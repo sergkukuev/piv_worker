@@ -3,6 +3,9 @@
 #include "StructPIV.h"
 #include "WorkExcel.h"
 
+#include <regex>
+
+// Класс для чтения протоколов из excel файлов
 class CReaderExcel	{
 public:
 	CReaderExcel();									// Конструктор
@@ -22,6 +25,7 @@ private:
 	vector <sheetData> getSheets();		// Чтение листов
 	list <signalData> getSignals();		// Чтение параметров на листе
 
+	int getNumPK();								// Поиск номера кадра (в противном случае будет равен -1)
 	bool findHeader();							// Поиск индексов заголовков
 	void setHeader(int index, adrCell& cell);	// Установка заголовка
 

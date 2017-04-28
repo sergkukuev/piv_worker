@@ -96,6 +96,40 @@ vector <sheetData> CReaderExcel::getSheets()
 	return sheets;
 }
 
+// Поиск номера кадра (в противном случае будет равен -1)
+int CReaderExcel::getNumPK()
+{
+	long lRows = static_cast<long> (iHeader.iRows - 1);
+	long lColumns = static_cast<long> (iHeader.iComments);
+	int iNumPK = -1;
+
+	if (work.getCellValue(lRows, lColumns) != "")
+	{
+		CString sNumPK = work.getCellValue(lRows, lColumns);
+		int i = 0;
+
+		while (i != -1)
+		{
+			i = sNumPK.Find(_T("№"), i == 0 ? i : i + 1);
+			i = i == sNumPK.GetLength() ? -1 : i;
+			iNumPK = i == -1 ? iNumPK : i;
+		}
+
+		if (iNumPK != -1)
+			sNumPK.Delete(0, iNumPK + 1);
+
+		sNumPK = sNumPK.Trim();
+
+		regex regStr("[[:digit:]]+");
+		string stdStr = convertString(sNumPK);
+
+		if (regex_match(stdStr, regStr))
+			iNumPK = atoi(stdStr.c_str());
+	}
+
+	return iNumPK;
+}
+
 // Чтение параметров на листе
 list <signalData> CReaderExcel::getSignals()
 {
