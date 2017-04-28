@@ -187,6 +187,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="PIVWorker.cpp" />
+    <ClCompile Include="ReaderExcel.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
@@ -204,8 +205,10 @@
     <ClInclude Include="excel\CWorksheets.h" />
     <ClInclude Include="excel\Enum.h" />
     <ClInclude Include="PIVWorker.h" />
+    <ClInclude Include="ReaderExcel.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="stdafx.h" />
+    <ClInclude Include="StructPIV.h" />
     <ClInclude Include="targetver.h" />
     <ClInclude Include="WorkExcel.h" />
   </ItemGroup>
