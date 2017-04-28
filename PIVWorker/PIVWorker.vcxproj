@@ -195,6 +195,13 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="excel\CApplication.h" />
+    <ClInclude Include="excel\CRange.h" />
+    <ClInclude Include="excel\CWorkbook.h" />
+    <ClInclude Include="excel\CWorkbooks.h" />
+    <ClInclude Include="excel\CWorksheet.h" />
+    <ClInclude Include="excel\CWorksheets.h" />
+    <ClInclude Include="excel\Enum.h" />
     <ClInclude Include="PIVWorker.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="stdafx.h" />
