@@ -57,3 +57,62 @@ vector <bookData> CReaderExcel::getBooks()
 
 	return books;
 }
+
+// Поиск индексов заголовков
+bool CReaderExcel::findHeader()
+{
+	vector<list<CString>>::iterator itV = HeaderTable.begin();
+	adrCell cell;		// Адрес ячейки заголовка
+	bool result = true;	// Найдены ли заголовки
+
+	for (int i = 1; itV != HeaderTable.end(); itV++, i++)
+	{
+		list<CString>::iterator itL = (*itV).begin();
+		bool bEnd = true;
+
+		while (itL != (*itV).end() || bEnd)
+		{
+			work.findOneDateCells(*itL, cell.row, cell.column);	// Поиск адреса ячейки с именем заголовка
+
+			if (cell.row == -1)
+			{
+				if (itL == (*itV).end())
+					result = bEnd = false;
+			}
+			else
+			{
+				setHeader(i, cell);
+				bEnd = false;
+			}
+			itL++;
+		}
+	}
+
+	return result;
+}
+
+// Установка заголовка
+void CReaderExcel::setHeader(int index, adrCell& cell)
+{
+	if (index == 1)
+	{
+		iHeader.iNumber = cell.column;
+		iHeader.iRows = cell.row;
+	}
+	else if (index == 2)
+		iHeader.iName = cell.column;
+	else if (index == 3)
+		iHeader.iNameSignal = cell.column;
+	else if (index == 4)
+		iHeader.iDimension = cell.column;
+	else if (index == 5)
+		iHeader.iMin = cell.column;
+	else if (index == 6)
+		iHeader.iMax = cell.column;
+	else if (index == 7)
+		iHeader.iCSR = cell.column;
+	else if (index == 8)
+		iHeader.iBits = cell.column;
+	else if (index = 9)
+		iHeader.iComments = cell.column;
+}

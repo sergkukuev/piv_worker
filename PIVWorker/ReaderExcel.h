@@ -18,5 +18,8 @@ private:
 	indexHeader iHeader;				// Индексы расположения заголовков
 	bool bHeader;						// Найдены ли заголовки
 	CWorkExcel work;					// Рабочая область
+
+	bool findHeader();							// Поиск индексов заголовков
+	void setHeader(int index, adrCell& cell);	// Установка заголовка
 };
 
