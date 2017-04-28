@@ -19,7 +19,12 @@ private:
 	bool bHeader;						// Найдены ли заголовки
 	CWorkExcel work;					// Рабочая область
 
+	vector <sheetData> getSheets();		// Чтение листов
+	list <signalData> getSignals();		// Чтение параметров на листе
+
 	bool findHeader();							// Поиск индексов заголовков
 	void setHeader(int index, adrCell& cell);	// Установка заголовка
+
+	string convertString(CString cStr);			// Функция преобразования CString в string
 };
 
