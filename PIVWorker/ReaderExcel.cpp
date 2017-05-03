@@ -292,25 +292,25 @@ bool CReaderExcel::findHeader()
 // Установка заголовка
 void CReaderExcel::setHeader(int index, adrCell& cell)
 {
-	if (index == 1)
+	if (index == INDEX_NUM)
 	{
 		iHeader.iNumber = cell.column;
 		iHeader.iRows = cell.row;
 	}
-	else if (index == 2)
+	else if (index == INDEX_NAME)
 		iHeader.iName = cell.column;
-	else if (index == 3)
+	else if (index == INDEX_SIGNAL)
 		iHeader.iNameSignal = cell.column;
-	else if (index == 4)
+	else if (index == INDEX_DIMENSION)
 		iHeader.iDimension = cell.column;
-	else if (index == 5)
+	else if (index == INDEX_MIN)
 		iHeader.iMin = cell.column;
-	else if (index == 6)
+	else if (index == INDEX_MAX)
 		iHeader.iMax = cell.column;
-	else if (index == 7)
+	else if (index == INDEX_CSR)
 		iHeader.iCSR = cell.column;
-	else if (index == 8)
+	else if (index == INDEX_BITS)
 		iHeader.iBits = cell.column;
-	else if (index = 9)
+	else if (index = INDEX_COMMENTS)
 		iHeader.iComments = cell.column;
 }
