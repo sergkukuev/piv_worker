@@ -95,7 +95,7 @@ void CPIVWorker::ReadExcel(CString pathToExcel)
 	}
 	catch (MyException& exc)
 	{
-
+		AfxMessageBox(exc.GetMsg());
 	}
 }
 
@@ -116,7 +116,7 @@ void CPIVWorker::ReadExcel(vector<CString> pathToExcel)
 	}
 	catch (MyException &exc)
 	{
-
+		AfxMessageBox(exc.GetMsg());
 	}
 }
 
