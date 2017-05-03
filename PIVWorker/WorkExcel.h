@@ -22,7 +22,8 @@ public:
 	CWorkExcel(CString& pathToTemplate);	// конструктор с параметром
 	~CWorkExcel();							// деструктор
 
-	void openWorkBook(CString& pathToTemplate);		// открытие рабой книги
+	void openWorkBook(CString& pathToTemplate);		// открытие рабочей книги
+	void closeWorkBook();							// закрытие рабочей книги
 	void setActivBook(long& iBook);					// задание активной книги
 	void setActivSheet(long& iSheet);				// задание активного листа
 	CString getNameBook();							// получение названия книги

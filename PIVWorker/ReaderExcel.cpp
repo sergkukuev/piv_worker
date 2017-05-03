@@ -58,6 +58,8 @@ bookData CReaderExcel::getBook(CString pathToExcel)
 
 	book.sheets = getSheets(work);
 
+	work.closeWorkBook();
+
 	return book;
 }
 
@@ -89,6 +91,8 @@ vector <bookData> CReaderExcel::getBooks(vector <CString> pathToExcel)
 
 		books[i - 1].sheets = getSheets(work);
 	}
+
+	work.closeWorkBook();
 
 	return books;
 }

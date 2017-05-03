@@ -59,6 +59,13 @@ void CWorkExcel::openWorkBook(CString& pathToTemplate)
 	setCountBooks();
 }
 
+void CWorkExcel::closeWorkBook()
+{
+	COleVariant covOptional((long)DISP_E_PARAMNOTFOUND, VT_ERROR);
+	_excelBooks.Close();
+	_countBooks = 0;
+}
+
 //Задание активной книги
 void CWorkExcel::setActivBook(long& iBook)
 {
