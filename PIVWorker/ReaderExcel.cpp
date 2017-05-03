@@ -39,7 +39,7 @@ CReaderExcel::~CReaderExcel()
 // Чтение одной книги
 bookData CReaderExcel::getBook(CString pathToExcel)
 {
-	if (!checkPath(pathToExcel))
+	if (!checkExtension(pathToExcel))
 		throw BadTypeException();
 
 	CWorkExcel work;
@@ -67,7 +67,7 @@ bookData CReaderExcel::getBook(CString pathToExcel)
 vector <bookData> CReaderExcel::getBooks(vector <CString> pathToExcel)
 {
 	for (size_t i = 0; i < pathToExcel.size(); i++)
-		if (!checkPath(pathToExcel[i]))
+		if (!checkExtension(pathToExcel[i]))
 			throw BadTypeException();
 
 	CWorkExcel work;
@@ -289,17 +289,17 @@ string CReaderExcel::convertString(CString cStr)
 }
 
 // Проверка расширения
-bool CReaderExcel::checkPath(CString path)
+bool CReaderExcel::checkExtension(CString path)
 {
-	int posDot = path.ReverseFind((wchar_t) ".");
+	int posDot = path.Find(_T("."), path.GetLength() - 5);
 
-	CString pathExctension = path.Mid(posDot);
+	CString pathExtension = path.Mid(posDot + 1);
 
 	for (size_t i = 0; i < extension.size(); i++)
-		if (pathExctension.CompareNoCase(extension[i]) != 0)
-			return false;
+		if (pathExtension.CompareNoCase(extension[i]) == 0)
+			return true;
 
-	return true;
+	return false;
 }
 
 // Поиск индексов заголовков

@@ -40,6 +40,6 @@ private:
 	void setHeader(int index, adrCell cell);	// Установка заголовка
 
 	string convertString(CString cStr);			// Функция преобразования CString в string
-	bool checkPath(CString path);				// Проверка расширений файлов
+	bool checkExtension(CString path);				// Проверка расширений файлов
 };
 
