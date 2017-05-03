@@ -204,6 +204,7 @@
     <ClInclude Include="excel\CWorksheet.h" />
     <ClInclude Include="excel\CWorksheets.h" />
     <ClInclude Include="excel\Enum.h" />
+    <ClInclude Include="MyException.h" />
     <ClInclude Include="PIVWorker.h" />
     <ClInclude Include="ReaderExcel.h" />
     <ClInclude Include="Resource.h" />

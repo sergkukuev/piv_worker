@@ -14,43 +14,68 @@ CReaderExcel::CReaderExcel()
 	HeaderTable.push_back(list<CString>{ _T("Цена старшего разряда") });
 	HeaderTable.push_back(list<CString>{ _T("Используемые разряды"), _T("Используе-мые разряды") });
 	HeaderTable.push_back(list<CString>{ _T("Примечание") });
+
+	// Добавление всех видов расширений excel файлов
+	extension.push_back(_T("xlsx"));
+	extension.push_back(_T("xlsm"));
+	extension.push_back(_T("xlsb"));
+	extension.push_back(_T("xltx"));
+	extension.push_back(_T("xltm"));
+	extension.push_back(_T("xls"));
+	extension.push_back(_T("xml"));
+	extension.push_back(_T("xlam"));
+	extension.push_back(_T("xla"));
+	extension.push_back(_T("xlw"));
+	extension.push_back(_T("xlr"));
 }
 
 // Деструктор
 CReaderExcel::~CReaderExcel()
 {
 	HeaderTable.clear();
+	extension.clear();
 }
 
 // Чтение одной книги
-bool CReaderExcel::getBook(CString pathToExcel, bookData& book)
+bookData CReaderExcel::getBook(CString pathToExcel)
 {
+	if (!checkPath(pathToExcel))
+		throw BadTypeException();
+
 	CWorkExcel work;
+	bookData book;
+
 	work.openWorkBook(pathToExcel);
 
-	if (work.getCountBooks() != 1)
-		return false;
+	if (work.getCountBooks() == 0)
+		throw NoBooksException();
 
-	long nBook = 1;
+	long clBook = (long)1;
+	work.setActivBook(clBook);
 
-	work.setActivBook(nBook);
 	book.nameBook = work.getNameBook();
 	book.sheets.resize(work.getCountSheets());
 
 	book.sheets = getSheets(work);
 
-	return true;
+	return book;
 }
 
 // Чтение книг
-bool CReaderExcel::getBooks(vector <CString> pathToExcel, vector <bookData>& books)
+vector <bookData> CReaderExcel::getBooks(vector <CString> pathToExcel)
 {
+	for (size_t i = 0; i < pathToExcel.size(); i++)
+		if (!checkPath(pathToExcel[i]))
+			throw BadTypeException();
+
 	CWorkExcel work;
+	vector <bookData> books;
+
 	for (size_t i = 0; i < pathToExcel.size(); i++)
 		work.openWorkBook(pathToExcel[i]);
 
 	if (work.getCountBooks() == 0)
-		return false;
+		throw NoBooksException();
 
 	books.resize(work.getCountBooks());
 
@@ -65,7 +90,7 @@ bool CReaderExcel::getBooks(vector <CString> pathToExcel, vector <bookData>& boo
 		books[i - 1].sheets = getSheets(work);
 	}
 
-	return true;
+	return books;
 }
 
 // Чтение листов
@@ -83,19 +108,12 @@ vector <sheetData> CReaderExcel::getSheets(CWorkExcel& work)
 		sheets[i - 1].iCommentFieldNP = -1;
 		sheets[i - 1].iNumPodKadra = -1;
 
-		if (bHeader)	// Проверка наличия заголовков на листе
-		{
-			sheets[i - 1].bErrorExcelSheet = true;
-			sheets[i - 1].bErrorSheet = true;
-		}
-		else
-		{
-			sheets[i - 1].bErrorExcelSheet = false;
-			sheets[i - 1].bErrorSheet = false;
-		}
+		if (!findHeader(work))
+			throw NotAllHeaderException();
 
-		bHeader = findHeader(work);
-
+		sheets[i - 1].bErrorExcelSheet = true;
+		sheets[i - 1].bErrorSheet = true;
+		
 		sheets[i - 1].iNumPodKadra = getNumPK(work);
 
 		iHeader.iRows++;
@@ -264,6 +282,20 @@ string CReaderExcel::convertString(CString cStr)
 	buffer = nullptr;
 
 	return result;
+}
+
+// Проверка расширения
+bool CReaderExcel::checkPath(CString path)
+{
+	int posDot = path.ReverseFind((wchar_t) ".");
+
+	CString pathExctension = path.Mid(posDot);
+
+	for (size_t i = 0; i < extension.size(); i++)
+		if (pathExctension.CompareNoCase(extension[i]) != 0)
+			return false;
+
+	return true;
 }
 
 // Поиск индексов заголовков

@@ -16,6 +16,9 @@
     <Filter Include="Заголовочные файлы\excel">
       <UniqueIdentifier>{9b1638db-2c9e-4671-be63-f66dcdf1a930}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Заголовочные файлы\reader">
+      <UniqueIdentifier>{f6c2a850-e8b1-41e4-af34-bc0223cdd2c5}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <Text Include="ReadMe.txt" />
@@ -68,13 +71,16 @@
     <ClInclude Include="excel\Enum.h">
       <Filter>Заголовочные файлы\excel</Filter>
     </ClInclude>
-    <ClInclude Include="WorkExcel.h">
+    <ClInclude Include="StructPIV.h">
       <Filter>Заголовочные файлы</Filter>
     </ClInclude>
     <ClInclude Include="ReaderExcel.h">
-      <Filter>Заголовочные файлы</Filter>
+      <Filter>Заголовочные файлы\reader</Filter>
     </ClInclude>
-    <ClInclude Include="StructPIV.h">
+    <ClInclude Include="WorkExcel.h">
+      <Filter>Заголовочные файлы\reader</Filter>
+    </ClInclude>
+    <ClInclude Include="MyException.h">
       <Filter>Заголовочные файлы</Filter>
     </ClInclude>
   </ItemGroup>
