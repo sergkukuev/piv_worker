@@ -1,9 +1,11 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.26403.7
+# Visual Studio 14
+VisualStudioVersion = 14.0.25420.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "PIVWorker", "PIVWorker\PIVWorker.vcxproj", "{3078582E-9A39-4E99-AB9D-C9118824B74B}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "PIVWorkerApp", "PIVWorkerApp\PIVWorkerApp.vcxproj", "{9E7BF9FD-FDD7-4841-B2DD-FB5EDB997DAF}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,6 +23,14 @@ Global
 		{3078582E-9A39-4E99-AB9D-C9118824B74B}.Release|x64.Build.0 = Release|x64
 		{3078582E-9A39-4E99-AB9D-C9118824B74B}.Release|x86.ActiveCfg = Release|Win32
 		{3078582E-9A39-4E99-AB9D-C9118824B74B}.Release|x86.Build.0 = Release|Win32
+		{9E7BF9FD-FDD7-4841-B2DD-FB5EDB997DAF}.Debug|x64.ActiveCfg = Debug|x64
+		{9E7BF9FD-FDD7-4841-B2DD-FB5EDB997DAF}.Debug|x64.Build.0 = Debug|x64
+		{9E7BF9FD-FDD7-4841-B2DD-FB5EDB997DAF}.Debug|x86.ActiveCfg = Debug|Win32
+		{9E7BF9FD-FDD7-4841-B2DD-FB5EDB997DAF}.Debug|x86.Build.0 = Debug|Win32
+		{9E7BF9FD-FDD7-4841-B2DD-FB5EDB997DAF}.Release|x64.ActiveCfg = Release|x64
+		{9E7BF9FD-FDD7-4841-B2DD-FB5EDB997DAF}.Release|x64.Build.0 = Release|x64
+		{9E7BF9FD-FDD7-4841-B2DD-FB5EDB997DAF}.Release|x86.ActiveCfg = Release|Win32
+		{9E7BF9FD-FDD7-4841-B2DD-FB5EDB997DAF}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
