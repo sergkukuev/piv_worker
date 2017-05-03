@@ -23,7 +23,8 @@ public:
 
 // Реализация
 protected:
-	HICON m_hIcon;
+	HACCEL m_AccelTable;		// Таблица акселераторов
+	HICON m_hIcon;				// Иконка
 
 	// Созданные функции схемы сообщений
 	virtual BOOL OnInitDialog();
@@ -32,5 +33,12 @@ protected:
 	afx_msg HCURSOR OnQueryDragIcon();
 	DECLARE_MESSAGE_MAP()
 public:
-	afx_msg void OnPivOpen();
+	afx_msg void OnPivOpen();			// Открытие протоколов
+	afx_msg void OnPivClose();			// Закрытие протокола
+	afx_msg void OnPivCloseAll();		// Закрыть все протоколы
+	afx_msg void OnPivAnalyze();		// Анализировать протоколы
+	afx_msg void OnPivReport();			// Открыть отчет
+	afx_msg void OnPivRepFolder();		// Открыть папку с отчетом
+	afx_msg void OnPivTxtGenerate();	// Генерировать txt отчет
+	afx_msg void OnAppInform();			// Информация о проекте
 };

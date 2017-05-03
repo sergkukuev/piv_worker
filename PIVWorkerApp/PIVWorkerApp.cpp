@@ -51,7 +51,6 @@ BOOL CPIVWorkerApp::InitInstance()
 
 	CWinApp::InitInstance();
 
-
 	// Создать диспетчер оболочки, в случае, если диалоговое окно содержит
 	// представление дерева оболочки или какие-либо его элементы управления.
 	CShellManager *pShellManager = new CShellManager;
@@ -68,10 +67,13 @@ BOOL CPIVWorkerApp::InitInstance()
 	// например на название организации
 	SetRegistryKey(_T("Локальные приложения, созданные с помощью мастера приложений"));
 
+	m_hAccel = LoadAccelerators(AfxGetInstanceHandle(), MAKEINTRESOURCE(IDR_ACCELERATOR));
+
 	CMainDlg dlg;
 	m_pMainWnd = &dlg;
 
 	INT_PTR nResponse = dlg.DoModal();
+
 	if (nResponse == IDOK)
 	{
 		// TODO: Введите код для обработки закрытия диалогового окна
@@ -101,5 +103,15 @@ BOOL CPIVWorkerApp::InitInstance()
 	// Поскольку диалоговое окно закрыто, возвратите значение FALSE, чтобы можно было выйти из
 	//  приложения вместо запуска генератора сообщений приложения.
 	return FALSE;
+}
+
+BOOL CPIVWorkerApp::ProcessMessageFilter(int code, LPMSG lpMsg)
+{
+	if (code >= 0 && m_pMainWnd && m_hAccel)
+	{
+		if (::TranslateAccelerator(m_pMainWnd->m_hWnd, m_hAccel, lpMsg))
+			return TRUE;
+	}
+	return CWinApp::ProcessMessageFilter(code, lpMsg);
 }
 

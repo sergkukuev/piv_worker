@@ -66,6 +66,13 @@ BEGIN_MESSAGE_MAP(CMainDlg, CDialog)
 	ON_WM_PAINT()
 	ON_WM_QUERYDRAGICON()
 	ON_COMMAND(ID_PIV_OPEN, &CMainDlg::OnPivOpen)
+	ON_COMMAND(ID_PIV_CLOSE, &CMainDlg::OnPivClose)
+	ON_COMMAND(ID_PIV_ANALYZE, &CMainDlg::OnPivAnalyze)
+	ON_COMMAND(ID_PIV_REPORT, &CMainDlg::OnPivReport)
+	ON_COMMAND(ID_PIV_REP_FOLDER, &CMainDlg::OnPivRepFolder)
+	ON_COMMAND(ID_PIV_TXT_GENERATE, &CMainDlg::OnPivTxtGenerate)
+	ON_COMMAND(ID_APP_INFORM, &CMainDlg::OnAppInform)
+	ON_COMMAND(ID_PIV_CLOSE_ALL, &CMainDlg::OnPivCloseAll)
 END_MESSAGE_MAP()
 
 
@@ -101,6 +108,8 @@ BOOL CMainDlg::OnInitDialog()
 	SetIcon(m_hIcon, FALSE);		// Мелкий значок
 
 	// TODO: добавьте дополнительную инициализацию
+
+	m_AccelTable = LoadAccelerators(AfxGetInstanceHandle(), MAKEINTRESOURCE(IDR_ACCELERATOR));
 
 	return TRUE;  // возврат значения TRUE, если фокус не передан элементу управления
 }
@@ -155,6 +164,49 @@ HCURSOR CMainDlg::OnQueryDragIcon()
 }
 
 void CMainDlg::OnPivOpen()
+{
+	// TODO: добавьте свой код обработчика команд
+}
+
+
+void CMainDlg::OnPivClose()
+{
+	// TODO: добавьте свой код обработчика команд
+}
+
+
+void CMainDlg::OnPivAnalyze()
+{
+	// TODO: добавьте свой код обработчика команд
+}
+
+
+void CMainDlg::OnPivReport()
+{
+	// TODO: добавьте свой код обработчика команд
+}
+
+
+void CMainDlg::OnPivRepFolder()
+{
+	// TODO: добавьте свой код обработчика команд
+}
+
+
+void CMainDlg::OnPivTxtGenerate()
+{
+	// TODO: добавьте свой код обработчика команд
+}
+
+
+void CMainDlg::OnAppInform()
+{
+	CAboutDlg aboutDlg;
+	aboutDlg.DoModal();
+}
+
+
+void CMainDlg::OnPivCloseAll()
 {
 	// TODO: добавьте свой код обработчика команд
 }

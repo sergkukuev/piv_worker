@@ -25,8 +25,11 @@ public:
 	virtual BOOL InitInstance();
 
 // Реализация
+	HACCEL m_hAccel;
 
-	DECLARE_MESSAGE_MAP()
+	DECLARE_MESSAGE_MAP();
+
+	virtual BOOL ProcessMessageFilter(int, LPMSG);
 };
 
 extern CPIVWorkerApp theApp;
