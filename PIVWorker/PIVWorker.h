@@ -7,6 +7,14 @@
 	#error "включить stdafx.h до включения этого файла в PCH"
 #endif
 
+#ifdef PIV_WORKER_EXPORTS
+#define PIV_WORKER_API __declspec(dllexport)
+#else
+#define PIV_WORKER_API __declspec(dllimport)
+#endif
+
+#include "StructPIV.h"		// структуры протоколов
+#include "ReaderExcel.h"	// чтение протоколов
 #include "resource.h"		// основные символы
 
 
@@ -14,14 +22,18 @@
 // Про реализацию данного класса см. PIVWorker.cpp
 //
 
-class CPIVWorkerApp : public CWinApp
-{
+class PIV_WORKER_API CPIVWorker	{
 public:
-	CPIVWorkerApp();
+	CPIVWorker();
+	~CPIVWorker();
+
+	void ReadExcel(CString pathToExcel);
+	void ReadExcel(vector <CString> pathToExcel);
 
 // Переопределение
-public:
-	virtual BOOL InitInstance();
+private:
+	vector <bookData> books;
+	vector <CString> path;
 
-	DECLARE_MESSAGE_MAP()
+	bool isExist(CString pathToExcel);
 };
