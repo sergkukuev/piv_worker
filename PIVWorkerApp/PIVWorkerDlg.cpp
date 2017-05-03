@@ -30,6 +30,7 @@ public:
 // Реализация
 protected:
 	DECLARE_MESSAGE_MAP()
+public:
 };
 
 CAboutDlg::CAboutDlg() : CDialogEx(IDD_ABOUTBOX)
@@ -64,6 +65,7 @@ BEGIN_MESSAGE_MAP(CMainDlg, CDialog)
 	ON_WM_SYSCOMMAND()
 	ON_WM_PAINT()
 	ON_WM_QUERYDRAGICON()
+	ON_COMMAND(ID_PIV_OPEN, &CMainDlg::OnPivOpen)
 END_MESSAGE_MAP()
 
 
@@ -152,3 +154,7 @@ HCURSOR CMainDlg::OnQueryDragIcon()
 	return static_cast<HCURSOR>(m_hIcon);
 }
 
+void CMainDlg::OnPivOpen()
+{
+	// TODO: добавьте свой код обработчика команд
+}

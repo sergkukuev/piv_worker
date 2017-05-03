@@ -70,6 +70,7 @@ BOOL CPIVWorkerApp::InitInstance()
 
 	CMainDlg dlg;
 	m_pMainWnd = &dlg;
+
 	INT_PTR nResponse = dlg.DoModal();
 	if (nResponse == IDOK)
 	{
