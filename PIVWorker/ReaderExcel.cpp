@@ -4,6 +4,16 @@
 // Конструктор
 CReaderExcel::CReaderExcel()
 {
+	// Установка набора заголовков
+	HeaderTable.push_back(list<CString>{ _T("№ слов"), _T("№ п/п"), _T("№ слова в подадресе") });
+	HeaderTable.push_back(list<CString>{ _T("Наименование параметра"), _T("Наименование сигнала") });
+	HeaderTable.push_back(list<CString>{ _T("Обозначение сигнала"), _T("Условное обозначение параметра / сигнала") });
+	HeaderTable.push_back(list<CString>{ _T("Размерность"), _T("Единица измерения") });
+	HeaderTable.push_back(list<CString>{ _T("Минимальное значение"), _T("Миним. значение"), _T("Минимал значение") });
+	HeaderTable.push_back(list<CString>{ _T("Максимальное значение"), _T("Максим. значение"), _T("Максимал значение") });
+	HeaderTable.push_back(list<CString>{ _T("Цена старшего разряда") });
+	HeaderTable.push_back(list<CString>{ _T("Используемые разряды"), _T("Используе-мые разряды") });
+	HeaderTable.push_back(list<CString>{ _T("Примечание") });
 }
 
 // Деструктор
@@ -12,9 +22,9 @@ CReaderExcel::~CReaderExcel()
 }
 
 // Конструктор с параметром
-CReaderExcel::CReaderExcel(vector <CString>& pathToExcel)
+CReaderExcel::CReaderExcel(vector <CString> pathToExcel)
 {
-	path = pathToExcel;
+	vector <CString> path = pathToExcel;
 
 	// Открытие книг
 	for (size_t i = 0; i < path.size(); i++)
@@ -38,10 +48,31 @@ int CReaderExcel::getSize()
 	return work.getCountBooks();
 }
 
-// Чтение книг
-vector <bookData> CReaderExcel::getBooks()
+// Чтение одной книги
+bool CReaderExcel::getBook(CString pathToExcel, bookData& book)
 {
-	vector <bookData> books;
+	work.openWorkBook(pathToExcel);
+
+	if (work.getCountBooks() != 1)
+		return false;
+
+	long nBook = 1;
+
+	work.setActivBook(nBook);
+	book.nameBook = work.getNameBook();
+	book.sheets.resize(work.getCountSheets());
+
+	book.sheets = getSheets();
+
+	return true;
+}
+
+// Чтение книг
+bool CReaderExcel::getBooks(vector <bookData>& books)
+{
+	if (work.getCountBooks() == 0)
+		return false;
+
 	books.resize(work.getCountBooks());
 
 	for (int i = 1; i < books.size() + 1; i++)
@@ -55,7 +86,7 @@ vector <bookData> CReaderExcel::getBooks()
 		books[i - 1].sheets = getSheets();
 	}
 
-	return books;
+	return true;
 }
 
 // Чтение листов
@@ -86,7 +117,7 @@ vector <sheetData> CReaderExcel::getSheets()
 
 		bHeader = findHeader();
 
-		//установить номер подкадра
+		sheets[i - 1].iNumPodKadra = getNumPK();
 
 		iHeader.iRows++;
 
@@ -290,7 +321,7 @@ bool CReaderExcel::findHeader()
 }
 
 // Установка заголовка
-void CReaderExcel::setHeader(int index, adrCell& cell)
+void CReaderExcel::setHeader(int index, adrCell cell)
 {
 	if (index == INDEX_NUM)
 	{
