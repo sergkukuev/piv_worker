@@ -27,6 +27,8 @@ CReaderExcel::CReaderExcel()
 	extension.push_back(_T("xla"));
 	extension.push_back(_T("xlw"));
 	extension.push_back(_T("xlr"));
+
+	iHeader = new int[SIZE_IHEADER];
 }
 
 // Деструктор
@@ -58,7 +60,7 @@ bookData CReaderExcel::getBook(CString pathToExcel)
 
 	book.sheets = getSheets(work);
 
-	work.closeWorkBook();
+	work.closeWorkBooks();
 
 	return book;
 }
@@ -92,7 +94,7 @@ vector <bookData> CReaderExcel::getBooks(vector <CString> pathToExcel)
 		books[i - 1].sheets = getSheets(work);
 	}
 
-	work.closeWorkBook();
+	work.closeWorkBooks();
 
 	return books;
 }
@@ -117,10 +119,10 @@ vector <sheetData> CReaderExcel::getSheets(CWorkExcel& work)
 
 		sheets[i - 1].bErrorExcelSheet = true;
 		sheets[i - 1].bErrorSheet = true;
-		
+
 		sheets[i - 1].iNumPodKadra = getNumPK(work);
 
-		iHeader.iRows++;
+		iHeader[INDEX_ROW]++;
 
 		sheets[i - 1].signals = getSignals(work);
 	}
@@ -131,8 +133,8 @@ vector <sheetData> CReaderExcel::getSheets(CWorkExcel& work)
 // Поиск номера кадра (в противном случае будет равен -1)
 int CReaderExcel::getNumPK(CWorkExcel& work)
 {
-	long lRows = static_cast<long> (iHeader.iRows - 1);
-	long lColumns = static_cast<long> (iHeader.iComments);
+	long lRows = static_cast<long> (iHeader[INDEX_ROW] - 1);
+	long lColumns = static_cast<long> (iHeader[INDEX_COMMENTS]);
 	int iNumPK = -1;
 
 	if (work.getCellValue(lRows, lColumns) != "")
@@ -172,104 +174,134 @@ list <signalData> CReaderExcel::getSignals(CWorkExcel& work)
 	do
 	{
 		signalData signal;
-		long lRow = static_cast<long> (iHeader.iRows);
+		adrCell cell;
 
-		// Чтение параметров
-		long lColumn = static_cast<long> (iHeader.iNumber);
-		signal.sNumWordField = work.getCellValue(lRow, lColumn);
+		cell.row = static_cast<long> (iHeader[INDEX_ROW]);
+		
+		// Чтение параметров:
+		// Наименование параетра и обозначение сигнала
+		cell.column = static_cast<long> (iHeader[INDEX_NAME]);
+		signal.sTitleParamField[0] = getCell(work, cell);
+		long cMergeName = work.getMergeCount(cell.row, cell.column);
+
+		cell.column = static_cast<long> (iHeader[INDEX_SIGNAL]);
+		signal.sTitleParamField[1] = getCell(work, cell);
+		long cMergeSignal = work.getMergeCount(cell.row, cell.column);
+
+		if (cMergeName != cMergeSignal)
+			signal.bTitleParamField = false;
+		else
+			signal.bTitleParamField = true;
+
+		// Чтение номера слова
+		cell.column = static_cast<long> (iHeader[INDEX_NUM]);
+		signal.sNumWordField = getCell(work, cell, cMergeName);
+		
+		if (signal.sNumWordField.Find(_T(",")) != -1)
+			signal.b2NumWordField = false;
+		else
+			signal.b2NumWordField = true;
+
 		signal.bNumWordField = true;
-		signal.b2NumWordField = false;
 		signal.bRepitNumWordField = false;
 
-		lColumn = static_cast<long> (iHeader.iName);
-		signal.sTitleParamField[0] = work.getCellValue(lRow, lColumn);
+		// Чтение размерности, min, max и csr
+		cell.column = static_cast<long> (iHeader[INDEX_DIMENSION]);
+		signal.sDimensionField = getCell(work, cell, cMergeName);
 
-		lColumn = static_cast<long> (iHeader.iNameSignal);
-		signal.sTitleParamField[1] = work.getCellValue(lRow, lColumn);
-		signal.bTitleParamField = true;
-
-		lColumn = static_cast<long> (iHeader.iDimension);
-		signal.sDimensionField = work.getCellValue(lRow, lColumn);
-
-		lColumn = static_cast<long> (iHeader.iMin);
-		signal.sMinMaxCsrValField[0] = work.getCellValue(lRow, lColumn);
-
-		lColumn = static_cast<long> (iHeader.iMax);
-		signal.sMinMaxCsrValField[1] = work.getCellValue(lRow, lColumn);
-
-		lColumn = static_cast<long> (iHeader.iCSR);
-		signal.sMinMaxCsrValField[2] = work.getCellValue(lRow, lColumn);
+		cell.column = static_cast<long> (iHeader[INDEX_MIN]);
+		signal.sMinMaxCsrValField[0] = getCell(work, cell, cMergeName);
 		signal.bMinValField = true;
+
+		cell.column = static_cast<long> (iHeader[INDEX_MAX]);
+		signal.sMinMaxCsrValField[1] = getCell(work, cell, cMergeName);
 		signal.bMaxValField = true;
+
+		cell.column = static_cast<long> (iHeader[INDEX_CSR]);
+		signal.sMinMaxCsrValField[2] = getCell(work, cell, cMergeName);
 		signal.bCsrValField = true;
 
-		lColumn = static_cast<long> (iHeader.iBits);
-		signal.sBitField = work.getCellValue(lRow, lColumn);
+		// Чтение разрядов
+		cell.column = static_cast<long> (iHeader[INDEX_BITS]);
+		signal.sBitField = getCell(work, cell, cMergeName);
 		signal.bBitField = true;
 		signal.b2BitField = false;
-
 		signal.iBitSigns = 0;
 		signal.bBitSigns = true;
 
 		// Чтение комментариев
-		lColumn = static_cast<long> (iHeader.iComments);
+		cell.column = static_cast<long> (iHeader[INDEX_COMMENTS]);
+		signal.sCommentField = getCell(work, cell, cMergeName);
 		signal.bCommentField = false;
 
-		if (work.getMergeCount(lRow, lColumn) != 1)	// Если комментарий не для одной строчки
-		{
-			list <signalData>::iterator itS = signals.end();
-			itS--;
-			signal.sCommentField.push_back(*itS->sCommentField.begin());
-		}
-		else
-			signal.sCommentField.push_back(work.getCellValue(lRow, lColumn));
-
-		bool bEmpty = true;		// Пустая строка
-		bool bOnlyOne = false;	// Хотя бы один параметр пустой
-		for (int j = 1; j < 9; j++)
-		{
-			lColumn = static_cast <long>(j);
-			if (work.getCellValue(lRow, lColumn) == "")
-				bOnlyOne = true;
-			else
-				bEmpty = false;
-		}
-
-		if (bEmpty)
-		{
-			list <CString>::iterator itC = signal.sCommentField.begin();
-
-			if (*itC != "")	// Является ли пустая строка комментарием
-			{
-				list <signalData>::iterator itS = signals.end();
-				itS--;
-				itS->sCommentField.push_back(*itC);
-			}
-			else
-				cEmpty++;
-		}
-		else
-		{
-			cEmpty = 0;
-
-			// Является ли строка примечанием или параметром
-			for (int j = 1; j < 9; j++)
-			{
-				lColumn = static_cast <long> (j);
-				bRemark = (work.getCellValue(lRow, lColumn).Find(_T("Примечания:")) > -1 ||
-					work.getCellValue(lRow, lColumn).Find(_T("Примечания:")) > -1) ? true : false;
-			}
-		}
+		bool bEmpty = IsEmpty(work, cell.row);
+		bRemark = IsRemark(work, cell.row);
 
 		// Добавление сигнала
 		if (!bEmpty && !bRemark)
 			signals.push_back(signal);
 
-		iHeader.iRows++;
+		iHeader[INDEX_ROW] += cMergeName;
 
 	} while (cEmpty < 5 && !bRemark);
 
 	return signals;
+}
+
+bool CReaderExcel::IsEmpty(CWorkExcel& work, long row)
+{
+	adrCell cell;
+	bool result;
+	cell.row = row;
+
+	for (long i = 1; i < SIZE_IHEADER; i++)
+	{
+		cell.column = static_cast <long>(i);
+		if (work.getCellValue(cell.row, cell.column) != "")
+			result = false;
+	}
+
+	return result;
+}
+
+bool CReaderExcel::IsRemark(CWorkExcel& work, long row)
+{
+	adrCell cell;
+	bool result;
+	cell.row = row;
+
+	for (long i = 1; i < SIZE_IHEADER; i++)
+	{
+		cell.column = static_cast<long> (iHeader[i]);
+		result = (work.getCellValue(cell.row, cell.column).Find(_T("Примечания:")) > -1 ||
+			work.getCellValue(cell.row, cell.column).Find(_T("Примечание:")) > -1) ? true : false;
+	}
+
+	return result;
+}
+
+// Чтение ячейки
+CString CReaderExcel::getCell(CWorkExcel& work, adrCell cell, long cName)
+{
+	long size = work.getMergeCount(cell.row, cell.column);
+	CString result;
+
+	if (size < cName)
+		size = cName;
+
+	long start = work.getStartMerge(cell.row, cell.column);
+	for (long i = start; i < start + size; i++)
+	{
+		CString tmp = work.getCellValue(i, cell.column);
+
+		if (i != (start + size - 1) || (!result.IsEmpty() && !tmp.IsEmpty()))
+			result += _T(", ");
+
+		if (!tmp.IsEmpty())
+			result += work.getCellValue(i, cell.column);
+	}
+
+	return result;
 }
 
 // Функция преобразования CString в string
@@ -325,7 +357,9 @@ bool CReaderExcel::findHeader(CWorkExcel& work)
 			}
 			else
 			{
-				setHeader(i, cell);
+				//setHeader(i, cell);
+				iHeader[i] = cell.column;
+				iHeader[i] = cell.row;
 				bEnd = false;
 			}
 			itL++;
@@ -338,7 +372,7 @@ bool CReaderExcel::findHeader(CWorkExcel& work)
 // Установка заголовка
 void CReaderExcel::setHeader(int index, adrCell cell)
 {
-	if (index == INDEX_NUM)
+	/*if (index == INDEX_NUM)
 	{
 		iHeader.iNumber = cell.column;
 		iHeader.iRows = cell.row;
@@ -358,5 +392,5 @@ void CReaderExcel::setHeader(int index, adrCell cell)
 	else if (index == INDEX_BITS)
 		iHeader.iBits = cell.column;
 	else if (index = INDEX_COMMENTS)
-		iHeader.iComments = cell.column;
+		iHeader.iComments = cell.column;*/
 }

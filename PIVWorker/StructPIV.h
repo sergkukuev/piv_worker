@@ -9,8 +9,8 @@ using namespace std;
 // Адрес ячейки
 struct adrCell
 {
-	int row;
-	int column;
+	long row;
+	long column;
 };
 
 //	Индексы параметров сигнала
@@ -54,7 +54,7 @@ struct signalData
 	bool bBitField;													// Присутствие ошибка в используемые категории
 	bool b2BitField;												// Присутствие двух используемыы категорий 
 
-	list <CString> sCommentField;									// Примечание
+	CString sCommentField;											// Примечание
 	int iBitSigns;													// Знаковая переменная описано в примечании
 	bool bCommentField;												// Присутствие знакового описания
 	bool bBitSigns;													// Ошибка в описании знакого бита

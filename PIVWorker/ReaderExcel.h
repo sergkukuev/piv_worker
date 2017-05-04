@@ -6,6 +6,8 @@
 
 #include <regex>
 
+const int SIZE_IHEADER = 10;
+const int INDEX_ROW = 0;
 const int INDEX_NUM = 1;
 const int INDEX_NAME = 2;
 const int INDEX_SIGNAL = 3;
@@ -30,16 +32,20 @@ public:
 private:
 	vector <CString> extension;
 	vector <list<CString>> HeaderTable;	// Набор заголовков
-	indexHeader iHeader;				// Индексы расположения заголовков
+	int* iHeader;				// Индексы расположения заголовков
 
 	vector <sheetData> getSheets(CWorkExcel& work);		// Чтение листов
 	list <signalData> getSignals(CWorkExcel& work);		// Чтение параметров на листе
+	CString getCell(CWorkExcel& work, adrCell cell, long cName = 1);	// Чтение ячейки
 
 	int getNumPK(CWorkExcel& work);				// Поиск номера кадра (в противном случае будет равен -1)
 	bool findHeader(CWorkExcel& work);			// Поиск индексов заголовков
 	void setHeader(int index, adrCell cell);	// Установка заголовка
 
+	bool IsEmpty(CWorkExcel& work, long row);	// Проверка строки на пустоту
+	bool IsRemark(CWorkExcel& work, long row);	// Проверка строки на наличие примечания
+
 	string convertString(CString cStr);			// Функция преобразования CString в string
-	bool checkExtension(CString path);				// Проверка расширений файлов
+	bool checkExtension(CString path);			// Проверка расширений файлов
 };
 
