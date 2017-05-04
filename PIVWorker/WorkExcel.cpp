@@ -27,6 +27,18 @@ bool CWorkExcel::initApplication()
 	return true;
 }
 
+// Уничтожение объекта Excel и указателя
+void CWorkExcel::destroyApplication()
+{
+	_excelBooks.Close();
+	_excelBooks.ReleaseDispatch();
+	_application.Quit();
+	_application.ReleaseDispatch();
+	_application = nullptr;
+	_excelBooks = nullptr;
+	_countBooks = 0;
+}
+
 //Конструктор
 CWorkExcel::CWorkExcel()
 {
@@ -40,30 +52,28 @@ CWorkExcel::CWorkExcel(CString& pathToTemplate)
 	openWorkBook(pathToTemplate);
 }
 
-// Диструктор
+// Деструктор
 CWorkExcel::~CWorkExcel()
 {
-	_excelBooks.Close();
-	_excelBooks.ReleaseDispatch();
-	_application.Quit();
-	_application.ReleaseDispatch();
-	_application = nullptr;
-	_excelBooks = nullptr;
+	destroyApplication();
 }
 
 //Открытие или добавление рабочей книги
 void CWorkExcel::openWorkBook(CString& pathToTemplate)
 {
+	if (!_excelBooks)
+		initApplication();
+
 	COleVariant covOptional((long)DISP_E_PARAMNOTFOUND, VT_ERROR);
-	_excelBooks.Open(pathToTemplate, covOptional, covOptional, covOptional, covOptional, covOptional, covOptional, covOptional, covOptional, covOptional, covOptional, covOptional, covOptional, covOptional, covOptional);
+	_excelBooks.Open(pathToTemplate, covOptional, covOptional, covOptional, covOptional, covOptional, covOptional, covOptional, 
+									covOptional, covOptional, covOptional, covOptional, covOptional, covOptional, covOptional);
 	setCountBooks();
 }
 
-void CWorkExcel::closeWorkBook()
+//Закрытие всех книг
+void CWorkExcel::closeWorkBooks()
 {
-	COleVariant covOptional((long)DISP_E_PARAMNOTFOUND, VT_ERROR);
-	_excelBooks.Close();
-	_countBooks = 0;
+	destroyApplication();
 }
 
 //Задание активной книги
@@ -107,43 +117,64 @@ int CWorkExcel::getCountSheets()
 //Получение количества объедененных ячеек
 int CWorkExcel::getMergeCount(long& rowIndex, long& columnIndex)
 {
-	long cellsMerge = 1;
 	CString rangeCellX;
 	int iCol = static_cast<int>(columnIndex);
+
 	rangeCellX.Format(_T("%s%d"), convertToChar(iCol), rowIndex);
-	//CString rangeCellY = rangeCellX;
+	
 	CRange cellRange = _workSheet.get_Range(COleVariant(rangeCellX), COleVariant(rangeCellX));
+	
 	cellRange = cellRange.get_MergeArea();
 	cellRange = cellRange.get_Rows();
-	cellsMerge = cellRange.get_Count();
-	return cellsMerge;
+	
+	return cellRange.get_Count();
+}
+
+//Получение индекса стартовой ячейки объединения
+int CWorkExcel::getStartMerge(long& rowIndex, long& columnIndex)
+{
+	CString rangeCellX;
+	int iCol = static_cast<int>(columnIndex);
+
+	rangeCellX.Format(_T("%s%d"), convertToChar(iCol), rowIndex);
+
+	CRange cellRange = _workSheet.get_Range(COleVariant(rangeCellX), COleVariant(rangeCellX));
+
+	cellRange = cellRange.get_MergeArea();
+	cellRange = cellRange.get_Rows();
+
+	return cellRange.get_Row();
 }
 
 // Получение значения из ячеки
 CString CWorkExcel::getCellValue(long& rowIndex, long& columnIndex)
 {
-	CString cellValue = nullptr;
 	CRange cellRange = _workSheet.get_Cells();
-	cellValue = cellRange.get_Item(COleVariant(rowIndex), COleVariant(columnIndex));
-	return cellValue;
+
+	return cellRange.get_Item(COleVariant(rowIndex), COleVariant(columnIndex));
 }
 
 // Поиск по ячекам в активном листе
-void CWorkExcel::findOneDateCells(CString& findString, int& rowNum, int& columnNum)
+bool CWorkExcel::findOneDateCells(CString& findString, int& rowNum, int& columnNum)
 {
 	CRange firstFind = _workSheet.get_Cells();
 	CRange Find;
 
 	COleVariant covOptional((long)DISP_E_PARAMNOTFOUND, VT_ERROR);
 	COleVariant covTrue((short)TRUE, VT_BOOL), covFalse((short)FALSE, VT_BOOL);
-	Find = firstFind.Find(COleVariant(findString), covOptional, COleVariant(long(xlValues)), COleVariant(long(xlPart)), COleVariant(long(xlByRows)), (long)xlNext, covFalse, covFalse, covFalse);
-	columnNum = -1;
-	rowNum = -1;
+
+	Find = firstFind.Find(COleVariant(findString), covOptional, COleVariant(long(xlValues)), COleVariant(long(xlPart)),
+							COleVariant(long(xlByRows)), (long)xlNext, covFalse, covFalse, covFalse);
+	
 	if (Find)
 	{
 		columnNum = Find.get_Column();
 		rowNum = Find.get_Row();
+
+		return true;
 	}
+	else
+		return false;
 }
 
 // Установка значения открытых книг
@@ -163,17 +194,19 @@ CString CWorkExcel::convertToChar(int & iCol)
 {
 	CString rez = _T("");
 	int iA = 0, iB = 0;
+
 	if (iCol <= 26)
-	{
 		rez.Format(_T("%c"), static_cast<char>(iCol + 64));
-	}
 	else
 	{
 		iA = iCol / 26;
 		iB = iCol % 26;
+
 		if (iB == 0)
 			iB = 26;
+		
 		rez.Format(_T("%s%s%s"), rez, convertToChar(iA), static_cast<char>(iB + 64));
 	}
+
 	return rez;
 }

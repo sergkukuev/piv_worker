@@ -23,16 +23,21 @@ public:
 	~CWorkExcel();							// деструктор
 
 	void openWorkBook(CString& pathToTemplate);		// открытие рабочей книги
-	void closeWorkBook();							// закрытие рабочей книги
+	void closeWorkBooks();							// закрытие всех книг
+
 	void setActivBook(long& iBook);					// задание активной книги
 	void setActivSheet(long& iSheet);				// задание активного листа
+	
 	CString getNameBook();							// получение названия книги
 	CString getNameSheet();							// получение названия листа
+	
 	int getCountBooks();							// получение кол-во открытых книг
 	int getCountSheets();							// получение кол-ва листов в активной книге
-	int getMergeCount(long& rowIndex, long& columnIndex);						//количество объедененных ячеек
+	
+	int getMergeCount(long& rowIndex, long& columnIndex);						// количество объедененных ячеек
+	int getStartMerge(long& rowIndex, long& colunIndex);						// стартовая позиция объеденения ячеек
 	CString getCellValue(long& rowIndex, long& columnIndex);					// получение значения их ячейки 
-	void findOneDateCells(CString& findString, int& rowNum, int& columnNum);	// поиск строки в активном листе
+	bool findOneDateCells(CString& findString, int& rowNum, int& columnNum);	// поиск строки в активном листе
 
 private:
 	CApplication _application = nullptr;	// объект Excel
@@ -40,12 +45,15 @@ private:
 	CWorkbook _workBook = nullptr;			// активная книга
 	CWorksheets _excelSheets = nullptr;		// все листы в активной книге
 	CWorksheet _workSheet = nullptr;		// активный лист в активной книге
-	int _countBooks = 0;					// количество открытых книг
-	int _countSheetsActivBook = 0;			// количиство листов в активной книге
 
-	bool initApplication();					// инициализация объекта Excel и указателя 
+	int _countBooks = 0;					// количество открытых книг
+	int _countSheetsActivBook = 0;			// количество листов в активной книге
+
+	bool initApplication();					// инициализация объекта Excel и указателя
+	void destroyApplication();				// уничтожение объекта Excel и указателя
 	void setCountBooks();					// задание количества открытых книг
 	void setCountSheets();					// задание количества листов в активной книге
+
 	CString convertToChar(int& iCol);		// функция получения буквенного обозначения ячейки из номера колонки
 };
 
