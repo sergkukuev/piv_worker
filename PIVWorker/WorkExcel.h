@@ -35,9 +35,9 @@ public:
 	int getCountSheets();							// получение кол-ва листов в активной книге
 	
 	int getMergeCount(long& rowIndex, long& columnIndex);						// количество объедененных €чеек
-	int getStartMerge(long& rowIndex, long& colunIndex);						// стартова€ позици€ объеденени€ €чеек
+	long getStartMerge(long& rowIndex, long& colunIndex);						// стартова€ позици€ объеденени€ €чеек
 	CString getCellValue(long& rowIndex, long& columnIndex);					// получение значени€ их €чейки 
-	bool findOneDateCells(CString& findString, int& rowNum, int& columnNum);	// поиск строки в активном листе
+	bool findOneDateCells(CString& findString, long& rowNum, long& columnNum);	// поиск строки в активном листе
 
 private:
 	CApplication _application = nullptr;	// объект Excel

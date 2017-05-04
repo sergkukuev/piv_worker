@@ -131,7 +131,7 @@ int CWorkExcel::getMergeCount(long& rowIndex, long& columnIndex)
 }
 
 //Получение индекса стартовой ячейки объединения
-int CWorkExcel::getStartMerge(long& rowIndex, long& columnIndex)
+long CWorkExcel::getStartMerge(long& rowIndex, long& columnIndex)
 {
 	CString rangeCellX;
 	int iCol = static_cast<int>(columnIndex);
@@ -155,7 +155,7 @@ CString CWorkExcel::getCellValue(long& rowIndex, long& columnIndex)
 }
 
 // Поиск по ячекам в активном листе
-bool CWorkExcel::findOneDateCells(CString& findString, int& rowNum, int& columnNum)
+bool CWorkExcel::findOneDateCells(CString& findString, long& rowNum, long& columnNum)
 {
 	CRange firstFind = _workSheet.get_Cells();
 	CRange Find;
