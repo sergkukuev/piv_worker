@@ -13,6 +13,9 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Заголовочные файлы\excel">
+      <UniqueIdentifier>{9b1638db-2c9e-4671-be63-f66dcdf1a930}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <Text Include="ReadMe.txt" />
@@ -22,6 +25,12 @@
       <Filter>Файлы исходного кода</Filter>
     </ClCompile>
     <ClCompile Include="stdafx.cpp">
+      <Filter>Файлы исходного кода</Filter>
+    </ClCompile>
+    <ClCompile Include="WorkExcel.cpp">
+      <Filter>Файлы исходного кода</Filter>
+    </ClCompile>
+    <ClCompile Include="ReaderExcel.cpp">
       <Filter>Файлы исходного кода</Filter>
     </ClCompile>
   </ItemGroup>
@@ -36,6 +45,39 @@
       <Filter>Заголовочные файлы</Filter>
     </ClInclude>
     <ClInclude Include="Resource.h">
+      <Filter>Заголовочные файлы</Filter>
+    </ClInclude>
+    <ClInclude Include="excel\CApplication.h">
+      <Filter>Заголовочные файлы\excel</Filter>
+    </ClInclude>
+    <ClInclude Include="excel\CRange.h">
+      <Filter>Заголовочные файлы\excel</Filter>
+    </ClInclude>
+    <ClInclude Include="excel\CWorkbook.h">
+      <Filter>Заголовочные файлы\excel</Filter>
+    </ClInclude>
+    <ClInclude Include="excel\CWorkbooks.h">
+      <Filter>Заголовочные файлы\excel</Filter>
+    </ClInclude>
+    <ClInclude Include="excel\CWorksheet.h">
+      <Filter>Заголовочные файлы\excel</Filter>
+    </ClInclude>
+    <ClInclude Include="excel\CWorksheets.h">
+      <Filter>Заголовочные файлы\excel</Filter>
+    </ClInclude>
+    <ClInclude Include="excel\Enum.h">
+      <Filter>Заголовочные файлы\excel</Filter>
+    </ClInclude>
+    <ClInclude Include="StructPIV.h">
+      <Filter>Заголовочные файлы</Filter>
+    </ClInclude>
+    <ClInclude Include="MyException.h">
+      <Filter>Заголовочные файлы</Filter>
+    </ClInclude>
+    <ClInclude Include="WorkExcel.h">
+      <Filter>Заголовочные файлы</Filter>
+    </ClInclude>
+    <ClInclude Include="ReaderExcel.h">
       <Filter>Заголовочные файлы</Filter>
     </ClInclude>
   </ItemGroup>
