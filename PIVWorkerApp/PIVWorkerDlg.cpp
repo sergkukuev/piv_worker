@@ -163,50 +163,93 @@ HCURSOR CMainDlg::OnQueryDragIcon()
 	return static_cast<HCURSOR>(m_hIcon);
 }
 
+#pragma region MenuButton
+
+// Открытие протоколов
 void CMainDlg::OnPivOpen()
 {
-	// TODO: добавьте свой код обработчика команд
+	CWnd* TheWindow = GetActiveWindow();
+	CFileDialog openDialog(true, NULL, NULL, OFN_ALLOWMULTISELECT + OFN_HIDEREADONLY, NULL, TheWindow);
+
+	openDialog.m_ofn.lpstrFilter = _T("Excel files(*.xls;*.xlsx)\0*.xls;*.xlsx\0All files(*.*)\0*.*\0\0");
+	openDialog.m_ofn.lpstrTitle = TEXT("Выберите протоколы для анализа");
+
+	if (openDialog.DoModal() == IDOK)
+	{
+		POSITION ps = openDialog.GetStartPosition();	// получить начальную позицию
+		while (ps) //пока есть выбранные файлы
+		{
+			CString _path = openDialog.GetPathName();
+			CString fullPath = openDialog.GetNextPathName(ps);
+
+			if (!piv.isExist(fullPath))
+				path.push_back(fullPath); // Заполнение, если такого файла еще нет
+
+			CString name = openDialog.GetFileName();
+
+			if (name == L"")
+			{
+				fullPath.Delete(0, _path.GetLength() + 1);
+				name = fullPath;
+			}
+		}
+	}
+
+	if (path.empty())
+		AfxMessageBox(_T("Нет протоколов для открытия"));
+	else
+	{
+		piv.ReadExcel(path);
+
+		CMenu* pMenu = GetMenu();
+
+		pMenu->EnableMenuItem(ID_PIV_CLOSE, MF_ENABLED);
+		pMenu->EnableMenuItem(ID_PIV_CLOSE_ALL, MF_ENABLED);
+		pMenu->EnableMenuItem(ID_PIV_ANALYZE, MF_ENABLED);
+	}
 }
 
-
+// Закрытие протокола
 void CMainDlg::OnPivClose()
 {
 	// TODO: добавьте свой код обработчика команд
 }
 
-
+// Анализировать протоколы
 void CMainDlg::OnPivAnalyze()
 {
 	// TODO: добавьте свой код обработчика команд
 }
 
-
+// Открыть отчет
 void CMainDlg::OnPivReport()
 {
 	// TODO: добавьте свой код обработчика команд
 }
 
-
+// Открыть папку с отчетом
 void CMainDlg::OnPivRepFolder()
 {
 	// TODO: добавьте свой код обработчика команд
 }
 
-
+// Генерировать txt отчет
 void CMainDlg::OnPivTxtGenerate()
 {
 	// TODO: добавьте свой код обработчика команд
 }
 
-
+// Информация о приложении
 void CMainDlg::OnAppInform()
 {
 	CAboutDlg aboutDlg;
 	aboutDlg.DoModal();
 }
 
-
+// Закрыть все протоколы
 void CMainDlg::OnPivCloseAll()
 {
 	// TODO: добавьте свой код обработчика команд
 }
+
+#pragma endregion

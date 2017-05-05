@@ -30,10 +30,10 @@ public:
 	void ReadExcel(CString pathToExcel);			// Чтение ПИВ
 	void ReadExcel(vector <CString> pathToExcel);	// Чтение ПИВ (перегрузка)
 
+	bool isExist(CString pathToExcel);	// Имеется ли уже такая книга
+
 // Переопределение
 private:
 	vector <bookData> books;	// Прочитанные ПИВ
 	vector <CString> path;		// Пути всех ПИВ
-
-	bool isExist(CString pathToExcel);	// Имеется ли уже такая книга
 };
