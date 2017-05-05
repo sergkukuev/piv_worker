@@ -16,6 +16,12 @@
 
 #include <cstring>
 
+// јдрес €чейки
+struct Cell {
+	long row;
+	long column;
+};
+
 class WORK_EXCEL_API CWorkExcel {
 public:
 	CWorkExcel(void);						// конструктор
@@ -34,10 +40,10 @@ public:
 	int getCountBooks();							// получение кол-во открытых книг
 	int getCountSheets();							// получение кол-ва листов в активной книге
 	
-	int getMergeCount(long& rowIndex, long& columnIndex);						// количество объедененных €чеек
-	long getStartMerge(long& rowIndex, long& colunIndex);						// стартова€ позици€ объеденени€ €чеек
-	CString getCellValue(long& rowIndex, long& columnIndex);					// получение значени€ их €чейки 
-	bool findOneDateCells(CString& findString, long& rowNum, long& columnNum);	// поиск строки в активном листе
+	int getMergeCount(Cell& cell);						// количество объедененных €чеек
+	long getStartMerge(Cell& cell);						// стартова€ позици€ объеденени€ €чеек
+	CString getCellValue(Cell& cell);					// получение значени€ их €чейки 
+	bool findOneDateCells(CString& findString, Cell& cell);	// поиск строки в активном листе
 
 private:
 	CApplication _application = nullptr;	// объект Excel

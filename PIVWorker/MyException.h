@@ -21,5 +21,5 @@ public:
 
 class NotAllHeaderException : public MyException {
 public:
-	virtual CString GetMsg() { return _T("Ќе удалось найти все заголовки!"); };
+	virtual CString GetMsg() { return _T("Ќе удалось найти все заголовки на одном из листов!"); };
 };

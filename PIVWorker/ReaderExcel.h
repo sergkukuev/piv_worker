@@ -6,17 +6,23 @@
 
 #include <regex>
 
-const int SIZE_IHEADER = 10;
-const int INDEX_ROW = 0;
-const int INDEX_NUM = 1;
-const int INDEX_NAME = 2;
-const int INDEX_SIGNAL = 3;
-const int INDEX_DIMENSION = 4;
-const int INDEX_MIN = 5;
-const int INDEX_MAX = 6;
-const int INDEX_CSR = 7;
-const int INDEX_BITS = 8;
-const int INDEX_COMMENTS = 9;
+struct Header 
+{ 
+	static const int size = 10;		// Количество заголовков
+	vector <list<CString>> list;	// Список допустимых заголовков 
+	int adress[size];				// Массив адресов для заголовков
+
+	const int iRow = 0;			//	Индекс строки в массиве адресов
+	const int iNumWord = 1;		//	Индекс слова в массиве адресов
+	const int iName = 2;		//	Индекс намиенования сигнала в массиве адресов
+	const int iSignal = 3;		//	Индекс идентификатора сигнала в массиве адресов
+	const int iDimension = 4;	//	Индекс размерности в массиве адресов
+	const int iMin = 5;			//	Индекс мин.знач. в массиве адресов
+	const int iMax = 6;			//	Индекс макс.знач. в массиве адресов
+	const int iCSR = 7;			//	Индекс цср в массиве адресов
+	const int iBits = 8;		//	Индекс битов в массиве адресов
+	const int iComment = 9;		//	Индекс примечаний в массиве адресов
+};
 
 
 // Класс для чтения протоколов из excel файлов
@@ -30,17 +36,15 @@ public:
 	vector<bookData> getBooks(vector <CString>);	// Чтение книг
 
 private:
-	vector <CString> extension;
-	vector <list<CString>> HeaderTable;	// Набор заголовков
-	int* iHeader;				// Индексы расположения заголовков
+	vector <CString> extension;	// Допустимые расширения файлов
+	Header header;				// Информация о заголовках
 
 	vector <sheetData> getSheets(CWorkExcel& work);		// Чтение листов
 	list <signalData> getSignals(CWorkExcel& work);		// Чтение параметров на листе
-	CString getCell(CWorkExcel& work, adrCell cell, long cName = 1);	// Чтение ячейки
+	CString getCell(CWorkExcel& work, Cell cell, long cName = 1);	// Чтение ячейки
 
 	int getNumPK(CWorkExcel& work);				// Поиск номера кадра (в противном случае будет равен -1)
 	bool findHeader(CWorkExcel& work);			// Поиск индексов заголовков
-	void setHeader(int index, adrCell cell);	// Установка заголовка
 
 	bool IsEmpty(CWorkExcel& work, long row);	// Проверка строки на пустоту
 	bool IsRemark(CWorkExcel& work, long row);	// Проверка строки на наличие примечания

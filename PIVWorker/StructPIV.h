@@ -6,28 +6,6 @@
 
 using namespace std;
 
-// Адрес ячейки
-struct adrCell
-{
-	long row;
-	long column;
-};
-
-//	Индексы параметров сигнала
-struct indexHeader
-{
-	int iRows;
-	int iNumber;
-	int iName;
-	int iNameSignal;
-	int iDimension;
-	int iMin;
-	int iMax;
-	int iCSR;
-	int iBits;
-	int iComments;
-};
-
 ///////////////////////////////////////////// Хранение ПИВ /////////////////////////////////////////////
 
 //	Данные сигнала

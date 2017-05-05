@@ -115,12 +115,12 @@ int CWorkExcel::getCountSheets()
 }
 
 //Получение количества объедененных ячеек
-int CWorkExcel::getMergeCount(long& rowIndex, long& columnIndex)
+int CWorkExcel::getMergeCount(Cell& cell)
 {
 	CString rangeCellX;
-	int iCol = static_cast<int>(columnIndex);
+	int iCol = static_cast<int>(cell.column);
 
-	rangeCellX.Format(_T("%s%d"), convertToChar(iCol), rowIndex);
+	rangeCellX.Format(_T("%s%d"), convertToChar(iCol), cell.row);
 	
 	CRange cellRange = _workSheet.get_Range(COleVariant(rangeCellX), COleVariant(rangeCellX));
 	
@@ -131,12 +131,12 @@ int CWorkExcel::getMergeCount(long& rowIndex, long& columnIndex)
 }
 
 //Получение индекса стартовой ячейки объединения
-long CWorkExcel::getStartMerge(long& rowIndex, long& columnIndex)
+long CWorkExcel::getStartMerge(Cell& cell)
 {
 	CString rangeCellX;
-	int iCol = static_cast<int>(columnIndex);
+	int iCol = static_cast<int>(cell.column);
 
-	rangeCellX.Format(_T("%s%d"), convertToChar(iCol), rowIndex);
+	rangeCellX.Format(_T("%s%d"), convertToChar(iCol), cell.row);
 
 	CRange cellRange = _workSheet.get_Range(COleVariant(rangeCellX), COleVariant(rangeCellX));
 
@@ -147,15 +147,15 @@ long CWorkExcel::getStartMerge(long& rowIndex, long& columnIndex)
 }
 
 // Получение значения из ячеки
-CString CWorkExcel::getCellValue(long& rowIndex, long& columnIndex)
+CString CWorkExcel::getCellValue(Cell& cell)
 {
 	CRange cellRange = _workSheet.get_Cells();
 
-	return cellRange.get_Item(COleVariant(rowIndex), COleVariant(columnIndex));
+	return cellRange.get_Item(COleVariant(cell.row), COleVariant(cell.column));
 }
 
 // Поиск по ячекам в активном листе
-bool CWorkExcel::findOneDateCells(CString& findString, long& rowNum, long& columnNum)
+bool CWorkExcel::findOneDateCells(CString& findString, Cell& cell)
 {
 	CRange firstFind = _workSheet.get_Cells();
 	CRange Find;
@@ -168,9 +168,8 @@ bool CWorkExcel::findOneDateCells(CString& findString, long& rowNum, long& colum
 	
 	if (Find)
 	{
-		columnNum = Find.get_Column();
-		rowNum = Find.get_Row();
-
+		cell.column = Find.get_Column();
+		cell.row = Find.get_Row();
 		return true;
 	}
 	else

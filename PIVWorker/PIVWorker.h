@@ -24,16 +24,16 @@
 
 class PIV_WORKER_API CPIVWorker	{
 public:
-	CPIVWorker();
-	~CPIVWorker();
+	CPIVWorker();	// Конструктор
+	~CPIVWorker();	// Деструктор
 
-	void ReadExcel(CString pathToExcel);
-	void ReadExcel(vector <CString> pathToExcel);
+	void ReadExcel(CString pathToExcel);			// Чтение ПИВ
+	void ReadExcel(vector <CString> pathToExcel);	// Чтение ПИВ (перегрузка)
 
 // Переопределение
 private:
-	vector <bookData> books;
-	vector <CString> path;
+	vector <bookData> books;	// Прочитанные ПИВ
+	vector <CString> path;		// Пути всех ПИВ
 
-	bool isExist(CString pathToExcel);
+	bool isExist(CString pathToExcel);	// Имеется ли уже такая книга
 };
