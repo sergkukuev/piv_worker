@@ -360,10 +360,10 @@ bool CReaderExcel::findHeader(CWorkExcel& work)
 
 		for (it; !bFind; it++)	// ѕоиск хот€ бы одного варианта заголовка из списка
 		{
-			bFind = work.findOneDateCells(*it, cell);
-
 			if ((it == header.list[i].end()) && !bFind)	// Ќичего не нашли и список закончилс€
 				return false;
+
+			bFind = work.findOneDateCells(*it, cell);
 		}
 		header.adress[header.iRow] = cell.row;
 		header.adress[i + 1] = cell.column;
