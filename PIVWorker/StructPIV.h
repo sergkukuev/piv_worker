@@ -3,6 +3,7 @@
 #include <cstring>
 #include <list>
 #include <vector>
+#include <regex>
 
 using namespace std;
 
@@ -92,12 +93,20 @@ struct errorSignalData
 struct errorSheetData
 {
 	list <errorSignalData> signals;	// Данные сигнала
-	CString nameSheet;				// Название листа
+	CString name;					// Название листа
 };
 
 // Книги
 struct errorBookData
 {
 	vector <errorSheetData> sheets;	// Листы считанные из книги
-	CString nameBook;				// Название книги
+	CString name;					// Название книги
+};
+
+// Структура регулярки
+struct errorRegular
+{
+	regex regular;			// Регулярное выражение
+	CString description;	// Если является ошибкой, то здесь лежит ее описание
+	bool bError;			// Является ли регулярка для ошибки или для правильного написания
 };
