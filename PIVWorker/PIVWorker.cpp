@@ -35,12 +35,10 @@
 
 
 // Единственный объект CPIVWorkerApp
-
 CWinApp theApp;
 
 
 // инициализация CPIVWorkerApp
-
 int main()
 {
 	int nRetCode = 0;
@@ -71,16 +69,21 @@ int main()
 	return nRetCode;
 }
 
+// Конструктор
 CPIVWorker::CPIVWorker()
 {
 
 }
 
+// Деструктор
 CPIVWorker::~CPIVWorker()
 {
+	path.clear();
 	books.clear();
+	errorDB.clear();
 }
 
+// Чтение ПИВ
 void CPIVWorker::ReadExcel(CString pathToExcel)
 {
 	try
@@ -99,13 +102,14 @@ void CPIVWorker::ReadExcel(CString pathToExcel)
 	}
 }
 
+// Чтение ПИВ
 void CPIVWorker::ReadExcel(vector<CString> pathToExcel)
 {
 	try
 	{
 		for (size_t i = 0; i < pathToExcel.size(); i++)
 		{
-			CReaderExcel reader;
+			CReaderExcel reader;	// класс чтения книг
 
 			if (!isExist(pathToExcel[i]))
 			{
@@ -120,6 +124,33 @@ void CPIVWorker::ReadExcel(vector<CString> pathToExcel)
 	}
 }
 
+// Проверка всех открытых книг
+void CPIVWorker::Test()
+{
+	try
+	{
+		for (size_t i = 0; i < books.size(); i++)
+		{
+			CTest tester;	// класс проверки книг
+			errorBookData errBook;
+
+			errBook = tester.Start(books[i]);
+
+			int indx = findReportBook(errBook.name);	// поиск в базе отчетов данной книги
+
+			if (indx != -1)
+				errorDB[indx] = errBook;	// Обновление отчета
+			else
+				errorDB.push_back(errBook); // Добавление нового отчета
+		}
+	}
+	catch (MyException &exc)
+	{
+		AfxMessageBox(exc.GetMsg());
+	}
+}
+
+// Имеется ли уже такая книга
 bool CPIVWorker::isExist(CString pathToExcel)
 {
 	for (size_t i = 0; i < path.size(); i++)
@@ -127,4 +158,16 @@ bool CPIVWorker::isExist(CString pathToExcel)
 			return true;
 
 	return false;
+}
+
+// Имеется ли отчет об ошибках по данной книге
+int CPIVWorker::findReportBook(CString nameBook)
+{
+	int result = -1;
+
+	for (size_t i = 0; i < errorDB.size(); i++)
+		if (errorDB[i].name.Compare(nameBook) == 0)
+			result = i;
+
+	return result;
 }

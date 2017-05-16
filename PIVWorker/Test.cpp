@@ -59,37 +59,46 @@ void CTest::testNumWord(errorSheetData& sheet, list<signalData>::iterator it)
 // Проверка наименований сигнала
 void CTest::testTitleParam(errorSheetData& sheet, list<signalData>::iterator it)
 {
-	list <CString> error = testField(it->sTitleParamField[0], errTitle);
-	list <CString> error1 = testField(it->sTitleParamField[1], errTitle);
+	list <CString> errTitle = testField(it->sTitleParamField[0], errTitleParam);
+	list <CString> errID = testField(it->sTitleParamField[1], errTitleParam);
 
-	if (error.empty() && error1.empty())
-		return;
+	if (!errTitle.empty())
+	{
+		errorSignalData signal = getErrSignal(it, errTitle);
+		sheet.signals.push_back(signal);
+	}
 
-	error.insert(error.end(), error1.begin(), --error1.end());
-	error1.clear();
-
-	errorSignalData signal = getErrSignal(it, error);
-	sheet.signals.push_back(signal);
+	if (!errID.empty())
+	{
+		errorSignalData signal = getErrSignal(it, errID);
+		sheet.signals.push_back(signal);
+	}
 }
 
 // Проверка минимального, максимального и цср
 void CTest::testMinMaxCSR(errorSheetData& sheet, list<signalData>::iterator it)
 {
-	list <CString> error = testField(it->sMinMaxCsrValField[0], errMinMaxCSR);
-	list <CString> error1 = testField(it->sMinMaxCsrValField[1], errMinMaxCSR);
-	list <CString> error2 = testField(it->sMinMaxCsrValField[2], errMinMaxCSR);
+	list <CString> errMin = testField(it->sMinMaxCsrValField[0], errMinMaxCSR);
+	list <CString> errMax = testField(it->sMinMaxCsrValField[1], errMinMaxCSR);
+	list <CString> errCSR = testField(it->sMinMaxCsrValField[2], errMinMaxCSR);
 
-	if (error.empty() && error1.empty() && error2.empty())
-		return;
+	if (!errMin.empty())
+	{
+		errorSignalData signal = getErrSignal(it, errMin);
+		sheet.signals.push_back(signal);
+	}
 
-	error.insert(error.end(), error1.begin(), --error1.end());
-	error.insert(error.end(), error2.begin(), --error2.end());
+	if (!errMax.empty())
+	{
+		errorSignalData signal = getErrSignal(it, errMax);
+		sheet.signals.push_back(signal);
+	}
 
-	error1.clear();
-	error2.clear();
-
-	errorSignalData signal = getErrSignal(it, error);
-	sheet.signals.push_back(signal);
+	if (!errCSR.empty())
+	{
+		errorSignalData signal = getErrSignal(it, errCSR);
+		sheet.signals.push_back(signal);
+	}
 }
 
 // Проверка используемых разрядов
@@ -141,6 +150,7 @@ list <CString> CTest::testField(CString field, errorRegular errStruct)
 	return error;
 }
 
+// Создание записи ошибки сигнала
 errorSignalData CTest::getErrSignal(list<signalData>::iterator it, list <CString> error)
 {
 	errorSignalData signal;
