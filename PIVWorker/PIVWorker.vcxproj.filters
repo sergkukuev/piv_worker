@@ -33,6 +33,9 @@
     <ClCompile Include="ReaderExcel.cpp">
       <Filter>Файлы исходного кода</Filter>
     </ClCompile>
+    <ClCompile Include="Test.cpp">
+      <Filter>Файлы исходного кода</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="PIVWorker.h">
@@ -78,6 +81,9 @@
       <Filter>Заголовочные файлы</Filter>
     </ClInclude>
     <ClInclude Include="ReaderExcel.h">
+      <Filter>Заголовочные файлы</Filter>
+    </ClInclude>
+    <ClInclude Include="Test.h">
       <Filter>Заголовочные файлы</Filter>
     </ClInclude>
   </ItemGroup>

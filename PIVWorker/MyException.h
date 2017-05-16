@@ -23,3 +23,9 @@ class NotAllHeaderException : public MyException {
 public:
 	virtual CString GetMsg() { return _T("Не удалось найти все заголовки на одном из листов!"); };
 };
+
+// Исключения для класса Test
+class UndefinedError : public MyException {
+public:
+	virtual CString GetMsg() { return _T("Параметр сигнала с неизвестной ошибкой!"); };
+};

@@ -103,10 +103,10 @@ struct errorBookData
 	CString name;					// Название книги
 };
 
-// Структура регулярки
+// Структура набора ошибок
 struct errorRegular
 {
-	regex regular;			// Регулярное выражение
-	CString description;	// Если является ошибкой, то здесь лежит ее описание
-	bool bError;			// Является ли регулярка для ошибки или для правильного написания
+	vector <regex> correct;			// Набор корректных регулярок
+	vector <regex> error;			// Набор ошибочных регулярок
+	vector <CString> description;	// Описание ошибок
 };
