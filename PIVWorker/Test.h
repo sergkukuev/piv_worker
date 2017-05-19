@@ -19,6 +19,9 @@ private:
 	errorRegular errBits;		// Набор регулярок для используемых разрядов
 	errorRegular errComment;		// Набор регулярок для коментариев
 
+	void SetCorrect(errorRegular regular, string reg);
+	void FillIncorrect();
+
 	void testAll(errorBookData& errBook, bookData book);	// Проверка на все ошибки
 	list <CString> testField(CString field, errorRegular errStruct);	// Проверка поля на ошибки
 	errorSignalData CTest::getErrSignal(list<signalData>::iterator it, list <CString> error);	// Создание записи ошибки сигнала

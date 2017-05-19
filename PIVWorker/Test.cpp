@@ -9,6 +9,22 @@ CTest::CTest()
 // Деструктор
 CTest::~CTest()
 {
+	SetCorrect(errNumWord, "[0-9]+[,]?[0-9]*$");
+	SetCorrect(errTitleParam, "^_*[A-Za-z]{1}[A-Za-z0-9_]*$");
+	SetCorrect(errMinMaxCSR, "^-?[0-9]+[,]?[0-9]*$");
+	SetCorrect(errBits, "[0-9]+[…]?[0-9]*$");
+	SetCorrect(errComment, "^_+");
+}
+
+void CTest::SetCorrect(errorRegular regular, string reg)
+{
+	regex temp(reg);
+	regular.correct = temp;
+}
+
+void CTest::FillIncorrect()
+{
+
 }
 
 // Проверка на все ошибки
