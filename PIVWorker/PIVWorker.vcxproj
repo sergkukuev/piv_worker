@@ -186,6 +186,7 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="ErrBase.cpp" />
     <ClCompile Include="PIVWorker.cpp" />
     <ClCompile Include="ReaderExcel.cpp" />
     <ClCompile Include="stdafx.cpp">
@@ -198,6 +199,7 @@
     <ClCompile Include="WorkExcel.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="ErrBase.h" />
     <ClInclude Include="excel\CApplication.h" />
     <ClInclude Include="excel\CRange.h" />
     <ClInclude Include="excel\CWorkbook.h" />

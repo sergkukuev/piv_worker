@@ -2,6 +2,7 @@
 
 #include "StructPIV.h"
 #include "MyException.h"
+#include "ErrBase.h"
 
 class CTest
 {
@@ -13,17 +14,10 @@ public:
 
 private:
 
-	errorRegular errNumWord;		// Набор регулярок для номера слова
-	errorRegular errTitleParam;		// Набор регулярок для наименований сигнала
-	errorRegular errMinMaxCSR;	// Набор регулярок для минимального, максимального и цср
-	errorRegular errBits;		// Набор регулярок для используемых разрядов
-	errorRegular errComment;		// Набор регулярок для коментариев
-
-	void SetCorrect(errorRegular regular, string reg);
-	void FillIncorrect();
+	CErrBase ErrorBase;	// База ошибок
 
 	void testAll(errorBookData& errBook, bookData book);	// Проверка на все ошибки
-	list <CString> testField(CString field, errorRegular errStruct);	// Проверка поля на ошибки
+	list <CString> testField(CString field, errorData errStruct);	// Проверка поля на ошибки
 	errorSignalData CTest::getErrSignal(list<signalData>::iterator it, list <CString> error);	// Создание записи ошибки сигнала
 	
 	void testNumWord(errorSheetData& sheet, list<signalData>::iterator it);		// Проверка номера слова

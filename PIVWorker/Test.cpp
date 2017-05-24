@@ -9,22 +9,6 @@ CTest::CTest()
 // Деструктор
 CTest::~CTest()
 {
-	SetCorrect(errNumWord, "[0-9]+[,]?[0-9]*$");
-	SetCorrect(errTitleParam, "^_*[A-Za-z]{1}[A-Za-z0-9_]*$");
-	SetCorrect(errMinMaxCSR, "^-?[0-9]+[,]?[0-9]*$");
-	SetCorrect(errBits, "[0-9]+[…]?[0-9]*$");
-	SetCorrect(errComment, "^_+");
-}
-
-void CTest::SetCorrect(errorRegular regular, string reg)
-{
-	regex temp(reg);
-	regular.correct = temp;
-}
-
-void CTest::FillIncorrect()
-{
-
 }
 
 // Проверка на все ошибки
@@ -63,7 +47,7 @@ void CTest::testAll(errorBookData& errBook, bookData book)
 // Проверка номера слова
 void CTest::testNumWord(errorSheetData& sheet, list<signalData>::iterator it)
 {
-	list <CString> error = testField(it->sNumWordField, errNumWord);
+	list <CString> error = testField(it->sNumWordField, ErrorBase.getNumWord());
 
 	if (error.empty())
 		return;
@@ -75,8 +59,8 @@ void CTest::testNumWord(errorSheetData& sheet, list<signalData>::iterator it)
 // Проверка наименований сигнала
 void CTest::testTitleParam(errorSheetData& sheet, list<signalData>::iterator it)
 {
-	list <CString> errTitle = testField(it->sTitleParamField[0], errTitleParam);
-	list <CString> errID = testField(it->sTitleParamField[1], errTitleParam);
+	list <CString> errTitle = testField(it->sTitleParamField[0], ErrorBase.getTitleParam());
+	list <CString> errID = testField(it->sTitleParamField[1], ErrorBase.getTitleParam());
 
 	if (!errTitle.empty())
 	{
@@ -94,9 +78,9 @@ void CTest::testTitleParam(errorSheetData& sheet, list<signalData>::iterator it)
 // Проверка минимального, максимального и цср
 void CTest::testMinMaxCSR(errorSheetData& sheet, list<signalData>::iterator it)
 {
-	list <CString> errMin = testField(it->sMinMaxCsrValField[0], errMinMaxCSR);
-	list <CString> errMax = testField(it->sMinMaxCsrValField[1], errMinMaxCSR);
-	list <CString> errCSR = testField(it->sMinMaxCsrValField[2], errMinMaxCSR);
+	list <CString> errMin = testField(it->sMinMaxCsrValField[0], ErrorBase.getMinMaxCSR());
+	list <CString> errMax = testField(it->sMinMaxCsrValField[1], ErrorBase.getMinMaxCSR());
+	list <CString> errCSR = testField(it->sMinMaxCsrValField[2], ErrorBase.getMinMaxCSR());
 
 	if (!errMin.empty())
 	{
@@ -120,7 +104,7 @@ void CTest::testMinMaxCSR(errorSheetData& sheet, list<signalData>::iterator it)
 // Проверка используемых разрядов
 void CTest::testBits(errorSheetData& sheet, list<signalData>::iterator it)
 {
-	list <CString> error = testField(it->sBitField, errBits);
+	list <CString> error = testField(it->sBitField, ErrorBase.getBits());
 
 	if (error.empty())
 		return;
@@ -132,7 +116,7 @@ void CTest::testBits(errorSheetData& sheet, list<signalData>::iterator it)
 // Проверка коментариев
 void CTest::testComment(errorSheetData& sheet, list<signalData>::iterator it)
 {
-	list <CString> error = testField(it->sCommentField, errComment);
+	list <CString> error = testField(it->sCommentField, ErrorBase.getComment());
 
 	if (error.empty())
 		return;
@@ -142,15 +126,14 @@ void CTest::testComment(errorSheetData& sheet, list<signalData>::iterator it)
 }
 
 // Проверка поля на ошибки
-list <CString> CTest::testField(CString field, errorRegular errStruct)
+list <CString> CTest::testField(CString field, errorData errStruct)
 {
 	string temp = convertString(field);
 	list <CString> error;	// Набор найденных ошибок в поле
 	bool result = false;
 
-	for (size_t i = 0; i < errStruct.correct.size(); i++)
-		if (regex_match(temp, errStruct.correct[i]))
-			result = true;
+	if (regex_match(temp, errStruct.correct))
+		result = true;
 
 	if (result)	return error;
 

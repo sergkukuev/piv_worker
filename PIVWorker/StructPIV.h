@@ -3,7 +3,6 @@
 #include <cstring>
 #include <list>
 #include <vector>
-#include <regex>
 
 using namespace std;
 
@@ -101,12 +100,4 @@ struct errorBookData
 {
 	vector <errorSheetData> sheets;	// Листы считанные из книги
 	CString name;					// Название книги
-};
-
-// Структура набора ошибок
-struct errorRegular
-{
-	vector <regex> correct;			// Набор корректных регулярок
-	vector <regex> error;			// Набор ошибочных регулярок
-	vector <CString> description;	// Описание ошибок
 };
