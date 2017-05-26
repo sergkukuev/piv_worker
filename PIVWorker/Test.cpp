@@ -38,7 +38,6 @@ void CTest::testAll(errorBookData& errBook, bookData book)
 				testTitleParam(errBook.sheets[cSheet], it);
 				testMinMaxCSR(errBook.sheets[cSheet], it);
 				testBits(errBook.sheets[cSheet], it);
-				testComment(errBook.sheets[cSheet], it);
 			}
 		}
 	}
@@ -59,20 +58,13 @@ void CTest::testNumWord(errorSheetData& sheet, list<signalData>::iterator it)
 // Проверка наименований сигнала
 void CTest::testTitleParam(errorSheetData& sheet, list<signalData>::iterator it)
 {
-	list <CString> errTitle = testField(it->sTitleParamField[0], ErrorBase.getTitleParam());
-	list <CString> errID = testField(it->sTitleParamField[1], ErrorBase.getTitleParam());
+	list <CString> error = testField(it->sTitleParamField[1], ErrorBase.getTitleParam());
 
-	if (!errTitle.empty())
-	{
-		errorSignalData signal = getErrSignal(it, errTitle);
-		sheet.signals.push_back(signal);
-	}
+	if (error.empty())
+		return;
 
-	if (!errID.empty())
-	{
-		errorSignalData signal = getErrSignal(it, errID);
-		sheet.signals.push_back(signal);
-	}
+	errorSignalData signal = getErrSignal(it, error);
+	sheet.signals.push_back(signal);
 }
 
 // Проверка минимального, максимального и цср
@@ -113,18 +105,6 @@ void CTest::testBits(errorSheetData& sheet, list<signalData>::iterator it)
 	sheet.signals.push_back(signal);
 }
 
-// Проверка коментариев
-void CTest::testComment(errorSheetData& sheet, list<signalData>::iterator it)
-{
-	list <CString> error = testField(it->sCommentField, ErrorBase.getComment());
-
-	if (error.empty())
-		return;
-
-	errorSignalData signal = getErrSignal(it, error);
-	sheet.signals.push_back(signal);
-}
-
 // Проверка поля на ошибки
 list <CString> CTest::testField(CString field, errorData errStruct)
 {
@@ -132,19 +112,18 @@ list <CString> CTest::testField(CString field, errorData errStruct)
 	list <CString> error;	// Набор найденных ошибок в поле
 	bool result = false;
 
-	if (regex_match(temp, errStruct.correct))
-		result = true;
+	result = regex_match(temp, errStruct.correct);	// Проверка на корректную регулярку
 
 	if (result)	return error;
 
-	for (size_t i = 0; i < errStruct.error.size(); i++)
-		if (!regex_match(temp, errStruct.error[i]))
+	for (size_t i = 0; i < errStruct.error.size(); i++)	// Перебор базы ошибок
+		if (regex_match(temp, errStruct.error[i]))
 		{
 			error.push_back(errStruct.description[i]);
-			result = false;
+			result = true;
 		}
 
-	if (result) throw UndefinedError();	// исключение, если в базе ошибок такая ошибка не предусмотрена
+	if (!result) throw UndefinedError();	// исключение, если в базе ошибок такая ошибка не предусмотрена
 
 	return error;
 }
