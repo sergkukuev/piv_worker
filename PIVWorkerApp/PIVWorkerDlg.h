@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include "PIVWorker.h"
 
 // диалоговое окно CMainDlg
 class CMainDlg : public CDialog
@@ -22,6 +23,10 @@ public:
 
 
 // Реализация
+private:
+	CPIVWorker piv;			// Переменная для работы с протоколами
+	vector <CString> path;	// Пути файлов
+
 protected:
 	HACCEL m_AccelTable;		// Таблица акселераторов
 	HICON m_hIcon;				// Иконка

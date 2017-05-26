@@ -1,10 +1,10 @@
-// PIVWorker.h: главный файл заголовка для DLL PIVWorker
+// PIVWorker.h: РіР»Р°РІРЅС‹Р№ С„Р°Р№Р» Р·Р°РіРѕР»РѕРІРєР° РґР»СЏ DLL PIVWorker
 //
 
 #pragma once
 
 #ifndef __AFXWIN_H__
-	#error "включить stdafx.h до включения этого файла в PCH"
+	#error "РІРєР»СЋС‡РёС‚СЊ stdafx.h РґРѕ РІРєР»СЋС‡РµРЅРёСЏ СЌС‚РѕРіРѕ С„Р°Р№Р»Р° РІ PCH"
 #endif
 
 #ifdef PIV_WORKER_EXPORTS
@@ -13,33 +13,33 @@
 #define PIV_WORKER_API __declspec(dllimport)
 #endif
 
-#include "StructPIV.h"		// структуры протоколов
-#include "ReaderExcel.h"	// чтение протоколов
-#include "Test.h"			// проверка на ошибки протоколов
-#include "resource.h"		// основные символы
+#include "StructPIV.h"		// СЃС‚СЂСѓРєС‚СѓСЂС‹ РїСЂРѕС‚РѕРєРѕР»РѕРІ
+#include "ReaderExcel.h"	// С‡С‚РµРЅРёРµ РїСЂРѕС‚РѕРєРѕР»РѕРІ
+#include "Test.h"			// РїСЂРѕРІРµСЂРєР° РЅР° РѕС€РёР±РєРё РїСЂРѕС‚РѕРєРѕР»РѕРІ
+#include "resource.h"		// РѕСЃРЅРѕРІРЅС‹Рµ СЃРёРјРІРѕР»С‹
 
 
 // CPIVWorkerApp
-// Про реализацию данного класса см. PIVWorker.cpp
+// РџСЂРѕ СЂРµР°Р»РёР·Р°С†РёСЋ РґР°РЅРЅРѕРіРѕ РєР»Р°СЃСЃР° СЃРј. PIVWorker.cpp
 //
 
 class PIV_WORKER_API CPIVWorker	{
 public:
-	CPIVWorker();	// Конструктор
-	~CPIVWorker();	// Деструктор
+	CPIVWorker();	// РљРѕРЅСЃС‚СЂСѓРєС‚РѕСЂ
+	~CPIVWorker();	// Р”РµСЃС‚СЂСѓРєС‚РѕСЂ
 
-	void ReadExcel(CString pathToExcel);			// Чтение ПИВ
-	void ReadExcel(vector <CString> pathToExcel);	// Чтение ПИВ (перегрузка)
+	void ReadExcel(CString pathToExcel);			// Р§С‚РµРЅРёРµ РџРР’
+	void ReadExcel(vector <CString> pathToExcel);	// Р§С‚РµРЅРёРµ РџРР’ (РїРµСЂРµРіСЂСѓР·РєР°)
 
-	void Test();	// Проверка всех открытых книг
+	void Test();	// РџСЂРѕРІРµСЂРєР° РІСЃРµС… РѕС‚РєСЂС‹С‚С‹С… РєРЅРёРі
 
-// Переопределение
+// РџРµСЂРµРѕРїСЂРµРґРµР»РµРЅРёРµ
 private:
-	vector <bookData> books;	// Прочитанные ПИВ
-	vector <CString> path;		// Пути всех ПИВ
+	vector <bookData> books;	// РџСЂРѕС‡РёС‚Р°РЅРЅС‹Рµ РџРР’
+	vector <CString> path;		// РџСѓС‚Рё РІСЃРµС… РџРР’
 
-	vector <errorBookData> errorDB;	// База данных ошибок
+	vector <errorBookData> errorDB;	// Р‘Р°Р·Р° РґР°РЅРЅС‹С… РѕС€РёР±РѕРє
 
-	bool isExist(CString pathToExcel);		// Имеется ли уже такая книга
-	int findReportBook(CString nameBook);	// Имеется ли отчет об ошибках по данной книге
+	bool isExist(CString pathToExcel);		// РРјРµРµС‚СЃСЏ Р»Рё СѓР¶Рµ С‚Р°РєР°СЏ РєРЅРёРіР°
+	int findReportBook(CString nameBook);	// РРјРµРµС‚СЃСЏ Р»Рё РѕС‚С‡РµС‚ РѕР± РѕС€РёР±РєР°С… РїРѕ РґР°РЅРЅРѕР№ РєРЅРёРіРµ
 };
