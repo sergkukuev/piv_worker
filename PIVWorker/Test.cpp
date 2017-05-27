@@ -117,7 +117,7 @@ list <CString> CTest::testField(CString field, errorData errStruct)
 	if (result)	return error;
 
 	for (size_t i = 0; i < errStruct.error.size(); i++)	// Перебор базы ошибок
-		if (regex_match(temp, errStruct.error[i]))
+		if (regex_search(temp, errStruct.error[i]))
 		{
 			error.push_back(errStruct.description[i]);
 			result = true;

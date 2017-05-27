@@ -30,6 +30,7 @@ public:
 
 	void ReadExcel(CString pathToExcel);			// Чтение ПИВ
 	void ReadExcel(vector <CString> pathToExcel);	// Чтение ПИВ (перегрузка)
+	bool isExist(CString pathToExcel);				// Прочитана ли уже такая книга
 
 	void Test();	// Проверка всех открытых книг
 
@@ -40,6 +41,5 @@ private:
 
 	vector <errorBookData> errorDB;	// База данных ошибок
 
-	bool isExist(CString pathToExcel);		// Имеется ли уже такая книга
 	int findReportBook(CString nameBook);	// Имеется ли отчет об ошибках по данной книге
 };
