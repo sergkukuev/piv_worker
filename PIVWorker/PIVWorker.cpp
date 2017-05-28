@@ -37,6 +37,12 @@
 // Единственный объект CPIVWorkerApp
 CWinApp theApp;
 
+struct MyData
+{
+	CPIVWorker* object;
+};
+
+MyData mD;
 
 // инициализация CPIVWorkerApp
 int main()
@@ -69,10 +75,35 @@ int main()
 	return nRetCode;
 }
 
+DWORD WINAPI ReaderThread(LPVOID lpParam)
+{
+	CoInitialize(NULL);
+	SetThreadPriorityBoost(GetCurrentThread(), TRUE);
+	MyData* myD = static_cast<MyData*>(lpParam);
+
+	ReadExcel(*(myD->object));
+
+	CoUninitialize();
+
+	return 0;
+}
+
+DWORD WINAPI TestThread(LPVOID lpParam)
+{
+	CoInitialize(NULL);
+	SetThreadPriorityBoost(GetCurrentThread(), TRUE);
+	MyData* myD = static_cast<MyData*>(lpParam);
+
+	Test(*(myD->object));
+
+	CoUninitialize();
+
+	return 0;
+}
+
 // Конструктор
 CPIVWorker::CPIVWorker()
 {
-
 }
 
 // Деструктор
@@ -81,51 +112,75 @@ CPIVWorker::~CPIVWorker()
 	path.clear();
 	books.clear();
 	errorDB.clear();
+	checkPath.clear();
 }
 
-// Чтение ПИВ
+// Получение путей для чтения
+void CPIVWorker::ReadExcel(vector <CString> pathToExcel)
+{
+	checkPath = pathToExcel;
+	StartRead();
+}
+
+// Получение пути для чтения
 void CPIVWorker::ReadExcel(CString pathToExcel)
 {
-	try
-	{
-		CReaderExcel reader;
+	checkPath.push_back(pathToExcel);
+	StartRead();
+}
 
-		if (!isExist(pathToExcel))
-		{
-			books.push_back(reader.getBook(pathToExcel));
-			path.push_back(pathToExcel);
-		}
-	}
-	catch (MyException& exc)
+// Начало чтения
+void CPIVWorker::StartRead()
+{
+	if (getStatusThread(primary))
 	{
-		AfxMessageBox(exc.GetMsg());
+		mD.object = this;
+		primary = CreateThread(NULL, 0, ReaderThread, &mD, 0, 0);
 	}
+	else
+		AfxMessageBox(_T("Поток занят! Подождите окончания процесса!"));
 }
 
 // Чтение ПИВ
-void CPIVWorker::ReadExcel(vector<CString> pathToExcel)
+void CPIVWorker::ReadExcel()
 {
 	try
 	{
-		for (size_t i = 0; i < pathToExcel.size(); i++)
+		for (size_t i = 0; i < checkPath.size(); i++)
 		{
 			CReaderExcel reader;	// класс чтения книг
 
-			if (!isExist(pathToExcel[i]))
+			if (findIndexBook(checkPath[i]) == -1)		// Если такой книги еще нет
 			{
-				books.push_back(reader.getBook(pathToExcel[i]));
-				path.push_back(pathToExcel[i]);
+				books.push_back(reader.getBook(checkPath[i]));
+				path.push_back(checkPath[i]);
 			}
 		}
+		AfxMessageBox(_T("Чтение завершено успешно!"));
 	}
 	catch (MyException &exc)
 	{
 		AfxMessageBox(exc.GetMsg());
 	}
+
+	checkPath.clear();
+	closeThread(primary);
 }
 
-// Проверка всех открытых книг
+// Начало тестирования
 void CPIVWorker::Test()
+{
+	if (getStatusThread(primary))
+	{
+		mD.object = this;
+		primary = CreateThread(NULL, 0, TestThread, &mD, 0, 0);
+	}
+	else
+		AfxMessageBox(_T("Поток занят! Подождите окончания процесса!"));
+
+}
+// Проверка всех открытых книг
+void CPIVWorker::TestAll()
 {
 	try
 	{
@@ -143,31 +198,121 @@ void CPIVWorker::Test()
 			else
 				errorDB.push_back(errBook); // Добавление нового отчета
 		}
+		AfxMessageBox(_T("Проверка протоколов завершена успешно!"));
 	}
 	catch (MyException &exc)
 	{
 		AfxMessageBox(exc.GetMsg());
 	}
+	closeThread(primary);
 }
 
-// Имеется ли уже такая книга
-bool CPIVWorker::isExist(CString pathToExcel)
+// Закрыть книжечку
+void CPIVWorker::CloseExcel(CString pathToExcel)
+{
+	int iBook = findIndexBook(pathToExcel);
+	
+	if (iBook != -1)
+	{
+		int iReport = findReportBook(books[iBook].nameBook);
+
+		if (iReport != -1)	// Чистим в базе ошибок
+		{
+			errorDB.erase(errorDB.begin() + iReport);
+			vector<errorBookData>(errorDB).swap(errorDB);
+		}
+
+		// Чистим пути и книжку
+		books.erase(books.begin() + iBook);
+		vector<bookData>(books).swap(books);
+
+		path.erase(path.begin() + iBook);
+		vector<CString>(path).swap(path);
+	}
+}
+
+// Закрыть книжечки
+void CPIVWorker::CloseExcel(vector <CString> pathToExcel)
+{
+	for (size_t i = 0; i < pathToExcel.size(); i++)
+	{
+		int iBook = findIndexBook(pathToExcel[i]);
+
+		if (iBook != -1)
+		{
+			int iReport = findReportBook(books[iBook].nameBook);
+
+			if (iReport != -1)	// Чистим в базе ошибок
+			{
+				errorDB.erase(errorDB.begin() + iReport);
+				vector<errorBookData>(errorDB).swap(errorDB);
+			}
+
+			// Чистим пути и книжку
+			books.erase(books.begin() + iBook);
+			vector<bookData>(books).swap(books);
+
+			path.erase(path.begin() + iBook);
+			vector<CString>(path).swap(path);
+		}
+	}
+}
+
+// Поиск индекса прочитанной книги в базе ошибок
+int CPIVWorker::findReportBook(CString name)
+{
+	for (size_t i = 0; i < errorDB.size(); i++)
+		if (name.Compare(errorDB[i].name) == 0)
+			return i;
+
+	return -1;
+}
+
+// Поиск индекса прочитанной книги в базе книг
+int CPIVWorker::findIndexBook(CString pathToExcel)
 {
 	for (size_t i = 0; i < path.size(); i++)
 		if (pathToExcel.Compare(path[i]) == 0)
-			return true;
+			return i;
 
-	return false;
+	return -1;
 }
 
-// Имеется ли отчет об ошибках по данной книге
-int CPIVWorker::findReportBook(CString nameBook)
+// Дружественная функция для запуска чтения протоколов
+void ReadExcel(CPIVWorker& piv)
 {
-	int result = -1;
+	piv.ReadExcel();
+}
 
-	for (size_t i = 0; i < errorDB.size(); i++)
-		if (errorDB[i].name.Compare(nameBook) == 0)
-			result = i;
+// Дружественная функция для запуска анализа протоколов
+void Test(CPIVWorker& piv)
+{
+	piv.TestAll();
+}
+
+// Проверка потока на доступность
+bool CPIVWorker::getStatusThread(HANDLE h)
+{
+	DWORD ty;
+	bool result = true;
+	GetExitCodeThread(h, &ty);
+
+	if (ty != STILL_ACTIVE)
+		result = true;
+	else
+		result = false;
 
 	return result;
+}
+
+// Закрытие потока
+void CPIVWorker::closeThread(HANDLE& h)
+{
+	if (h != 0)
+	{
+		CloseHandle(h);
+		h = NULL;
+	}
+	else
+		AfxMessageBox(_T("А он и не открывался, парам парарам!"));
 }

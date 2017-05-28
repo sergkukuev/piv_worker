@@ -28,18 +28,36 @@ public:
 	CPIVWorker();	// Конструктор
 	~CPIVWorker();	// Деструктор
 
-	void ReadExcel(CString pathToExcel);			// Чтение ПИВ
-	void ReadExcel(vector <CString> pathToExcel);	// Чтение ПИВ (перегрузка)
-	bool isExist(CString pathToExcel);				// Прочитана ли уже такая книга
+	void ReadExcel(CString pathToExcel);			// Получение пути ПИВ для чтения	
+	void ReadExcel(vector <CString> pathToExcel);	// Получение путей ПИВ для чтения
 
-	void Test();	// Проверка всех открытых книг
+	void Test(); // Проверка всех книг
 
-// Переопределение
+	void CloseExcel(CString pathToExcel);		// Закрытие книги ПИВ в памяти
+	void CloseExcel(vector <CString> pathToExcel);	// Закрытие книг ПИВ в памяти
+
+protected:
+	friend void ReadExcel(CPIVWorker& piv);	// Дружественная функция для запуска процесса чтения ПИВ
+	friend void Test(CPIVWorker& piv);		// Дружественная функция для запуска процесса тестирования ПИВ
+
 private:
+	HANDLE primary;				// Основной поток
+	HANDLE secondary;			// Дополнительный поток
+	
 	vector <bookData> books;	// Прочитанные ПИВ
-	vector <CString> path;		// Пути всех ПИВ
+	vector <CString> path;		// Пути проверенных ПИВ
+	vector <CString> checkPath;	// Пути поданных для чтения ПИВ
 
 	vector <errorBookData> errorDB;	// База данных ошибок
 
-	int findReportBook(CString nameBook);	// Имеется ли отчет об ошибках по данной книге
+	void StartRead();	// Начало чтения протоколов
+	void ReadExcel();	// Чтение протоколов
+
+	void TestAll();		// Проверка всех книг
+
+	int findIndexBook(CString pathToExcel);	// Поиск индекса протокола в открытых ПИВ (в противном -1)
+	int findReportBook(CString name);		// Поиск индекса протокола в базе ошибок (в противном -1)
+
+	bool getStatusThread(HANDLE h);		// Проверка доступности потока
+	void closeThread(HANDLE& h);		// Закрытие потока
 };
