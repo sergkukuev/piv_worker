@@ -34,10 +34,18 @@ void CTest::testAll(errorBookData& errBook, bookData book)
 		{
 			for (list <signalData>::iterator it = book.sheets[cSheet].signals.begin(); it != book.sheets[cSheet].signals.end(); it++)
 			{
-				testNumWord(errBook.sheets[cSheet], it);
-				testTitleParam(errBook.sheets[cSheet], it);
-				testMinMaxCSR(errBook.sheets[cSheet], it);
-				testBits(errBook.sheets[cSheet], it);
+				try 
+				{
+					testNumWord(errBook.sheets[cSheet], it);
+					testTitleParam(errBook.sheets[cSheet], it);
+					testMinMaxCSR(errBook.sheets[cSheet], it);
+					testBits(errBook.sheets[cSheet], it);
+				}
+				catch (UndefinedError& exc)
+				{
+					exc.SetName(errBook.sheets[cSheet].name);
+					throw exc;
+				}
 			}
 		}
 	}
@@ -123,7 +131,12 @@ list <CString> CTest::testField(CString field, errorData errStruct)
 			result = true;
 		}
 
-	if (!result) throw UndefinedError();	// исключение, если в базе ошибок такая ошибка не предусмотрена
+	if (!result)	// исключение, если в базе ошибок такая ошибка не предусмотрена
+	{
+		UndefinedError exc;
+		exc.SetParam(field);
+		throw exc;
+	}
 
 	return error;
 }

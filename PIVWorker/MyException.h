@@ -27,5 +27,18 @@ public:
 // Исключения для класса Test
 class UndefinedError : public MyException {
 public:
-	virtual CString GetMsg() { return _T("Параметр сигнала с неизвестной ошибкой!"); };
+	void SetParam(CString param) { this->param = param; }
+	void SetName(CString name) { this->name = name; }
+	virtual CString GetMsg() 
+	{
+		CString result = _T("Параметр сигнала с неизвестной ошибкой!\n");
+		
+		result += _T("Имя листа: ") + name;
+		result += _T(", Параметр: ") + param;
+		
+		return result; 
+	};
+private:
+	CString name = _T("");	// Имя листа, на котором найдена неизвестная ошибка
+	CString param = _T("");	// Параметр, который обрабатывался
 };
