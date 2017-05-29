@@ -101,3 +101,11 @@ struct errorBookData
 	vector <errorSheetData> sheets;	// Листы считанные из книги
 	CString name;					// Название книги
 };
+
+// Все ошибки
+struct errorSet
+{
+	vector <errorBookData> syntax;		// Синтаксические
+	vector <errorBookData> simantic;	// Семантические
+	vector <errorBookData> warning;		// Замечания
+};
