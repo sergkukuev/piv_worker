@@ -64,16 +64,16 @@ void CReport::makeReport()
 	CString tPath;	// Путь к текущему файлу
 
 	// Создание директорий для отчета
-	tPath.Format(_T("%s\\ERROR"), path);
+	tPath.Format(_T("%s\\Error"), path);
 	CreateDirectory(tPath, NULL);
 	tPath.Empty();
-	tPath.Format(_T("%s\\WARNING"), path);
+	tPath.Format(_T("%s\\Warning"), path);
 	CreateDirectory(tPath, NULL);
 	tPath.Empty();
-	tPath.Format(_T("%s\\ERROR\\SyntaxError"), path);
+	tPath.Format(_T("%s\\Error\\Syntax"), path);
 	CreateDirectory(tPath, NULL);
 	tPath.Empty();
-	tPath.Format(_T("%s\\ERROR\\SimanticError"), path);
+	tPath.Format(_T("%s\\Error\\Simantic"), path);
 	CreateDirectory(tPath, NULL);
 
 	// Создание и открытие файла
@@ -128,9 +128,11 @@ void CReport::makeReport()
 	for (size_t cBooks = 0; cBooks < books.size(); cBooks++)
 	{
 		writeSheets(file, cBooks);
-		//writeSyntaxError(file, cBooks);
-		//writeSimanticError(file, cBooks);
-		//writeWarning(file, cBooks);
+
+		// Создание отчета о синтаксических, семантических ошибках и предупреждениях
+		writeError(file, errorDB.syntax[cBooks], _T("Error\\Syntax"));
+		writeError(file, errorDB.syntax[cBooks], _T("Error\\Simantic"));
+		writeError(file, errorDB.syntax[cBooks], _T("Warning"));
 		file << "          </tr>\n";
 	}
 	file << "      </table>\n";
@@ -210,6 +212,158 @@ void CReport::writeSheets(ofstream& file, int cBooks)
 	}
 	file << "                 </dl>\n";
 	file << "              </td>\n";
+}
+
+// Создание страниц ошибок
+void CReport::writeError(ofstream& file, errorBookData error, CString folder)
+{
+	bool pathDirectory = true;
+
+	for (size_t iSheets = 0; iSheets < error.sheets.size(); iSheets++)	// Обход по листам
+	{
+		if (error.sheets[iSheets].signals.size() > 0)
+		{
+			CString name = error.name;
+
+			name.Delete(error.name.Find(_T(".")), error.name.GetLength() - error.name.Find(_T(".")));	// Удаляем значения после точки	(ПОСМОТРЕТЬ, ЕСЛИ ТАМ ВОВСЕ ТОЧКА)
+
+			// Создание директории для книги, если ее нет
+			if (pathDirectory)
+			{
+				pathDirectory = false;
+
+				CString tPath = _T("");
+				tPath.Format(_T("%s\\%s\\%s"), path, folder, name);
+				CreateDirectory(tPath, NULL);
+
+				file << "              <td colspan=\"3\" align=\"center\">\n";
+				file << "                 <dl>\n";
+			}
+
+			// Установка информации в главную страницу отчета
+			CString fullPath = _T("");	// Полный путь страницы отчета
+			CString pathHref = _T("");
+			CString buffer = _T("");
+			pathHref.Format(_T("%s\\%s\\%s"), folder, name, error.sheets[iSheets].name);
+			buffer.Format(_T("                     <dt><a href=\"%s\">%d</a></dt>\n"), pathHref, error.sheets[iSheets].signals.size());
+			file << CT2A(buffer);
+
+			fullPath.Format(_T("%s\\%s"), path, pathHref);
+
+			// Открытие файла
+			ofstream tempFile;
+			tempFile.open(fullPath);
+
+			// Запись 
+			tempFile << "<html>\n";
+			tempFile << "  <head>\n";
+			tempFile << "     <meta http-equiv=\"Content-Type\" content=\"text/html; charset=win-1251\" />\n";
+
+			tempFile << "     <title>Замечания по книге \""; tempFile << error.name; tempFile << "\"</title>\n";
+
+			tempFile << "  </head>\n";
+			tempFile << "  <body>\n";
+			tempFile << "      <table border=\"1\"cellspacing=\"0\">\n";
+			tempFile << "          <tr>\n";
+			tempFile << "              <th rowspan=\"2\">№ Замечания</th>\n";
+
+			tempFile << "              <th colspan=\"9\">Замечания. Книга \""; tempFile << error.name;
+			tempFile << "\". Лист \""; tempFile << error.sheets[iSheets].name; tempFile << "\".</th>\n";
+
+			tempFile << "          </tr>\n";
+			tempFile << "          <tr>\n";
+			tempFile << "              <th>№Слова</th>\n";
+			tempFile << "              <th>Наименование сигнала</th>\n";
+			tempFile << "              <th>Условное обозначение параметра / сигнала</th>\n";
+			tempFile << "              <th>Единица измерения</th>\n";
+			tempFile << "              <th>Минимальное значение</th>\n";
+			tempFile << "              <th>Максимальное значение</th>\n";
+			tempFile << "              <th>Цена старшего разряда</th>\n";
+			tempFile << "              <th>Используемые разряды</th>\n";
+			tempFile << "              <th>Примечание</th>\n";
+			tempFile << "          </tr>\n";
+
+			// Обход по ячейкам
+			int iRow = 1;
+			for (list<errorSignalData>::iterator it = error.sheets[iSheets].signals.begin(); it != error.sheets[iSheets].signals.end(); it++, iRow)
+			{
+				tempFile << "          <tr>\n";
+				tempFile << "              <th rowspan=\"2\"> &nbsp "; tempFile << iRow; tempFile << "< / th>\n";
+				
+				int indxErr = getIndexErrorField(it);
+				
+				hightlightError(tempFile, indxErr, 0, it->sNumWordField);	// Подсвечиваем номер слова
+
+				buffer.Empty();
+				buffer.Format(_T("              <td >  &nbsp  %s</td>\n"), it->sTitleParamField[0]);
+				tempFile << CT2A(buffer);
+
+				hightlightError(tempFile, indxErr, 1, it->sTitleParamField[1]);	// Подсвечиваем идентификатор
+
+				buffer.Empty();
+				buffer.Format(_T("              <td align=\"center\"> &nbsp %s</td>\n"), it->sDimensionField);
+				tempFile << CT2A(buffer);
+
+				// Подсвечиваем
+				hightlightError(tempFile, indxErr, 2, it->sMinMaxCsrValField[0]);	// Мин
+				hightlightError(tempFile, indxErr, 3, it->sMinMaxCsrValField[1]);	// Макс
+				hightlightError(tempFile, indxErr, 4, it->sMinMaxCsrValField[2]);	//Цср
+				hightlightError(tempFile, indxErr, 5, it->sBitField);				// Биты
+				hightlightError(tempFile, indxErr, 6, it->sCommentField);			// Коммент
+
+				tempFile << "          </tr>\n";
+				tempFile << "          <tr>\n";
+
+				// Запись описания ошибки
+				list<CString>::iterator itP = it->sErrorField.begin();
+				buffer.Empty();
+				buffer.Format(_T("              <td colspan=\"9\" bgcolor = \"#FDFCD0\"> &nbsp %s\n"), *itP);
+				tempFile << CT2A(buffer);
+
+				if (it->sErrorField.size() > 1)
+				{
+					itP++;
+					tempFile << "                  <ul>\n";
+					for (; itP != it->sErrorField.end(); itP++)
+					{
+						buffer.Empty();
+						buffer.Format(_T("                  <li>%s</li>\n"), *itP);
+						tempFile << CT2A(buffer);
+					}
+					tempFile << "                  </ul>\n";
+				}
+				tempFile << "              </td>\n";
+				tempFile << "          </tr>\n";
+				tempFile << "          <tr>\n";
+				tempFile << "              <td colspan=\"10\"> &nbsp </td>\n";
+				tempFile << "          </tr>\n";
+			}
+			tempFile << "      </table>\n";
+			tempFile << "  </body>\n";
+			tempFile << "</html>\n";
+
+			tempFile.close();	// Закрытие
+		}
+		else
+			file << "                     <dt>-</dt>\n";
+	}
+	file << "                 </dl>\n";
+	file << "              </td>\n";
+}
+
+//Подсветка ошибочного параметра
+void CReport::hightlightError(ofstream& file, int tIndx, int Indx, CString field)
+{
+	CString buffer = _T("");
+	CString color = _T("bgcolor = \"#FDFCD0\"");
+	buffer.Format(_T("              <td align=\"center\" %s> &nbsp  %s</td>\n"), (tIndx == Indx) ? color : _T(""), field);
+	file << CT2A(buffer);
+}
+
+// Поиск индекса ошибочного параметра
+int CReport::getIndexErrorField(list<errorSignalData>::iterator it)
+{
+	return -1;
 }
 
 // Количество всех наборов данных

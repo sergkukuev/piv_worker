@@ -50,13 +50,14 @@ private:
 	void makeEmptyReport();	// Генерация пустого отчета
 
 	void writeSheets(ofstream& file, int cBooks);		// Создание страниц
-	void writeSyntaxError(ofstream& file, int cBooks);	// Создание страниц с синтаксическими ошибками
-	void writeSimanticError(ofstream& file, int cBooks);// Создание страниц с семантическими ошибками
-	void writeWarning(ofstream& file, int cBooks);		// Создание страниц с замечаниями
+	void writeError(ofstream& file, errorBookData error, CString folder);	// Создание страницы с ошибками
 	
 	void Clear();			// Очистка переменных
 	int getSetsAmount();	// Количество наборов данных
 	int getSetsAmountWithError();	// Количество наборов данных с ошибкой
 	int getErrorAmount(vector <errorBookData> error);	// Количество ошибок
+
+	void hightlightError(ofstream& file, int tIndx, int Indx, CString field);	// Подсветка нужного параметра
+	int getIndexErrorField(list<errorSignalData>::iterator it);					// Поиск индекса параметра
 };
 
