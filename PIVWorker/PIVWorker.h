@@ -48,7 +48,7 @@ private:
 	vector <CString> path;		// Пути проверенных ПИВ
 	vector <CString> checkPath;	// Пути поданных для чтения ПИВ
 
-	vector <errorBookData> errorDB;	// База данных ошибок
+	errorSet errorDB;	// База данных ошибок
 
 	void StartRead();	// Начало чтения протоколов
 	void ReadExcel();	// Чтение протоколов

@@ -12,105 +12,175 @@ CTest::~CTest()
 }
 
 // Проверка на все ошибки
-errorBookData CTest::Start(bookData book) 
-{
-	errorBookData errBook;
-	
-	errBook.sheets.resize(book.sheets.size());
-	errBook.name = book.nameBook;
-	testAll(errBook, book);
-	
-	return errBook;
+errorOneSet CTest::Start(bookData& book) 
+{	
+	// Синтаксические ошибки
+	error.syntax.sheets.resize(book.sheets.size());
+	error.syntax.name = book.nameBook;
+	Syntax(error.syntax, book);
+
+	// Семантические ошибки
+	/*error.simantic.sheets.resize(book.sheets.size());
+	error.simantic.name = book.nameBook;
+	error.warning.sheets.resize(book.sheets.size());
+	error.warning.name = book.nameBook;
+	Simantic(error.simantic, book);
+	*/
+	return error;
 }
 
+#pragma region Syntax
+
 // Проверка на синтаксические ошибки
-void CTest::testAll(errorBookData& errBook, bookData book)
+void CTest::Syntax(errorBookData& errBook, bookData& book)
 {
 	for (size_t cSheet = 0; cSheet < errBook.sheets.size(); cSheet++)
 	{
 		errBook.sheets[cSheet].name = book.sheets[cSheet].nameSheet;
 
-		if (book.sheets[cSheet].bErrorSheet)
+		for (list <signalData>::iterator it = book.sheets[cSheet].signals.begin(); it != book.sheets[cSheet].signals.end(); it++)
 		{
-			for (list <signalData>::iterator it = book.sheets[cSheet].signals.begin(); it != book.sheets[cSheet].signals.end(); it++)
+			try 
 			{
-				try 
-				{
-					testNumWord(errBook.sheets[cSheet], it);
-					testTitleParam(errBook.sheets[cSheet], it);
-					testMinMaxCSR(errBook.sheets[cSheet], it);
-					testBits(errBook.sheets[cSheet], it);
-				}
-				catch (UndefinedError& exc)
-				{
-					exc.SetName(errBook.sheets[cSheet].name);
-					throw exc;
-				}
+				bool begin = true;
+				if (it != book.sheets[cSheet].signals.begin())	begin = false;
+				bool result = syntaxNumWord(errBook.sheets[cSheet], it);
+				(!syntaxTitleParam(errBook.sheets[cSheet], it))? result = false : result = result;
+				(!syntaxMinMaxCSR(errBook.sheets[cSheet], it)) ? result = false : result = result;
+				(!syntaxBits(errBook.sheets[cSheet], it))? result = false : result = result;
+				(!syntaxComment(errBook.sheets[cSheet], it, begin)) ? result = false : result = result;
+
+				if (!result)	// Установка флага, что на листе есть ошибка
+					book.sheets[cSheet].bErrorSheet = false;
+			}
+			catch (UndefinedError& exc)
+			{
+				exc.SetName(errBook.sheets[cSheet].name);
+				throw exc;
 			}
 		}
 	}
 }
 
 // Проверка номера слова
-void CTest::testNumWord(errorSheetData& sheet, list<signalData>::iterator it)
+bool CTest::syntaxNumWord(errorSheetData& sheet, list<signalData>::iterator& it)
 {
 	list <CString> error = testField(it->sNumWordField, ErrorBase.getNumWord());
 
 	if (error.empty())
-		return;
+	{
+		translateNumWord(it);	// Преобразование слов в числа
+		return true;
+	}
 	
 	errorSignalData signal = getErrSignal(it, error);
 	sheet.signals.push_back(signal);
+	it->bNumWordField = false;
+	return false;
 }
 
 // Проверка наименований сигнала
-void CTest::testTitleParam(errorSheetData& sheet, list<signalData>::iterator it)
+bool CTest::syntaxTitleParam(errorSheetData& sheet, list<signalData>::iterator& it)
 {
 	list <CString> error = testField(it->sTitleParamField[1], ErrorBase.getTitleParam());
 
 	if (error.empty())
-		return;
+		return true;
 
 	errorSignalData signal = getErrSignal(it, error);
 	sheet.signals.push_back(signal);
+	it->bTitleParamField = false;
+	return false;
 }
 
 // Проверка минимального, максимального и цср
-void CTest::testMinMaxCSR(errorSheetData& sheet, list<signalData>::iterator it)
+bool CTest::syntaxMinMaxCSR(errorSheetData& sheet, list<signalData>::iterator& it)
 {
 	list <CString> errMin = testField(it->sMinMaxCsrValField[0], ErrorBase.getMinMaxCSR());
 	list <CString> errMax = testField(it->sMinMaxCsrValField[1], ErrorBase.getMinMaxCSR());
 	list <CString> errCSR = testField(it->sMinMaxCsrValField[2], ErrorBase.getMinMaxCSR());
+	bool result = true;
 
 	if (!errMin.empty())
 	{
 		errorSignalData signal = getErrSignal(it, errMin);
 		sheet.signals.push_back(signal);
+		it->bMinValField = false;
+		result = false;
+	}
+	else
+	{
+		CString buffer = it->sMinMaxCsrValField[0];
+		it->iMinMaxCsrVal[0] = _wtoi(buffer);
 	}
 
 	if (!errMax.empty())
 	{
 		errorSignalData signal = getErrSignal(it, errMax);
 		sheet.signals.push_back(signal);
+		it->bMaxValField = false;
+		result = false;
+	}
+	else
+	{
+		CString buffer = it->sMinMaxCsrValField[1];
+		it->iMinMaxCsrVal[1] = _wtoi(buffer);
 	}
 
 	if (!errCSR.empty())
 	{
 		errorSignalData signal = getErrSignal(it, errCSR);
 		sheet.signals.push_back(signal);
+		it->bCsrValField = false;
+		result = false;
 	}
+	else
+	{
+		CString buffer = it->sMinMaxCsrValField[2];
+		it->iMinMaxCsrVal[2] = _wtoi(buffer);
+	}
+
+	return result;
 }
 
 // Проверка используемых разрядов
-void CTest::testBits(errorSheetData& sheet, list<signalData>::iterator it)
+bool CTest::syntaxBits(errorSheetData& sheet, list<signalData>::iterator& it)
 {
 	list <CString> error = testField(it->sBitField, ErrorBase.getBits());
 
 	if (error.empty())
-		return;
+		return true;
 
 	errorSignalData signal = getErrSignal(it, error);
 	sheet.signals.push_back(signal);
+	it->bBitField = false;
+
+	return false;
+}
+
+// Проверка комментариев
+bool CTest::syntaxComment(errorSheetData& sheet, list<signalData>::iterator& it, bool begin)
+{
+	list <CString> error;
+	string field = convertString(it->sCommentField);
+	bool bNP = false;
+	bool zn = regex_search(field, ErrorBase.getComment().error[1]);	// Проверка на знак
+
+	if (begin)
+		bNP = regex_search(field, ErrorBase.getComment().error[0]);	// Проверка на набор параметров
+
+	if (bNP)
+		error.push_back(ErrorBase.getComment().description[0]);
+
+	if (zn)
+		error.push_back(ErrorBase.getComment().description[1]);
+
+	if (error.empty())
+	{
+		size_t iBit = field.find("Зн-");
+		// Достать значение знака
+		return true;
+	}
 }
 
 // Проверка поля на ошибки
@@ -140,6 +210,124 @@ list <CString> CTest::testField(CString field, errorData errStruct)
 
 	return error;
 }
+
+#pragma endregion 
+
+#pragma once region Simantic
+
+// Проверка на семантические ошибки
+void CTest::Simantic(errorBookData& errBook, bookData& book)
+{
+	for (size_t cSheet = 0; cSheet < errBook.sheets.size(); cSheet++)
+	{
+		errBook.sheets[cSheet].name = book.sheets[cSheet].nameSheet;
+
+		for (list <signalData>::iterator it = book.sheets[cSheet].signals.begin(); it != book.sheets[cSheet].signals.end(); it++)
+		{
+			bool wRepite[32];
+			bool result = simanticNumWord(errBook.sheets[cSheet], it, wRepite);
+			(!simanticTitleParam(errBook.sheets[cSheet], it)) ? result = false : result = result;
+			(!simanticMinMaxCSR(errBook.sheets[cSheet], it)) ? result = false : result = result;
+			(!simanticBits(errBook.sheets[cSheet], it)) ? result = false : result = result;
+			
+			if (!result)	// Установка флага, что на листе есть ошибка
+				book.sheets[cSheet].bErrorSheet = false;
+		}
+	}
+}
+
+// Проверка номера слова
+bool CTest::simanticNumWord(errorSheetData& sheet, list<signalData>::iterator& it, bool wRep[])
+{
+	list <CString> error;
+
+	if (it->bNumWordField)
+	{
+		if (it->iNumWord[0] > 32 || it->iNumWord[1] > 32)	// Слово должно быть не больше 32
+			error.push_back(ErrorBase.sim.NumMore32);
+
+		if (it->iNumWord[1] > 0)
+			if (!wRep[it->iNumWord[1] - 1])	// Поиск совпадений № слов для второго слова
+				error.push_back(ErrorBase.sim.NumRepite);
+		
+		if (!wRep[it->iNumWord[0] - 1])	// Для первого
+			error.push_back(ErrorBase.sim.NumRepite);
+
+		// Отметка о том, что эти слова на этом листе
+		wRep[it->iNumWord[0] - 1] = false;
+		if (it->iNumWord[1] > 0)
+			wRep[it->iNumWord[1] - 1] = false;
+	}
+
+	if (error.empty())
+		return true;
+
+	errorSignalData signal = getErrSignal(it, error);
+	sheet.signals.push_back(signal);
+	it->bNumWordField = false;
+
+	return false;
+}
+
+bool CTest::simanticTitleParam(errorSheetData& errSheet, list<signalData>::iterator& it)	// Прокинуть книгу и индекс листа
+{
+	list <CString> error;
+
+	if (it->bTitleParamField)
+	{
+		if (findRepiteInSheet())
+			error.push_back(ErrorBase.sim.TitleRepSheet);
+		else if (findRepiteInBook())
+			error.push_back(ErrorBase.sim.TitleRepBook);	// Замечание, а не ошибка 
+	}
+
+	if (error.empty())
+		return true;
+
+	errorSignalData signal = getErrSignal(it, error);
+	errSheet.signals.push_back(signal);
+	it->bTitleParamField = false;
+
+	return false;
+}
+
+// Проверка минимального, максимального и цср
+bool CTest::simanticMinMaxCSR(errorSheetData& sheet, list<signalData>::iterator& it)
+{
+
+}
+
+// Проверка используемых разрядов
+bool CTest::simanticBits(errorSheetData& sheet, list<signalData>::iterator& it)
+{
+
+}
+
+// Перевод из строки в числа
+void CTest::translateNumWord(list<signalData>::iterator& it)
+{
+	CString num = it->sNumWordField;
+	int indxDot = num.Find(_T(","));
+
+	if (indxDot == -1)
+	{
+		num.Trim();	// Удаление пробелов
+		it->iNumWord[0] = _wtoi(num);
+	}
+	else
+	{
+		CString num2 = num;	// Второе число
+		num2.Delete(indxDot, num.GetLength() - indxDot);
+		num2.Trim();
+		it->iNumWord[1] = _wtoi(num2);
+
+		num.Delete(0, indxDot);	// Первое число
+		num.Trim();
+		it->iNumWord[0] = _wtoi(num);
+	}
+}
+
+#pragma endregion
 
 // Создание записи ошибки сигнала
 errorSignalData CTest::getErrSignal(list<signalData>::iterator it, list <CString> error)

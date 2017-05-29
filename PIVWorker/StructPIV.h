@@ -22,7 +22,7 @@ struct signalData
 
 	CString sDimensionField;										// Размерность
 	CString sMinMaxCsrValField[3] = { _T(""), _T("") , _T("") };	// Строковое значение мин., макс. и цена старшего разряда
-	double dMinMaxCsrVal[3] = { 0, 0, 0 };							// Значения мин., макс. и цена старшего разряда
+	double iMinMaxCsrVal[3] = { 0, 0, 0 };							// Значения мин., макс. и цена старшего разряда
 	bool bMinValField;												// Присутствие ошибки в мин. 
 	bool bMaxValField;												// Присутствие ошибки в макс.
 	bool bCsrValField;												// Присутствие ошибки в ЦСР.
@@ -108,4 +108,11 @@ struct errorSet
 	vector <errorBookData> syntax;		// Синтаксические
 	vector <errorBookData> simantic;	// Семантические
 	vector <errorBookData> warning;		// Замечания
+};
+
+struct errorOneSet
+{
+	errorBookData syntax;
+	errorBookData simantic;
+	errorBookData warning;
 };

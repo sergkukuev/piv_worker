@@ -111,7 +111,9 @@ CPIVWorker::~CPIVWorker()
 {
 	path.clear();
 	books.clear();
-	errorDB.clear();
+	errorDB.syntax.clear();
+	errorDB.simantic.clear();
+	errorDB.warning.clear();
 	checkPath.clear();
 }
 
@@ -187,16 +189,25 @@ void CPIVWorker::TestAll()
 		for (size_t i = 0; i < books.size(); i++)
 		{
 			CTest tester;	// класс проверки книг
-			errorBookData errBook;
+			errorOneSet errBook;
 
 			errBook = tester.Start(books[i]);
 
-			int indx = findReportBook(errBook.name);	// поиск в базе отчетов данной книги
+			int indx = findReportBook(errBook.syntax.name);	// поиск в базе отчетов данной книги
 
-			if (indx != -1)
-				errorDB[indx] = errBook;	// Обновление отчета
-			else
-				errorDB.push_back(errBook); // Добавление нового отчета
+			if (indx != -1)	// Обновление отчета
+			{
+				errorDB.syntax[indx] = errBook.syntax;
+				errorDB.simantic[indx] = errBook.simantic;
+				errorDB.warning[indx] = errBook.warning;
+			}
+			else // Добавление нового отчета
+			{
+				errorDB.syntax.push_back(errBook.syntax);
+				errorDB.simantic.push_back(errBook.simantic);
+				errorDB.warning.push_back(errBook.warning);
+			}
+				
 		}
 		AfxMessageBox(_T("Проверка протоколов завершена успешно!"));
 	}
@@ -218,8 +229,14 @@ void CPIVWorker::CloseExcel(CString pathToExcel)
 
 		if (iReport != -1)	// Чистим в базе ошибок
 		{
-			errorDB.erase(errorDB.begin() + iReport);
-			vector<errorBookData>(errorDB).swap(errorDB);
+			errorDB.syntax.erase(errorDB.syntax.begin() + iReport);
+			vector<errorBookData>(errorDB.syntax).swap(errorDB.syntax);
+
+			errorDB.simantic.erase(errorDB.simantic.begin() + iReport);
+			vector<errorBookData>(errorDB.simantic).swap(errorDB.simantic);
+
+			errorDB.warning.erase(errorDB.warning.begin() + iReport);
+			vector<errorBookData>(errorDB.warning).swap(errorDB.warning);
 		}
 
 		// Чистим пути и книжку
@@ -244,8 +261,14 @@ void CPIVWorker::CloseExcel(vector <CString> pathToExcel)
 
 			if (iReport != -1)	// Чистим в базе ошибок
 			{
-				errorDB.erase(errorDB.begin() + iReport);
-				vector<errorBookData>(errorDB).swap(errorDB);
+				errorDB.syntax.erase(errorDB.syntax.begin() + iReport);
+				vector<errorBookData>(errorDB.syntax).swap(errorDB.syntax);
+
+				errorDB.simantic.erase(errorDB.simantic.begin() + iReport);
+				vector<errorBookData>(errorDB.simantic).swap(errorDB.simantic);
+
+				errorDB.warning.erase(errorDB.warning.begin() + iReport);
+				vector<errorBookData>(errorDB.warning).swap(errorDB.warning);
 			}
 
 			// Чистим пути и книжку
@@ -261,8 +284,8 @@ void CPIVWorker::CloseExcel(vector <CString> pathToExcel)
 // Поиск индекса прочитанной книги в базе ошибок
 int CPIVWorker::findReportBook(CString name)
 {
-	for (size_t i = 0; i < errorDB.size(); i++)
-		if (name.Compare(errorDB[i].name) == 0)
+	for (size_t i = 0; i < errorDB.syntax.size(); i++)
+		if (name.Compare(errorDB.syntax[i].name) == 0)
 			return i;
 
 	return -1;
