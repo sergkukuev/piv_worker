@@ -189,22 +189,15 @@ list <signalData> CReaderExcel::getSignals(CWorkExcel& work)
 		cell.column = static_cast<long> (header.adress[header.iSignal]);
 		signal.sTitleParamField[1] = getCell(work, cell);
 
-		if (cMergeName != work.getMergeCount(cell))
-			signal.bTitleParamField = false;
-		else
-			signal.bTitleParamField = true;
+		signal.bTitleParamField = true;
 
 		// Чтение номера слова
 		cell.column = static_cast<long> (header.adress[header.iNumWord]);
 		signal.sNumWordField = getCell(work, cell, cMergeName);
 		
-		if (signal.sNumWordField.Find(_T(",")) != -1)
-			signal.b2NumWordField = false;
-		else
-			signal.b2NumWordField = true;
-
+		signal.b2NumWordField = true;
 		signal.bNumWordField = true;
-		signal.bRepitNumWordField = false;
+		signal.bRepitNumWordField = true;
 
 		// Чтение размерности, min, max и csr
 		cell.column = static_cast<long> (header.adress[header.iDimension]);
@@ -226,14 +219,14 @@ list <signalData> CReaderExcel::getSignals(CWorkExcel& work)
 		cell.column = static_cast<long> (header.adress[header.iBits]);
 		signal.sBitField = getCell(work, cell, cMergeName);
 		signal.bBitField = true;
-		signal.b2BitField = false;
+		signal.b2BitField = true;
 		signal.iBitSigns = 0;
 		signal.bBitSigns = true;
 
 		// Чтение комментариев
 		cell.column = static_cast<long> (header.adress[header.iComment]);
 		signal.sCommentField = getCell(work, cell, cMergeName);
-		signal.bCommentField = false;
+		signal.bCommentField = true;
 
 		bool bEmpty = IsEmpty(work, cell.row);
 		bRemark = IsRemark(work, cell.row);
