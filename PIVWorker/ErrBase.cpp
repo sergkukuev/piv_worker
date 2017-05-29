@@ -60,6 +60,9 @@ CErrBase::CErrBase()
 	AddError(Bits, ",[ \t]?[0-9]+(…|(...))$", _T("Отсутствует значение в конце промежутка после запятой."));
 
 	AddError(Bits, "[0-9]*..?[0-9]*,[ \t]?[0-9]*..?[0-9]*", _T("Неверное обозначение обоих промежутков."));
+
+	AddError(Comment, "NP( )?=( )?[^0-9]+", _T("Нет номера набора параметров."));
+	AddError(Comment, "Зн-[^0-9]+", _T("Значение знакового разряда в поле нечисловое."));
 }
 
 // Деструктор
@@ -117,4 +120,10 @@ errorData CErrBase::getMinMaxCSR()
 errorData CErrBase::getBits()
 {
 	return Bits;
+}
+
+// Получить набор для комментариев
+errorData CErrBase::getComment()
+{
+	return Comment;
 }
