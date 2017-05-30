@@ -20,12 +20,12 @@ errorOneSet CTest::Start(bookData& book)
 	Syntax(error.syntax, book);
 
 	// Семантические ошибки
-	/*error.simantic.sheets.resize(book.sheets.size());
+	error.simantic.sheets.resize(book.sheets.size());
 	error.simantic.name = book.nameBook;
 	error.warning.sheets.resize(book.sheets.size());
 	error.warning.name = book.nameBook;
 	Simantic(error.simantic, book);
-	*/
+	
 	return error;
 }
 
@@ -49,6 +49,12 @@ void CTest::Syntax(errorBookData& errBook, bookData& book)
 				(!syntaxMinMaxCSR(errBook.sheets[cSheet], it)) ? result = false : result = result;
 				(!syntaxBits(errBook.sheets[cSheet], it))? result = false : result = result;
 				(!syntaxComment(errBook.sheets[cSheet], it, begin)) ? result = false : result = result;
+
+				if (NP != 0)
+				{
+					book.sheets[cSheet].iCommentFieldNP = NP;	// Установка номера набора (translateComment)
+					NP = 0;
+				}
 
 				if (!result)	// Установка флага, что на листе есть ошибка
 					book.sheets[cSheet].bErrorSheet = false;
@@ -166,23 +172,26 @@ bool CTest::syntaxComment(errorSheetData& sheet, list<signalData>::iterator& it,
 {
 	list <CString> error;
 	string field = convertString(it->sCommentField);
-	bool bNP = false;
-	bool zn = regex_search(field, ErrorBase.getComment().error[1]);	// Проверка на знак
 
 	if (begin)
 	{
-		bNP = regex_search(field, ErrorBase.getComment().error[0]);	// Проверка на набор параметров
-
+		bool bNP = regex_search(field, ErrorBase.getComment().error[0]);	// Проверка на набор параметров
 		if (bNP)
 			error.push_back(ErrorBase.getComment().description[0]);
 	}
 	else
+	{
+		bool zn = regex_search(field, ErrorBase.getComment().error[1]);	// Проверка на знак
 		if (zn)
+		{
 			error.push_back(ErrorBase.getComment().description[1]);
+			it->bBitSigns = false;
+		}		
+	}
 
 	if (error.empty())
 	{
-		translateBitSign(it);	// Достать значение знакового бита
+		translateComment(it);	// Достать значение знакового бита или NP набора, если они есть
 		return true;
 	}
 }
@@ -217,7 +226,7 @@ list <CString> CTest::testField(CString field, errorData errStruct)
 
 #pragma endregion 
 
-#pragma once region Simantic
+#pragma region Simantic
 
 // Проверка на семантические ошибки
 void CTest::Simantic(errorBookData& errBook, bookData& book)
@@ -228,10 +237,12 @@ void CTest::Simantic(errorBookData& errBook, bookData& book)
 
 		for (list <signalData>::iterator it = book.sheets[cSheet].signals.begin(); it != book.sheets[cSheet].signals.end(); it++)
 		{
-			bool wRepite[32];
+			bool wRepite[32];	// Для отслеживания повторений слов
+			bool begin = true;
+			if (it != book.sheets[cSheet].signals.begin())	begin = false;
 			bool result = simanticNumWord(errBook.sheets[cSheet], it, wRepite);
-			(!simanticTitleParam(errBook.sheets[cSheet], it)) ? result = false : result = result;
-			(!simanticMinMaxCSR(errBook.sheets[cSheet], it)) ? result = false : result = result;
+			//(!simanticTitleParam(errBook.sheets[cSheet], it)) ? result = false : result = result;
+			(!simanticMinMaxCSR(errBook.sheets[cSheet], it, book.sheets[cSheet].iCommentFieldNP, begin)) ? result = false : result = result;
 			(!simanticBits(errBook.sheets[cSheet], it)) ? result = false : result = result;
 			
 			if (!result)	// Установка флага, что на листе есть ошибка
@@ -268,14 +279,13 @@ bool CTest::simanticNumWord(errorSheetData& sheet, list<signalData>::iterator& i
 
 	errorSignalData signal = getErrSignal(it, error);
 	sheet.signals.push_back(signal);
-	it->bNumWordField = false;
 
 	return false;
 }
 
 bool CTest::simanticTitleParam(errorSheetData& errSheet, list<signalData>::iterator& it)	// Прокинуть книгу и индекс листа
 {
-	list <CString> error;
+	/*list <CString> error;
 
 	if (it->bTitleParamField)
 	{
@@ -290,21 +300,118 @@ bool CTest::simanticTitleParam(errorSheetData& errSheet, list<signalData>::itera
 
 	errorSignalData signal = getErrSignal(it, error);
 	errSheet.signals.push_back(signal);
-	it->bTitleParamField = false;
+	it->bTitleParamField = false;*/
 
 	return false;
 }
 
 // Проверка минимального, максимального и цср
-bool CTest::simanticMinMaxCSR(errorSheetData& sheet, list<signalData>::iterator& it)
+bool CTest::simanticMinMaxCSR(errorSheetData& sheet, list<signalData>::iterator& it, int currNP, bool begin)
 {
+	list <CString> error;
 
+	if (it->bMinValField && it->bMaxValField && it->bCsrValField && it->bBitField && it->bBitSigns)
+	{
+		if (begin)
+			if (it->iMinMaxCsrVal[1] != currNP || it->iMinMaxCsrVal[0] != currNP)
+				error.push_back(ErrorBase.sim.MMCNotNote);
+		
+		// Подсчет битов
+		int nBit = 0;
+		if (it->b2BitField)
+			nBit = (it->iBit[1] - it->iBit[0]) + (it->iBit[3] - it->iBit[2]) + 2;
+		else
+			nBit = it->iBit[1] - it->iBit[0] + 1;
+
+		if (it->bCommentField)	
+			nBit--;
+
+		// Подсчет минимума и максимума
+		int nMin = it->iMinMaxCsrVal[2];	// мин
+		for (int i = 1; i <= nBit; i++)
+			nMin = nMin / 2;
+
+		int nMax = (it->iMinMaxCsrVal[2] * 2) - nMin;	// макс
+
+		if (it->iMinMaxCsrVal[1] > nMax && it->iMinMaxCsrVal[1] - nMax >= 1)
+			error.push_back(ErrorBase.sim.MMCNotPkg);
+		else if (( (abs(it->iMinMaxCsrVal[0]) > (nMax + nMin)) || (abs(it->iMinMaxCsrVal[0]) < nMin)) && it->iMinMaxCsrVal[0] != 0)
+			error.push_back(ErrorBase.sim.MMCNotPkg);
+
+		if ((it->iMinMaxCsrVal[0] < 0) && !it->bCommentField)
+			error.push_back(ErrorBase.sim.MMCNotNegative);
+		else if ((it->iMinMaxCsrVal[0] >= 0) && it->bCommentField)
+			error.push_back(ErrorBase.sim.MMCNotNegative);
+	}
+
+	if (error.empty())
+		return true;
+
+	errorSignalData signal = getErrSignal(it, error);
+	sheet.signals.push_back(signal);
+
+	return false;
 }
 
 // Проверка используемых разрядов
 bool CTest::simanticBits(errorSheetData& sheet, list<signalData>::iterator& it)
 {
+	list <CString> error;
+	
+	if (it->bNumWordField && it->bBitField)
+	{
+		if (it->b2NumWordField == it->b2BitField)	// Кол-во № слов должно совпадать с кол-вами интервалов исп. разрядов
+		{
+			if (!checkCrossBits(it))
+				error.push_back(ErrorBase.sim.BitsCross);	// Проверка на перекрытие
 
+			if (it->bCommentField && it->bBitSigns)
+				if (it->iBitSigns != it->iBit[0])
+					error.push_back(ErrorBase.sim.BitsNotSetSign);
+		}
+		else
+		{
+			if (it->b2NumWordField)
+				error.push_back(ErrorBase.sim.BitsOneInter);
+			if (it->b2BitField)
+				error.push_back(ErrorBase.sim.BitsTwoInter);
+		}
+	}
+
+	if (error.empty())
+		return true;
+
+	errorSignalData signal = getErrSignal(it, error);
+	sheet.signals.push_back(signal);
+
+	return false;
+}
+
+// Проверка на перекрытие битов
+bool CTest::checkCrossBits(list<signalData>::iterator& it)
+{
+	return true;
+}
+
+#pragma endregion
+
+// Создание записи ошибки сигнала
+errorSignalData CTest::getErrSignal(list<signalData>::iterator it, list <CString> error)
+{
+	errorSignalData signal;
+
+	signal.sNumWordField = it->sNumWordField;
+	signal.sTitleParamField[0] = it->sTitleParamField[0];
+	signal.sTitleParamField[1] = it->sTitleParamField[1];
+	signal.sDimensionField = it->sDimensionField;
+	signal.sMinMaxCsrValField[0] = it->sMinMaxCsrValField[0];
+	signal.sMinMaxCsrValField[1] = it->sMinMaxCsrValField[1];
+	signal.sMinMaxCsrValField[2] = it->sMinMaxCsrValField[2];
+	signal.sBitField = it->sBitField;
+	signal.sCommentField = it->sCommentField;
+	signal.sErrorField = error;
+	
+	return signal;
 }
 
 // Перевод номеров слов из строки в числа
@@ -321,11 +428,11 @@ void CTest::translateNumWord(list<signalData>::iterator& it)
 	else
 	{
 		CString num2 = num;	// Второе число
-		num2.Delete(indxDot, num.GetLength() - indxDot);
+		num2.Delete(0, indxDot + 1);
 		num2.Trim();
 		it->iNumWord[1] = _wtoi(num2);
 
-		num.Delete(0, indxDot);	// Первое число
+		num.Delete(indxDot, num.GetLength());	// Первое число
 		num.Trim();
 		it->iNumWord[0] = _wtoi(num);
 
@@ -349,13 +456,14 @@ void CTest::translateBits(list<signalData>::iterator& it)
 	else  // Для двух промежутков
 	{
 		CString bits2 = bits;
-		bits2.Delete(indxDot, bits.GetLength() - indxDot);
-		bits.Delete(0, indxDot);
+		bits2.Delete(0, indxDot + 1);
+		bits.Delete(indxDot, bits.GetLength());
+		bits.Trim();	bits2.Trim();
 
 		vector <int> tmp = stepTranslateBits(bits);
 		it->iBit[0] = tmp[0];
 		it->iBit[1] = tmp[1];
-		
+
 		tmp.clear();
 		tmp = stepTranslateBits(bits2);
 		it->iBit[2] = tmp[0];
@@ -370,25 +478,26 @@ vector <int> CTest::stepTranslateBits(CString bits)
 {
 	vector <int> result = { 0, 0 };
 	bits.Trim();
-	
+
 	// Поиск индекса разделителей
 	int indxDel = bits.Find(_T('.'));
 	if (indxDel == -1)
 		indxDel = bits.Find(_T('…'));
 	else
 		bits.Delete(indxDel, 2);	// Удалям две последующие точки
-	
+
 	if (indxDel == -1)	// Разделителей нет, используется один разряд
 		result[0] = _wtoi(bits);
 	else
 	{
 		CString num = bits;
-		num.Delete(0, indxDel);	// Первое число
+		CString num2 = num;	// Второе число
+
+		num.Delete(indxDel, num.GetLength());	// Первое число
 		num.Trim();
 		result[0] = _wtoi(num);
 
-		CString num2 = num;	// Второе число
-		num2.Delete(indxDel, num.GetLength() - indxDel);
+		num2.Delete(0, indxDel + 1);
 		num2.Trim();
 		result[1] = _wtoi(num2);
 	}
@@ -396,46 +505,45 @@ vector <int> CTest::stepTranslateBits(CString bits)
 	return result;
 }
 
-// Перевод знакового бита, если он есть
-void CTest::translateBitSign(list<signalData>::iterator& it)
+// Перевод знакового бита или NP набора, если он есть
+void CTest::translateComment(list<signalData>::iterator& it)
 {
-	int posZn = it->sCommentField.Find(_T("Зн-"));
+	int indx = it->sCommentField.Find(_T("Зн-"));
+	CString tmp = it->sCommentField;
 
-	if (posZn != -1)
+	if (indx != -1)
 	{
-		CString tmp = it->sCommentField;
-		tmp.Delete(0, posZn + 3);
+		tmp.Delete(0, indx + 3);
+		
 		int iSpace = tmp.Find(_T(' '));
 		if (iSpace == -1)
-			iSpace = tmp.Find(_T('0x1c'));
+			iSpace = tmp.Find(_T('\n'));
+		if (iSpace == -1)
+			iSpace = tmp.Find(_T('\0'));
 
-		tmp.Delete(0, iSpace);
+		tmp.Delete(iSpace, tmp.GetLength());
 
 		it->iBitSigns = _wtoi(tmp);
 
-		it->bBitSigns = false;	// Установка флага присутствия знака в примечании
+		it->bCommentField = false;	// Установка флага присутствия знака в примечании
 	}
-}
 
-#pragma endregion
+	indx = tmp.Find(_T("NP="));
 
-// Создание записи ошибки сигнала
-errorSignalData CTest::getErrSignal(list<signalData>::iterator it, list <CString> error)
-{
-	errorSignalData signal;
+	if (indx != -1)
+	{
+		tmp.Delete(0, indx + 3);
 
-	signal.sNumWordField = it->sNumWordField;
-	signal.sTitleParamField[0] = it->sTitleParamField[0];
-	signal.sTitleParamField[1] = it->sTitleParamField[1];
-	signal.sDimensionField = it->sDimensionField;
-	signal.sMinMaxCsrValField[0] = it->sMinMaxCsrValField[0];
-	signal.sMinMaxCsrValField[1] = it->sMinMaxCsrValField[1];
-	signal.sMinMaxCsrValField[2] = it->sMinMaxCsrValField[2];
-	signal.sBitField = it->sBitField;
-	signal.sCommentField = it->sCommentField;
-	signal.sErrorField = error;
-	
-	return signal;
+		int iSpace = tmp.Find(_T(' '));
+		if (iSpace == -1)
+			iSpace = tmp.Find(_T('\n'));
+		if (iSpace == -1)
+			iSpace = tmp.Find(_T('\0'));
+
+		tmp.Delete(iSpace, tmp.GetLength());
+
+		NP = _wtoi(tmp);
+	}
 }
 
 // Функция преобразования CString в string

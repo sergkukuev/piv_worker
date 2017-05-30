@@ -35,6 +35,7 @@ struct simantic
 	CONST CString BitsNotSetSign = TEXT("Не включен знаковый бит.");
 	CONST CString BitsOneInter = TEXT("Должен быть один промежуток.");
 	CONST CString BitsTwoInter = TEXT("Должно быть два промежутка.");
+	CONST CString BitsCross = TEXT("Бит(ы) перекрывает(ют)ся. ");
 };
 
 // Класс набора ошибок для всех полей ПИВ

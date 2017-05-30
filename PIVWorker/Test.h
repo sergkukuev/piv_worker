@@ -16,6 +16,7 @@ private:
 
 	CErrBase ErrorBase;	// База ошибок
 	errorOneSet error;
+	int NP = 0;
 
 	void Syntax(errorBookData& errBook, bookData& book);	// Проверка на синтаксические ошибки
 	void Simantic(errorBookData& errBook, bookData& book);	// Проверка на семантические ошибки
@@ -32,15 +33,16 @@ private:
 	// Семантические
 	bool simanticNumWord(errorSheetData& sheet, list<signalData>::iterator& it, bool wRep[]);		// Проверка номера слова
 	bool simanticTitleParam(errorSheetData& sheet, list<signalData>::iterator& it);		// Проверка наименований сигнала
-	bool simanticMinMaxCSR(errorSheetData& sheet, list<signalData>::iterator& it);		// Проверка минимального, максимального и цср
+	bool simanticMinMaxCSR(errorSheetData& sheet, list<signalData>::iterator& it, int currNP, bool begin);		// Проверка минимального, максимального и цср
 	bool simanticBits(errorSheetData& sheet, list<signalData>::iterator& it);			// Проверка используемых разрядов
 
 	bool findRepiteInBook();
 	bool findRepiteInSheet();
+	bool checkCrossBits(list<signalData>::iterator& it);	// Проверка на перекрытия битов
 	void translateNumWord(list<signalData>::iterator& it);	// Перевод № слова из строки в числа
 	void translateBits(list<signalData>::iterator& it);		// Перевод используемых разрядов из строки в числа
 	vector <int> stepTranslateBits(CString bits);			// Дополнительная функция для перевода разрядов
-	void translateBitSign(list<signalData>::iterator& it);	// Перевод значения знака из примечания
+	void translateComment(list<signalData>::iterator& it);	// Перевод значения знака или NP набора из примечания
 
 	string convertString(CString cStr);	// Конвертер CString в string 
 };
