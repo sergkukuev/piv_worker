@@ -149,7 +149,10 @@ bool CTest::syntaxBits(errorSheetData& sheet, list<signalData>::iterator& it)
 	list <CString> error = testField(it->sBitField, ErrorBase.getBits());
 
 	if (error.empty())
+	{
+		translateBits(it);
 		return true;
+	}
 
 	errorSignalData signal = getErrSignal(it, error);
 	sheet.signals.push_back(signal);
@@ -167,18 +170,19 @@ bool CTest::syntaxComment(errorSheetData& sheet, list<signalData>::iterator& it,
 	bool zn = regex_search(field, ErrorBase.getComment().error[1]);	// Проверка на знак
 
 	if (begin)
+	{
 		bNP = regex_search(field, ErrorBase.getComment().error[0]);	// Проверка на набор параметров
 
-	if (bNP)
-		error.push_back(ErrorBase.getComment().description[0]);
-
-	if (zn)
-		error.push_back(ErrorBase.getComment().description[1]);
+		if (bNP)
+			error.push_back(ErrorBase.getComment().description[0]);
+	}
+	else
+		if (zn)
+			error.push_back(ErrorBase.getComment().description[1]);
 
 	if (error.empty())
 	{
-		size_t iBit = field.find("Зн-");
-		// Достать значение знака
+		translateBitSign(it);	// Достать значение знакового бита
 		return true;
 	}
 }
@@ -303,11 +307,11 @@ bool CTest::simanticBits(errorSheetData& sheet, list<signalData>::iterator& it)
 
 }
 
-// Перевод из строки в числа
+// Перевод номеров слов из строки в числа
 void CTest::translateNumWord(list<signalData>::iterator& it)
 {
 	CString num = it->sNumWordField;
-	int indxDot = num.Find(_T(","));
+	int indxDot = num.Find(_T(','));
 
 	if (indxDot == -1)
 	{
@@ -324,6 +328,92 @@ void CTest::translateNumWord(list<signalData>::iterator& it)
 		num.Delete(0, indxDot);	// Первое число
 		num.Trim();
 		it->iNumWord[0] = _wtoi(num);
+
+		it->b2NumWordField = false; // Установка флага присутствия двух слов
+	}
+}
+
+// Перевод из используемых разрядов из строки в числа
+void CTest::translateBits(list<signalData>::iterator& it)
+{
+	CString bits = it->sBitField;
+	int indxDot = bits.Find(_T(','));
+
+	if (indxDot == -1)	// Для одного промежутка
+	{
+		vector <int> tmp = stepTranslateBits(bits);
+
+		it->iBit[0] = tmp[0];
+		it->iBit[1] = tmp[1];
+	}
+	else  // Для двух промежутков
+	{
+		CString bits2 = bits;
+		bits2.Delete(indxDot, bits.GetLength() - indxDot);
+		bits.Delete(0, indxDot);
+
+		vector <int> tmp = stepTranslateBits(bits);
+		it->iBit[0] = tmp[0];
+		it->iBit[1] = tmp[1];
+		
+		tmp.clear();
+		tmp = stepTranslateBits(bits2);
+		it->iBit[2] = tmp[0];
+		it->iBit[3] = tmp[1];
+
+		it->b2BitField = false; // Установка флага для двух промежутков
+	}
+}
+
+// Дополнительная функция для перевода разрядов
+vector <int> CTest::stepTranslateBits(CString bits)
+{
+	vector <int> result = { 0, 0 };
+	bits.Trim();
+	
+	// Поиск индекса разделителей
+	int indxDel = bits.Find(_T('.'));
+	if (indxDel == -1)
+		indxDel = bits.Find(_T('…'));
+	else
+		bits.Delete(indxDel, 2);	// Удалям две последующие точки
+	
+	if (indxDel == -1)	// Разделителей нет, используется один разряд
+		result[0] = _wtoi(bits);
+	else
+	{
+		CString num = bits;
+		num.Delete(0, indxDel);	// Первое число
+		num.Trim();
+		result[0] = _wtoi(num);
+
+		CString num2 = num;	// Второе число
+		num2.Delete(indxDel, num.GetLength() - indxDel);
+		num2.Trim();
+		result[1] = _wtoi(num2);
+	}
+
+	return result;
+}
+
+// Перевод знакового бита, если он есть
+void CTest::translateBitSign(list<signalData>::iterator& it)
+{
+	int posZn = it->sCommentField.Find(_T("Зн-"));
+
+	if (posZn != -1)
+	{
+		CString tmp = it->sCommentField;
+		tmp.Delete(0, posZn + 3);
+		int iSpace = tmp.Find(_T(' '));
+		if (iSpace == -1)
+			iSpace = tmp.Find(_T('0x1c'));
+
+		tmp.Delete(0, iSpace);
+
+		it->iBitSigns = _wtoi(tmp);
+
+		it->bBitSigns = false;	// Установка флага присутствия знака в примечании
 	}
 }
 

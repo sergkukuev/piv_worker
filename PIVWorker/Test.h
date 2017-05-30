@@ -37,9 +37,10 @@ private:
 
 	bool findRepiteInBook();
 	bool findRepiteInSheet();
-	void translateNumWord(list<signalData>::iterator& it);	// Перевод № слова из строки в числа(о)
-	void translateMinMaxCSR(list<signalData>::iterator& it);// Переводи мин, макс, цср из строки в числа
+	void translateNumWord(list<signalData>::iterator& it);	// Перевод № слова из строки в числа
 	void translateBits(list<signalData>::iterator& it);		// Перевод используемых разрядов из строки в числа
+	vector <int> stepTranslateBits(CString bits);			// Дополнительная функция для перевода разрядов
+	void translateBitSign(list<signalData>::iterator& it);	// Перевод значения знака из примечания
 
 	string convertString(CString cStr);	// Конвертер CString в string 
 };
