@@ -234,11 +234,11 @@ void CTest::Simantic(errorBookData& errBook, bookData& book)
 	for (size_t cSheet = 0; cSheet < errBook.sheets.size(); cSheet++)
 	{
 		errBook.sheets[cSheet].name = book.sheets[cSheet].nameSheet;
+		bool wRepite[32];		// Для отслеживания повторений слов
+		bool tRepiter[32][32];	// Для отслеживания повторений идентификаторов
 
 		for (list <signalData>::iterator it = book.sheets[cSheet].signals.begin(); it != book.sheets[cSheet].signals.end(); it++)
 		{
-			bool wRepite[32];	// Для отслеживания повторений слов
-			bool tRepiter[32][32]; // Для отслеживания повторений идентификаторов
 			bool begin = true;
 			if (it != book.sheets[cSheet].signals.begin())	begin = false;
 			bool result = simanticNumWord(errBook.sheets[cSheet], it, wRepite);

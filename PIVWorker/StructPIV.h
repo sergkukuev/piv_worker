@@ -59,21 +59,6 @@ struct bookData
 	bool bNumPodKadra;			// Присутствие номера подкадра
 };
 
-struct repitParametr
-{
-	CString sNameBook;			// Имя книги
-	CString sNameSheet;			// Имя листа
-	int iNumWord[2] = { 0,0 };	// Номер слова в листе
-	CString sNameParam;			// Обозначение парамметра
-	int iRepit;					// Количество повторений
-};
-
-struct repitWord
-{
-	bool sNumWordField;						// Строка с номерами слов
-	bool sTitleParamField[32] = { false };	// Наименование парамметра (максимум 2 строки)
-};
-
 ///////////////////////////////////////////// Ошибки ПИВ /////////////////////////////////////////////
 
 // Сигналы
