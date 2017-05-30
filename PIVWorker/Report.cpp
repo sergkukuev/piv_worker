@@ -131,8 +131,8 @@ void CReport::makeReport()
 
 		// Создание отчета о синтаксических, семантических ошибках и предупреждениях
 		writeError(file, errorDB.syntax[cBooks], _T("Error\\Syntax"));
-		writeError(file, errorDB.syntax[cBooks], _T("Error\\Simantic"));
-		writeError(file, errorDB.syntax[cBooks], _T("Warning"));
+		writeError(file, errorDB.simantic[cBooks], _T("Error\\Simantic"));
+		writeError(file, errorDB.warning[cBooks], _T("Warning"));
 		file << "          </tr>\n";
 	}
 	file << "      </table>\n";
@@ -197,17 +197,17 @@ void CReport::writeSheets(ofstream& file, int cBooks)
 
 	for (size_t cSheets = 0; cSheets < books[cBooks].sheets.size(); cSheets++)
 	{
-		if (books[cBooks].sheets[cSheets].bErrorSheet) // Имеется ли ошибка на листе
+		if (!books[cBooks].sheets[cSheets].bErrorSheet) // Имеется ли ошибка на листе
 		{
 			if (pathDirectory)
 			{
 				pathDirectory = false;
 				file << "          <tr>\n";
-				file << "              <td>"; file << books[cBooks].nameBook; file << "< / td>\n";
+				file << "              <td>"; file << CT2A(books[cBooks].nameBook); file << "</td>\n";
 				file << "              <td align=\"center\">\n";
 				file << "                 <dl>\n";
 			}
-			file << "                     <dt>"; file << books[cBooks].sheets[cSheets].nameSheet; file << "< / dt>\n";
+			file << "                     <dt>"; file << CT2A(books[cBooks].sheets[cSheets].nameSheet); file << "</dt>\n";
 		}
 	}
 	file << "                 </dl>\n";
@@ -225,7 +225,7 @@ void CReport::writeError(ofstream& file, errorBookData error, CString folder)
 		{
 			CString name = error.name;
 
-			name.Delete(error.name.Find(_T(".")), error.name.GetLength() - error.name.Find(_T(".")));	// Удаляем значения после точки	(ПОСМОТРЕТЬ, ЕСЛИ ТАМ ВОВСЕ ТОЧКА)
+			//name.Delete(error.name.Find(_T(".")), error.name.GetLength() - error.name.Find(_T(".")));	// Удаляем значения после точки	(ПОСМОТРЕТЬ, ЕСЛИ ТАМ ВОВСЕ ТОЧКА)
 
 			// Создание директории для книги, если ее нет
 			if (pathDirectory)
@@ -236,7 +236,7 @@ void CReport::writeError(ofstream& file, errorBookData error, CString folder)
 				tPath.Format(_T("%s\\%s\\%s"), path, folder, name);
 				CreateDirectory(tPath, NULL);
 
-				file << "              <td colspan=\"3\" align=\"center\">\n";
+				file << "              <td align=\"center\">\n";
 				file << "                 <dl>\n";
 			}
 
@@ -244,7 +244,7 @@ void CReport::writeError(ofstream& file, errorBookData error, CString folder)
 			CString fullPath = _T("");	// Полный путь страницы отчета
 			CString pathHref = _T("");
 			CString buffer = _T("");
-			pathHref.Format(_T("%s\\%s\\%s"), folder, name, error.sheets[iSheets].name);
+			pathHref.Format(_T("%s\\%s\\%s.html"), folder, name, error.sheets[iSheets].name);
 			buffer.Format(_T("                     <dt><a href=\"%s\">%d</a></dt>\n"), pathHref, error.sheets[iSheets].signals.size());
 			file << CT2A(buffer);
 
@@ -259,7 +259,7 @@ void CReport::writeError(ofstream& file, errorBookData error, CString folder)
 			tempFile << "  <head>\n";
 			tempFile << "     <meta http-equiv=\"Content-Type\" content=\"text/html; charset=win-1251\" />\n";
 
-			tempFile << "     <title>Замечания по книге \""; tempFile << error.name; tempFile << "\"</title>\n";
+			tempFile << "     <title>Замечания по книге \""; tempFile << CT2A(error.name); tempFile << "\"</title>\n";
 
 			tempFile << "  </head>\n";
 			tempFile << "  <body>\n";
@@ -267,8 +267,8 @@ void CReport::writeError(ofstream& file, errorBookData error, CString folder)
 			tempFile << "          <tr>\n";
 			tempFile << "              <th rowspan=\"2\">№ Замечания</th>\n";
 
-			tempFile << "              <th colspan=\"9\">Замечания. Книга \""; tempFile << error.name;
-			tempFile << "\". Лист \""; tempFile << error.sheets[iSheets].name; tempFile << "\".</th>\n";
+			tempFile << "              <th colspan=\"9\">Замечания. Книга \""; tempFile << CT2A(error.name);
+			tempFile << "\". Лист \""; tempFile << CT2A(error.sheets[iSheets].name); tempFile << "\".</th>\n";
 
 			tempFile << "          </tr>\n";
 			tempFile << "          <tr>\n";
@@ -285,10 +285,10 @@ void CReport::writeError(ofstream& file, errorBookData error, CString folder)
 
 			// Обход по ячейкам
 			int iRow = 1;
-			for (list<errorSignalData>::iterator it = error.sheets[iSheets].signals.begin(); it != error.sheets[iSheets].signals.end(); it++, iRow)
+			for (list<errorSignalData>::iterator it = error.sheets[iSheets].signals.begin(); it != error.sheets[iSheets].signals.end(); it++, iRow++)
 			{
 				tempFile << "          <tr>\n";
-				tempFile << "              <th rowspan=\"2\"> &nbsp "; tempFile << iRow; tempFile << "< / th>\n";
+				tempFile << "              <th rowspan=\"2\"> &nbsp "; tempFile << iRow; tempFile << "</th>\n";
 				
 				int indxErr = getIndexErrorField(it);
 				
@@ -345,7 +345,11 @@ void CReport::writeError(ofstream& file, errorBookData error, CString folder)
 			tempFile.close();	// Закрытие
 		}
 		else
+		{
+			file << "              <td colspan=\"3\" align=\"center\">\n";
+			file << "                 <dl>\n";
 			file << "                     <dt>-</dt>\n";
+		}
 	}
 	file << "                 </dl>\n";
 	file << "              </td>\n";
@@ -384,7 +388,7 @@ int CReport::getSetsAmountWithError()
 
 	for (size_t i = 0; i < books.size(); i++)
 		for (size_t j = 0; j < books[i].sheets.size(); j++)
-			if (books[i].sheets[j].bErrorSheet)
+			if (!books[i].sheets[j].bErrorSheet)
 				result++;
 
 	return result;
