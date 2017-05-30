@@ -32,13 +32,13 @@ private:
 
 	// Семантические
 	bool simanticNumWord(errorSheetData& sheet, list<signalData>::iterator& it, bool wRep[]);		// Проверка номера слова
-	bool simanticTitleParam(errorSheetData& sheet, list<signalData>::iterator& it);		// Проверка наименований сигнала
-	bool simanticMinMaxCSR(errorSheetData& sheet, list<signalData>::iterator& it, int currNP, bool begin);		// Проверка минимального, максимального и цср
-	bool simanticBits(errorSheetData& sheet, list<signalData>::iterator& it);			// Проверка используемых разрядов
+	bool simanticTitleParam(errorSheetData& sheet, list<signalData>::iterator& it);					// Проверка наименований сигнала
+	bool simanticMinMaxCSR(errorSheetData& sheet, list<signalData>::iterator& it, int currNP, bool begin);	// Проверка минимального, максимального и цср
+	bool simanticBits(errorSheetData& sheet, list<signalData>::iterator& it, bool tRep[32][32]);			// Проверка используемых разрядов
 
 	bool findRepiteInBook();
 	bool findRepiteInSheet();
-	bool checkCrossBits(list<signalData>::iterator& it);	// Проверка на перекрытия битов
+	bool checkCrossBits(list<signalData>::iterator& it, bool repiter[32][32]);	// Проверка на перекрытия битов
 	void translateNumWord(list<signalData>::iterator& it);	// Перевод № слова из строки в числа
 	void translateBits(list<signalData>::iterator& it);		// Перевод используемых разрядов из строки в числа
 	vector <int> stepTranslateBits(CString bits);			// Дополнительная функция для перевода разрядов

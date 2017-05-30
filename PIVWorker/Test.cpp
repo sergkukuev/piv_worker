@@ -238,12 +238,13 @@ void CTest::Simantic(errorBookData& errBook, bookData& book)
 		for (list <signalData>::iterator it = book.sheets[cSheet].signals.begin(); it != book.sheets[cSheet].signals.end(); it++)
 		{
 			bool wRepite[32];	// Для отслеживания повторений слов
+			bool tRepiter[32][32]; // Для отслеживания повторений идентификаторов
 			bool begin = true;
 			if (it != book.sheets[cSheet].signals.begin())	begin = false;
 			bool result = simanticNumWord(errBook.sheets[cSheet], it, wRepite);
 			//(!simanticTitleParam(errBook.sheets[cSheet], it)) ? result = false : result = result;
 			(!simanticMinMaxCSR(errBook.sheets[cSheet], it, book.sheets[cSheet].iCommentFieldNP, begin)) ? result = false : result = result;
-			(!simanticBits(errBook.sheets[cSheet], it)) ? result = false : result = result;
+			(!simanticBits(errBook.sheets[cSheet], it, tRepiter)) ? result = false : result = result;
 			
 			if (!result)	// Установка флага, что на листе есть ошибка
 				book.sheets[cSheet].bErrorSheet = false;
@@ -354,7 +355,7 @@ bool CTest::simanticMinMaxCSR(errorSheetData& sheet, list<signalData>::iterator&
 }
 
 // Проверка используемых разрядов
-bool CTest::simanticBits(errorSheetData& sheet, list<signalData>::iterator& it)
+bool CTest::simanticBits(errorSheetData& sheet, list<signalData>::iterator& it, bool tRep[][32])
 {
 	list <CString> error;
 	
@@ -362,8 +363,8 @@ bool CTest::simanticBits(errorSheetData& sheet, list<signalData>::iterator& it)
 	{
 		if (it->b2NumWordField == it->b2BitField)	// Кол-во № слов должно совпадать с кол-вами интервалов исп. разрядов
 		{
-			if (!checkCrossBits(it))
-				error.push_back(ErrorBase.sim.BitsCross);	// Проверка на перекрытие
+			if (!checkCrossBits(it, tRep))	// Проверка на перекрытие
+				error.push_back(ErrorBase.sim.BitsCross);	
 
 			if (it->bCommentField && it->bBitSigns)
 				if (it->iBitSigns != it->iBit[0])
@@ -388,9 +389,70 @@ bool CTest::simanticBits(errorSheetData& sheet, list<signalData>::iterator& it)
 }
 
 // Проверка на перекрытие битов
-bool CTest::checkCrossBits(list<signalData>::iterator& it)
+bool CTest::checkCrossBits(list<signalData>::iterator& it, bool repiter[][32])
 {
-	return true;
+	bool result = false;
+	int nInterval;
+	(it->b2BitField) ? nInterval = 1 : nInterval = 2;
+
+	for (int i = 0; i < nInterval; i++)
+	{
+		int start, end;
+
+		if (i == 0)
+		{
+			start = it->iBit[0];
+			end = it->iBit[1];
+		}
+		else
+		{
+			start = it->iBit[2];
+			end = it->iBit[3];
+		}
+
+		if (end == 0)
+			end = start;
+
+		// int param_povt_f = -1, param_povt_s = -1;
+		// CString boot = _T("");
+
+		for (; start <= end; start++)
+		{
+			if (repiter[it->iNumWord[i] - 1][start - 1])
+				repiter[it->iNumWord[i] - 1][start - 1] = false;
+			else
+				result = true;
+			/*{
+				result = true;
+				if (param_povt_f == -1)
+				{
+					param_povt_f = start_bit;
+					boot.Format(_T("%d"), param_povt_f);
+				}
+
+				if (param_povt_s == -1)
+					param_povt_s = start_bit;
+
+				if ((start_bit - param_povt_s) > 1)
+				{
+					if (param_povt_f == param_povt_s)
+						boot.Format(_T("%s,%d"), boot, param_povt_s);
+					else
+						boot.Format(_T("%s...%d,%d"), boot, param_povt_s, start_bit);
+					param_povt_f = start;
+					param_povt_s = start;
+				}
+
+				if ((start - param_povt_s) == 1)
+					param_povt_s = start;
+			}
+
+			if (start == end)
+				if (param_povt_f != param_povt_s)
+					boot.Format(_T("%s...%d"), boot, param_povt_s);*/
+		}
+	}
+	return result;
 }
 
 #pragma endregion
@@ -511,7 +573,7 @@ void CTest::translateComment(list<signalData>::iterator& it)
 	int indx = it->sCommentField.Find(_T("Зн-"));
 	CString tmp = it->sCommentField;
 
-	if (indx != -1)
+	if (indx != -1)	// Чтение знакового бита
 	{
 		tmp.Delete(0, indx + 3);
 		
@@ -530,7 +592,7 @@ void CTest::translateComment(list<signalData>::iterator& it)
 
 	indx = tmp.Find(_T("NP="));
 
-	if (indx != -1)
+	if (indx != -1)	// Чтение NP
 	{
 		tmp.Delete(0, indx + 3);
 
