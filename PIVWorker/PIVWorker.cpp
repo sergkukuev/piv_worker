@@ -101,6 +101,19 @@ DWORD WINAPI TestThread(LPVOID lpParam)
 	return 0;
 }
 
+DWORD WINAPI ReportThread(LPVOID lpParam)
+{
+	CoInitialize(NULL);
+	SetThreadPriorityBoost(GetCurrentThread(), TRUE);
+	MyData* myD = static_cast<MyData*>(lpParam);
+
+	Report(*(myD->object));
+
+	CoUninitialize();
+
+	return 0;
+}
+
 // Конструктор
 CPIVWorker::CPIVWorker()
 {
@@ -179,8 +192,8 @@ void CPIVWorker::Test()
 	}
 	else
 		AfxMessageBox(_T("Поток занят! Подождите окончания процесса!"));
-
 }
+
 // Проверка всех открытых книг
 void CPIVWorker::TestAll()
 {
@@ -216,6 +229,34 @@ void CPIVWorker::TestAll()
 		AfxMessageBox(exc.GetMsg());
 	}
 	closeThread(primary);
+}
+
+// Создание отчета об ошибках
+void CPIVWorker::Report(CString path)
+{
+	if (path.IsEmpty())
+		AfxMessageBox(_T("Укажите путь сохранения отчета!"));
+	else
+	{
+		pathRep = path;
+		if (getStatusThread(primary))
+		{
+			mD.object = this;
+			primary = CreateThread(NULL, 0, ReportThread, &mD, 0, 0);
+		}
+		else
+			AfxMessageBox(_T("Поток занят! Подождите окончания процесса!"));
+	}
+}
+
+// Создание отчета
+void CPIVWorker::MakeReport()
+{
+	CReport report;
+
+	report.setPath(pathRep);
+	report.Generate(books, errorDB);
+	AfxMessageBox(_T("Создание отчета завершено!"));
 }
 
 // Закрыть книжечку
@@ -311,6 +352,12 @@ void ReadExcel(CPIVWorker& piv)
 void Test(CPIVWorker& piv)
 {
 	piv.TestAll();
+}
+
+// Дружественная функция для запуска создания отчета
+void Report(CPIVWorker& piv)
+{
+	piv.MakeReport();
 }
 
 // Проверка потока на доступность
