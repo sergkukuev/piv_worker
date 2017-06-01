@@ -47,8 +47,32 @@ END_MESSAGE_MAP()
 
 
 // диалоговое окно CMainDlg
+struct MyData
+{
+	CMainDlg* object;
+};
 
+MyData mD;
 
+DWORD WINAPI CheckThread(LPVOID lpParam)
+{
+	CoInitialize(NULL);
+	SetThreadPriorityBoost(GetCurrentThread(), TRUE);
+	MyData* myD = static_cast<MyData*>(lpParam);
+
+	waitThread(*(myD->object));
+
+	CoUninitialize();
+
+	return 0;
+}
+
+void waitThread(CMainDlg& object)
+{
+	WaitForSingleObject(object.piv.primary, INFINITE);
+	
+	object.logicMenu(object.cmd);
+}
 
 CMainDlg::CMainDlg(CWnd* pParent /*=NULL*/)
 	: CDialog(IDD_PIVWORKERAPP_DIALOG, pParent)
@@ -101,6 +125,11 @@ BOOL CMainDlg::OnInitDialog()
 			pSysMenu->AppendMenu(MF_STRING, IDM_ABOUTBOX, strAboutMenu);
 		}
 	}
+
+	// Создание и настройка ListBox
+	lsBox = new CListBox();
+	lsBox->Create(WS_CHILD | WS_VISIBLE | LBS_MULTIPLESEL, CRect(10, 30, 295, 300), this, 0x118);
+	lsBox->GetItemHeight(20);
 
 	// Задает значок для этого диалогового окна.  Среда делает это автоматически,
 	//  если главное окно приложения не является диалоговым
@@ -179,58 +208,86 @@ void CMainDlg::OnPivOpen()
 		POSITION ps = openDialog.GetStartPosition();	// получить начальную позицию
 		while (ps) //пока есть выбранные файлы
 		{
-			CString _path = openDialog.GetPathName();
 			CString fullPath = openDialog.GetNextPathName(ps);
-
-			if (!piv.isExist(fullPath))
-				path.push_back(fullPath); // Заполнение, если такого файла еще нет
-
 			CString name = openDialog.GetFileName();
-
+			
 			if (name == L"")
 			{
-				fullPath.Delete(0, _path.GetLength() + 1);
-				name = fullPath;
+				CString _path = openDialog.GetPathName();
+				CString tmp = fullPath;
+				tmp.Delete(0, _path.GetLength() + 1);
+				name = tmp;
 			}
+
+			AddPath(fullPath, name);	// Добавление файла
 		}
 	}
 
 	if (path.empty())
-		AfxMessageBox(_T("Нет протоколов для открытия"));
+		AfxMessageBox(_T("Список протоколов для открытия пуст!"));
 	else
 	{
 		piv.ReadExcel(path);
-
-		CMenu* pMenu = GetMenu();
-
-		pMenu->EnableMenuItem(ID_PIV_CLOSE, MF_ENABLED);
-		pMenu->EnableMenuItem(ID_PIV_CLOSE_ALL, MF_ENABLED);
-		pMenu->EnableMenuItem(ID_PIV_ANALYZE, MF_ENABLED);
+		setMenu(1);
 	}
 }
 
 // Закрытие протокола
 void CMainDlg::OnPivClose()
 {
-	// TODO: добавьте свой код обработчика команд
+	vector <CString> del;
+	// Получите индексы всех выбранных элементов.
+	int nCount = lsBox->GetSelCount();
+	CArray<int, int> sel;
+
+	sel.SetSize(nCount);
+	lsBox->GetSelItems(nCount, sel.GetData());
+
+	for (size_t i = 0; i < sel.GetSize(); i++)
+	{
+		del.push_back(path[i]);
+		path.erase(path.begin() + i);
+		lsBox->DeleteString(i);
+	}
+	piv.CloseExcel(del);
+	setMenu(3);
 }
 
 // Анализировать протоколы
 void CMainDlg::OnPivAnalyze()
 {
-	// TODO: добавьте свой код обработчика команд
+	piv.Test();
+	setMenu(2);
 }
 
 // Открыть отчет
 void CMainDlg::OnPivReport()
 {
-	// TODO: добавьте свой код обработчика команд
+	BROWSEINFO	bi;
+	TCHAR	szDisplayName[MAX_PATH];
+	LPITEMIDLIST	pidl;
+
+	ZeroMemory(&bi, sizeof(bi));
+	bi.hwndOwner = NULL;
+	bi.pszDisplayName = szDisplayName;
+	bi.lpszTitle = TEXT("Выберите папку для сохранения");
+	bi.ulFlags = BIF_NEWDIALOGSTYLE; //or BIF_VALIDATE//BIF_RETURNONLYFSDIRS;
+	pidl = SHBrowseForFolder(&bi);
+
+	if (pidl)
+	{
+		SHGetPathFromIDList(pidl, szDisplayName);
+		folder = szDisplayName;
+	}
+
+	piv.Report(folder);	// Генерация отчета
+	setMenu(4);
 }
 
 // Открыть папку с отчетом
 void CMainDlg::OnPivRepFolder()
 {
-	// TODO: добавьте свой код обработчика команд
+	ShellExecute(0, L"Explore", folder, NULL, NULL, SW_NORMAL);
 }
 
 // Генерировать txt отчет
@@ -249,7 +306,72 @@ void CMainDlg::OnAppInform()
 // Закрыть все протоколы
 void CMainDlg::OnPivCloseAll()
 {
-	// TODO: добавьте свой код обработчика команд
+	vector <CString> tmp = path;
+	path.clear();
+	lsBox->ResetContent();
+	piv.CloseExcel(tmp);
+	setMenu(3);
 }
 
 #pragma endregion
+
+void CMainDlg::AddPath(CString fullPath, CString name)
+{
+	if (!path.empty())
+	{
+		for (size_t i = 0; i < path.size(); i++)
+			if (fullPath.Compare(path[i]) != 0)
+			{
+				path.push_back(fullPath); // Заполнение, если такого файла еще нет
+				lsBox->AddString(name);
+			}
+	}
+	else
+	{
+		path.push_back(fullPath);
+		lsBox->AddString(name);
+	}
+}
+
+void CMainDlg::logicMenu(int command)
+{
+	CMenu* pMenu = GetMenu();
+
+	if (cmd == 1)	// Команда открыть протокол
+	{
+		pMenu->EnableMenuItem(ID_PIV_ANALYZE, MFS_ENABLED);
+		pMenu->EnableMenuItem(ID_PIV_CLOSE, MFS_ENABLED);
+		pMenu->EnableMenuItem(ID_PIV_CLOSE_ALL, MFS_ENABLED);
+	}
+	else if (cmd == 2)	// Команда анализировать
+	{
+		pMenu->EnableMenuItem(ID_PIV_REPORT, MFS_ENABLED);
+		pMenu->EnableMenuItem(ID_PIV_GEN_TXT, MFS_ENABLED);
+	}
+	else if (cmd == 3)	// Закрыть протокол / Закрыть все
+	{
+		if (path.empty())
+		{
+			pMenu->EnableMenuItem(ID_PIV_ANALYZE, MFS_GRAYED);
+			pMenu->EnableMenuItem(ID_PIV_CLOSE, MFS_GRAYED);
+			pMenu->EnableMenuItem(ID_PIV_CLOSE_ALL, MFS_GRAYED);
+
+			pMenu->EnableMenuItem(ID_PIV_REPORT, MFS_GRAYED);
+			pMenu->EnableMenuItem(ID_PIV_REP_FOLDER, MFS_GRAYED);
+			pMenu->EnableMenuItem(ID_PIV_GEN_TXT, MFS_GRAYED);
+		}
+	}
+	else if (cmd == 4)	// Создать отчет
+	{
+		pMenu->EnableMenuItem(ID_PIV_REP_FOLDER, MFS_ENABLED);
+	}
+	else
+		AfxMessageBox(L"Нераспознанная команда!");
+}
+
+void CMainDlg::setMenu(int command)
+{
+	cmd = command;
+	mD.object = this;
+	hWait = CreateThread(NULL, 0, CheckThread, &mD, 0, 0);
+}

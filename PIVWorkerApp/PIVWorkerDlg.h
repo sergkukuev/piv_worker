@@ -25,7 +25,14 @@ public:
 // Реализация
 private:
 	CPIVWorker piv;			// Переменная для работы с протоколами
+	CString folder;			// Путь для отчета
 	vector <CString> path;	// Пути файлов
+	HANDLE hWait;
+	int cmd = 0;
+
+	CListBox* lsBox;
+	void setMenu(int command);
+	void AddPath(CString fullPath, CString name);
 
 protected:
 	HACCEL m_AccelTable;		// Таблица акселераторов
@@ -37,7 +44,10 @@ protected:
 	afx_msg void OnPaint();
 	afx_msg HCURSOR OnQueryDragIcon();
 	DECLARE_MESSAGE_MAP()
+	friend void waitThread(CMainDlg& object);
+
 public:
+	void logicMenu(int command);
 	afx_msg void OnPivOpen();			// Открытие протоколов
 	afx_msg void OnPivClose();			// Закрытие протокола
 	afx_msg void OnPivCloseAll();		// Закрыть все протоколы
