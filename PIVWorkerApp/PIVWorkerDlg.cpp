@@ -54,6 +54,7 @@ struct MyData
 
 MyData mD;
 
+// Поток для проверки доступности потока класса CPIVWorker
 DWORD WINAPI CheckThread(LPVOID lpParam)
 {
 	CoInitialize(NULL);
@@ -67,6 +68,7 @@ DWORD WINAPI CheckThread(LPVOID lpParam)
 	return 0;
 }
 
+// Ожидание доступности потока класса CPIVWorker
 void waitThread(CMainDlg& object)
 {
 	WaitForSingleObject(object.piv.primary, INFINITE);
@@ -235,9 +237,8 @@ void CMainDlg::OnPivOpen()
 // Закрытие протокола
 void CMainDlg::OnPivClose()
 {
-	vector <CString> del;
-	// Получите индексы всех выбранных элементов.
-	int nCount = lsBox->GetSelCount();
+	vector <CString> del;	// Пути всех удаленных пив
+	int nCount = lsBox->GetSelCount();	// Получите индексы всех выбранных элементов.
 	CArray<int, int> sel;
 
 	sel.SetSize(nCount);
@@ -315,6 +316,7 @@ void CMainDlg::OnPivCloseAll()
 
 #pragma endregion
 
+// Добаление путей файлов
 void CMainDlg::AddPath(CString fullPath, CString name)
 {
 	if (!path.empty())
@@ -333,6 +335,7 @@ void CMainDlg::AddPath(CString fullPath, CString name)
 	}
 }
 
+// Логика работы меню приложения
 void CMainDlg::logicMenu(int command)
 {
 	CMenu* pMenu = GetMenu();
@@ -363,12 +366,16 @@ void CMainDlg::logicMenu(int command)
 	}
 	else if (cmd == 4)	// Создать отчет
 	{
+		CString file = folder;
+		file.Format(_T("%s\\Отчет.html"), folder);
 		pMenu->EnableMenuItem(ID_PIV_REP_FOLDER, MFS_ENABLED);
+		ShellExecute(0, L"open", file, NULL, NULL, SW_NORMAL);	// Надо или не надо, вот в чем вопрос
 	}
 	else
 		AfxMessageBox(L"Нераспознанная команда!");
 }
 
+// Установка параметров меню
 void CMainDlg::setMenu(int command)
 {
 	cmd = command;
