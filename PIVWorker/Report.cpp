@@ -197,18 +197,15 @@ void CReport::writeSheets(ofstream& file, int cBooks)
 
 	for (size_t cSheets = 0; cSheets < books[cBooks].sheets.size(); cSheets++)
 	{
-		if (!books[cBooks].sheets[cSheets].bErrorSheet) // Имеется ли ошибка на листе
+		if (pathDirectory)
 		{
-			if (pathDirectory)
-			{
-				pathDirectory = false;
-				file << "          <tr>\n";
-				file << "              <td>"; file << CT2A(books[cBooks].nameBook); file << "</td>\n";
-				file << "              <td align=\"center\">\n";
-				file << "                 <dl>\n";
-			}
-			file << "                     <dt>"; file << CT2A(books[cBooks].sheets[cSheets].nameSheet); file << "</dt>\n";
+			pathDirectory = false;
+			file << "          <tr>\n";
+			file << "              <td>"; file << CT2A(books[cBooks].nameBook); file << "</td>\n";
+			file << "              <td align=\"center\">\n";
+			file << "                 <dl>\n";
 		}
+		file << "                     <dt>"; file << CT2A(books[cBooks].sheets[cSheets].nameSheet); file << "</dt>\n";
 	}
 	file << "                 </dl>\n";
 	file << "              </td>\n";
@@ -218,25 +215,24 @@ void CReport::writeSheets(ofstream& file, int cBooks)
 void CReport::writeError(ofstream& file, errorBookData error, CString folder)
 {
 	bool pathDirectory = true;
+	CString colspan;
+
+	(folder.Compare(_T("Warning")) == 0) ? colspan = "colspan=\"3\"" : colspan = "";
 
 	for (size_t iSheets = 0; iSheets < error.sheets.size(); iSheets++)	// Обход по листам
 	{
 		if (error.sheets[iSheets].signals.size() > 0)
 		{
-			CString name = error.name;
-
-			//name.Delete(error.name.Find(_T(".")), error.name.GetLength() - error.name.Find(_T(".")));	// Удаляем значения после точки	(ПОСМОТРЕТЬ, ЕСЛИ ТАМ ВОВСЕ ТОЧКА)
-
 			// Создание директории для книги, если ее нет
 			if (pathDirectory)
 			{
 				pathDirectory = false;
 
 				CString tPath = _T("");
-				tPath.Format(_T("%s\\%s\\%s"), path, folder, name);
+				tPath.Format(_T("%s\\%s\\%s"), path, folder, error.name);
 				CreateDirectory(tPath, NULL);
 
-				file << "              <td align=\"center\">\n";
+				file << "              <td "; file << CT2A(colspan); file << " align=\"center\">\n";
 				file << "                 <dl>\n";
 			}
 
@@ -244,7 +240,7 @@ void CReport::writeError(ofstream& file, errorBookData error, CString folder)
 			CString fullPath = _T("");	// Полный путь страницы отчета
 			CString pathHref = _T("");
 			CString buffer = _T("");
-			pathHref.Format(_T("%s\\%s\\%s.html"), folder, name, error.sheets[iSheets].name);
+			pathHref.Format(_T("%s\\%s\\%s.html"), folder, error.name, error.sheets[iSheets].name);
 			buffer.Format(_T("                     <dt><a href=\"%s\">%d</a></dt>\n"), pathHref, error.sheets[iSheets].signals.size());
 			file << CT2A(buffer);
 
@@ -346,8 +342,17 @@ void CReport::writeError(ofstream& file, errorBookData error, CString folder)
 		}
 		else
 		{
-			file << "              <td colspan=\"3\" align=\"center\">\n";
-			file << "                 <dl>\n";
+			if (pathDirectory)
+			{
+				pathDirectory = false;
+
+				CString tPath = _T("");
+				tPath.Format(_T("%s\\%s\\%s"), path, folder, error.name);
+				CreateDirectory(tPath, NULL);
+
+				file << "              <td "; file << CT2A(colspan); file << " align=\"center\">\n";
+				file << "                 <dl>\n";
+			}
 			file << "                     <dt>-</dt>\n";
 		}
 	}
@@ -367,7 +372,16 @@ void CReport::hightlightError(ofstream& file, int tIndx, int Indx, CString field
 // Поиск индекса ошибочного параметра
 int CReport::getIndexErrorField(list<errorSignalData>::iterator it)
 {
-	return -1;
+	int result = -1;
+	CString tab = *it->sErrorField.begin();
+
+	for (int i = 0; i < 7; i++)
+	{
+		if (tab.Compare(errRemarks[i]) == 0)
+			result = i;
+	}
+
+	return result;
 }
 
 // Количество всех наборов данных

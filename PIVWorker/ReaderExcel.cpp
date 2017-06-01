@@ -226,7 +226,7 @@ list <signalData> CReaderExcel::getSignals(CWorkExcel& work)
 		// Чтение комментариев
 		cell.column = static_cast<long> (header.adress[header.iComment]);
 		signal.sCommentField = getCell(work, cell, cMergeName);
-		signal.bCommentField = true;
+		signal.bCommentField = false;
 
 		bool bEmpty = IsEmpty(work, cell.row);
 		bRemark = IsRemark(work, cell.row);

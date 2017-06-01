@@ -26,6 +26,9 @@
 
 class PIV_WORKER_API CPIVWorker	{
 public:
+	HANDLE primary;				// Основной поток
+	HANDLE secondary;			// Дополнительный поток
+
 	CPIVWorker();	// Конструктор
 	~CPIVWorker();	// Деструктор
 
@@ -44,9 +47,6 @@ protected:
 	friend void Report(CPIVWorker& piv);		// Дружественная функция для запуска создания отчета о проверке
 
 private:
-	HANDLE primary;				// Основной поток
-	HANDLE secondary;			// Дополнительный поток
-	
 	vector <bookData> books;	// Прочитанные ПИВ
 	vector <CString> path;		// Пути проверенных ПИВ
 	vector <CString> checkPath;	// Пути поданных ПИВ
