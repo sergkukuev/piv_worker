@@ -311,6 +311,13 @@ void CMainDlg::OnPivTxtGenerate()
 		folder = szDisplayName;
 	}
 
+	CButton *pCheck = (CButton*)GetDlgItem(IDC_CHECK_NUMPK);
+
+	if (pCheck == BST_UNCHECKED)
+		piv.setStatusNumPK(false);
+	else
+		piv.setStatusNumPK(true);
+
 	piv.CreateTxt(folder);
 }
 
