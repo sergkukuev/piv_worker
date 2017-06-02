@@ -21,7 +21,7 @@ void CRepTxt::Generate(vector <bookData> books, CString pathToSave, bool bNumPK)
 		// Обход по страницам
 		for (size_t iSheet = 0; iSheet < books[iBook].sheets.size(); iSheet++)
 		{
-			if (books[iBook].sheets[iSheet].bError)	// Если нет на странице ошибок
+			if (!books[iBook].sheets[iSheet].bError)	// Если нет на странице ошибок
 			{
 				ofstream tmpFile;
 				CString name;

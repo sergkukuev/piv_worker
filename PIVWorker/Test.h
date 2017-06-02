@@ -45,7 +45,5 @@ private:
 	void translateBits(list<signalData>::iterator& it);		// Перевод используемых разрядов из строки в числа
 	vector <int> stepTranslateBits(CString bits);			// Дополнительная функция для перевода разрядов
 	void translateComment(list<signalData>::iterator& it);	// Перевод значения знака или NP набора из примечания
-
-	string convertString(CString cStr);	// Конвертер CString в string 
 };
 

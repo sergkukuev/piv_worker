@@ -4,8 +4,6 @@
 #include "WorkExcel.h"
 #include "MyException.h"
 
-#include <regex>
-
 struct Header 
 { 
 	static const int size = 10;		// Количество заголовков
@@ -23,6 +21,8 @@ struct Header
 	const int iBits = 8;		//	Индекс битов в массиве адресов
 	const int iComment = 9;		//	Индекс примечаний в массиве адресов
 };
+
+const int MAX_EMPTY_STRING = 5;	// Максимально допустимое число пустых строк подряд
 
 
 // Класс для чтения протоколов из excel файлов
@@ -48,8 +48,6 @@ private:
 
 	bool IsEmpty(CWorkExcel& work, long row);	// Проверка строки на пустоту
 	bool IsRemark(CWorkExcel& work, long row);	// Проверка строки на наличие примечания
-
-	string convertString(CString cStr);			// Функция преобразования CString в string
 	bool checkExtension(CString path);			// Проверка расширений файлов
 };
 

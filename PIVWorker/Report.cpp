@@ -402,7 +402,7 @@ int CReport::getSetsAmountWithError()
 
 	for (size_t i = 0; i < books.size(); i++)
 		for (size_t j = 0; j < books[i].sheets.size(); j++)
-			if (!books[i].sheets[j].bError)
+			if (books[i].sheets[j].bError)
 				result++;
 
 	return result;

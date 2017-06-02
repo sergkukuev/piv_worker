@@ -116,7 +116,7 @@ vector <sheetData> CReaderExcel::getSheets(CWorkExcel& work)
 		if (!findHeader(work))		// Поиск заголовков на листе
 			throw NotAllHeaderException();
 
-		sheets[i - 1].bError = true;
+		sheets[i - 1].bError = false;
 
 		sheets[i - 1].iNumPK = getNumPK(work);
 
@@ -154,12 +154,7 @@ int CReaderExcel::getNumPK(CWorkExcel& work)
 			sNumPK.Delete(0, iNumPK + 1);
 
 		sNumPK = sNumPK.Trim();
-
-		regex regStr("[[:digit:]]+");
-		string stdStr = convertString(sNumPK);
-
-		if (regex_match(stdStr, regStr))
-			iNumPK = atoi(stdStr.c_str());
+		iNumPK = _wtoi(sNumPK);
 	}
 
 	return iNumPK;
@@ -188,14 +183,14 @@ list <signalData> CReaderExcel::getSignals(CWorkExcel& work)
 		cell.column = static_cast<long> (header.adress[header.iSignal]);
 		signal.sTitleParamField[1] = getCell(work, cell);
 
-		signal.bTitleParamField = true;
+		signal.bTitleParamField = false;
 
 		// Чтение номера слова
 		cell.column = static_cast<long> (header.adress[header.iNumWord]);
 		signal.sNumWordField = getCell(work, cell, cMergeName);
 		
-		signal.b2NumWordField = true;
-		signal.bNumWordField = true;
+		signal.b2NumWordField = false;
+		signal.bNumWordField = false;
 
 		// Чтение размерности, min, max и csr
 		cell.column = static_cast<long> (header.adress[header.iDimension]);
@@ -203,23 +198,23 @@ list <signalData> CReaderExcel::getSignals(CWorkExcel& work)
 
 		cell.column = static_cast<long> (header.adress[header.iMin]);
 		signal.sMinMaxCsrValField[0] = getCell(work, cell, cMergeName);
-		signal.bMinValField = true;
+		signal.bMinValField = false;
 
 		cell.column = static_cast<long> (header.adress[header.iMax]);
 		signal.sMinMaxCsrValField[1] = getCell(work, cell, cMergeName);
-		signal.bMaxValField = true;
+		signal.bMaxValField = false;
 
 		cell.column = static_cast<long> (header.adress[header.iCSR]);
 		signal.sMinMaxCsrValField[2] = getCell(work, cell, cMergeName);
-		signal.bCsrValField = true;
+		signal.bCsrValField = false;
 
 		// Чтение разрядов
 		cell.column = static_cast<long> (header.adress[header.iBits]);
 		signal.sBitField = getCell(work, cell, cMergeName);
-		signal.bBitField = true;
-		signal.b2BitField = true;
+		signal.bBitField = false;
+		signal.b2BitField = false;
 		signal.iBitSigns = 0;
-		signal.bBitSigns = true;
+		signal.bBitSigns = false;
 
 		// Чтение комментариев
 		cell.column = static_cast<long> (header.adress[header.iComment]);
@@ -240,7 +235,7 @@ list <signalData> CReaderExcel::getSignals(CWorkExcel& work)
 
 		header.adress[header.iRow] += cMergeName;
 
-	} while (cEmpty < 5 && !bRemark);
+	} while (cEmpty < MAX_EMPTY_STRING && !bRemark);
 
 	return signals;
 }
@@ -306,22 +301,6 @@ CString CReaderExcel::getCell(CWorkExcel& work, Cell cell, long cName)
 		cell.row = work.getStartMerge(cell);
 		result = work.getCellValue(cell);
 	}
-
-	return result;
-}
-
-// Функция преобразования CString в string
-string CReaderExcel::convertString(CString cStr)
-{
-	int bytes = WideCharToMultiByte(CP_ACP, 0, cStr.GetBuffer(), -1, 0, 0, NULL, NULL);
-	char *buffer = new char[bytes];
-
-	WideCharToMultiByte(CP_ACP, 0, cStr.GetBuffer(), -1, buffer, bytes, NULL, NULL);
-
-	string result(buffer);
-
-	delete buffer;
-	buffer = nullptr;
 
 	return result;
 }
