@@ -22,9 +22,12 @@ errorOneSet CTest::Start(bookData& book)
 	// Семантические ошибки
 	error.simantic.sheets.resize(book.sheets.size());
 	error.simantic.name = book.name;
+	Simantic(error.simantic, book);
+
+	// Замечания
 	error.warning.sheets.resize(book.sheets.size());
 	error.warning.name = book.name;
-	Simantic(error.simantic, book);
+	Warning(error.warning, book);
 	
 	return error;
 }
@@ -233,6 +236,32 @@ list <CString> CTest::testField(CString field, errorData errStruct)
 
 #pragma endregion 
 
+// Замечания
+void CTest::Warning(errorBookData& errBook, bookData& book)
+{
+	for (size_t cSheet = 0; cSheet < errBook.sheets.size(); cSheet++)
+	{
+		errBook.sheets[cSheet].name = book.sheets[cSheet].name;
+
+		for (list <signalData>::iterator it = book.sheets[cSheet].signals.begin(); it != book.sheets[cSheet].signals.end(); it++)
+		{
+			list <CString> error;
+
+			if (!it->bTitleParamField)
+				if (findRepiteInBook(it->sTitleParamField[1], book))
+					error.push_back(ErrorBase.sim.TitleRepBook);
+			
+			if (!error.empty())
+			{
+				error.push_front(errRemarks[1]);
+				errorSignalData signal = getErrSignal(it, error);
+				errBook.sheets[cSheet].signals.push_back(signal);
+				it->bTitleParamField = true;
+			}
+		}
+	}
+}
+
 #pragma region Simantic
 
 // Проверка на семантические ошибки
@@ -242,7 +271,7 @@ void CTest::Simantic(errorBookData& errBook, bookData& book)
 	{
 		errBook.sheets[cSheet].name = book.sheets[cSheet].name;
 		bool wRepite[32];		// Для отслеживания повторений слов
-		bool tRepiter[32][32];	// Для отслеживания повторений идентификаторов
+		bool tRepiter[32][32];	// Для отслеживания бито перекрытия
 
 		for (list <signalData>::iterator it = book.sheets[cSheet].signals.begin(); it != book.sheets[cSheet].signals.end(); it++)
 		{
@@ -251,9 +280,9 @@ void CTest::Simantic(errorBookData& errBook, bookData& book)
 			if (it->sTitleParamField->Compare(_T("Резерв")) != 0)
 			{
 				result = simanticNumWord(errBook.sheets[cSheet], it, wRepite);
-				//(!simanticTitleParam(errBook.sheets[cSheet], it)) ? result = false : result = result;
+				(!simanticTitleParam(errBook.sheets[cSheet], it, book, cSheet)) ? result = false : result = result;
 				(!simanticMinMaxCSR(errBook.sheets[cSheet], it, book.sheets[cSheet].iFieldNP, begin)) ? result = false : result = result;
-				(!simanticBits(errBook.sheets[cSheet], it, tRepiter)) ? result = false : result = result;
+				//(!simanticBits(errBook.sheets[cSheet], it, tRepiter)) ? result = false : result = result;
 			}
 			if (!result)	// Установка флага, что на листе есть ошибка
 				book.sheets[cSheet].bError = true;
@@ -293,24 +322,22 @@ bool CTest::simanticNumWord(errorSheetData& sheet, list<signalData>::iterator& i
 	return false;
 }
 
-bool CTest::simanticTitleParam(errorSheetData& errSheet, list<signalData>::iterator& it)	// Прокинуть книгу и индекс листа
+// Проверка идентификатора
+bool CTest::simanticTitleParam(errorSheetData& errSheet, list<signalData>::iterator& it, bookData book, int iSheet)	// Прокинуть книгу и индекс листа
 {
-	/*list <CString> error;
+	list <CString> error;
 
-	if (it->bTitleParamField)
-	{
-		if (findRepiteInSheet())
+	if (!it->bTitleParamField)
+		if (findRepiteInSheet(it->sTitleParamField[1], book.sheets[iSheet]))
 			error.push_back(ErrorBase.sim.TitleRepSheet);
-		else if (findRepiteInBook())
-			error.push_back(ErrorBase.sim.TitleRepBook);	// Замечание, а не ошибка 
-	}
 
 	if (error.empty())
 		return true;
 
+	error.push_front(errRemarks[1]);
 	errorSignalData signal = getErrSignal(it, error);
 	errSheet.signals.push_back(signal);
-	it->bTitleParamField = false;*/
+	it->bTitleParamField = true;
 
 	return false;
 }
@@ -479,6 +506,40 @@ bool CTest::checkCrossBits(list<signalData>::iterator& it, bool repiter[][32])
 }
 
 #pragma endregion
+
+// Поиск повторений в книге
+bool CTest::findRepiteInBook(CString field, bookData book)
+{
+	int result = 0;
+
+	for (size_t iSheet = 0; iSheet < book.sheets.size(); iSheet++)
+	{
+		list<signalData>::iterator& it = book.sheets[iSheet].signals.begin();	it++;
+		for (; it != book.sheets[iSheet].signals.end(); it++)
+			if (it->sTitleParamField[1].Compare(field) == 0)
+				result++;
+	}
+	
+	if (result > 1)
+		return true;
+
+	return false;
+}
+
+// Поиск повторений на листе
+bool CTest::findRepiteInSheet(CString field, sheetData sheet)
+{
+	int result = 0;
+	list<signalData>::iterator& it = sheet.signals.begin(); it++;
+	for (; it != sheet.signals.end(); it++)
+		if (it->sTitleParamField[1].Compare(field) == 0)
+			result++;
+
+	if (result > 1)
+		return true;
+
+	return false;
+}
 
 // Создание записи ошибки сигнала
 errorSignalData CTest::getErrSignal(list<signalData>::iterator it, list <CString> error)

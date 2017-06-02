@@ -20,6 +20,7 @@ private:
 
 	void Syntax(errorBookData& errBook, bookData& book);	// Проверка на синтаксические ошибки
 	void Simantic(errorBookData& errBook, bookData& book);	// Проверка на семантические ошибки
+	void Warning(errorBookData& errBook, bookData& book);	// Проверка на замечания
 	list <CString> testField(CString field, errorData errStruct);	// Проверка поля на ошибки
 	errorSignalData getErrSignal(list<signalData>::iterator it, list <CString> error);	// Создание записи ошибки сигнала
 	
@@ -32,12 +33,12 @@ private:
 
 	// Семантические
 	bool simanticNumWord(errorSheetData& sheet, list<signalData>::iterator& it, bool wRep[]);		// Проверка номера слова
-	bool simanticTitleParam(errorSheetData& sheet, list<signalData>::iterator& it);					// Проверка наименований сигнала
+	bool simanticTitleParam(errorSheetData& sheet, list<signalData>::iterator& it, bookData book, int iSheet);	// Проверка наименований сигнала
 	bool simanticMinMaxCSR(errorSheetData& sheet, list<signalData>::iterator& it, int currNP, bool begin);	// Проверка минимального, максимального и цср
 	bool simanticBits(errorSheetData& sheet, list<signalData>::iterator& it, bool tRep[][32]);			// Проверка используемых разрядов
 
-	bool findRepiteInBook();
-	bool findRepiteInSheet();
+	bool findRepiteInBook(CString field, bookData book);	// Поиск повторений в книге
+	bool findRepiteInSheet(CString field, sheetData sheet);	// Поиск повторений в листе
 	bool checkCrossBits(list<signalData>::iterator& it, bool repiter[][32]);	// Проверка на перекрытия битов
 	void translateNumWord(list<signalData>::iterator& it);	// Перевод № слова из строки в числа
 	void translateMMC(list<signalData>::iterator& it);	// Перевод мин, макс и цср
