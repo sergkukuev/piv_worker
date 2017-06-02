@@ -28,7 +28,7 @@ private:
 	CString folder;			// Путь для отчета
 	vector <CString> path;	// Пути файлов
 	HANDLE hWait;	// Поток для доступности потока класса CPIVWorker
-	int cmd = 0;	// Номер команды для меню: 1 - открыть, 2 - анализировать, 3 - закрыть, 4 - генерировать отчет
+	int command = 0;	// Номер команды для меню: 1 - открыть, 2 - анализировать, 3 - закрыть, 4 - генерировать отчет
 
 	CListBox* lsBox;	// Лист бокс
 	void setMenu(int command);	// Установка параметров меню
@@ -47,7 +47,7 @@ protected:
 	friend void waitThread(CMainDlg& object);	// Дружественная функция для ожидания окончания потока
 
 public:
-	void logicMenu(int command);		// Логика работы меню
+	void logicMenu();					// Логика работы меню
 	afx_msg void OnPivOpen();			// Открытие протоколов
 	afx_msg void OnPivClose();			// Закрытие протокола
 	afx_msg void OnPivCloseAll();		// Закрыть все протоколы

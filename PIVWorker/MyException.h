@@ -31,11 +31,8 @@ public:
 	void SetName(CString name) { this->name = name; }
 	virtual CString GetMsg() 
 	{
-		CString result = _T("Параметр сигнала с неизвестной ошибкой!\n");
-		
-		result += _T("Имя листа: ") + name;
-		result += _T(", Параметр: ") + param;
-		
+		CString result = _T("Параметр сигнала с неизвестной ошибкой!");
+		result.Format(_T("%s\n (Имя листа: %s, Параметр: %s)"), result, name, param);
 		return result; 
 	};
 private:
