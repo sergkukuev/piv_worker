@@ -88,6 +88,9 @@ DWORD WINAPI PrimaryThread(LPVOID lpParam)
 	return 0;
 }
 
+// Конструктор
+CPIVWorker::CPIVWorker() { }
+
 // Деструктор
 CPIVWorker::~CPIVWorker()
 {
@@ -148,11 +151,11 @@ void CPIVWorker::ReadExcel()
 				path.push_back(buffer[i]);
 			}
 		}
-		AfxMessageBox(_T("Чтение завершено успешно!"));
+		AfxMessageBox(_T("Чтение завершено успешно!"), MB_ICONINFORMATION);
 	}
 	catch (MyException &exc)
 	{
-		AfxMessageBox(exc.GetMsg());
+		AfxMessageBox(exc.GetMsg(), MB_ICONERROR);
 	}
 
 	buffer.clear();
@@ -204,11 +207,11 @@ void CPIVWorker::Test()
 			}
 				
 		}
-		AfxMessageBox(_T("Проверка протоколов завершена успешно!"));
+		AfxMessageBox(_T("Проверка протоколов завершена успешно!"), MB_ICONINFORMATION);
 	}
 	catch (MyException &exc)
 	{
-		AfxMessageBox(exc.GetMsg());
+		AfxMessageBox(exc.GetMsg(), MB_ICONERROR);
 	}
 	closeThread(primary);
 }
@@ -256,7 +259,7 @@ void CPIVWorker::MakeReport()
 	report.setPath(pathReport);
 	report.Generate(books, errorDB);
 	pathFile.Format(_T("%s\\Отчет.html"), pathReport);
-	msg.Format(_T("Создание отчета завершено!\n\nРасположени: %s\nОткрыть для просмотра?"), pathReport);
+	msg.Format(_T("Создание отчета завершено!\n\nРасположение: %s\nОткрыть для просмотра?"), pathReport);
 	if (AfxMessageBox(msg, MB_YESNO | MB_ICONQUESTION) == IDYES);
 		ShellExecute(0, L"open", pathFile, NULL, NULL, SW_NORMAL);	
 }
@@ -407,7 +410,7 @@ void Thread(CPIVWorker& piv)
 	else if (piv.hCmd == piv.command.close)
 		piv.CloseExcel();
 	else
-		AfxMessageBox(_T("Неопознанная команда!"));
+		AfxMessageBox(_T("Неопознанная команда!"), MB_ICONWARNING);
 }
 
 // Проверка потока на доступность

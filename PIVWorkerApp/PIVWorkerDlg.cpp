@@ -73,7 +73,7 @@ void waitThread(CMainDlg& object)
 {
 	WaitForSingleObject(object.piv.primary, INFINITE);
 	
-	object.logicMenu(object.cmd);
+	object.logicMenu();
 }
 
 CMainDlg::CMainDlg(CWnd* pParent /*=NULL*/)
@@ -257,7 +257,7 @@ void CMainDlg::OnPivClose()
 // Анализировать протоколы
 void CMainDlg::OnPivAnalyze()
 {
-	piv.Test();
+	piv.TestExcel();
 	setMenu(2);
 }
 
@@ -271,7 +271,7 @@ void CMainDlg::OnPivReport()
 	ZeroMemory(&bi, sizeof(bi));
 	bi.hwndOwner = NULL;
 	bi.pszDisplayName = szDisplayName;
-	bi.lpszTitle = TEXT("Выберите папку для сохранения");
+	bi.lpszTitle = TEXT("Выберите папку для сохранения отчета");
 	bi.ulFlags = BIF_NEWDIALOGSTYLE; //or BIF_VALIDATE//BIF_RETURNONLYFSDIRS;
 	pidl = SHBrowseForFolder(&bi);
 
@@ -294,7 +294,24 @@ void CMainDlg::OnPivRepFolder()
 // Генерировать txt отчет
 void CMainDlg::OnPivTxtGenerate()
 {
-	// TODO: добавьте свой код обработчика команд
+	BROWSEINFO	bi;
+	TCHAR	szDisplayName[MAX_PATH];
+	LPITEMIDLIST	pidl;
+
+	ZeroMemory(&bi, sizeof(bi));
+	bi.hwndOwner = NULL;
+	bi.pszDisplayName = szDisplayName;
+	bi.lpszTitle = TEXT("Выберите папку для сохранения txt файлов");
+	bi.ulFlags = BIF_NEWDIALOGSTYLE; //or BIF_VALIDATE//BIF_RETURNONLYFSDIRS;
+	pidl = SHBrowseForFolder(&bi);
+
+	if (pidl)
+	{
+		SHGetPathFromIDList(pidl, szDisplayName);
+		folder = szDisplayName;
+	}
+
+	piv.CreateTxt(folder);
 }
 
 // Информация о приложении
@@ -336,22 +353,22 @@ void CMainDlg::AddPath(CString fullPath, CString name)
 }
 
 // Логика работы меню приложения
-void CMainDlg::logicMenu(int command)
+void CMainDlg::logicMenu()
 {
 	CMenu* pMenu = GetMenu();
 
-	if (cmd == 1)	// Команда открыть протокол
+	if (command == 1)	// Команда открыть протокол
 	{
 		pMenu->EnableMenuItem(ID_PIV_ANALYZE, MFS_ENABLED);
 		pMenu->EnableMenuItem(ID_PIV_CLOSE, MFS_ENABLED);
 		pMenu->EnableMenuItem(ID_PIV_CLOSE_ALL, MFS_ENABLED);
 	}
-	else if (cmd == 2)	// Команда анализировать
+	else if (command == 2)	// Команда анализировать
 	{
 		pMenu->EnableMenuItem(ID_PIV_REPORT, MFS_ENABLED);
-		pMenu->EnableMenuItem(ID_PIV_GEN_TXT, MFS_ENABLED);
+		pMenu->EnableMenuItem(ID_PIV_TXT_GENERATE, MFS_ENABLED);
 	}
-	else if (cmd == 3)	// Закрыть протокол / Закрыть все
+	else if (command == 3)	// Закрыть протокол / Закрыть все
 	{
 		if (path.empty())
 		{
@@ -361,24 +378,23 @@ void CMainDlg::logicMenu(int command)
 
 			pMenu->EnableMenuItem(ID_PIV_REPORT, MFS_GRAYED);
 			pMenu->EnableMenuItem(ID_PIV_REP_FOLDER, MFS_GRAYED);
-			pMenu->EnableMenuItem(ID_PIV_GEN_TXT, MFS_GRAYED);
+			pMenu->EnableMenuItem(ID_PIV_TXT_GENERATE, MFS_GRAYED);
 		}
 	}
-	else if (cmd == 4)	// Создать отчет
+	else if (command == 4)	// Создать отчет
 	{
 		CString file = folder;
 		file.Format(_T("%s\\Отчет.html"), folder);
 		pMenu->EnableMenuItem(ID_PIV_REP_FOLDER, MFS_ENABLED);
-		ShellExecute(0, L"open", file, NULL, NULL, SW_NORMAL);	// Надо или не надо, вот в чем вопрос
 	}
 	else
 		AfxMessageBox(L"Нераспознанная команда!");
 }
 
 // Установка параметров меню
-void CMainDlg::setMenu(int command)
+void CMainDlg::setMenu(int com)
 {
-	cmd = command;
+	command = com;
 	mD.object = this;
 	hWait = CreateThread(NULL, 0, CheckThread, &mD, 0, 0);
 }

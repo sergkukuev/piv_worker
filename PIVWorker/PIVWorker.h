@@ -25,7 +25,7 @@
 // Про реализацию данного класса см. PIVWorker.cpp
 //
 
-struct cmd	// команды 
+struct cmd_set	// команды 
 {
 	const int open = 0;		// открыть 
 	const int test = 1;		// анализировать
@@ -39,7 +39,7 @@ public:
 	HANDLE primary;				// Основной поток
 	HANDLE secondary;			// Дополнительный поток
 
-	CPIVWorker() {};// Конструктор
+	CPIVWorker();// Конструктор
 	~CPIVWorker();	// Деструктор
 
 	void ReadExcel(CString pathToExcel);			// Получение пути ПИВ для чтения	
@@ -59,7 +59,7 @@ protected:
 	friend void Thread(CPIVWorker& piv);	// Дружественная функция для запуска определенной операции
 
 private:
-	cmd command;			// Набор команд
+	cmd_set command;			// Набор команд
 	int hCmd;				// Команда для потока (0 - открыть ПИВ, 1 - анализировать, 2 - отчет, 3 - txt, 4 - закрыть)
 
 	vector <bookData> books;	// Прочитанные ПИВ

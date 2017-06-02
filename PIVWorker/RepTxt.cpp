@@ -5,7 +5,7 @@
 void CRepTxt::Generate(vector <bookData> books, CString pathToSave, bool bNumPK)
 {
 	// Создание директории
-	pathToSave.Format(_T("%s\\TEXT"), pathToSave);
+	pathToSave.Format(_T("%s\\Text"), pathToSave);
 	CreateDirectory(pathToSave, NULL);
 
 	CString filePath = pathToSave;
