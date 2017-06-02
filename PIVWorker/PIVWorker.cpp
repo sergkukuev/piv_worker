@@ -304,7 +304,7 @@ void CPIVWorker::CloseExcel()
 
 		if (iBook != -1)
 		{
-			int iReport = findReportBook(books[iBook].nameBook);
+			int iReport = findReportBook(books[iBook].name);
 
 			if (iReport != -1)	// Чистим в базе ошибок
 			{

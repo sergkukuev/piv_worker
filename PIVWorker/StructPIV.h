@@ -15,14 +15,13 @@ struct signalData
 	int iNumWord[2] = { 0, 0 };										// Числовые значения номеров слов (максимум 2 числа)
 	bool bNumWordField;												// Присутствие ошибки строке с номером слова
 	bool b2NumWordField;											// Присутствие двух номеров слова 
-	bool bRepitNumWordField;										// Первый параметр составного слова
 
 	CString sTitleParamField[2] = { _T(""), _T("") };				// Наименование парамметра (максимум 2 строки) 
 	bool bTitleParamField;											// Присутствие ошибки в наименование парамметра  
 
 	CString sDimensionField;										// Размерность
 	CString sMinMaxCsrValField[3] = { _T(""), _T("") , _T("") };	// Строковое значение мин., макс. и цена старшего разряда
-	double iMinMaxCsrVal[3] = { 0, 0, 0 };							// Значения мин., макс. и цена старшего разряда
+	double dMinMaxCsrVal[3] = { 0, 0, 0 };							// Значения мин., макс. и цена старшего разряда
 	bool bMinValField;												// Присутствие ошибки в мин. 
 	bool bMaxValField;												// Присутствие ошибки в макс.
 	bool bCsrValField;												// Присутствие ошибки в ЦСР.
@@ -30,7 +29,7 @@ struct signalData
 	CString sBitField;												// Строковое значение используемые категории
 	int iBit[4] = { 0, 0, 0, 0 };									// Используемые категории (максимум 4 числа)
 	bool bBitField;													// Присутствие ошибка в используемые категории
-	bool b2BitField;												// Присутствие двух используемыы категорий 
+	bool b2BitField;												// Присутствие двух используемых категорий 
 
 	CString sCommentField;											// Примечание
 	int iBitSigns;													// Знаковая переменная описано в примечании
@@ -43,20 +42,18 @@ struct sheetData
 {
 	list <signalData> signals;	// Считанная информация о сигналах
 
-	CString nameSheet;			// название листа в книге
-	int iCommentFieldNP;		// номер набора параметров
-	int iNumPodKadra;			// номер подкадра
-
-	bool bErrorExcelSheet;
-	bool bErrorSheet;
+	CString name;	// название листа в книге
+	int iFieldNP;	// номер набора параметров
+	int iNumPK;		// номер подкадра
+	bool bError;	// Присутствие ошибки на листе
 };
 
 // Книги
 struct bookData
 {
 	vector <sheetData> sheets;	// Считанные из книги листы
-	CString nameBook;			// Название книги
-	bool bNumPodKadra;			// Присутствие номера подкадра
+	CString name;	// Название книги
+	bool bNumPK;	// Присутствие номера подкадра
 };
 
 ///////////////////////////////////////////// Ошибки ПИВ /////////////////////////////////////////////

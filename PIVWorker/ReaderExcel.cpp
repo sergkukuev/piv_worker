@@ -53,7 +53,7 @@ bookData CReaderExcel::getBook(CString pathToExcel)
 	long clBook = (long)1;
 	work.setActivBook(clBook);
 
-	book.nameBook = work.getNameBook();
+	book.name = work.getNameBook();
 	book.sheets.resize(work.getCountSheets());
 
 	book.sheets = getSheets(work);
@@ -87,7 +87,7 @@ vector <bookData> CReaderExcel::getBooks(vector <CString> pathToExcel)
 		long clBooks = static_cast<long>(i);
 
 		work.setActivBook(clBooks);
-		books[i - 1].nameBook = work.getNameBook();
+		books[i - 1].name = work.getNameBook();
 		books[i - 1].sheets.resize(work.getCountSheets());
 
 		books[i - 1].sheets = getSheets(work);
@@ -109,17 +109,16 @@ vector <sheetData> CReaderExcel::getSheets(CWorkExcel& work)
 		long iSheet = static_cast<long> (i);
 
 		work.setActivSheet(iSheet);
-		sheets[i - 1].nameSheet = work.getNameSheet();
-		sheets[i - 1].iCommentFieldNP = -1;
-		sheets[i - 1].iNumPodKadra = -1;
+		sheets[i - 1].name = work.getNameSheet();
+		sheets[i - 1].iFieldNP = -1;
+		sheets[i - 1].iNumPK = -1;
 
 		if (!findHeader(work))		// Поиск заголовков на листе
 			throw NotAllHeaderException();
 
-		sheets[i - 1].bErrorExcelSheet = true;
-		sheets[i - 1].bErrorSheet = true;
+		sheets[i - 1].bError = true;
 
-		sheets[i - 1].iNumPodKadra = getNumPK(work);
+		sheets[i - 1].iNumPK = getNumPK(work);
 
 		header.adress[header.iRow]++;
 
@@ -197,7 +196,6 @@ list <signalData> CReaderExcel::getSignals(CWorkExcel& work)
 		
 		signal.b2NumWordField = true;
 		signal.bNumWordField = true;
-		signal.bRepitNumWordField = true;
 
 		// Чтение размерности, min, max и csr
 		cell.column = static_cast<long> (header.adress[header.iDimension]);

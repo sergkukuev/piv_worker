@@ -21,14 +21,14 @@ void CRepTxt::Generate(vector <bookData> books, CString pathToSave, bool bNumPK)
 		// Обход по страницам
 		for (size_t iSheet = 0; iSheet < books[iBook].sheets.size(); iSheet++)
 		{
-			if (books[iBook].sheets[iSheet].bErrorSheet)	// Если нет на странице ошибок
+			if (books[iBook].sheets[iSheet].bError)	// Если нет на странице ошибок
 			{
 				ofstream tmpFile;
 				CString name;
-				int NP = books[iBook].sheets[iSheet].iCommentFieldNP;
+				int NP = books[iBook].sheets[iSheet].iFieldNP;
 				
 				// Создание txt файла для записи
-				name.Format(_T("NP_%d_%s.txt"), NP, books[iBook].sheets[iSheet].nameSheet);
+				name.Format(_T("NP_%d_%s.txt"), NP, books[iBook].sheets[iSheet].name);
 				filePath.Format(_T("%s\\%s"), pathToSave, name);
 				tmpFile.open(filePath);
 				mainFile << "#include \""; mainFile << CT2A(name); mainFile << "\"\n";
@@ -36,8 +36,8 @@ void CRepTxt::Generate(vector <bookData> books, CString pathToSave, bool bNumPK)
 				for (list <signalData>::iterator it = signal_set(iBook, iSheet).begin(); it != signal_set(iBook, iSheet).end(); it++)
 				{
 					sheetInfo info;
-					info.NP = books[iBook].sheets[iSheet].iCommentFieldNP;
-					info.NumPk = books[iBook].sheets[iSheet].iNumPodKadra;
+					info.NP = books[iBook].sheets[iSheet].iFieldNP;
+					info.NumPk = books[iBook].sheets[iSheet].iNumPK;
 					info.bNumPk = bNumPK;
 					WriteParameter(tmpFile, it, info);	// Запись параметра
 				}
@@ -93,7 +93,7 @@ void CRepTxt::WriteParameter(ofstream& file, list <signalData>::iterator it, she
 			file << CT2A(buffer);
 		}
 
-		if (it->iMinMaxCsrVal[1] != 0 && it->iMinMaxCsrVal[2] != 0)	// Мин, макс, цср
+		if (it->dMinMaxCsrVal[1] != 0 && it->dMinMaxCsrVal[2] != 0)	// Мин, макс, цср
 		{
 			file << "\t VALDESCR\n";
 			file << (it->bCommentField ? "\t\t SIGNED\n" : "\t\t UNSIGNED\n");

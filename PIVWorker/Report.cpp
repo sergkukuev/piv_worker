@@ -201,11 +201,11 @@ void CReport::writeSheets(ofstream& file, int cBooks)
 		{
 			pathDirectory = false;
 			file << "          <tr>\n";
-			file << "              <td>"; file << CT2A(books[cBooks].nameBook); file << "</td>\n";
+			file << "              <td>"; file << CT2A(books[cBooks].name); file << "</td>\n";
 			file << "              <td align=\"center\">\n";
 			file << "                 <dl>\n";
 		}
-		file << "                     <dt>"; file << CT2A(books[cBooks].sheets[cSheets].nameSheet); file << "</dt>\n";
+		file << "                     <dt>"; file << CT2A(books[cBooks].sheets[cSheets].name); file << "</dt>\n";
 	}
 	file << "                 </dl>\n";
 	file << "              </td>\n";
@@ -402,7 +402,7 @@ int CReport::getSetsAmountWithError()
 
 	for (size_t i = 0; i < books.size(); i++)
 		for (size_t j = 0; j < books[i].sheets.size(); j++)
-			if (!books[i].sheets[j].bErrorSheet)
+			if (!books[i].sheets[j].bError)
 				result++;
 
 	return result;

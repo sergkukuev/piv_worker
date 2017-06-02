@@ -16,14 +16,14 @@ errorOneSet CTest::Start(bookData& book)
 {	
 	// Синтаксические ошибки
 	error.syntax.sheets.resize(book.sheets.size());
-	error.syntax.name = book.nameBook;
+	error.syntax.name = book.name;
 	Syntax(error.syntax, book);
 
 	// Семантические ошибки
 	error.simantic.sheets.resize(book.sheets.size());
-	error.simantic.name = book.nameBook;
+	error.simantic.name = book.name;
 	error.warning.sheets.resize(book.sheets.size());
-	error.warning.name = book.nameBook;
+	error.warning.name = book.name;
 	Simantic(error.simantic, book);
 	
 	return error;
@@ -36,7 +36,7 @@ void CTest::Syntax(errorBookData& errBook, bookData& book)
 {
 	for (size_t cSheet = 0; cSheet < errBook.sheets.size(); cSheet++)
 	{
-		errBook.sheets[cSheet].name = book.sheets[cSheet].nameSheet;
+		errBook.sheets[cSheet].name = book.sheets[cSheet].name;
 
 		for (list <signalData>::iterator it = book.sheets[cSheet].signals.begin(); it != book.sheets[cSheet].signals.end(); it++)
 		{
@@ -55,12 +55,12 @@ void CTest::Syntax(errorBookData& errBook, bookData& book)
 				
 				if (NP != 0)
 				{
-					book.sheets[cSheet].iCommentFieldNP = NP;	// Установка номера набора (translateComment)
+					book.sheets[cSheet].iFieldNP = NP;	// Установка номера набора (translateComment)
 					NP = 0;
 				}
 
 				if (!result)	// Установка флага, что на листе есть ошибка
-					book.sheets[cSheet].bErrorSheet = false;
+					book.sheets[cSheet].bError = false;
 			}
 			catch (UndefinedError& exc)
 			{
@@ -240,7 +240,7 @@ void CTest::Simantic(errorBookData& errBook, bookData& book)
 {
 	for (size_t cSheet = 0; cSheet < errBook.sheets.size(); cSheet++)
 	{
-		errBook.sheets[cSheet].name = book.sheets[cSheet].nameSheet;
+		errBook.sheets[cSheet].name = book.sheets[cSheet].name;
 		bool wRepite[32];		// Для отслеживания повторений слов
 		bool tRepiter[32][32];	// Для отслеживания повторений идентификаторов
 
@@ -252,11 +252,11 @@ void CTest::Simantic(errorBookData& errBook, bookData& book)
 			{
 				result = simanticNumWord(errBook.sheets[cSheet], it, wRepite);
 				//(!simanticTitleParam(errBook.sheets[cSheet], it)) ? result = false : result = result;
-				(!simanticMinMaxCSR(errBook.sheets[cSheet], it, book.sheets[cSheet].iCommentFieldNP, begin)) ? result = false : result = result;
+				(!simanticMinMaxCSR(errBook.sheets[cSheet], it, book.sheets[cSheet].iFieldNP, begin)) ? result = false : result = result;
 				(!simanticBits(errBook.sheets[cSheet], it, tRepiter)) ? result = false : result = result;
 			}
 			if (!result)	// Установка флага, что на листе есть ошибка
-				book.sheets[cSheet].bErrorSheet = false;
+				book.sheets[cSheet].bError = false;
 		}
 	}
 }
@@ -324,9 +324,9 @@ bool CTest::simanticMinMaxCSR(errorSheetData& sheet, list<signalData>::iterator&
 	{
 		if (begin)
 		{
-			if (it->iMinMaxCsrVal[0] != currNP)
+			if (it->dMinMaxCsrVal[0] != currNP)
 				errMin.push_back(ErrorBase.sim.MMCNotNote);
-			if (it->iMinMaxCsrVal[1] != currNP)
+			if (it->dMinMaxCsrVal[1] != currNP)
 				errMax.push_back(ErrorBase.sim.MMCNotNote);
 		}
 
@@ -341,20 +341,20 @@ bool CTest::simanticMinMaxCSR(errorSheetData& sheet, list<signalData>::iterator&
 			nBit--;
 
 		// Подсчет минимума и максимума
-		int nMin = it->iMinMaxCsrVal[2];	// мин
+		int nMin = it->dMinMaxCsrVal[2];	// мин
 		for (int i = 1; i <= nBit; i++)
 			nMin = nMin / 2;
 
-		int nMax = (it->iMinMaxCsrVal[2] * 2) - nMin;	// макс
+		int nMax = (it->dMinMaxCsrVal[2] * 2) - nMin;	// макс
 
-		if (it->iMinMaxCsrVal[1] - nMax > 2)
+		if (it->dMinMaxCsrVal[1] - nMax > 2)
 			errMax.push_back(ErrorBase.sim.MMCNotPkg);
-		else if (( (abs(it->iMinMaxCsrVal[0]) > (nMax + nMin)) || (abs(it->iMinMaxCsrVal[0]) < nMin)) && it->iMinMaxCsrVal[0] != 0)
+		else if (( (abs(it->dMinMaxCsrVal[0]) > (nMax + nMin)) || (abs(it->dMinMaxCsrVal[0]) < nMin)) && it->dMinMaxCsrVal[0] != 0)
 			errMin.push_back(ErrorBase.sim.MMCNotPkg);
 
-		if ((it->iMinMaxCsrVal[0] < 0) && !it->bCommentField)
+		if ((it->dMinMaxCsrVal[0] < 0) && !it->bCommentField)
 			errMin.push_back(ErrorBase.sim.MMCNotNegative);
-		else if ((it->iMinMaxCsrVal[0] >= 0) && it->bCommentField)
+		else if ((it->dMinMaxCsrVal[0] >= 0) && it->bCommentField)
 			errMin.push_back(ErrorBase.sim.MMCNegative);
 	}
 
@@ -528,9 +528,9 @@ void CTest::translateNumWord(list<signalData>::iterator& it)
 // Перевод из мин, макс и цср
 void CTest::translateMMC(list<signalData>::iterator& it)
 {
-	it->iMinMaxCsrVal[0] = stepTranslateMMC(it->sMinMaxCsrValField[0]);
-	it->iMinMaxCsrVal[1] = stepTranslateMMC(it->sMinMaxCsrValField[1]);
-	it->iMinMaxCsrVal[2] = stepTranslateMMC(it->sMinMaxCsrValField[2]);
+	it->dMinMaxCsrVal[0] = stepTranslateMMC(it->sMinMaxCsrValField[0]);
+	it->dMinMaxCsrVal[1] = stepTranslateMMC(it->sMinMaxCsrValField[1]);
+	it->dMinMaxCsrVal[2] = stepTranslateMMC(it->sMinMaxCsrValField[2]);
 }
 
 // Дополнительная функция перевода мин, макс, цср
