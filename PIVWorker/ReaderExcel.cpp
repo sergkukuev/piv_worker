@@ -175,14 +175,13 @@ list <signalData> CReaderExcel::getSignals(CWorkExcel& work)
 		cell.row = static_cast<long> (header.adress[header.iRow]);
 		
 		// Чтение параметров:
-		// Наименование параетра и обозначение сигнала
+		// Наименование параметра и обозначение сигнала
 		cell.column = static_cast<long> (header.adress[header.iName]);
 		signal.sTitleParamField[0] = getCell(work, cell);
-		long cMergeName = work.getMergeCount(cell);
 
 		cell.column = static_cast<long> (header.adress[header.iSignal]);
 		signal.sTitleParamField[1] = getCell(work, cell);
-
+		long cMergeName = work.getMergeCount(cell);
 		signal.bTitleParamField = false;
 
 		// Чтение номера слова
@@ -260,7 +259,7 @@ bool CReaderExcel::IsEmpty(CWorkExcel& work, long row)
 // Является ли строка примечанием
 bool CReaderExcel::IsRemark(CWorkExcel& work, long row)
 {
-	bool result = true;
+	bool result = false;
 	Cell cell;
 
 	cell.row = row;
@@ -268,7 +267,7 @@ bool CReaderExcel::IsRemark(CWorkExcel& work, long row)
 	{
 		cell.column = static_cast<long> (header.adress[i]);
 		result = (work.getCellValue(cell).Find(_T("Примечания:")) > -1 ||
-			work.getCellValue(cell).Find(_T("Примечание:")) > -1) ? true : false;
+			work.getCellValue(cell).Find(_T("Примечание:")) > -1) ? true : result;
 	}
 
 	return result;
@@ -289,7 +288,7 @@ CString CReaderExcel::getCell(CWorkExcel& work, Cell cell, long cName)
 			cell.row = i;
 			CString tmp = work.getCellValue(cell);
 
-			if (i != (start + size - 1) || (!result.IsEmpty() && !tmp.IsEmpty()))
+			if (!result.IsEmpty() && !tmp.IsEmpty())
 				result += _T(", ");
 
 			if (!tmp.IsEmpty())
