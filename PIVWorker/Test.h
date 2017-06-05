@@ -41,10 +41,11 @@ private:
 	bool findRepiteInSheet(CString field, sheetData sheet);	// Поиск повторений в листе
 	bool checkCrossBits(list<signalData>::iterator& it, bool repiter[][32]);	// Проверка на перекрытия битов
 	void translateNumWord(list<signalData>::iterator& it);	// Перевод № слова из строки в числа
-	void translateMMC(list<signalData>::iterator& it);	// Перевод мин, макс и цср
+	void translateMMC(list<signalData>::iterator& it);		// Перевод мин, макс и цср
 	double stepTranslateMMC(CString value);					// Дополнительная функция для перевода разрядов
 	void translateBits(list<signalData>::iterator& it);		// Перевод используемых разрядов из строки в числа
 	vector <int> stepTranslateBits(CString bits);			// Дополнительная функция для перевода разрядов
 	void translateComment(list<signalData>::iterator& it);	// Перевод значения знака или NP набора из примечания
+	int stepTranslateComment(CString field, int indx);		// Дополнительная функция для перевода знака или NP
 };
 

@@ -2,14 +2,10 @@
 #include "Test.h"
 
 // Конструктор
-CTest::CTest()
-{
-}
+CTest::CTest()	{	}
 
 // Деструктор
-CTest::~CTest()
-{
-}
+CTest::~CTest()	{	}
 
 // Проверка на все ошибки
 errorOneSet CTest::Start(bookData& book) 
@@ -46,7 +42,10 @@ void CTest::Syntax(errorBookData& errBook, bookData& book)
 			try 
 			{
 				bool begin = true, result = true;
-				if (it != book.sheets[cSheet].signals.begin())	begin = false;
+				
+				if (it != book.sheets[cSheet].signals.begin())	
+					begin = false;
+
 				if (it->sTitleParamField->Compare(_T("Резерв")) != 0)
 				{
 					result = syntaxNumWord(errBook.sheets[cSheet], it);
@@ -89,10 +88,11 @@ bool CTest::syntaxNumWord(errorSheetData& sheet, list<signalData>::iterator& it)
 	errorSignalData signal = getErrSignal(it, error);
 	sheet.signals.push_back(signal);
 	it->bNumWordField = true;
+
 	return false;
 }
 
-// Проверка наименований сигнала
+// Проверка идентификатора
 bool CTest::syntaxTitleParam(errorSheetData& sheet, list<signalData>::iterator& it)
 {
 	list <CString> error = testField(it->sTitleParamField[1], ErrorBase.getTitleParam());
@@ -104,6 +104,7 @@ bool CTest::syntaxTitleParam(errorSheetData& sheet, list<signalData>::iterator& 
 	errorSignalData signal = getErrSignal(it, error);
 	sheet.signals.push_back(signal);
 	it->bTitleParamField = true;
+
 	return false;
 }
 
@@ -160,7 +161,7 @@ bool CTest::syntaxBits(errorSheetData& sheet, list<signalData>::iterator& it)
 
 	if (error.empty())
 	{
-		translateBits(it);
+		translateBits(it);	// Считывание битов
 		return true;
 	}
 
@@ -203,6 +204,7 @@ bool CTest::syntaxComment(errorSheetData& sheet, list<signalData>::iterator& it,
 	error.push_front(errRemarks[6]);
 	errorSignalData signal = getErrSignal(it, error);
 	sheet.signals.push_back(signal);
+
 	return false;
 }
 
@@ -245,18 +247,21 @@ void CTest::Warning(errorBookData& errBook, bookData& book)
 
 		for (list <signalData>::iterator it = book.sheets[cSheet].signals.begin(); it != book.sheets[cSheet].signals.end(); it++)
 		{
-			list <CString> error;
-
-			if (!it->bTitleParamField)
-				if (findRepiteInBook(it->sTitleParamField[1], book))
-					error.push_back(ErrorBase.sim.TitleRepBook);
-			
-			if (!error.empty())
+			if (it->sTitleParamField->Compare(_T("Резерв")) != 0)
 			{
-				error.push_front(errRemarks[1]);
-				errorSignalData signal = getErrSignal(it, error);
-				errBook.sheets[cSheet].signals.push_back(signal);
-				it->bTitleParamField = true;
+				list <CString> error;
+
+				if (!it->bTitleParamField)
+					if (findRepiteInBook(it->sTitleParamField[1], book))
+						error.push_back(ErrorBase.sim.TitleRepBook);
+
+				if (!error.empty())
+				{
+					error.push_front(errRemarks[1]);
+					errorSignalData signal = getErrSignal(it, error);
+					errBook.sheets[cSheet].signals.push_back(signal);
+					it->bTitleParamField = true;
+				}
 			}
 		}
 	}
@@ -270,20 +275,32 @@ void CTest::Simantic(errorBookData& errBook, bookData& book)
 	for (size_t cSheet = 0; cSheet < errBook.sheets.size(); cSheet++)
 	{
 		errBook.sheets[cSheet].name = book.sheets[cSheet].name;
-		bool wRepite[32];		// Для отслеживания повторений слов
+		bool wRepiter[32];		// Для отслеживания повторений слов
 		bool tRepiter[32][32];	// Для отслеживания бито перекрытия
+
+		// Очистка массивов
+		for (int i = 0; i < 32; i++)
+		{
+			wRepiter[i] = true;
+			for (int j = 0; j < 32; j++)
+				tRepiter[i][j] = true;
+		}
 
 		for (list <signalData>::iterator it = book.sheets[cSheet].signals.begin(); it != book.sheets[cSheet].signals.end(); it++)
 		{
 			bool begin = true, result = true;
-			if (it != book.sheets[cSheet].signals.begin())	begin = false;
+			
+			if (it != book.sheets[cSheet].signals.begin())	
+				begin = false;
+			
 			if (it->sTitleParamField->Compare(_T("Резерв")) != 0)
 			{
-				result = simanticNumWord(errBook.sheets[cSheet], it, wRepite);
+				result = simanticNumWord(errBook.sheets[cSheet], it, wRepiter);
 				(!simanticTitleParam(errBook.sheets[cSheet], it, book, cSheet)) ? result = false : result = result;
 				(!simanticMinMaxCSR(errBook.sheets[cSheet], it, book.sheets[cSheet].iFieldNP, begin)) ? result = false : result = result;
-				//(!simanticBits(errBook.sheets[cSheet], it, tRepiter)) ? result = false : result = result;
+				(!simanticBits(errBook.sheets[cSheet], it, tRepiter)) ? result = false : result = result;
 			}
+
 			if (!result)	// Установка флага, что на листе есть ошибка
 				book.sheets[cSheet].bError = true;
 		}
@@ -297,19 +314,21 @@ bool CTest::simanticNumWord(errorSheetData& sheet, list<signalData>::iterator& i
 
 	if (!it->bNumWordField)
 	{
-		if (it->iNumWord[0] > 32 || it->iNumWord[1] > 32)	// Слово должно быть не больше 32
-			error.push_back(ErrorBase.sim.NumMore32);
-
 		if (it->iNumWord[1] > 0)
 			if (!wRep[it->iNumWord[1] - 1])	// Поиск совпадений № слов для второго слова
 				error.push_back(ErrorBase.sim.NumRepite);
 		else if (!wRep[it->iNumWord[0] - 1])	// Для первого
 			error.push_back(ErrorBase.sim.NumRepite);
 
-		// Отметка о том, что эти слова на этом листе
-		wRep[it->iNumWord[0] - 1] = false;
-		if (it->iNumWord[1] > 0)
-			wRep[it->iNumWord[1] - 1] = false;
+		if (it->iNumWord[0] > 32 || it->iNumWord[1] > 32)	// Слово должно быть не больше 32
+			error.push_back(ErrorBase.sim.NumMore32);
+		else
+		{
+			// Отметка о том, что эти слова на этом листе
+			wRep[it->iNumWord[0] - 1] = false;
+			if (it->iNumWord[1] > 0)
+				wRep[it->iNumWord[1] - 1] = false;
+		}
 	}
 
 	if (error.empty())
@@ -337,7 +356,6 @@ bool CTest::simanticTitleParam(errorSheetData& errSheet, list<signalData>::itera
 	error.push_front(errRemarks[1]);
 	errorSignalData signal = getErrSignal(it, error);
 	errSheet.signals.push_back(signal);
-	it->bTitleParamField = true;
 
 	return false;
 }
@@ -441,7 +459,7 @@ bool CTest::simanticBits(errorSheetData& sheet, list<signalData>::iterator& it, 
 // Проверка на перекрытие битов
 bool CTest::checkCrossBits(list<signalData>::iterator& it, bool repiter[][32])
 {
-	bool result = false;
+	bool result = true;
 	int nInterval;
 	(it->b2BitField) ? nInterval = 2 : nInterval = 1;
 
@@ -463,43 +481,12 @@ bool CTest::checkCrossBits(list<signalData>::iterator& it, bool repiter[][32])
 		if (end == 0)
 			end = start;
 
-		// int param_povt_f = -1, param_povt_s = -1;
-		// CString boot = _T("");
-
 		for (; start <= end; start++)
 		{
 			if (repiter[it->iNumWord[i] - 1][start - 1])
 				repiter[it->iNumWord[i] - 1][start - 1] = false;
 			else
-				result = true;
-			/*{
-				result = true;
-				if (param_povt_f == -1)
-				{
-					param_povt_f = start_bit;
-					boot.Format(_T("%d"), param_povt_f);
-				}
-
-				if (param_povt_s == -1)
-					param_povt_s = start_bit;
-
-				if ((start_bit - param_povt_s) > 1)
-				{
-					if (param_povt_f == param_povt_s)
-						boot.Format(_T("%s,%d"), boot, param_povt_s);
-					else
-						boot.Format(_T("%s...%d,%d"), boot, param_povt_s, start_bit);
-					param_povt_f = start;
-					param_povt_s = start;
-				}
-
-				if ((start - param_povt_s) == 1)
-					param_povt_s = start;
-			}
-
-			if (start == end)
-				if (param_povt_f != param_povt_s)
-					boot.Format(_T("%s...%d"), boot, param_povt_s);*/
+				result = false;
 		}
 	}
 	return result;
@@ -674,17 +661,7 @@ void CTest::translateComment(list<signalData>::iterator& it)
 
 	if (indx != -1)	// Чтение знакового бита
 	{
-		tmp.Delete(0, indx + 3);
-		
-		int iSpace = tmp.Find(_T(' '));
-		if (iSpace == -1)
-			iSpace = tmp.Find(_T('\n'));
-		if (iSpace == -1)
-			iSpace = tmp.Find(_T('\0'));
-
-		tmp.Delete(iSpace, tmp.GetLength());
-
-		it->iBitSigns = _wtoi(tmp);
+		it->iBitSigns = stepTranslateComment(tmp, indx);
 
 		it->bCommentField = true;	// Установка флага присутствия знака в примечании
 	}
@@ -692,17 +669,21 @@ void CTest::translateComment(list<signalData>::iterator& it)
 	indx = tmp.Find(_T("NP="));
 
 	if (indx != -1)	// Чтение NP
-	{
-		tmp.Delete(0, indx + 3);
+		NP = stepTranslateComment(tmp, indx);
+}
 
-		int iSpace = tmp.Find(_T(' '));
-		if (iSpace == -1)
-			iSpace = tmp.Find(_T('\n'));
-		if (iSpace == -1)
-			iSpace = tmp.Find(_T('\0'));
+// Дополнительная функция для перевода знака или NP
+int CTest::stepTranslateComment(CString field, int indx)
+{
+	field.Delete(0, indx + 3);
 
-		tmp.Delete(iSpace, tmp.GetLength());
+	int iSpace = field.Find(_T(' '));
+	if (iSpace == -1)
+		iSpace = field.Find(_T('\n'));
+	if (iSpace == -1)
+		iSpace = field.Find(_T('\0'));
 
-		NP = _wtoi(tmp);
-	}
+	field.Delete(iSpace, field.GetLength());
+
+	return _wtoi(field);
 }

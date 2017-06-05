@@ -343,16 +343,14 @@ void CMainDlg::OnPivCloseAll()
 // Добаление путей файлов
 void CMainDlg::AddPath(CString fullPath, CString name)
 {
+	bool result = true;
+
 	if (!path.empty())
-	{
 		for (size_t i = 0; i < path.size(); i++)
-			if (fullPath.Compare(path[i]) != 0)
-			{
-				path.push_back(fullPath); // Заполнение, если такого файла еще нет
-				lsBox->AddString(name);
-			}
-	}
-	else
+			if (fullPath.Compare(path[i]) == 0)
+				result = false;
+	
+	if (result)
 	{
 		path.push_back(fullPath);
 		lsBox->AddString(name);
