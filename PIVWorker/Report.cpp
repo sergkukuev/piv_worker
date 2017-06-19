@@ -2,82 +2,36 @@
 #include "Report.h"
 
 // Конструктор
-CReport::CReport()
-{
-}
+CReport::CReport()	{	}
 
 // Деструктор
-CReport::~CReport()
+CReport::~CReport()	{	}
+
+#pragma region GenerateReport
+
+// Генерация отчета об ошибках
+void CReport::getReport(vector <bookData> books, errorSet errorDB, CString pathToSave)
 {
-	Clear();
-}
+	if (pathToSave.IsEmpty())
+		throw EmptyPathException();
 
-// Установка пути сохранения
-void CReport::setPath(CString path) 
-{ 
-	this->path = path;
-}
+	path = pathToSave;
 
-// Генерация отчета
-bool CReport::Generate(vector <bookData> books, errorSet errorDB)
-{
-	if (path.IsEmpty())	// Не задан путь сохранения
-		return false;
-
-	this->errorDB = errorDB;
-	this->books = books;
-	startGenerate();	// Генерация
-	Clear();
-
-	return true;
-}
-
-// Очистка переменных
-void CReport::Clear()
-{
-	errorDB.syntax.clear();
-	errorDB.simantic.clear();
-	errorDB.warning.clear();
-}
-
-// Начало генерации отчета
-void CReport::startGenerate()
-{
 	// Подсчет количества наборов и ошибок
-	amount.allSets = getSetsAmount();
-	amount.setsWithError = getSetsAmountWithError();
-	amount.setsWithoutError = amount.allSets - amount.setsWithError;
+	setAmount(books);	
+	amount.error = getAmountError(errorDB.syntax) + getAmountError(errorDB.simantic);
+	amount.warning = getAmountError(errorDB.warning);
 
-	amount.error = getErrorAmount(errorDB.syntax) + getErrorAmount(errorDB.simantic);
-	amount.warning = getErrorAmount(errorDB.warning);
-
-	if (amount.error + amount.warning != 0)
-		makeReport();
-	else
-		makeEmptyReport();
+	makeReport(books, errorDB);
 }
 
 // Генерация не пустого отчета
-void CReport::makeReport()
+void CReport::makeReport(vector <bookData> books, errorSet errorDB)
 {
 	ofstream file;	// Поток записи в файл
 	CString tPath;	// Путь к текущему файлу
 
-	// Создание директорий для отчета
-	tPath.Format(_T("%s\\Error"), path);
-	CreateDirectory(tPath, NULL);
-	tPath.Empty();
-	tPath.Format(_T("%s\\Warning"), path);
-	CreateDirectory(tPath, NULL);
-	tPath.Empty();
-	tPath.Format(_T("%s\\Error\\Syntax"), path);
-	CreateDirectory(tPath, NULL);
-	tPath.Empty();
-	tPath.Format(_T("%s\\Error\\Simantic"), path);
-	CreateDirectory(tPath, NULL);
-
 	// Создание и открытие файла
-	tPath.Empty();
 	tPath.Format(_T("%s\\Отчет.html"), path);
 	file.open(tPath);
 
@@ -92,15 +46,15 @@ void CReport::makeReport()
 	file << "      <table border=\"1\"cellspacing=\"0\">\n";
 	file << "          <tr>\n";
 	file << "              <th align=\"left\">Наборов параметров всего</th>\n";
-	file << "              <td align=\"center\">";	file << amount.allSets;	file << "</td>\n";
+	file << "              <td align=\"center\">";	file << amount.all;	file << "</td>\n";
 	file << "          </tr>\n";
 	file << "          <tr>\n";
 	file << "              <th align=\"left\">Наборов параметров с ошибками</th>\n";
-	file << "              <td align=\"center\">";	file << amount.setsWithError; file << "</td> \n";
+	file << "              <td align=\"center\">";	file << amount.withError; file << "</td> \n";
 	file << "          </tr>\n";
 	file << "          <tr>\n";
 	file << "              <th align=\"left\">Наборов параметров без ошибок</th>\n";
-	file << "              <td align=\"center\">";	file << amount.setsWithoutError; file << "</td>\n";
+	file << "              <td align=\"center\">";	file << amount.withoutError; file << "</td>\n";
 	file << "          </tr>\n";
 	file << "          <tr>\n";
 	file << "              <th align=\"left\">Всего ошибок</th>\n";
@@ -112,6 +66,32 @@ void CReport::makeReport()
 	file << "          </tr>\n";
 	file << "      </table>\n";
 	file << "      <br/>\n";
+
+	if (amount.error + amount.warning != 0)
+		startWrite(file, books, errorDB);
+	else
+		file << "      <h2>Ошибок и замечаний нет!</h2>\n";
+	
+	file << "  </body>\n";
+	file << "</html>\n";
+
+	file.close();	// Закрытие файла
+}
+
+void CReport::startWrite(ofstream& file, vector <bookData> books, errorSet errorDB)
+{
+	CString tPath;
+
+	// Создание директорий для отчета
+	tPath.Format(_T("%s\\Error"), path);
+	CreateDirectory(tPath, NULL);
+	tPath.Format(_T("%s\\Warning"), path);
+	CreateDirectory(tPath, NULL);
+	tPath.Format(_T("%s\\Error\\Syntax"), path);
+	CreateDirectory(tPath, NULL);
+	tPath.Format(_T("%s\\Error\\Simantic"), path);
+	CreateDirectory(tPath, NULL);
+
 	file << "      <h3>Отчет.</h3>\n";
 	file << "      <table border=\"1\"cellspacing=\"0\">\n";
 	file << "          <tr>\n";
@@ -127,7 +107,7 @@ void CReport::makeReport()
 
 	for (size_t cBooks = 0; cBooks < books.size(); cBooks++)
 	{
-		writeSheets(file, cBooks);
+		writeSheets(file, books, cBooks);
 
 		// Создание отчета о синтаксических, семантических ошибках и предупреждениях
 		writeError(file, errorDB.syntax[cBooks], _T("Error\\Syntax"));
@@ -136,77 +116,23 @@ void CReport::makeReport()
 		file << "          </tr>\n";
 	}
 	file << "      </table>\n";
-	file << "  </body>\n";
-	file << "</html>\n";
-
-	file.close();	// Закрытие файла
-}
-
-// Генерация пустого отчета
-void CReport::makeEmptyReport()
-{
-	ofstream file;	// Поток записи в файл
-	CString tPath;	// Путь к текущему файлу
-
-	// Создание и открытие файла
-	tPath.Format(_T("%s\\Отчет.html"), path);
-	file.open(tPath);
-
-	// Запись в файл
-	file << "<html>\n";
-	file << "  <head>\n";
-	file << "     <meta http-equiv=\"Content-Type\" content=\"text/html; charset=win-1251\" />\n";
-	file << "     <title>Замечания</title>\n";
-	file << "  </head>\n";
-	file << "  <body>\n";
-	file << "      <h3>Статистика.</h3>\n";
-	file << "      <table border=\"1\"cellspacing=\"0\">\n";
-	file << "          <tr>\n";
-	file << "              <th align=\"left\">Наборов параметров всего</th>\n";
-	file << "              <td align=\"center\">";	file << amount.allSets; file << "</td>\n";
-	file << "          </tr>\n";
-	file << "          <tr>\n";
-	file << "              <th align=\"left\">Наборов параметров с ошибками</th>\n";
-	file << "              <td align=\"center\">";	file << amount.setsWithError; file << "</td>\n ";
-	file << "          </tr>\n";
-	file << "          <tr>\n";
-	file << "              <th align=\"left\">Наборов параметров без ошибок</th>\n";
-	file << "              <td align=\"center\">";	file << amount.setsWithoutError; file << "</td>\n";
-	file << "          </tr>\n";
-	file << "          <tr>\n";
-	file << "              <th align=\"left\">Всего ошибок</th>\n";
-	file << "              <td align=\"center\">"; file << amount.error; file << "</td>\n";
-	file << "          </tr>\n";
-	file << "          <tr>\n";
-	file << "              <th align=\"left\">Всего предупреждений</th>\n";
-	file << "              <td align=\"center\">";	file << amount.warning; file << "</td>\n";
-	file << "          </tr>\n";
-	file << "      </table>\n";
-	file << "      <br/>\n";
-	file << "      <h2>Ошибок и замечаний нет!</h2>\n";
-	file << "  </body>\n";
-	file << "</html>\n";
-
-	file.close();	// Закрытие файла
 }
 
 // Создание страниц
-void CReport::writeSheets(ofstream& file, int cBooks)
+void CReport::writeSheets(ofstream& file, vector <bookData> books, int cBooks)
 {
-	bool pathDirectory = true;
+	file << "          <tr>\n";
+	file << "              <td>"; file << CT2A(books[cBooks].name); file << "</td>\n";
+	file << "              <td align=\"center\">\n";
+	file << "                 <dl>\n";
 
 	for (size_t cSheets = 0; cSheets < books[cBooks].sheets.size(); cSheets++)
 	{
-		if (pathDirectory)
-		{
-			pathDirectory = false;
-			file << "          <tr>\n";
-			file << "              <td>"; file << CT2A(books[cBooks].name); file << "</td>\n";
-			file << "              <td align=\"center\">\n";
-			file << "                 <dl>\n";
-		}
-		file << "                     <dt>"; file << CT2A(books[cBooks].sheets[cSheets].name); file << "</dt>\n";
+		file << "                     <dt>"; 
+		file << CT2A(books[cBooks].sheets[cSheets].name); 
+		file << "</dt>\n";
 	}
+
 	file << "                 </dl>\n";
 	file << "              </td>\n";
 }
@@ -384,32 +310,21 @@ int CReport::getIndexErrorField(list<errorSignalData>::iterator it)
 	return result;
 }
 
-// Количество всех наборов данных
-int CReport::getSetsAmount()
+// Установка количества набора данных (всего, с ошибками, без)
+void CReport::setAmount(vector <bookData> books)
 {
-	int result = 0;
-
 	for (size_t i = 0; i < books.size(); i++)
-		result += books[i].sheets.size();
-
-	return result;
-}
-
-// Количество наборов данных с ошибкой
-int CReport::getSetsAmountWithError()
-{
-	int result = 0;
-
-	for (size_t i = 0; i < books.size(); i++)
+	{
+		amount.all += books[i].sheets.size();
 		for (size_t j = 0; j < books[i].sheets.size(); j++)
 			if (books[i].sheets[j].bError)
-				result++;
-
-	return result;
+				amount.withError++;
+	}
+	amount.withoutError = amount.all - amount.withError;
 }
 
 // Количество ошибок
-int CReport::getErrorAmount(vector <errorBookData> error)
+int CReport::getAmountError(vector <errorBookData> error)
 {
 	int result = 0;
 
@@ -419,3 +334,140 @@ int CReport::getErrorAmount(vector <errorBookData> error)
 
 	return result;
 }
+
+#pragma endregion
+
+#pragma region GenerateTxt
+
+// Начало генерации txt файлов
+void CReport::getTxt(vector <bookData> books, CString pathToSave, bool bNumPK)
+{
+	// Создание директории
+	pathToSave.Format(_T("%s\\Text"), pathToSave);
+	CreateDirectory(pathToSave, NULL);
+
+	CString filePath = pathToSave;
+	filePath.Format(_T("%s\\_ProtocolMain.txt"), pathToSave);
+
+	// Открытие главного файла для записи
+	ofstream mainFile;
+	mainFile.open(pathToSave);
+
+	// Обход по книгам
+	for (size_t iBook = 0; iBook < books.size(); iBook++)
+	{
+		// Обход по страницам
+		for (size_t iSheet = 0; iSheet < books[iBook].sheets.size(); iSheet++)
+		{
+			if (!books[iBook].sheets[iSheet].bError)	// Если нет на странице ошибок
+			{
+				ofstream tmpFile;
+				CString name;
+				int NP = books[iBook].sheets[iSheet].iFieldNP;
+
+				// Создание txt файла для записи
+				name.Format(_T("NP_%d_%s.txt"), NP, books[iBook].sheets[iSheet].name);
+				filePath.Format(_T("%s\\%s"), pathToSave, name);
+				tmpFile.open(filePath);
+				mainFile << "#include \""; mainFile << CT2A(name); mainFile << "\"\n";
+
+				for (list <signalData>::iterator it = signal_set(iBook, iSheet).begin(); it != signal_set(iBook, iSheet).end(); it++)
+				{
+					sheetInfo info;
+					info.NP = books[iBook].sheets[iSheet].iFieldNP;
+					info.NumPk = books[iBook].sheets[iSheet].iNumPK;
+					info.bNumPk = bNumPK;
+					writeTxtParam(tmpFile, it, info);	// Запись параметра
+				}
+				tmpFile.close();
+			}
+			else continue;
+		}
+	}
+	mainFile.close();
+}
+
+// Запись сигнала в txt файл
+void CReport::writeTxtParam(ofstream& file, list <signalData>::iterator it, sheetInfo info)
+{
+	CString buffer = it->sTitleParamField[0];
+
+	if (buffer.Find(_T("Резерв")) == -1)
+	{
+		buffer.Format(_T("PAR=%s\n"), it->sTitleParamField[1]);	// Запись обозначения сигнала
+		file << CT2A(buffer);
+
+		buffer.Replace(_T("\""), _T("\\\""));
+		buffer.Format(_T("\t NAME=\"%s\"\n"), it->sTitleParamField[0]); // Наименования сигнала
+		file << CT2A(buffer);
+
+		if (!it->sDimensionField.IsEmpty())
+		{
+			buffer.Format(_T("\t UNIT=\"%s\"\n"), it->sDimensionField);	// Размерности
+			file << CT2A(buffer);
+		}
+
+		// Установка набора
+		if (info.NumPk != -1 && info.bNumPk)
+			buffer.Format(_T("\t SET=%d:%d\n"), info.NumPk, info.NP);
+		else
+			buffer.Format(_T("\t SET=%d\n"), info.NP);
+		file << CT2A(buffer);
+
+		int max = (it->iBit[1] == 0 ? it->iBit[0] : it->iBit[1]);
+
+		if (it->b2NumWordField)	// Запись номера слова и битов
+		{
+			file << "\t MERGE\n";
+			buffer.Format(_T("\t\t WDADDR = %d,%d,%d\n"), it->iNumWord[0], it->iBit[0], max);
+			file << CT2A(buffer);
+			buffer.Format(_T("\t\t WDADDR = %d,%d,%d\n"), it->iNumWord[1], it->iBit[0], max);
+			file << CT2A(buffer);
+			file << "\t END_MERGE\n";
+		}
+		else
+		{
+			buffer.Format(_T("\t\t WDADDR = %d,%d,%d\n"), it->iNumWord[0], it->iBit[0], max);
+			file << CT2A(buffer);
+		}
+
+		if (it->dMinMaxCsrVal[1] != 0 && it->dMinMaxCsrVal[2] != 0)	// Мин, макс, цср
+		{
+			file << "\t VALDESCR\n";
+			file << (it->bCommentField ? "\t\t SIGNED\n" : "\t\t UNSIGNED\n");
+
+			buffer = it->sMinMaxCsrValField[0];
+			buffer.Replace(_T(","), _T("."));
+			buffer.Format(_T("\t\t MIN = %s\n"), buffer);
+			file << CT2A(buffer);
+
+			buffer = it->sMinMaxCsrValField[1];
+			buffer.Replace(_T(","), _T("."));
+			buffer.Format(_T("\t\t MAX = %s\n"), buffer);
+			file << CT2A(buffer);
+
+			buffer = it->sMinMaxCsrValField[2];
+			buffer.Replace(_T(","), _T("."));
+			buffer.Format(_T("\t\t MSB = %s\n"), buffer);
+			file << CT2A(buffer);
+
+			file << "\t END_VALDESCR\n";
+		}
+
+		if (!it->sCommentField.IsEmpty())	// Запись комментариев
+		{
+			file << "\t COMMENT\n";
+
+			buffer = it->sCommentField;
+			buffer.Replace(_T("\""), _T("\\\""));
+			buffer.Replace(_T("\n"), _T("\"\n\t\t\""));
+			buffer.Format(_T("\t\t\"%s\"\n"), buffer);
+
+			file << CT2A(buffer);
+			file << "\t END_COMMENT\n";
+		}
+		file << "END_PAR \n\n";
+	}
+}
+
+#pragma endregion

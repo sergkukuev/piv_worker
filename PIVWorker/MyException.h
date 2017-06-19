@@ -39,3 +39,9 @@ private:
 	CString name = _T("");	// Имя листа, на котором найдена неизвестная ошибка
 	CString param = _T("");	// Параметр, который обрабатывался
 };
+
+// Исключения для класс Report
+class EmptyPathException : public MyException {
+public:
+	virtual CString GetMsg() { return _T("Путь для сохранения отчета не задан!"); };
+};

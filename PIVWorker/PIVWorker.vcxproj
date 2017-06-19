@@ -190,7 +190,6 @@
     <ClCompile Include="PIVWorker.cpp" />
     <ClCompile Include="ReaderExcel.cpp" />
     <ClCompile Include="Report.cpp" />
-    <ClCompile Include="RepTxt.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
@@ -213,7 +212,6 @@
     <ClInclude Include="PIVWorker.h" />
     <ClInclude Include="ReaderExcel.h" />
     <ClInclude Include="Report.h" />
-    <ClInclude Include="RepTxt.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="StructPIV.h" />

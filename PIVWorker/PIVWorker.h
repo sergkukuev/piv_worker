@@ -17,7 +17,6 @@
 #include "ReaderExcel.h"	// чтение протоколов
 #include "Test.h"			// проверка на ошибки протоколов
 #include "Report.h"			// создание отчетов об ошибках
-#include "RepTxt.h"			// Создание txt
 #include "resource.h"		// основные символы
 
 

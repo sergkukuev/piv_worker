@@ -256,8 +256,7 @@ void CPIVWorker::MakeReport()
 {
 	CReport report;
 	CString pathFile, msg;
-	report.setPath(pathReport);
-	report.Generate(books, errorDB);
+	report.getReport(books, errorDB, pathReport);
 	pathFile.Format(_T("%s\\Отчет.html"), pathReport);
 	msg.Format(_T("Создание отчета завершено!\n\nРасположение: %s\nОткрыть для просмотра?"), pathReport);
 	if (AfxMessageBox(msg, MB_YESNO | MB_ICONQUESTION) == IDYES);
@@ -366,9 +365,9 @@ void CPIVWorker::StartTxt()
 // Начало генерации txt файлов 
 void CPIVWorker::GenerateTxt()
 {
-	CRepTxt txtFile;
+	CReport report;
 	CString msg;
-	txtFile.Generate(books,pathReport, bNumPK);
+	report.getTxt(books,pathReport, bNumPK);
 	msg.Format(_T("Создание txt файлов завершено!\n\nРасположение: %s\nОткрыть для просмотра?"), pathReport);
 	if (AfxMessageBox(msg, MB_YESNO | MB_ICONQUESTION) == IDYES);
 		ShellExecute(0, L"open", pathReport, NULL, NULL, SW_NORMAL);

@@ -42,9 +42,6 @@
     <ClCompile Include="Report.cpp">
       <Filter>Файлы исходного кода</Filter>
     </ClCompile>
-    <ClCompile Include="RepTxt.cpp">
-      <Filter>Файлы исходного кода</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="PIVWorker.h">
@@ -99,9 +96,6 @@
       <Filter>Заголовочные файлы</Filter>
     </ClInclude>
     <ClInclude Include="Report.h">
-      <Filter>Заголовочные файлы</Filter>
-    </ClInclude>
-    <ClInclude Include="RepTxt.h">
       <Filter>Заголовочные файлы</Filter>
     </ClInclude>
   </ItemGroup>
