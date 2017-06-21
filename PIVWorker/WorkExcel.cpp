@@ -1,211 +1,116 @@
-#include "stdafx.h"
+п»ї#include "stdafx.h"
 #include "WorkExcel.h"
 
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#endif
-
-// Инициализация объекта Excel и указателя 
-bool CWorkExcel::initApplication()
+CWorkExcel::CWorkExcel(void)
 {
+	if (!app.CreateDispatch(_T("Excel.Application"), NULL))
+		AfxMessageBox(_T("РќРµ СѓРґР°Р»РѕСЃСЊ РѕС‚РєСЂС‹С‚СЊ РїСЂРёР»РѕР¶РµРЅРёРµ Excel!"));
 
-	if (!_application.CreateDispatch(_T("Excel.Application"))) //запустить сервер
-	{
-		AfxMessageBox(_T("Ошибка при старте Excel!"));
+	app.put_Visible(FALSE);
+	app.put_UserControl(FALSE);
+
+	books.AttachDispatch(app.get_Workbooks());
+	cells = NULL;
+}
+
+CWorkExcel::~CWorkExcel(void)
+{
+	sheet.ReleaseDispatch();
+	sheets.ReleaseDispatch();
+	book.ReleaseDispatch();
+	books.ReleaseDispatch();
+	app.Quit();
+	app.ReleaseDispatch();
+	delete cells;
+}
+
+bool CWorkExcel::openBook(CString path)
+{
+	COleVariant covOptional((long)DISP_E_PARAMNOTFOUND, VT_ERROR);
+	Lp = books.Open(path, covOptional, covOptional, covOptional, covOptional, covOptional,
+						  covOptional, covOptional, covOptional, covOptional, covOptional,
+						  covOptional, covOptional, covOptional, covOptional);
+
+	if (Lp == NULL)	
 		return false;
-	}
 
-	_excelBooks = _application.get_Workbooks(); // указатель на открытые книги
-
-	if (!_excelBooks)
-	{
-		AfxMessageBox(_T("Ошибка при инициализации указателя на Книги!"));
-		ASSERT(_excelBooks != NULL);
-		return false;
-	}
+	book.AttachDispatch(Lp);
+	sheets.AttachDispatch(book.get_Sheets());
+	count = sheets.get_Count();
 
 	return true;
 }
 
-// Уничтожение объекта Excel и указателя
-void CWorkExcel::destroyApplication()
+CString CWorkExcel::bookName()
 {
-	_excelBooks.Close();
-	_excelBooks.ReleaseDispatch();
-	_application.Quit();
-	_application.ReleaseDispatch();
-	_application = nullptr;
-	_excelBooks = nullptr;
-	_countBooks = 0;
+	return book.get_Name();
 }
 
-//Конструктор
-CWorkExcel::CWorkExcel()
+bool CWorkExcel::setActiveSheet(long& iSheet)
 {
-	initApplication();
-}
+	Lp = sheets.get_Item(COleVariant(iSheet));
 
-//Конструктор с параметром
-CWorkExcel::CWorkExcel(CString& pathToTemplate)
-{
-	initApplication();
-	openWorkBook(pathToTemplate);
-}
-
-// Деструктор
-CWorkExcel::~CWorkExcel()
-{
-	destroyApplication();
-}
-
-//Открытие или добавление рабочей книги
-void CWorkExcel::openWorkBook(CString& pathToTemplate)
-{
-	if (!_excelBooks)
-		initApplication();
-
-	COleVariant covOptional((long)DISP_E_PARAMNOTFOUND, VT_ERROR);
-	_excelBooks.Open(pathToTemplate, covOptional, covOptional, covOptional, covOptional, covOptional, covOptional, covOptional, 
-									covOptional, covOptional, covOptional, covOptional, covOptional, covOptional, covOptional);
-	setCountBooks();
-}
-
-//Закрытие всех книг
-void CWorkExcel::closeWorkBooks()
-{
-	destroyApplication();
-}
-
-//Задание активной книги
-void CWorkExcel::setActivBook(long& iBook)
-{
-	_workBook = _excelBooks.get_Item(COleVariant(iBook));
-	_excelSheets = _workBook.get_Sheets();
-	setCountSheets();
-}
-
-//Задание активного листа в книге
-void CWorkExcel::setActivSheet(long& iSheet)
-{
-	_workSheet = _excelSheets.get_Item(COleVariant(iSheet));
-}
-
-//Получение названия книги
-CString CWorkExcel::getNameBook()
-{
-	return _workBook.get_Name();
-}
-
-//Получение названия листа
-CString CWorkExcel::getNameSheet()
-{
-	return _workSheet.get_Name();
-}
-
-//Получение количества открытых книг
-int CWorkExcel::getCountBooks()
-{
-	return _countBooks;
-}
-
-//Получение количества листов в активной книге
-int CWorkExcel::getCountSheets()
-{
-	return _countSheetsActivBook;
-}
-
-//Получение количества объедененных ячеек
-int CWorkExcel::getMergeCount(Cell& cell)
-{
-	CString rangeCellX;
-	int iCol = static_cast<int>(cell.column);
-
-	rangeCellX.Format(_T("%s%d"), convertToChar(iCol), cell.row);
-	
-	CRange cellRange = _workSheet.get_Range(COleVariant(rangeCellX), COleVariant(rangeCellX));
-	
-	cellRange = cellRange.get_MergeArea();
-	cellRange = cellRange.get_Rows();
-	
-	return cellRange.get_Count();
-}
-
-//Получение индекса стартовой ячейки объединения
-long CWorkExcel::getStartMerge(Cell& cell)
-{
-	CString rangeCellX;
-	int iCol = static_cast<int>(cell.column);
-
-	rangeCellX.Format(_T("%s%d"), convertToChar(iCol), cell.row);
-
-	CRange cellRange = _workSheet.get_Range(COleVariant(rangeCellX), COleVariant(rangeCellX));
-
-	cellRange = cellRange.get_MergeArea();
-	cellRange = cellRange.get_Rows();
-
-	return cellRange.get_Row();
-}
-
-// Получение значения из ячеки
-CString CWorkExcel::getCellValue(Cell& cell)
-{
-	CRange cellRange = _workSheet.get_Cells();
-
-	return cellRange.get_Item(COleVariant(cell.row), COleVariant(cell.column));
-}
-
-// Поиск по ячекам в активном листе
-bool CWorkExcel::findOneDateCells(CString& findString, Cell& cell)
-{
-	CRange firstFind = _workSheet.get_Cells();
-	CRange Find;
-
-	COleVariant covOptional((long)DISP_E_PARAMNOTFOUND, VT_ERROR);
-	COleVariant covTrue((short)TRUE, VT_BOOL), covFalse((short)FALSE, VT_BOOL);
-
-	Find = firstFind.Find(COleVariant(findString), covOptional, COleVariant(long(xlValues)), COleVariant(long(xlPart)),
-							COleVariant(long(xlByRows)), (long)xlNext, covFalse, covFalse, covFalse);
-	
-	if (Find)
-	{
-		cell.column = Find.get_Column();
-		cell.row = Find.get_Row();
-		return true;
-	}
-	else
+	if (Lp == NULL)	
 		return false;
+	
+	sheet.AttachDispatch(Lp);
+	Lp = sheet.get_UsedRange();
+	range.AttachDispatch(Lp);
+
+	VARIANT tmp = range.get_Value2();
+
+	if (cells != NULL)
+		delete cells;
+
+	cells = new COleSafeArray(tmp);
+	cells->GetLBound(1, &RowLeft);
+	cells->GetUBound(1, &RowRight);
+	cells->GetLBound(2, &ColumnLeft);
+	cells->GetUBound(2, &ColumnRight);
+
+	return true;
 }
 
-// Установка значения открытых книг
-void CWorkExcel::setCountBooks()
+CString CWorkExcel::sheetName()
 {
-	_countBooks = _excelBooks.get_Count();
+	return sheet.get_Name();
 }
 
-//Установка количества листов в активной книги
-void CWorkExcel::setCountSheets()
+int CWorkExcel::countSheet()
 {
-	_countSheetsActivBook = _excelSheets.get_Count();
+	return count;
 }
 
-//Получения буквенного обозначения ячейки из номера колонки
-CString CWorkExcel::convertToChar(int & iCol)
+VARIANT CWorkExcel::cellValue(long& row, long& column)
 {
-	CString rez = _T("");
-	int iA = 0, iB = 0;
+	VARIANT item;
+	long index[2] = { row, column };
+	cells->GetElement(index, &item);
+	return item;
+}
 
-	if (iCol <= 26)
-		rez.Format(_T("%c"), static_cast<char>(iCol + 64));
-	else
+int CWorkExcel::countSignal()
+{
+	long result;
+	cells->GetUBound(1, &result);
+	return result;
+}
+
+/*bool CWorkExcel::findHeader(CString& findString, Cell& cell)
+{
+	for (int i = ColumnLeft; i < ColumnRight; i++)
 	{
-		iA = iCol / 26;
-		iB = iCol % 26;
-
-		if (iB == 0)
-			iB = 26;
-		
-		rez.Format(_T("%s%s%s"), rez, convertToChar(iA), static_cast<char>(iB + 64));
+		for (int j = RowLeft; j < RowRight; j++)
+		{
+			Cell c;
+			c.row = j; c.column = i;
+			CString res = getCellValue(c);
+			if (res.Find(findString) != -1)
+			{
+				cell = c;
+				return true;
+			}
+		}
 	}
-
-	return rez;
-}
+	return false;
+}*/

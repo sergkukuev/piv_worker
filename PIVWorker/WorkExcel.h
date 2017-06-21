@@ -24,42 +24,35 @@ struct Cell {
 
 class WORK_EXCEL_API CWorkExcel {
 public:
-	CWorkExcel(void);						// конструктор
-	CWorkExcel(CString& pathToTemplate);	// конструктор с параметром
-	~CWorkExcel();							// деструктор
+	CWorkExcel(void);
+	~CWorkExcel(void);
+	
+	bool openBook(CString path);
+	CString bookName();
 
-	void openWorkBook(CString& pathToTemplate);		// открытие рабочей книги
-	void closeWorkBooks();							// закрытие всех книг
+	bool setActiveSheet(long& iSheet);
+	CString sheetName();
+	int countSheet();
 
-	void setActivBook(long& iBook);					// задание активной книги
-	void setActivSheet(long& iSheet);				// задание активного листа
-	
-	CString getNameBook();							// получение названия книги
-	CString getNameSheet();							// получение названия листа
-	
-	int getCountBooks();							// получение кол-во открытых книг
-	int getCountSheets();							// получение кол-ва листов в активной книге
-	
-	int getMergeCount(Cell& cell);						// количество объедененных ячеек
-	long getStartMerge(Cell& cell);						// стартовая позиция объеденения ячеек
-	CString getCellValue(Cell& cell);					// получение значения их ячейки 
-	bool findOneDateCells(CString& findString, Cell& cell);	// поиск строки в активном листе
+	int countSignal();
+	VARIANT cellValue(long& row, long& column);
 
 private:
-	CApplication _application = nullptr;	// объект Excel
-	CWorkbooks _excelBooks = nullptr;		// все открытые книги
-	CWorkbook _workBook = nullptr;			// активная книга
-	CWorksheets _excelSheets = nullptr;		// все листы в активной книге
-	CWorksheet _workSheet = nullptr;		// активный лист в активной книге
-
-	int _countBooks = 0;					// количество открытых книг
-	int _countSheetsActivBook = 0;			// количество листов в активной книге
-
-	bool initApplication();					// инициализация объекта Excel и указателя
-	void destroyApplication();				// уничтожение объекта Excel и указателя
-	void setCountBooks();					// задание количества открытых книг
-	void setCountSheets();					// задание количества листов в активной книге
-
-	CString convertToChar(int& iCol);		// функция получения буквенного обозначения ячейки из номера колонки
+	CApplication app;
+	CWorkbooks books;
+	CWorkbook book;
+	CWorksheets sheets;
+	CWorksheet sheet;
+	CRange range;
+	LPDISPATCH Lp;
+	
+	// Данные листа
+	COleSafeArray* cells;
+	int count = 0;
+	// Размеры листа
+	long RowLeft;
+	long RowRight;
+	long ColumnLeft;
+	long ColumnRight;
 };
 
