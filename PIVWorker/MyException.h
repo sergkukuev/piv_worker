@@ -5,23 +5,57 @@ class MyException	{
 public:
 	MyException() {};
 	virtual ~MyException() {};
-	virtual CString GetMsg() { return _T("Ошибка!"); };
+	virtual CString GetMsg() { return _T("Неизвестная ошибка!"); };
 };
 
 // Исключения класса CReaderExcel
 class BadTypeException: public MyException	{
 public:
-	virtual CString GetMsg() { return _T("Неверное расширение файла(ов)!"); };
+	virtual CString GetMsg() { return _T("Неверное расширение одного из файлов!"); };
 };
 
-class NoBooksException: public MyException {
+class AccessExcelException : public MyException {
 public:
-	virtual CString GetMsg() { return _T("Открыть файл(ы) не удалось!"); };
+	void setOleError(CString error) { this->error = error; };
+	virtual CString GetMsg() {
+		CString result;
+		result.Format(_T("Запустить приложение Excel не удалось!\n\nОшибка: %s"), error);
+		return result;
+	};
+private:
+	CString error = _T("");
+};
+
+class ReadBookException: public MyException {
+public:
+	void setParam(CString error, CString nameBook) { 
+		this->error = error; 
+		this->nameBook = nameBook;
+	};
+	virtual CString GetMsg() {
+		CString result;
+		result.Format(_T("Считать данные из файла \"%s\" не удалось!\n\nОшибка: %s"), nameBook, error);
+		return result;
+	};
+private:
+	CString error = _T("");
+	CString nameBook = _T("");
 };
 
 class NotAllHeaderException : public MyException {
 public:
-	virtual CString GetMsg() { return _T("Не удалось найти все заголовки на одном из листов!"); };
+	void setParam(CString nameSheet, CString nameBook) { 
+		this->nameSheet = nameSheet;
+		this->nameBook = nameBook;
+	};
+	virtual CString GetMsg() { 
+		CString result;
+		result.Format(_T("Не удалось найти все заголовки на листе \"%s\" в файле \"%s\"!"), nameSheet, nameBook);
+		return result;
+	};
+private:
+	CString nameBook = _T("");
+	CString nameSheet = _T("");
 };
 
 // Исключения для класса Test

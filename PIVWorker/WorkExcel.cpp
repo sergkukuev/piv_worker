@@ -1,11 +1,9 @@
 ﻿#include "stdafx.h"
 #include "WorkExcel.h"
 
-CWorkExcel::CWorkExcel(void)
-{
-	if (!app.CreateDispatch(_T("Excel.Application"), NULL))
-		AfxMessageBox(_T("Не удалось открыть приложение Excel!"));
-
+// Конструктор
+CWorkExcel::CWorkExcel(void) {
+	app.CreateDispatch(_T("Excel.Application"), NULL);
 	app.put_Visible(FALSE);
 	app.put_UserControl(FALSE);
 
@@ -13,8 +11,8 @@ CWorkExcel::CWorkExcel(void)
 	cells = NULL;
 }
 
-CWorkExcel::~CWorkExcel(void)
-{
+// Деструктор
+CWorkExcel::~CWorkExcel(void) {
 	sheet.ReleaseDispatch();
 	sheets.ReleaseDispatch();
 	book.ReleaseDispatch();
@@ -24,93 +22,115 @@ CWorkExcel::~CWorkExcel(void)
 	delete cells;
 }
 
-bool CWorkExcel::openBook(CString path)
-{
+// Открытие книги
+bool CWorkExcel::openBook(CString path) {
 	COleVariant covOptional((long)DISP_E_PARAMNOTFOUND, VT_ERROR);
-	Lp = books.Open(path, covOptional, covOptional, covOptional, covOptional, covOptional,
+	LPDISPATCH Lp = books.Open(path, covOptional, covOptional, covOptional, covOptional, covOptional,
 						  covOptional, covOptional, covOptional, covOptional, covOptional,
 						  covOptional, covOptional, covOptional, covOptional);
-
 	if (Lp == NULL)	
 		return false;
 
 	book.AttachDispatch(Lp);
 	sheets.AttachDispatch(book.get_Sheets());
-	count = sheets.get_Count();
 
 	return true;
 }
 
-CString CWorkExcel::bookName()
-{
-	return book.get_Name();
-}
+// Получение имени книги
+CString CWorkExcel::bookName() { return book.get_Name(); }
 
-bool CWorkExcel::setActiveSheet(long& iSheet)
-{
-	Lp = sheets.get_Item(COleVariant(iSheet));
+// Открытие листа
+bool CWorkExcel::openSheet(long index) {
+	LPDISPATCH Lp = sheets.get_Item(COleVariant(index));
 
 	if (Lp == NULL)	
 		return false;
 	
+	CRange range;
 	sheet.AttachDispatch(Lp);
 	Lp = sheet.get_UsedRange();
 	range.AttachDispatch(Lp);
 
-	VARIANT tmp = range.get_Value2();
+	VARIANT items = range.get_Value2();
 
 	if (cells != NULL)
 		delete cells;
 
-	cells = new COleSafeArray(tmp);
-	cells->GetLBound(1, &RowLeft);
-	cells->GetUBound(1, &RowRight);
-	cells->GetLBound(2, &ColumnLeft);
-	cells->GetUBound(2, &ColumnRight);
+	cells = new COleSafeArray(items);
+	
+	// Получение границ листа
+	cells->GetLBound(1, &first.row);
+	cells->GetLBound(2, &first.column);
+	cells->GetUBound(1, &last.row);
+	cells->GetUBound(2, &last.column);
 
 	return true;
 }
 
-CString CWorkExcel::sheetName()
-{
-	return sheet.get_Name();
+// Получение имени текущего листа
+CString CWorkExcel::sheetName()	{ return sheet.get_Name(); }
+
+// Получение количества листов в книги
+long CWorkExcel::countSheets()	{ return sheets.get_Count(); }
+
+// Получение значения ячейки
+VARIANT CWorkExcel::cellValue(Cell cell) {
+	VARIANT item;
+	long index[2] = { cell.row, cell.column };
+	cells->GetElement(index, &item);
+	return item;
 }
 
-int CWorkExcel::countSheet()
-{
-	return count;
-}
-
-VARIANT CWorkExcel::cellValue(long& row, long& column)
-{
+// Перегрузка
+VARIANT CWorkExcel::cellValue(long row, long column) {
 	VARIANT item;
 	long index[2] = { row, column };
 	cells->GetElement(index, &item);
 	return item;
 }
 
-int CWorkExcel::countSignal()
-{
-	long result;
-	cells->GetUBound(1, &result);
-	return result;
+// Получение количества строк в листе
+long CWorkExcel::countRows() { return last.row; }
+
+// Поиск заголовков на текущем листе
+bool CWorkExcel::findHeader(Header& header) {
+	for (size_t i = 0; i < header.list.size(); i++) {
+
+		std::vector<CString>::iterator it = header.list[i].begin();
+		bool bFind = false;
+		Cell cell = first;
+		
+		for (it; !bFind; it++) {
+			if ((it == header.list[i].end()) && !bFind)
+				return false;
+
+			bFind = findCell(*it, cell);
+		}
+
+		header.adress[header.iRow] = cell.row;
+		header.adress[i + 1] = cell.column;
+	}
+
+	return true;
 }
 
-/*bool CWorkExcel::findHeader(CString& findString, Cell& cell)
-{
-	for (int i = ColumnLeft; i < ColumnRight; i++)
-	{
-		for (int j = RowLeft; j < RowRight; j++)
-		{
-			Cell c;
-			c.row = j; c.column = i;
-			CString res = getCellValue(c);
-			if (res.Find(findString) != -1)
-			{
-				cell = c;
+// Поиск ячейки по содержимому, в противном cell(-1,-1)
+bool CWorkExcel::findCell(CString field, Cell& cell) {
+	for (long i = first.row; i <= last.row; i++) {
+		for (long j = first.column; j <= last.column; j++) {
+			Cell tmp;
+			tmp.row = i; tmp.column = j;
+
+			CString item = cellValue(tmp);
+			item.Trim();
+
+			if (item.CompareNoCase(field) == 0) {
+				cell = tmp;
 				return true;
 			}
 		}
 	}
+
 	return false;
-}*/
+}

@@ -74,9 +74,6 @@
     <ClInclude Include="excel\CWorksheets.h">
       <Filter>Заголовочные файлы\excel</Filter>
     </ClInclude>
-    <ClInclude Include="excel\Enum.h">
-      <Filter>Заголовочные файлы\excel</Filter>
-    </ClInclude>
     <ClInclude Include="StructPIV.h">
       <Filter>Заголовочные файлы</Filter>
     </ClInclude>
