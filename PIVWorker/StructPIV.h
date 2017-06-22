@@ -6,54 +6,38 @@
 
 using namespace std;
 
-///////////////////////////////////////////// Хранение ПИВ /////////////////////////////////////////////
+#pragma region Data
 
 //	Данные сигнала
 struct signalData {
-	CString sNumWordField;											// Строка с номерами слов
-	int iNumWord[2] = { 0, 0 };										// Числовые значения номеров слов (максимум 2 числа)
-	bool bNumWordField;												// Присутствие ошибки строке с номером слова
-	bool b2NumWordField;											// Присутствие двух номеров слова 
-
-	CString sTitleParamField[2] = { _T(""), _T("") };				// Наименование парамметра (максимум 2 строки) 
-	bool bTitleParamField;											// Присутствие ошибки в наименование парамметра  
-
-	CString sDimensionField;										// Размерность
-	CString sMinMaxCsrValField[3] = { _T(""), _T("") , _T("") };	// Строковое значение мин., макс. и цена старшего разряда
-	double dMinMaxCsrVal[3] = { 0, 0, 0 };							// Значения мин., макс. и цена старшего разряда
-	bool bMinValField;												// Присутствие ошибки в мин. 
-	bool bMaxValField;												// Присутствие ошибки в макс.
-	bool bCsrValField;												// Присутствие ошибки в ЦСР.
-
-	CString sBitField;												// Строковое значение используемые категории
-	int iBit[4] = { 0, 0, 0, 0 };									// Используемые категории (максимум 4 числа)
-	bool bBitField;													// Присутствие ошибка в используемые категории
-	bool b2BitField;												// Присутствие двух используемых категорий 
-
-	CString sCommentField;											// Примечание
-	int iBitSigns;													// Знаковая переменная описано в примечании
-	bool bCommentField;												// Присутствие знакового описания
-	bool bBitSigns;													// Ошибка в описании знакого бита
+	CString numWord;		// Номер слова
+	CString title[2];		// Название параметра и идентификатор
+	CString dimension;		// Размерность
+	CString min, max, csr;	// Мин, макс, цср
+	CString bit;			// Используемые разряды
+	CString comment;		// Примечание
 };
 
-// Листа
+// Лист
 struct sheetData {
-	list <signalData> signals;	// Считанная информация о сигналах
+	vector <signalData> signals;	// Набор параметров на листе
 
 	CString name;	// название листа в книге
-	int iFieldNP;	// номер набора параметров
-	int iNumPK;		// номер подкадра
-	bool bError;	// Присутствие ошибки на листе
+	CString line;	// линия передачи
+	int np;			// номер набора параметров
+	int pk;			// номер подкадра
 };
 
-// Книги
+// Книга
 struct bookData {
-	vector <sheetData> sheets;	// Считанные из книги листы
-	CString name;	// Название книги
-	bool bNumPK;	// Присутствие номера подкадра
+	vector <sheetData> sheets;	// Набор листов в книге
+	CString name;				// Название книги
+	bool bPK;					// Присутствие номера подкадра
 };
 
-///////////////////////////////////////////// Ошибки ПИВ /////////////////////////////////////////////
+#pragma endregion
+
+#pragma region Error
 
 // Сигналы
 struct errorSignalData {
@@ -105,3 +89,5 @@ const CString errRemarks[7] = {
 	_T("Замечание. Поле \"Используемые разряды\" заполнено не верно."),
 	_T("Замечание. Поле \"Примечание\" заполнено не верно.")
 };
+
+#pragma endregion

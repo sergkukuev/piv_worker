@@ -15,9 +15,9 @@ private:
 	vector <CString> extension;	// Допустимые расширения файлов
 	Header header;				// Информация о заголовках
 
-	vector <sheetData> getSheets(CWorkExcel& work);		// Чтение листов
-	list <signalData> getSignals(CWorkExcel& work);		// Чтение параметров на листе
-	CString getCell(CWorkExcel& work, Cell cell, long cName = 1);	// Чтение ячейки
+	void getSheets(vector <sheetData>& book, CWorkExcel& work);		// Чтение листов
+	void getSignals(vector <signalData>& signals, CWorkExcel& work);		// Чтение параметров на листе
+	CString getCell(CWorkExcel& work, Cell cell);	// Чтение ячейки
 
 	int getNumPK(CWorkExcel& work);				// Поиск номера кадра (в противном случае будет равен -1)
 

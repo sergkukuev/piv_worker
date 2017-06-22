@@ -74,6 +74,41 @@ CString CWorkExcel::sheetName()	{ return sheet.get_Name(); }
 // Получение количества листов в книги
 long CWorkExcel::countSheets()	{ return sheets.get_Count(); }
 
+// Получение значения линии передачи
+VARIANT CWorkExcel::lineValue() {
+	VARIANT item;
+	Cell cell;
+
+	if (findCell(LINE_FIELD, cell))
+		item = cellValue(cell.row, cell.column + 1);
+
+	return item;
+}
+
+// Получение номера набора
+int CWorkExcel::npValue(Header head) {
+	CString item = cellValue(head.adress[head.iRow] + 1, head.adress[head.iComment]);
+	if (!item.IsEmpty()) {
+		int pos = item.Find(NP_FIELD);
+		item.Delete(0, pos + 3);
+		item.Trim();
+		return _wtoi(item);
+	}
+	return 0;
+}
+
+// Получение значения номера подкадра
+int CWorkExcel::pkValue(Header head) {
+	CString item = cellValue(head.adress[head.iRow] - 1, head.adress[head.iComment]);
+	if (!item.IsEmpty()) {
+		int pos = item.ReverseFind(PK_FIELD);
+		item.Delete(0, pos + 1);
+		item.Trim();
+		return _wtoi(item);
+	}
+	return 0;
+}
+
 // Получение значения ячейки
 VARIANT CWorkExcel::cellValue(Cell cell) {
 	VARIANT item;

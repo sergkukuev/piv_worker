@@ -10,7 +10,7 @@ CReport::~CReport()	{	}
 #pragma region GenerateReport
 
 // Генерация отчета об ошибках
-void CReport::getReport(vector <bookData> books, errorSet errorDB, CString pathToSave) {
+/*void CReport::getReport(vector <bookData> books, errorSet errorDB, CString pathToSave) {
 	if (pathToSave.IsEmpty())
 		throw EmptyPathException();
 
@@ -437,3 +437,4 @@ void CReport::writeTxtParam(ofstream& file, list <signalData>::iterator it, shee
 }
 
 #pragma endregion
+*/

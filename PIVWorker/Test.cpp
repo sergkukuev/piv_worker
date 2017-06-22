@@ -8,7 +8,7 @@ CTest::CTest()	{	}
 CTest::~CTest()	{	}
 
 // Проверка на все ошибки
-errorOneSet CTest::Start(bookData& book) {	
+/*errorOneSet CTest::Start(bookData& book) {	
 	// Синтаксические ошибки
 	error.syntax.sheets.resize(book.sheets.size());
 	error.syntax.name = book.name;
@@ -618,4 +618,4 @@ int CTest::stepTranslateComment(CString field, int indx) {
 	field.Delete(iSpace, field.GetLength());
 
 	return _wtoi(field);
-}
+}*/

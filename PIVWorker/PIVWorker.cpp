@@ -86,7 +86,7 @@ CPIVWorker::CPIVWorker() { }
 
 // Деструктор
 CPIVWorker::~CPIVWorker() {
-	path.clear();
+	//path.clear();
 	books.clear();
 	errorDB.syntax.clear();
 	errorDB.simantic.clear();
@@ -128,10 +128,8 @@ void CPIVWorker::ReadExcel() {
 		for (size_t i = 0; i < buffer.size(); i++) {
 			CReaderExcel reader;	// класс чтения книг
 
-			if (findIndexBook(buffer[i]) == -1) { 	// Если такой книги еще нет
+			if (findIndexBook(buffer[i]) == -1)
 				books.push_back(reader.getBook(buffer[i]));
-				path.push_back(buffer[i]);
-			}
 		}
 		AfxMessageBox(_T("Чтение завершено успешно!"), MB_ICONINFORMATION);
 	}
@@ -140,11 +138,12 @@ void CPIVWorker::ReadExcel() {
 	}
 
 	buffer.clear();
+	buffer.shrink_to_fit();
 	closeThread(primary);
 }
 
 #pragma endregion
-
+/*
 #pragma region TEST
 
 // Начало тестирования
@@ -334,22 +333,30 @@ int CPIVWorker::findReportBook(CString name) {
 			return i;
 
 	return -1;
-}
+} */
 
 // Поиск индекса прочитанной книги в базе книг
 int CPIVWorker::findIndexBook(CString pathToExcel) {
-	for (size_t i = 0; i < path.size(); i++)
-		if (pathToExcel.Compare(path[i]) == 0)
-			return i;
+	int result = 0;
+	for (list<bookData>::iterator it = books.begin(); it != books.end(); it++, result++)
+		if (nameFromPath(pathToExcel).Compare(it->name) == 0)
+			return result;
 
 	return -1;
+}
+
+// Получение имени файла ?????? посмотреть в работе после реконструкции
+CString CPIVWorker::nameFromPath(CString path) {
+	int startPos = path.ReverseFind(_T('\\')) + 1;
+	int endPos = path.ReverseFind(_T('.')) - 1;
+	return path.Mid(startPos, endPos - startPos);
 }
 
 // Дружественная функция для запуска определенной операции
 void Thread(CPIVWorker& piv) {
 	if (piv.hCmd == piv.command.open)
 		piv.ReadExcel();
-	else if (piv.hCmd == piv.command.test)
+	/*else if (piv.hCmd == piv.command.test)
 		piv.Test();
 	else if (piv.hCmd == piv.command.report)
 		piv.MakeReport();
@@ -358,7 +365,7 @@ void Thread(CPIVWorker& piv) {
 	else if (piv.hCmd == piv.command.close)
 		piv.CloseExcel();
 	else
-		AfxMessageBox(_T("Неопознанная команда!"), MB_ICONWARNING);
+		AfxMessageBox(_T("Неопознанная команда!"), MB_ICONWARNING);*/
 }
 
 // Проверка потока на доступность

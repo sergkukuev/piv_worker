@@ -34,6 +34,10 @@ struct Cell {
 	long column;	// Столбец
 };
 
+#define LINE_FIELD _T("Линия")
+#define NP_FIELD _T("NP=")
+#define PK_FIELD _T('№')
+
 // Класс чтения данных из Excel 
 class CWorkExcel {
 public:
@@ -47,6 +51,10 @@ public:
 	CString sheetName();			// Имя листа
 	long countSheets();				// Количество листов в книги
 	long countRows();				// Количество столбцов на текущем листе
+
+	VARIANT lineValue();			// Получение значения линии передачи
+	int npValue(Header head);		// Получение номера набора
+	int pkValue(Header head);		// Получение значения номера подкадра			
 
 	VARIANT cellValue(long row, long column);	// Получение значения ячейки
 	VARIANT cellValue(Cell cell);				// Перегрузка
