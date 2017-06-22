@@ -10,8 +10,8 @@ using namespace std;
 
 //	Данные сигнала
 struct signalData {
-	CString numWord;		// Номер слова
-	CString title[2];		// Название параметра и идентификатор
+	vector <int> numWord;				// Номер слова
+	vector <CString> title = { _T(""), _T("")};	// Название параметра и идентификатор
 	CString dimension;		// Размерность
 	CString min, max, csr;	// Мин, макс, цср
 	CString bit;			// Используемые разряды
