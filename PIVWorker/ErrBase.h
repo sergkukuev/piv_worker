@@ -7,16 +7,14 @@
 using namespace std;
 
 // Структура набора ошибок
-struct errorData
-{
+struct errorData {
 	regex correct;					// Корректная регулярка
 	vector <regex> error;			// Набор ошибочных регулярок
 	vector <CString> description;	// Описание ошибок
 };
 
 // Набор семантических ошибок
-struct simantic
-{
+struct simantic {
 	// При работе с полем "№ слова"
 	CONST CString NumRepite = TEXT("\t Слово с таким номером встречалось ранее на листе.");
 	CONST CString NumMore32 = TEXT("\t Номер слова больше 32.");
@@ -39,8 +37,7 @@ struct simantic
 };
 
 // Класс набора ошибок для всех полей ПИВ
-class CErrBase 
-{
+class CErrBase {
 public:
 	CErrBase();		// Конструктор
 	~CErrBase();	// Деструктор

@@ -9,8 +9,7 @@ using namespace std;
 ///////////////////////////////////////////// Хранение ПИВ /////////////////////////////////////////////
 
 //	Данные сигнала
-struct signalData
-{
+struct signalData {
 	CString sNumWordField;											// Строка с номерами слов
 	int iNumWord[2] = { 0, 0 };										// Числовые значения номеров слов (максимум 2 числа)
 	bool bNumWordField;												// Присутствие ошибки строке с номером слова
@@ -38,8 +37,7 @@ struct signalData
 };
 
 // Листа
-struct sheetData
-{
+struct sheetData {
 	list <signalData> signals;	// Считанная информация о сигналах
 
 	CString name;	// название листа в книге
@@ -49,8 +47,7 @@ struct sheetData
 };
 
 // Книги
-struct bookData
-{
+struct bookData {
 	vector <sheetData> sheets;	// Считанные из книги листы
 	CString name;	// Название книги
 	bool bNumPK;	// Присутствие номера подкадра
@@ -59,8 +56,7 @@ struct bookData
 ///////////////////////////////////////////// Ошибки ПИВ /////////////////////////////////////////////
 
 // Сигналы
-struct errorSignalData
-{
+struct errorSignalData {
 	CString sNumWordField;											// Строка с номерами слов
 	CString sTitleParamField[2] = { _T(""), _T("") };				// Наименование парамметра (максимум 2 строки)
 	CString sDimensionField;										// Размерность
@@ -71,37 +67,32 @@ struct errorSignalData
 };
 
 // Листы
-struct errorSheetData
-{
+struct errorSheetData {
 	list <errorSignalData> signals;	// Данные сигнала
 	CString name;					// Название листа
 };
 
 // Книги
-struct errorBookData
-{
+struct errorBookData {
 	vector <errorSheetData> sheets;	// Листы считанные из книги
 	CString name;					// Название книги
 };
 
 // Все ошибки
-struct errorSet
-{
+struct errorSet {
 	vector <errorBookData> syntax;		// Синтаксические
 	vector <errorBookData> simantic;	// Семантические
 	vector <errorBookData> warning;		// Замечания
 };
 
-struct errorOneSet
-{
+struct errorOneSet {
 	errorBookData syntax;
 	errorBookData simantic;
 	errorBookData warning;
 };
 
 // Шапки таблицы
-const CString errRemarks[7] =
-{
+const CString errRemarks[7] = {
 	// Номер параметра
 	_T("Замечание. Поле \"№ слова\" заполнено не верно."),
 	// Обозначение параметра

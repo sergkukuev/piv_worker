@@ -7,8 +7,8 @@
 // Максрос (обращение к сигналам)
 #define signal_set(iBook, iSheet) books[iBook].sheets[iSheet].signals
 
-struct Amount	// Структура подсчета наборов данных и их ошибок
-{
+// Количество наборов данных и их ошибок
+struct Amount	{
 	int all = 0;
 	int withError = 0;
 	int withoutError = 0;
@@ -16,16 +16,15 @@ struct Amount	// Структура подсчета наборов данных и их ошибок
 	int warning = 0;
 };
 
-struct sheetInfo	// Информация со страницы протокола
-{
+// Информация со страницы протокола
+struct sheetInfo {
 	int NP;			// Номер набора
 	int NumPk;		// Номер подкадра
 	bool bNumPk;	// Нужно ли устанавливать номер подкадра
 };
 
 // Класс генерации отчета
-class CReport
-{
+class CReport {
 public:
 	CReport();	// Конструктор
 	~CReport();	// Деструктор

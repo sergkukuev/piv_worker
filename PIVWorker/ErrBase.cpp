@@ -2,8 +2,7 @@
 #include "ErrBase.h"
 
 // Конструктор
-CErrBase::CErrBase()
-{
+CErrBase::CErrBase() {
 	// Установка корректных регулярок
 	SetCorrect(NumWord, "^[0-9]+(,[ \t]?[0-9]*)?$");
 	SetCorrect(TitleParam, "^[A-Za-z][A-Za-z0-9_]*$");
@@ -66,8 +65,7 @@ CErrBase::CErrBase()
 }
 
 // Деструктор
-CErrBase::~CErrBase()
-{
+CErrBase::~CErrBase() {
 	Clear(NumWord);
 	Clear(TitleParam);
 	Clear(MinMaxCSR);
@@ -75,55 +73,37 @@ CErrBase::~CErrBase()
 }
 
 // Установка регулярки для корректного поля
-void CErrBase::SetCorrect(errorData& err, string reg)
-{
+void CErrBase::SetCorrect(errorData& err, string reg) {
 	regex temp(reg);
-
 	err.correct = temp;
 }
 
 // Добавление ошибки к определенному набору
-void CErrBase::AddError(errorData& err, string reg, CString msg)
-{
+void CErrBase::AddError(errorData& err, string reg, CString msg) {
 	regex temp(reg);
-
 	err.error.push_back(temp);
 	err.description.push_back(msg);
 }
 
 // Очистка набор ошибок
-void CErrBase::Clear(errorData& err)
-{
+void CErrBase::Clear(errorData& err) {
 	err.error.clear();
+	err.error.shrink_to_fit();
 	err.description.clear();
+	err.description.shrink_to_fit();
 }
 
 // Получить набор для № слова
-errorData CErrBase::getNumWord()
-{
-	return NumWord;
-}
+errorData CErrBase::getNumWord() { return NumWord; }
 
 // Получить набор для идентификатора
-errorData CErrBase::getTitleParam()
-{
-	return TitleParam;
-}
+errorData CErrBase::getTitleParam() { return TitleParam; }
 
 // Получить набора для мин, макс и цср
-errorData CErrBase::getMinMaxCSR()
-{
-	return MinMaxCSR;
-}
+errorData CErrBase::getMinMaxCSR() { return MinMaxCSR; }
 
 // Получить набор для используемых битов
-errorData CErrBase::getBits()
-{
-	return Bits;
-}
+errorData CErrBase::getBits() { return Bits; }
 
 // Получить набор для комментариев
-errorData CErrBase::getComment()
-{
-	return Comment;
-}
+errorData CErrBase::getComment() { return Comment; }

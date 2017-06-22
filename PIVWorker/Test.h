@@ -4,8 +4,7 @@
 #include "MyException.h"
 #include "ErrBase.h"
 
-class CTest
-{
+class CTest {
 public:
 	CTest();	// Конструктор
 	~CTest();	// Деструктор
