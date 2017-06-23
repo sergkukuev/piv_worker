@@ -4,6 +4,8 @@
 #include "WorkExcel.h"
 #include "MyException.h"
 
+#define RESERVE_SIGNAL _T("Резерв")
+
 // Класс для чтения протоколов из excel файлов
 class CReaderExcel	{
 public:
@@ -18,10 +20,11 @@ private:
 	void getSheets(vector <sheetData>& book, CWorkExcel& work);			// Чтение листов из книги
 	void getSignals(vector <signalData>& signals, CWorkExcel& work);	// Чтение параметров на листе
 
-	vector <int> getNumWord(CWorkExcel& work, Cell cell, int& step);	// Получить номера слов
-	void translateNumWord(CString field, vector <int>& numWord);		// Перевод номеров слов из строки в числа
-	vector <CString> getTitle(CWorkExcel& work, Cell cell, long& step, int& size);
-	CString getComment(CWorkExcel& work, Cell cell, int size);
+	void getNumWord(CString field, vector <int>& result);		// Получить номера слов из строки в числа
+	void getDouble(CString field, double& result);				// Получение значения double (если есть)
+	void getBits(CString bits, vector <int>& result);			// Получить используемые разряды
+	vector <int> CReaderExcel::stepGetBits(CString bits);		// Доп функция для разрядов
+	CString getComment(CWorkExcel& work, long row, int size);	// Чтение примечания
 
 
 	bool isEmpty(CWorkExcel& work, long row);	// Проверка строки на пустоту

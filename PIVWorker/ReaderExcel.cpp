@@ -105,41 +105,44 @@ void CReaderExcel::getSignals(vector <signalData>& signals, CWorkExcel& work) {
 
 	for (long i = header.adress[header.iRow]; i < work.countRows() + 1; i++) {
 		signalData signal;
-		long row, column;
+		long column;
+		long row = i;
+		int merge = 0;
 
-		row = i;
-
+		// Номера слов
 		column = header.adress[header.iNumWord];
-		int step = 0;
-		Cell cell;
-		cell.row = row; cell.column = column;
-		signal.numWord = getNumWord(work, cell, step);
+		merge = work.getMerge(row, column);
+		getNumWord(work.cellValue(row, column), signal.numWord);
 		
-		cell.column = header.adress[header.iSignal];
-		long rowID = 0; int size = 0;
-		signal.title = getTitle(work, cell, rowID, size);
+		// Наименование и идентификатор
+		column = header.adress[header.iName];
+		row = i;
+		merge = work.getMerge(row, column);
+		signal.title[0] = work.cellValue(row, column);
 
-		// Чтение размерности, min, max и csr
+		column = header.adress[header.iSignal];
+		signal.title[1] = work.cellValue(row, column);
+
+		// Чтение размерности
 		column = header.adress[header.iDimension];
-		signal.dimension = work.cellValue(rowID, column);
+		signal.dimension = work.cellValue(row, column);
 
+		// min, max, csr 
 		column = header.adress[header.iMin];
-		signal.min = work.cellValue(rowID, column);
+		getDouble(work.cellValue(row, column), signal.min);
 
 		column = header.adress[header.iMax];
-		signal.max= work.cellValue(rowID, column);
+		getDouble(work.cellValue(row, column), signal.max);
 		
 		column = header.adress[header.iCSR];
-		signal.csr = work.cellValue(rowID, column);
+		getDouble(work.cellValue(row, column), signal.csr);
 		
-		// Чтение разрядов
+		// Используемых разрядов
 		column = header.adress[header.iBits];
-		signal.bit = work.cellValue(rowID, column);
+		getBits(work.cellValue(row, column), signal.bit);
 
 		// Чтение комментариев
-		cell.column = header.adress[header.iComment];
-		cell.row = rowID;
-		signal.comment = getComment(work, cell, size);
+		signal.comment = getComment(work, row, merge);
 
 		bool bEmpty = isEmpty(work, row);
 		bool bRemark = isRemark(work, row);
@@ -147,78 +150,106 @@ void CReaderExcel::getSignals(vector <signalData>& signals, CWorkExcel& work) {
 		// Добавление сигнала
 		if (!bEmpty && !bRemark)
 			signals.push_back(signal);
+
+		i += merge - 1;
 	}
 }
 
-// Получить номера слов
-vector <int> CReaderExcel::getNumWord(CWorkExcel& work, Cell cell, int& step) {
-	CString field = work.cellValue(cell);
-	step = 0;
-
-	while (field.IsEmpty()) {
-		cell.row--;
-		field = work.cellValue(cell);
-	}
-
-	vector <int> result;
-	translateNumWord(field, result);
-
-	do {
-		cell.row++;	step++;
-		field = work.cellValue(cell);
-	} while (field.IsEmpty() && cell.row < work.countRows());
-	if (cell.row < work.countRows())
-		step++;
-	return result;
-}
-
-// Перевод номеров слов из строки в числа
-void CReaderExcel::translateNumWord(CString numeric, vector <int>& numWord) {
+// Получить номера слов из ячейки в числа
+void CReaderExcel::getNumWord(CString numeric, vector <int>& result) {
 	int posDot = numeric.Find(_T(','));
-
 	if (posDot == -1) {
-		numeric.Trim();	// Удаление пробелов
-		numWord.push_back(_wtoi(numeric));
+		numeric.Trim();
+		result.push_back(_wtoi(numeric));
 	}
 	else {
 		CString numeric2 = numeric;	
 		numeric.Delete(posDot, numeric.GetLength());	// Первое число
 		numeric.Trim();
-		numWord.push_back(_wtoi(numeric));
+		result.push_back(_wtoi(numeric));
 
-		numeric2.Delete(0, posDot + 1); // Второе число
+		numeric2.Delete(0, posDot + 1);					// Второе число
 		numeric2.Trim();
-		numWord.push_back(_wtoi(numeric2));
+		result.push_back(_wtoi(numeric2));
 	}
 }
 
-vector <CString> CReaderExcel::getTitle(CWorkExcel& work, Cell cell, long& size, int& step) {
-	CString field = work.cellValue(cell);
-	size = 0;
+// Перевод из используемых разрядов из строки в числа
+void CReaderExcel::getBits(CString bits, vector <int>& result) {
+	int posDot = bits.Find(_T(','));
+	vector <int> tmp;
 
-	while (field.IsEmpty()) {
-		cell.row--;
-		field = work.cellValue(cell);
+	// Для одного промежутка
+	if (posDot == -1)
+		tmp = stepGetBits(bits);
+	else { // Для двух промежутков
+		CString bits2 = bits;
+		bits2.Delete(0, posDot + 1);
+		bits.Delete(posDot, bits.GetLength());
+		bits.Trim();	bits2.Trim();
+
+		tmp = stepGetBits(bits);
+		tmp.resize(4);
+		tmp[1] = -1;
+		if (tmp.size() != 2)
+			tmp.resize(4);
+
+		vector <int> tmp2 = stepGetBits(bits2);
+		for (size_t i = 0; i < tmp2.size(); i++)
+			tmp[i + 2] = tmp2[i];
 	}
-	size = cell.row;
 
-	vector <CString> result = { _T(""), _T("") };
-	result[0] = work.cellValue(cell.row, header.adress[header.iName]);
-	result[1] = work.cellValue(cell.row, header.adress[header.iSignal]);
-	do {
-		cell.row++;	step++;
-		field = work.cellValue(cell);
-	} while (field.IsEmpty() && cell.row < work.countRows());
-	if (cell.row < work.countRows())
-		step++;
+	for (size_t i = 0; i < tmp.size(); i++)
+		result[i] = tmp[i];
+}
+
+// Дополнительная функция для перевода разрядов
+vector <int> CReaderExcel::stepGetBits(CString bits) {
+	vector <int> result;
+	bits.Trim();
+
+	// Поиск индекса разделителей
+	int indxDel = bits.Find(_T('.'));
+	if (indxDel == -1)
+		indxDel = bits.Find(_T('…'));
+
+	if (indxDel == -1)	// Разделителей нет, используется один разряд
+		result.push_back(_wtoi(bits));
+	else {
+		CString num = bits;
+		CString num2 = num;	// Второе число
+		int posDot = bits.ReverseFind(_T('.'));
+
+		if (posDot != -1)
+			indxDel = posDot;
+
+		num.Delete(indxDel, num.GetLength());	// Первое число
+		num.Trim();
+		result.push_back(_wtoi(num));
+
+		num2.Delete(0, indxDel + 1);
+		num2.Trim();
+		result.push_back(_wtoi(num2));
+	}
+
 	return result;
 }
 
-CString CReaderExcel::getComment(CWorkExcel& work, Cell cell, int size) {
-	CString result = work.cellValue(cell);
+// Конвертер дабл значения
+void CReaderExcel::getDouble(CString field, double& result) {
+	if (!field.IsEmpty())
+		result = _wtof(field);
+}
+
+// Чтение примечания
+CString CReaderExcel::getComment(CWorkExcel& work, long row, int size) {
+	long column = header.adress[header.iComment];
+	CString result = work.cellValue(row, column);
+
 	for (int i = 1; i < size; i++) {
-		CString tmp = work.cellValue(cell.row + i, cell.column);
-		result += _T("\n") + tmp;
+		CString tmp = work.cellValue(row + i, column);
+		if (!tmp.IsEmpty())
+			result += _T("\n") + tmp;
 	}
 		
 	return result;
