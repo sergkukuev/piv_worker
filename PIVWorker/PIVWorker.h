@@ -59,10 +59,11 @@ protected:
 private:
 	const cmd_set command;	// Набор команд
 	int hCmd;	// Команда для потока (0 - открыть ПИВ, 1 - анализировать, 2 - отчет, 3 - txt, 4 - закрыть)
-	list <bookData> books;	// Прочитанные ПИВ
-	vector <CString> buffer;	// Вектор обмена данными
+	
+	list <bookData> books;		// Данные о прочитанных ПИВ
+	vector <CString> buffer;	// Вектор путей файлов
+	list <errorSet> Db;			// База ошибок
 
-	errorSet errorDB;			// База данных ошибок
 	bool bNumPK = false;		// Нужно ли устанавливать в txt подкадры
 
 	void StartRead();	// Начало чтения протоколов

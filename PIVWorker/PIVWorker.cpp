@@ -88,9 +88,6 @@ CPIVWorker::CPIVWorker() { }
 CPIVWorker::~CPIVWorker() {
 	//path.clear();
 	books.clear();
-	errorDB.syntax.clear();
-	errorDB.simantic.clear();
-	errorDB.warning.clear();
 	buffer.clear();
 }
 
@@ -143,7 +140,7 @@ void CPIVWorker::ReadExcel() {
 }
 
 #pragma endregion
-/*
+
 #pragma region TEST
 
 // Начало тестирования
@@ -162,24 +159,7 @@ void CPIVWorker::Test() {
 	try {
 		for (size_t i = 0; i < books.size(); i++) {
 			CTest tester;	// класс проверки книг
-			errorOneSet errBook;
-
-			errBook = tester.Start(books[i]);
-
-			int indx = findReportBook(errBook.syntax.name);	// поиск в базе отчетов данной книги
-
-			// Обновление отчета
-			if (indx != -1) { 
-				errorDB.syntax[indx] = errBook.syntax;
-				errorDB.simantic[indx] = errBook.simantic;
-				errorDB.warning[indx] = errBook.warning;
-			}
-			else { // Добавление нового отчета
-				errorDB.syntax.push_back(errBook.syntax);
-				errorDB.simantic.push_back(errBook.simantic);
-				errorDB.warning.push_back(errBook.warning);
-			}
-				
+			Db = tester.Start(books);
 		}
 		AfxMessageBox(_T("Проверка протоколов завершена успешно!"), MB_ICONINFORMATION);
 	}
@@ -190,7 +170,7 @@ void CPIVWorker::Test() {
 }
 
 #pragma endregion
-
+/*
 #pragma region REPORT
 
 // Начало создания отчета

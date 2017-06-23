@@ -17,6 +17,7 @@ struct signalData {
 			csr = DBL_MIN;						// Цср
 	vector <int> bit = {-1, -1, -1, -1};		// Используемые разряды
 	CString comment;							// Примечание
+	bool bitSign = false;						// Флаг наличия знака
 };
 
 // Лист
@@ -25,8 +26,9 @@ struct sheetData {
 
 	CString name;	// название листа в книге
 	CString line;	// линия передачи
-	int np;			// номер набора параметров
-	int pk;			// номер подкадра
+	int np = -1;			// номер набора параметров
+	int pk = -1;			// номер подкадра
+	bool error = false;
 };
 
 // Книга
@@ -40,9 +42,9 @@ struct bookData {
 
 #pragma region Error
 
-struct errorSet {
-	bookData* book;		// Указатель на книгу, в которой содержатся данные ошибки
-	vector <errorSheet> yupi;	// Наборы ошибок
+struct errorSignal {
+	signalData* signal;		// Указатель на данные сигнала с ошибками
+	vector <CString> error;	// Набор ошибок параметра
 };
 
 struct errorSheet {
@@ -52,46 +54,10 @@ struct errorSheet {
 	vector <errorSignal> warning;	// Предупреждения
 };
 
-struct errorSignal {
-	signalData* signal;		// Указатель на данные сигнала с ошибками
-	vector <CString> error;	// Набор ошибок параметра
-};
-
-// Сигналы
-/*struct errorSignalData {
-	CString sNumWordField;											// Строка с номерами слов
-	CString sTitleParamField[2] = { _T(""), _T("") };				// Наименование парамметра (максимум 2 строки)
-	CString sDimensionField;										// Размерность
-	CString sMinMaxCsrValField[3] = { _T(""), _T("") , _T("") };	// Строковое значение мин., макс. и цена старшего разряда
-	CString sBitField;												// Строковое значение используемые категории
-	CString sCommentField;											// Примечание 
-	list <CString> sErrorField;										// Вся информация об ошибках
-};
-
-// Листы
-struct errorSheetData {
-	list <errorSignalData> signals;	// Данные сигнала
-	CString name;					// Название листа
-};
-
-// Книги
-struct errorBookData {
-	vector <errorSheetData> sheets;	// Листы считанные из книги
-	CString name;					// Название книги
-};
-
-// Все ошибки
 struct errorSet {
-	vector <errorBookData> syntax;		// Синтаксические
-	vector <errorBookData> simantic;	// Семантические
-	vector <errorBookData> warning;		// Замечания
+	bookData* book;		// Указатель на книгу, в которой содержатся данные ошибки
+	vector <errorSheet> yupi;	// Наборы ошибок
 };
-
-struct errorOneSet {
-	errorBookData syntax;
-	errorBookData simantic;
-	errorBookData warning;
-};*/
 
 // Шапки таблицы
 const CString errRemarks[7] = {

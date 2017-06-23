@@ -4,8 +4,6 @@
 #include "WorkExcel.h"
 #include "MyException.h"
 
-#define RESERVE_SIGNAL _T("Резерв")
-
 // Класс для чтения протоколов из excel файлов
 class CReaderExcel	{
 public:
