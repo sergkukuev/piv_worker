@@ -169,3 +169,25 @@ bool CWorkExcel::findCell(CString field, Cell& cell) {
 
 	return false;
 }
+
+int CWorkExcel::getMerge(long& row, long& column) {
+	CString field = cellValue(row, column);
+	long tmpRow = row;
+	int result = 1;
+
+	// Ищем первое непустое значение в таблице, выше ячейки
+	while (field.IsEmpty() && tmpRow >= first.row) {
+		tmpRow--;
+		field = cellValue(tmpRow, column);
+	}
+	row = tmpRow;	tmpRow++;
+	if (tmpRow <= last.row)
+		field = cellValue(tmpRow, column);
+	// Идем вниз до первого непутого значения в таблице 
+	while (field.IsEmpty() && tmpRow <= last.row) {
+		field = cellValue(tmpRow, column);
+		tmpRow++; result++;
+	} 
+
+	return result;
+}

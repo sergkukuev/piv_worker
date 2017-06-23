@@ -58,6 +58,7 @@ public:
 
 	VARIANT cellValue(long row, long column);	// Получение значения ячейки
 	VARIANT cellValue(Cell cell);				// Перегрузка
+	int getMerge(long& row, long& column);
 	bool findHeader(Header& header);	// Поиск заголовков на текущем листе
 
 private:
