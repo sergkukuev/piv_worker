@@ -10,12 +10,13 @@ using namespace std;
 
 //	Данные сигнала
 struct signalData {
-	vector <int> numWord;				// Номер слова
+	vector <int> numWord = {-1, -1};			// Номер слова
 	vector <CString> title = { _T(""), _T("")};	// Название параметра и идентификатор
-	CString dimension;		// Размерность
-	CString min, max, csr;	// Мин, макс, цср
-	CString bit;			// Используемые разряды
-	CString comment;		// Примечание
+	CString dimension;							// Размерность
+	double min = DBL_MIN, max = DBL_MIN,		// Мин, макс
+			csr = DBL_MIN;						// Цср
+	vector <int> bit = {-1, -1, -1, -1};		// Используемые разряды
+	CString comment;							// Примечание
 };
 
 // Лист
@@ -39,8 +40,25 @@ struct bookData {
 
 #pragma region Error
 
+struct errorSet {
+	bookData* book;		// Указатель на книгу, в которой содержатся данные ошибки
+	vector <errorSheet> yupi;	// Наборы ошибок
+};
+
+struct errorSheet {
+	sheetData* sheet;				// Указатель на лист, в котором содержатся данные ошибки
+	vector <errorSignal> syntax;	// Синтаксические ошибки
+	vector <errorSignal> simantic;	// Семантические ошибки
+	vector <errorSignal> warning;	// Предупреждения
+};
+
+struct errorSignal {
+	signalData* signal;		// Указатель на данные сигнала с ошибками
+	vector <CString> error;	// Набор ошибок параметра
+};
+
 // Сигналы
-struct errorSignalData {
+/*struct errorSignalData {
 	CString sNumWordField;											// Строка с номерами слов
 	CString sTitleParamField[2] = { _T(""), _T("") };				// Наименование парамметра (максимум 2 строки)
 	CString sDimensionField;										// Размерность
@@ -73,7 +91,7 @@ struct errorOneSet {
 	errorBookData syntax;
 	errorBookData simantic;
 	errorBookData warning;
-};
+};*/
 
 // Шапки таблицы
 const CString errRemarks[7] = {
