@@ -66,7 +66,7 @@ struct errorSheet {
 };
 
 struct errorSet {
-	bookData* book;				// Указатель на книгу, в которой содержатся данные ошибки
+	list <bookData>::iterator book;	// Указатель на книгу, в которой содержатся данные ошибки
 	vector <errorSheet> set;	// Наборы ошибок
 };
 
