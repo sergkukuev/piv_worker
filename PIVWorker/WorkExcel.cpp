@@ -177,10 +177,10 @@ bool CWorkExcel::findCell(const CString& field, Cell& cell) {
 }
 
 // Кол-во пустых ячеек по стобцам
-int CWorkExcel::getMerge(long& row, const long& column) {
+long CWorkExcel::getMerge(long& row, const long& column) {
 	CString field = cellValue(row, column);
 	long tmpRow = row;
-	int result = 1;
+	long result = 1;
 
 	// Ищем первое непустое значение в таблице, выше ячейки
 	while (field.IsEmpty() && tmpRow >= first.row) {

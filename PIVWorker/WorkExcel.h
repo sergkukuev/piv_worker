@@ -60,7 +60,7 @@ public:
 
 	VARIANT cellValue(const long& row, const long& column);	// Получение значения ячейки
 	VARIANT cellValue(const Cell& cell);					// Перегрузка
-	int getMerge(long& row, const long& column);			// Кол-во пустых ячеек по стобцам
+	long getMerge(long& row, const long& column);			// Кол-во пустых ячеек по стобцам
 	bool findHeader(Header& header);						// Поиск заголовков на текущем листе
 
 private:
