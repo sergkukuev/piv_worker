@@ -26,7 +26,7 @@ private:
 	
 	// Синтаксический анализ
 	void syntaxValue(const convertError& flags, vector <CString>& error);	// Проверка числовых параметров
-	bool syntaxTitle(const CString& title, vector <CString>& error);		// Проверка синтаксиса идентификатора
+	bool syntaxTitle(const vector <CString>& title, vector <CString>& error);		// Проверка синтаксиса идентификатора
 
 	void checkValueByFlag(const CString& field, const int& indx, const bool& flag, vector <CString>& error); // Проверка числовых параметров по набору флагов
 

@@ -15,7 +15,7 @@ list <errorSet> CTest::Start(list <bookData>& books) {
 	for (it = books.begin(); it != books.end(); it++) {
 		errorSet error;
 		error.book = it;
-		for (size_t j = 0; it->sheets.size(); j++) {
+		for (size_t j = 0; j < it->sheets.size(); j++) {
 			errorSheet tmp;
 			tmp.sheet = &it->sheets[j];
 			getErrors(&it->sheets[j], tmp.syntax, tmp.simantic);
@@ -48,7 +48,7 @@ void CTest::getErrors(sheetData* sheet, vector <errorSignal>& syntax, vector <er
 				errorSignal tmp;
 				tmp.signal = &sheet->signals[i];
 				syntaxValue(sheet->signals[i].flags, tmp.error);
-				correctTitle = syntaxTitle(sheet->signals[i].title[1], tmp.error);
+				correctTitle = syntaxTitle(sheet->signals[i].title, tmp.error);
 				
 				if (!tmp.error.empty()) {
 					sheet->error = true;
@@ -58,7 +58,7 @@ void CTest::getErrors(sheetData* sheet, vector <errorSignal>& syntax, vector <er
 
 				// Проход по семантическми ошибкам
 				simanticNumWord(sheet->signals[i].numWord, sheet->signals[i].flags.num, numRepit, tmp.error);
-				simanticTitle(sheet, sheet->signals[i].title[0], correctTitle, tmp.error);
+				simanticTitle(sheet, sheet->signals[i].title[1], correctTitle, tmp.error);
 				simanticValue(sheet->signals[i], tmp.error);
 				simanticBits(sheet->signals[i], bitRepit, tmp.error);
 
@@ -142,15 +142,15 @@ void CTest::checkValueByFlag(const CString& field, const int& indx, const bool& 
 }
 
 // Проверка синтаксиса идентификатора
-bool CTest::syntaxTitle(const CString& title, vector <CString>& error) {
+bool CTest::syntaxTitle(const vector <CString>& title, vector <CString>& error) {
 	regex correct("^[A-Za-z][A-Za-z0-9_]*$");
-	string tmp = CT2A(title);
+	string tmp = CT2A(title[1]);
 	bool result = regex_match(tmp, correct);
 
 	if (!result) {
 		error.push_back(errRemarks[1]);
 		bool bFind = false;	// Найдена ли ошибка из набора регулярных выражений
-		vector <string> incorrect = { "(^$)", "[ \t\n]+", "^[^A-Za-z][A-Za-z0-9_]*$", "([A-Za-z0-9_]*[А-Яа-я]+[A-Za-z0-9_]*)+", "_$" };
+		vector <string> incorrect = { "^[ \t\n]*$", "[ \t\n]+", "^[^A-Za-z][A-Za-z0-9_]*$", "([A-Za-z0-9_]*[А-Яа-я]+[A-Za-z0-9_]*)+", "_$" };
 		vector <CString> description = { _T("Значение в поле отсутствует. (Возможно сигнал зарезервирован, но \"Резерв\" не написано)"), 
 										_T("Значение в поле содержит пробел"),
 										_T("Значение в поле начинается не с латинской буквы"),
@@ -163,9 +163,9 @@ bool CTest::syntaxTitle(const CString& title, vector <CString>& error) {
 				bFind = true;
 			}
 		}
-		if (bFind) {
+		if (!bFind) {
 			UndefinedError exc;
-			exc.SetParam(title);
+			exc.SetParam(title[0] + title[1]);
 			throw exc;
 		}
 	}
