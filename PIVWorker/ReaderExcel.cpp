@@ -85,12 +85,11 @@ void CReaderExcel::getSignals(vector <signalData>& signals, CWorkExcel& work) {
 		signalData signal;
 		long column, row = i;
 
-		// Номера слов
+		// Чтение параметров одного сигнала
 		column = header.adress[header.iNumWord];
 		merge = work.getMerge(row, column);
 		signal.numWord = getNumWord(work.cellValue(row, column), signal.flags.num);
 		
-		// Наименование и идентификатор
 		column = header.adress[header.iName];	row = i;
 		merge = work.getMerge(row, column);
 		signal.title[0] = work.cellValue(row, column);
@@ -98,29 +97,18 @@ void CReaderExcel::getSignals(vector <signalData>& signals, CWorkExcel& work) {
 		column = header.adress[header.iSignal];
 		signal.title[1] = work.cellValue(row, column);
 
-		// Чтение размерности
 		column = header.adress[header.iDimension];
 		signal.dimension = work.cellValue(row, column);
 
-		// min, max, csr 
-		column = header.adress[header.iMin];
-		signal.min = getDouble(work.cellValue(row, column), signal.flags.min);
-
-		column = header.adress[header.iMax];
-		signal.max = getDouble(work.cellValue(row, column), signal.flags.max);
+		getMinMaxCsr(signal, work, row);	
 		
-		column = header.adress[header.iCSR];
-		signal.csr = getDouble(work.cellValue(row, column), signal.flags.csr);
-		
-		// Используемых разрядов
 		column = header.adress[header.iBits];
 		signal.bit = getBits(work.cellValue(row, column), signal.flags.bit);
 
-		// Чтение комментариев
 		signal.comment = getComment(work, row, merge, signal.bitSign);
 
-		bool bEmpty = isEmpty(work, row);
-		bool bRemark = isRemark(work, row);
+		bool bEmpty = isEmpty(work, row);	// Проверка на пустую строку
+		bool bRemark = isRemark(work, row);	// Проверка на примечание
 
 		// Добавление сигнала
 		if (!bEmpty && !bRemark)
@@ -151,6 +139,25 @@ vector <int> CReaderExcel::getNumWord(const CString& field, bool& flag) {
 		result[1] = getInt(numeric2, flag);
 	}
 	return result;
+}
+
+// Получить значения мин, макс и цср
+void CReaderExcel::getMinMaxCsr(signalData& signal, CWorkExcel& work, const long& row) {
+	long column = header.adress[header.iMin];
+	signal.min = getDouble(work.cellValue(row, column), signal.flags.min);
+
+	column = header.adress[header.iMax];
+	signal.max = getDouble(work.cellValue(row, column), signal.flags.max);
+
+	column = header.adress[header.iCSR];
+	signal.csr = getDouble(work.cellValue(row, column), signal.flags.csr);
+
+	// Сброс флагов, если одновременно все параметры пусты
+	if (signal.min == signal.max == signal.csr == DBL_MIN) {
+		signal.flags.min = false;
+		signal.flags.max = false;
+		signal.flags.csr = false;
+	}
 }
 
 // Перевод из используемых разрядов из строки в числа
