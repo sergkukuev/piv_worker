@@ -54,19 +54,19 @@ struct bookData {
 #pragma region Error
 
 struct errorSignal {
-	signalData* signal;		// Указатель на данные сигнала с ошибками
-	vector <CString> error;	// Набор ошибок параметра
+	signalData* signal = nullptr;	// Указатель на данные сигнала с ошибками
+	vector <CString> error;			// Набор ошибок параметра
 };
 
 struct errorSheet {
-	sheetData* sheet;				// Указатель на лист, в котором содержатся данные ошибки
+	sheetData* sheet = nullptr;		// Указатель на лист, в котором содержатся данные ошибки
 	vector <errorSignal> syntax;	// Синтаксические ошибки
 	vector <errorSignal> simantic;	// Семантические ошибки
 	vector <errorSignal> warning;	// Предупреждения
 };
 
 struct errorSet {
-	list <bookData>::iterator book;	// Указатель на книгу, в которой содержатся данные ошибки
+	list <bookData>::iterator book;		// Указатель на книгу, в которой содержатся данные ошибки
 	vector <errorSheet> set;	// Наборы ошибок
 };
 
