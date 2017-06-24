@@ -23,7 +23,7 @@ CWorkExcel::~CWorkExcel(void) {
 }
 
 // Открытие книги
-bool CWorkExcel::openBook(CString path) {
+bool CWorkExcel::openBook(const CString& path) {
 	COleVariant covOptional((long)DISP_E_PARAMNOTFOUND, VT_ERROR);
 	LPDISPATCH Lp = books.Open(path, covOptional, covOptional, covOptional, covOptional, covOptional,
 						  covOptional, covOptional, covOptional, covOptional, covOptional,
@@ -41,7 +41,7 @@ bool CWorkExcel::openBook(CString path) {
 CString CWorkExcel::bookName() { return book.get_Name(); }
 
 // Открытие листа
-bool CWorkExcel::openSheet(long index) {
+bool CWorkExcel::openSheet(const long& index) {
 	LPDISPATCH Lp = sheets.get_Item(COleVariant(index));
 
 	if (Lp == NULL)	
@@ -86,7 +86,7 @@ VARIANT CWorkExcel::lineValue() {
 }
 
 // Получение номера набора
-int CWorkExcel::npValue(Header head) {
+int CWorkExcel::npValue(const Header& head) {
 	CString item = cellValue(head.adress[head.iRow] + 1, head.adress[head.iComment]);
 	if (!item.IsEmpty()) {
 		int pos = item.Find(NP_FIELD);
@@ -98,7 +98,7 @@ int CWorkExcel::npValue(Header head) {
 }
 
 // Получение значения номера подкадра
-int CWorkExcel::pkValue(Header head) {
+int CWorkExcel::pkValue(const Header& head) {
 	CString item = cellValue(head.adress[head.iRow] - 1, head.adress[head.iComment]);
 	if (!item.IsEmpty()) {
 		int pos = item.ReverseFind(PK_FIELD);
@@ -110,7 +110,7 @@ int CWorkExcel::pkValue(Header head) {
 }
 
 // Получение значения ячейки
-VARIANT CWorkExcel::cellValue(Cell cell) {
+VARIANT CWorkExcel::cellValue(const Cell& cell) {
 	VARIANT item;
 	long index[2] = { cell.row, cell.column };
 	cells->GetElement(index, &item);
@@ -118,7 +118,7 @@ VARIANT CWorkExcel::cellValue(Cell cell) {
 }
 
 // Перегрузка
-VARIANT CWorkExcel::cellValue(long row, long column) {
+VARIANT CWorkExcel::cellValue(const long& row, const long& column) {
 	VARIANT item;
 	long index[2] = { row, column };
 	cells->GetElement(index, &item);
@@ -151,7 +151,7 @@ bool CWorkExcel::findHeader(Header& header) {
 }
 
 // Поиск ячейки по содержимому, в противном cell(-1,-1)
-bool CWorkExcel::findCell(CString field, Cell& cell) {
+bool CWorkExcel::findCell(const CString& field, Cell& cell) {
 	for (long i = first.row; i <= last.row; i++) {
 		for (long j = first.column; j <= last.column; j++) {
 			Cell tmp;
@@ -170,7 +170,7 @@ bool CWorkExcel::findCell(CString field, Cell& cell) {
 	return false;
 }
 
-int CWorkExcel::getMerge(long& row, long& column) {
+int CWorkExcel::getMerge(long& row, const long& column) {
 	CString field = cellValue(row, column);
 	long tmpRow = row;
 	int result = 1;

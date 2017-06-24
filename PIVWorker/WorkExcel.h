@@ -44,21 +44,21 @@ public:
 	CWorkExcel(void);	// Конструктор
 	~CWorkExcel(void);	// Деструктор
 	
-	bool openBook(CString path);	// Открытие книги
+	bool openBook(const CString& path);	// Открытие книги
 	CString bookName();				// Имя книги
 
-	bool openSheet(long iSheet);	// Открытие листа
+	bool openSheet(const long& index);	// Открытие листа
 	CString sheetName();			// Имя листа
 	long countSheets();				// Количество листов в книги
 	long countRows();				// Количество столбцов на текущем листе
 
 	VARIANT lineValue();			// Получение значения линии передачи
-	int npValue(Header head);		// Получение номера набора
-	int pkValue(Header head);		// Получение значения номера подкадра			
+	int npValue(const Header& head);		// Получение номера набора
+	int pkValue(const Header& head);		// Получение значения номера подкадра			
 
-	VARIANT cellValue(long row, long column);	// Получение значения ячейки
-	VARIANT cellValue(Cell cell);				// Перегрузка
-	int getMerge(long& row, long& column);
+	VARIANT cellValue(const long& row, const long& column);	// Получение значения ячейки
+	VARIANT cellValue(const Cell& cell);				// Перегрузка
+	int getMerge(long& row, const long& column);
 	bool findHeader(Header& header);	// Поиск заголовков на текущем листе
 
 private:
@@ -71,6 +71,6 @@ private:
 	COleSafeArray* cells;	// Данные листа
 	Cell first, last;		// Индексы первой и последней ячейки
 
-	bool findCell(CString field, Cell& cell);	// Поиск ячейки по содержимому, в противном cell(-1,-1)
+	bool findCell(const CString& field, Cell& cell);	// Поиск ячейки по содержимому, в противном cell(-1,-1)
 };
 
