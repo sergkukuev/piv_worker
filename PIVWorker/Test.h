@@ -5,38 +5,10 @@
 
 #include <regex>
 
-#define ERROR_DATA _T("Не удалось прочитать значение %d-го %s. (Поле содержит недопустимые символы или лишний разделитель)")
+#define ERROR_DATA _T("Не удалось прочитать значение %s. (Поле содержит недопустимые символы или лишние '.' и ',')")
 #define RESERVE_SIGNAL _T("Резерв")
-
-// Набор семантических ошибок
-// При работе с полем "№ слова"
-CONST CString NumRepite = TEXT("\t Слово с таким номером встречалось ранее на листе");
-CONST CString NumMore32 = TEXT("\t Номер слова больше 32");
-
-// При работе с полем "Обозначение сигнала"
-CONST CString TitleRepBook = TEXT("Сигнал с таким обозначением присутсвует в книге");
-CONST CString TitleRepSheet = TEXT("Сигнал с таким обозначением присутсвует на этом листе");
-
-// При работе с полями "Минимальное значение", "Максимальное значение"
-CONST CString MMCNotNote = TEXT("Значение не соответствует значению в примечании");
-CONST CString MMCNotPkg = TEXT("Нельзя упаковать данное значение");
-CONST CString MMCNotNegative = TEXT("Не может быть отрицательным числом или не верно задан знаковый бит в поле \"Примечание\"");
-CONST CString MMCNegative = TEXT("Должно быть отрицательным числом или не верно задан знаковый бит в поле \"Примечание\"");
-
-// При работе с полем "Используемые биты"
-CONST CString BitsNotSetSign = TEXT("Не включен знаковый бит");
-CONST CString BitsOneInter = TEXT("Должен быть один промежуток");
-CONST CString BitsTwoInter = TEXT("Должно быть два промежутка");
-CONST CString BitsCross = TEXT("Бит(ы) перекрывает(ют)ся");
-
-struct fieldError {
-	bool numWord = false;
-	bool title = false;
-	bool min = false;
-	bool max = false;
-	bool csr = false;
-	bool bit = false;
-};
+#define MAX_NUMWORD 32
+#define MAX_BITS 32
 
 class CTest {
 public:
@@ -47,20 +19,25 @@ public:
 
 private:
 	void getErrors(sheetData* sheet, vector <errorSignal>& syntax, vector <errorSignal>& simantic); // Проверка на ошибки
-	void getWarning(sheetData* sheet, vector <errorSignal>& warning);		// Проверка на замечания
+	void getWarnings(sheetData* sheet, vector <errorSignal>& warning);		// Проверка на замечания
+
+	void checkNP(signalData& signal, const int& np, vector <errorSignal>& syntax);	// Проверка ошибок, связанных с номером набора
+	void initRepiter(bool* num, bool** bits);	// Инициализация репитеров
 	
 	// Синтаксический анализ
-	bool syntaxValue(signalData& signal, vector <CString>& error, fieldError& errValue);
-	int checkValue(vector <int> numeric);
-	bool syntaxTitle(CString title, vector <CString>& error);
+	void syntaxValue(const convertError& flags, vector <CString>& error);	// Проверка числовых параметров
+	bool syntaxTitle(const CString& title, vector <CString>& error);		// Проверка синтаксиса идентификатора
 
-	bool simanticNumWord(vector <int> numeric, vector <CString>& error, bool correct, bool repit[]);		// Проверка номера слова
-	bool simanticTitle(sheetData* sheet, CString title, vector <CString>& error, bool err);	// Проверка наименований сигнала
-	bool simanticValue();	// Проверка минимального, максимального и цср
-	bool simanticBits(signalData& signal, vector <CString>& error, fieldError errValue, bool repit[][32]);		// Проверка используемых разрядов
+	void checkValueByFlag(const CString& field, const int& indx, const bool& flag, vector <CString>& error); // Проверка числовых параметров по набору флагов
 
-	bool checkCrossBits(vector <int>& bits, vector <int>& numWord, bool repiter[][32]); // Перекрытие битов
-	bool findRepiteInSheet(CString field, sheetData* sheet)
+	// Семантический анализ
+	void simanticNumWord(const vector <int>& numeric, const bool& flag, bool* repiter, vector <CString>& error);		// Проверка номера слова
+	void simanticTitle(sheetData* sheet, const CString& title, const bool& flag, vector <CString>& error);				// Проверка наименований сигнала
+	void simanticValue(const signalData& signal, vector <CString>& error);						// Проверка минимального, максимального и цср
+	void simanticBits(const signalData& signal, bool** repiter, vector <CString>& error);		// Проверка используемых разрядов
+	
+	bool checkCrossBits(const vector <int>& bits, const vector <int>& numWord, bool** repiter); // Проверка перекрытия битов
+	bool findRepiteInSheet(const CString& field, sheetData* sheet);
 
 	/*list <CString> testField(CString field, errorData errStruct);	// Проверка поля на ошибки
 	errorSignalData getErrSignal(list<signalData>::iterator it, list <CString> error);	// Создание записи ошибки сигнала
