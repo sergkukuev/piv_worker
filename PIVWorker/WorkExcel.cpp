@@ -43,9 +43,8 @@ CString CWorkExcel::bookName() { return book.get_Name(); }
 
 // Получение имени книги из пути
 CString CWorkExcel::bookName(const CString& path) {
-	int posDot = path.ReverseFind(_T('.'));
 	int posSlash = path.ReverseFind(_T('\\'));
-	return path.Mid(posSlash + 1, posDot - posSlash - 1);
+	return path.Mid(posSlash + 1, path.GetLength());
 }
 
 // Открытие листа
