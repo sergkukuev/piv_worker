@@ -11,12 +11,19 @@ public:
 // Исключения класса CReaderExcel
 class BadTypeException: public MyException	{
 public:
-	virtual CString GetMsg() { return _T("Неверное расширение одного из файлов!"); };
+	void setName(const CString& name) { this->name = name; }
+	virtual CString GetMsg() {
+		CString result;
+		result.Format(_T("Неверное расширение файла \"%s\"!"), name);
+		return result;
+	};
+private:
+	CString name = (_T(""));
 };
 
 class AccessExcelException : public MyException {
 public:
-	void setOleError(CString error) { this->error = error; };
+	void setOleError(const CString& error) { this->error = error; };
 	virtual CString GetMsg() {
 		CString result;
 		result.Format(_T("Запустить приложение Excel не удалось!\n\nОшибка: %s"), error);
@@ -28,23 +35,19 @@ private:
 
 class ReadBookException: public MyException {
 public:
-	void setParam(CString error, CString nameBook) { 
-		this->error = error; 
-		this->nameBook = nameBook;
-	};
+	void setParam(const CString& nameBook) { this->nameBook = nameBook; };
 	virtual CString GetMsg() {
 		CString result;
-		result.Format(_T("Считать данные из файла \"%s\" не удалось!\n\nОшибка: %s"), nameBook, error);
+		result.Format(_T("Открыть книгу \"%s\" не удалось!"), nameBook);
 		return result;
 	};
 private:
-	CString error = _T("");
 	CString nameBook = _T("");
 };
 
 class NotAllHeaderException : public MyException {
 public:
-	void setParam(CString nameSheet, CString nameBook) { 
+	void setParam(const CString& nameSheet, const CString& nameBook) { 
 		this->nameSheet = nameSheet;
 		this->nameBook = nameBook;
 	};

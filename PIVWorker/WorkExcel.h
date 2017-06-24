@@ -6,6 +6,7 @@
 #include "excel\CWorkbooks.h"
 #include "excel\CWorksheet.h"
 #include "excel\CWorksheets.h"
+#include "MyException.h"
 
 #include <cstring>
 #include <vector>
@@ -44,22 +45,23 @@ public:
 	CWorkExcel(void);	// Конструктор
 	~CWorkExcel(void);	// Деструктор
 	
-	bool openBook(const CString& path);	// Открытие книги
-	CString bookName();				// Имя книги
+	bool openBook(const CString& path);		// Открытие книги
+	CString bookName();						// Имя книги из файла
+	CString bookName(const CString& path);	// Имя книги из пути
 
 	bool openSheet(const long& index);	// Открытие листа
-	CString sheetName();			// Имя листа
-	long countSheets();				// Количество листов в книги
-	long countRows();				// Количество столбцов на текущем листе
+	CString sheetName();				// Имя листа
+	long countSheets();					// Количество листов в книги
+	long countRows();					// Количество столбцов на текущем листе
 
-	VARIANT lineValue();			// Получение значения линии передачи
-	int npValue(const Header& head);		// Получение номера набора
-	int pkValue(const Header& head);		// Получение значения номера подкадра			
+	VARIANT lineValue();				// Получение значения линии передачи
+	int npValue(const Header& head);	// Получение номера набора
+	int pkValue(const Header& head);	// Получение значения номера подкадра			
 
 	VARIANT cellValue(const long& row, const long& column);	// Получение значения ячейки
-	VARIANT cellValue(const Cell& cell);				// Перегрузка
-	int getMerge(long& row, const long& column);
-	bool findHeader(Header& header);	// Поиск заголовков на текущем листе
+	VARIANT cellValue(const Cell& cell);					// Перегрузка
+	int getMerge(long& row, const long& column);			// Кол-во пустых ячеек по стобцам
+	bool findHeader(Header& header);						// Поиск заголовков на текущем листе
 
 private:
 	CApplication app;	// Приложение excel

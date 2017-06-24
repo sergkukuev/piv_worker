@@ -3,7 +3,8 @@
 
 // Конструктор
 CWorkExcel::CWorkExcel(void) {
-	app.CreateDispatch(_T("Excel.Application"), NULL);
+	if (!app.CreateDispatch(_T("Excel.Application"), NULL))
+		throw AccessExcelException();
 	app.put_Visible(FALSE);
 	app.put_UserControl(FALSE);
 
@@ -37,8 +38,15 @@ bool CWorkExcel::openBook(const CString& path) {
 	return true;
 }
 
-// Получение имени книги
+// Получение имени книги из файла
 CString CWorkExcel::bookName() { return book.get_Name(); }
+
+// Получение имени книги из пути
+CString CWorkExcel::bookName(const CString& path) {
+	int posDot = path.ReverseFind(_T('.'));
+	int posSlash = path.ReverseFind(_T('\\'));
+	return path.Mid(posSlash + 1, posDot - posSlash - 1);
+}
 
 // Открытие листа
 bool CWorkExcel::openSheet(const long& index) {
@@ -131,7 +139,6 @@ long CWorkExcel::countRows() { return last.row; }
 // Поиск заголовков на текущем листе
 bool CWorkExcel::findHeader(Header& header) {
 	for (size_t i = 0; i < header.list.size(); i++) {
-
 		std::vector<CString>::iterator it = header.list[i].begin();
 		bool bFind = false;
 		Cell cell = first;
@@ -142,7 +149,6 @@ bool CWorkExcel::findHeader(Header& header) {
 
 			bFind = findCell(*it, cell);
 		}
-
 		header.adress[header.iRow] = cell.row;
 		header.adress[i + 1] = cell.column;
 	}
@@ -170,6 +176,7 @@ bool CWorkExcel::findCell(const CString& field, Cell& cell) {
 	return false;
 }
 
+// Кол-во пустых ячеек по стобцам
 int CWorkExcel::getMerge(long& row, const long& column) {
 	CString field = cellValue(row, column);
 	long tmpRow = row;
