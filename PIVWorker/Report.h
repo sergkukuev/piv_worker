@@ -4,8 +4,9 @@
 #include "StructPIV.h"
 #include "MyException.h"
 
-// Максрос (обращение к сигналам)
-#define signal_set(iBook, iSheet) books[iBook].sheets[iSheet].signals
+#define SYNTAX_FOLDER _T("\\Error\\Syntax")
+#define SIMANTIC_FOLDER _T("\\Error\\Simantic")
+#define WARNING_FOLDER _T("\\Warning")
 
 // Количество наборов данных и их ошибок
 struct Amount	{
@@ -18,9 +19,9 @@ struct Amount	{
 
 // Информация со страницы протокола
 struct sheetInfo {
-	int NP;			// Номер набора
-	int NumPk;		// Номер подкадра
-	bool bNumPk;	// Нужно ли устанавливать номер подкадра
+	int np;		// Номер набора
+	int pk;		// Номер подкадра
+	bool bPK;	// Нужно ли устанавливать номер подкадра
 };
 
 // Класс генерации отчета
@@ -29,25 +30,26 @@ public:
 	CReport();	// Конструктор
 	~CReport();	// Деструктор
 
-	void getReport(vector <bookData> books, errorSet errorDB, CString pathToSave);	// Генерация отчета о ошибках
-	void getTxt(vector <bookData> books, CString pathToSave, bool bNumPK);			// Генерация txt файлов
+	void getReport(list <bookData>& books, list <errorSet>& Db, const CString& pathToSave);	// Генерация отчета о ошибках
+	void getTxt(list <bookData>& books, const CString& pathToSave, const bool& bNumPK);			// Генерация txt файлов
 
 private:
-	CString path;	// Путь сохранения отчета
-	Amount amount;	// Количество наборов данных и их ошибок
-	
-	void makeReport(vector <bookData> books, errorSet errorDB);		// Генерация отчета
+	CString path;	// Путь для хранения отчетов
+	Amount amount;	// Информация о количестве сигналов, с ошибками и без и прочее
 
-	void startWrite(ofstream& file, vector <bookData> books, errorSet errorDB);	// Запись ошибок в отчет
-	void writeSheets(ofstream& file, vector <bookData> books, int cBooks);	// Создание страниц
-	void writeError(ofstream& file, errorBookData error, CString folder);	// Создание страницы с ошибками
-	
-	void setAmount(vector <bookData> books);			// Установка количества набора данных (всего, с ошибками, без)
-	int getAmountError(vector <errorBookData> error);	// Количество ошибок
+	void makeReport(list <bookData>& books, list <errorSet>& errorDB);		// Генерация отчета
 
-	void hightlightError(ofstream& file, int tIndx, int Indx, CString field);	// Подсветка нужного параметра
+	void startWrite(ofstream& file, list <errorSet>& errorDB);			// Запись ошибок в отчет
+	void writeSheets(ofstream& file, vector <errorSheet>& set);	// Создание страниц
+	CString CReport::writeError(sheetData* sheet, const vector <errorSignal>& errors, const CString& folder, const CString& bookName);
+	//void writeError(ofstream& file, const vector <errorSignal>& error, const CString& folder);	// Создание страницы с ошибками
+	
+	void setAmount(list <bookData>& books);			// Установка количества набора данных (всего, с ошибками, без)
+	void setAmountError(list <errorSet>& Db);		// Установка количества ошибок и замечаний
+
+	void hightlightError(ofstream& file, const vector <int>& light, const int& indx, const CString& field);	// Подсветка нужного параметра
 	int getIndexErrorField(list<errorSignalData>::iterator it);					// Поиск индекса параметра
 
-	void writeTxtParam(ofstream& file, list <signalData>::iterator it, sheetInfo info);	// Запись сигнала в txt файл
+	void writeTxtParam(ofstream& file, const signalData& signal, const sheetInfo& info);	// Запись сигнала в txt файл*/
 };
 

@@ -8,6 +8,8 @@ using namespace std;
 
 #pragma region Data
 
+#define RESERVE_SIGNAL _T("–езерв")
+
 // ‘лаги ошибки преобразовани€ данных из €чейки
 struct convertError {
 	bool num = false;	// ƒл€ номера слова

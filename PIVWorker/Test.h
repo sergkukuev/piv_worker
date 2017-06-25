@@ -6,7 +6,6 @@
 #include <regex>
 
 #define ERROR_DATA _T("Не удалось прочитать значение %s. (Поле содержит недопустимые символы или лишние '.' и ',')")
-#define RESERVE_SIGNAL _T("Резерв")
 #define MAX_NUMWORD 32
 #define MAX_BITS 32
 

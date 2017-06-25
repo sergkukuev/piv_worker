@@ -10,22 +10,21 @@ CReport::~CReport()	{	}
 #pragma region GenerateReport
 
 // Генерация отчета об ошибках
-/*void CReport::getReport(vector <bookData> books, errorSet errorDB, CString pathToSave) {
+void CReport::getReport(list <bookData>& books, list<errorSet>& Db, const CString& pathToSave) {
 	if (pathToSave.IsEmpty())
 		throw EmptyPathException();
 
 	path = pathToSave;
 
 	// Подсчет количества наборов и ошибок
-	setAmount(books);	
-	amount.error = getAmountError(errorDB.syntax) + getAmountError(errorDB.simantic);
-	amount.warning = getAmountError(errorDB.warning);
+	setAmount(books);
+	setAmountError(Db);
 
-	makeReport(books, errorDB);
+	makeReport(books, Db);
 }
 
 // Генерация не пустого отчета
-void CReport::makeReport(vector <bookData> books, errorSet errorDB) {
+void CReport::makeReport(list <bookData>& books, list <errorSet>& errorDB) {
 	ofstream file;	// Поток записи в файл
 	CString tPath;	// Путь к текущему файлу
 
@@ -66,7 +65,7 @@ void CReport::makeReport(vector <bookData> books, errorSet errorDB) {
 		"      <br/>\n";
 
 	if (amount.error + amount.warning != 0)
-		startWrite(file, books, errorDB);
+		startWrite(file, errorDB);
 	else
 		file << "      <h2>Ошибок и замечаний нет!</h2>\n";
 	
@@ -76,7 +75,7 @@ void CReport::makeReport(vector <bookData> books, errorSet errorDB) {
 	file.close();	// Закрытие файла
 }
 
-void CReport::startWrite(ofstream& file, vector <bookData> books, errorSet errorDB) {
+void CReport::startWrite(ofstream& file, list <errorSet>& errorDB) {
 	CString tPath;
 
 	// Создание директорий для отчета
@@ -102,37 +101,100 @@ void CReport::startWrite(ofstream& file, vector <bookData> books, errorSet error
 		"              <th>Семантические</th>\n"
 		"          </tr>\n";
 
-	for (size_t cBooks = 0; cBooks < books.size(); cBooks++) {
-		writeSheets(file, books, cBooks);
+	for (list <errorSet>::iterator it = errorDB.begin; it != errorDB.end(); it++) {
+		file << "          <tr>\n";
+		"              <td>"; file << CT2A(it->book->name); file << "</td>\n"
+			"              <td align=\"center\">\n"
+			"                 <dl>\n";
 
-		// Создание отчета о синтаксических, семантических ошибках и предупреждениях
-		writeError(file, errorDB.syntax[cBooks], _T("Error\\Syntax"));
-		writeError(file, errorDB.simantic[cBooks], _T("Error\\Simantic"));
-		writeError(file, errorDB.warning[cBooks], _T("Warning"));
+		writeSheets(file, it->set);
 		file << "          </tr>\n";
 	}
 	file << "      </table>\n";
 }
 
 // Создание страниц
-void CReport::writeSheets(ofstream& file, vector <bookData> books, int cBooks) {
-	file << "          <tr>\n";
-		"              <td>"; file << CT2A(books[cBooks].name); file << "</td>\n"
-		"              <td align=\"center\">\n"
-		"                 <dl>\n";
-
-	for (size_t cSheets = 0; cSheets < books[cBooks].sheets.size(); cSheets++) {
-		file << "                     <dt>"; 
-		file << CT2A(books[cBooks].sheets[cSheets].name); 
+void CReport::writeSheets(ofstream& file, vector <errorSheet>& set) {
+	for (size_t i = 0; i < set.size(); i++) {
+		file << "                     <dt>";
+		file << CT2A(set[i].sheet->name);
 		file << "</dt>\n";
 	}
 
 	file << "                 </dl>\n"
 		"              </td>\n";
+	// синтаксис
+	file << "              <td align=\"center\">\n"
+		"                     <dl>";
+	for (size_t i = 0; i < set.size(); i++) {
+		file << writeError(set[i].sheet, set[i].syntax, SYNTAX_FOLDER);
+	}
+	file << "                 </dl>\n"
+		"              </td>\n";
+	// семантика
+	file << "              <td align=\"center\">\n"
+		"                     <dl>";
+	for (size_t i = 0; i < set.size(); i++) {
+		file << writeError(set[i].sheet, set[i].simantic, SIMANTIC_FOLDER);
+	}
+	file << "                 </dl>\n"
+		"              </td>\n";
+	// предупреждения
+	file << "              <td colspan=\"3\" align=\"center\">\n"
+		"                     <dl>";
+	for (size_t i = 0; i < set.size(); i++) {
+		file << writeError(set[i].sheet, set[i].warning, WARNING_FOLDER);
+	}
+	file << "                 </dl>\n"
+		"              </td>\n";
 }
 
-// Создание страниц ошибок
-void CReport::writeError(ofstream& file, errorBookData error, CString folder) {
+CString CReport::writeError(sheetData* sheet, const vector <errorSignal>& db, const CString& folder, const CString& bookName) {
+	// Создать файл с ошибками
+	// Записать туда ошибки
+	// Закрыть поток с файлом
+
+	CString pathFile;
+	pathFile.Format(_T("%s\\%s\\%s\\%s.html"), path, folder, bookName, sheet->name);
+	CreateDirectory(pathFile, NULL);
+
+	ofstream file;
+	file.open(pathFile);
+
+	// Шапочка
+	file << "<html>\n"
+		"  <head>\n"
+		"     <meta http-equiv=\"Content-Type\" content=\"text/html; charset=win-1251\" />\n"
+		"     <title>Замечания по книге \""; file << CT2A(bookName); file << "\"</title>\n"
+		"  </head>\n"
+		"  <body>\n"
+		"      <table border=\"1\"cellspacing=\"0\">\n"
+		"          <tr>\n"
+		"              <th rowspan=\"2\">№ Замечания</th>\n"
+		"              <th colspan=\"9\">Замечания. Книга \""; file << CT2A(bookName);
+	file << "\". Лист \""; file << CT2A(sheet->name); file << "\".</th>\n"
+		"          </tr>\n"
+		"          <tr>\n"
+		"              <th>№Слова</th>\n"
+		"              <th>Наименование сигнала</th>\n"
+		"              <th>Условное обозначение параметра / сигнала</th>\n"
+		"              <th>Единица измерения</th>\n"
+		"              <th>Минимальное значение</th>\n"
+		"              <th>Максимальное значение</th>\n"
+		"              <th>Цена старшего разряда</th>\n"
+		"              <th>Используемые разряды</th>\n"
+		"              <th>Примечание</th>\n"
+		"          </tr>\n";
+
+	int iRow = 1;
+	for (size_t i = 0; i < db.size(); i++) {
+		file << "          <tr>\n"
+			"              <th rowspan=\"2\"> &nbsp "; file << iRow; file << "</th>\n";
+	}
+}
+
+/*// Создание страниц ошибок
+void CReport::writeError(ofstream& file, const vector <errorSignal>& error, const CString& folder) {
 	bool pathDirectory = true;
 	CString colspan;
 
@@ -266,7 +328,7 @@ void CReport::writeError(ofstream& file, errorBookData error, CString folder) {
 	file << "                 </dl>\n"
 		"              </td>\n";
 }
-
+*/
 //Подсветка ошибочного параметра
 void CReport::hightlightError(ofstream& file, int tIndx, int Indx, CString field) {
 	CString buffer = _T("");
@@ -288,26 +350,21 @@ int CReport::getIndexErrorField(list<errorSignalData>::iterator it) {
 }
 
 // Установка количества набора данных (всего, с ошибками, без)
-void CReport::setAmount(vector <bookData> books) {
-	for (size_t i = 0; i < books.size(); i++) {
-		amount.all += books[i].sheets.size();
-		for (size_t j = 0; j < books[i].sheets.size(); j++)
-			if (books[i].sheets[j].bError)
+void CReport::setAmount(list <bookData>& books) {
+	for (list <bookData>::iterator it = books.begin(); it != books.end(); it++) {
+		amount.all += it->sheets.size();
+		for (size_t j = 0; j < it->sheets.size(); j++)
+			if (it->sheets[j].error)
 				amount.withError++;
 	}
-
 	amount.withoutError = amount.all - amount.withError;
 }
 
-// Количество ошибок
-int CReport::getAmountError(vector <errorBookData> error) {
-	int result = 0;
-
-	for (size_t i = 0; i < error.size(); i++)
-		for (size_t j = 0; j < error[i].sheets.size(); j++)
-			result += error[i].sheets[j].signals.size();
-
-	return result;
+void CReport::setAmountError(list <errorSet>& db) {
+	for (list <errorSet>::iterator it = db.begin(); it != db.end; it++)
+		for (size_t i = 0; i < it->set.size(); i++) {
+			it->set[i].simantic
+		}
 }
 
 #pragma endregion
@@ -315,40 +372,41 @@ int CReport::getAmountError(vector <errorBookData> error) {
 #pragma region GenerateTxt
 
 // Начало генерации txt файлов
-void CReport::getTxt(vector <bookData> books, CString pathToSave, bool bNumPK) {
+void CReport::getTxt(list <bookData>& books, const CString& pathToSave, const bool& bNumPK) {
 	// Создание директории
-	pathToSave.Format(_T("%s\\Text"), pathToSave);
-	CreateDirectory(pathToSave, NULL);
+	path = pathToSave;
+	path.Format(_T("%s\\Text"), pathToSave);
+	CreateDirectory(path, NULL);
 
-	CString filePath = pathToSave;
+	CString filePath = path;
 	filePath.Format(_T("%s\\_ProtocolMain.txt"), pathToSave);
 
 	// Открытие главного файла для записи
 	ofstream mainFile;
-	mainFile.open(pathToSave);
+	mainFile.open(filePath);
 
 	// Обход по книгам
-	for (size_t iBook = 0; iBook < books.size(); iBook++) {
+	for (list <bookData>::iterator it = books.begin(); it != books.end(); it++) {
 		// Обход по страницам
-		for (size_t iSheet = 0; iSheet < books[iBook].sheets.size(); iSheet++) {
-			if (!books[iBook].sheets[iSheet].bError) { // Если нет на странице ошибок
+		for (size_t i = 0; i < it->sheets.size(); i++) {
+			if (!it->sheets[i].error) { // Если нет на странице ошибок
 				ofstream tmpFile;
 				CString name;
-				int NP = books[iBook].sheets[iSheet].iFieldNP;
+				sheetInfo info;
+
+				info.np = it->sheets[i].np;
+				info.pk = it->sheets[i].pk;
+				info.bPK = bNumPK;
 
 				// Создание txt файла для записи
-				name.Format(_T("NP_%d_%s.txt"), NP, books[iBook].sheets[iSheet].name);
-				filePath.Format(_T("%s\\%s"), pathToSave, name);
+				name.Format(_T("NP_%d_%s.txt"), info.np, it->sheets[i].name);
+				filePath.Format(_T("%s\\%s"), path, name);
 				tmpFile.open(filePath);
 				mainFile << "#include \""; mainFile << CT2A(name); mainFile << "\"\n";
 
-				for (list <signalData>::iterator it = signal_set(iBook, iSheet).begin(); it != signal_set(iBook, iSheet).end(); it++) {
-					sheetInfo info;
-					info.NP = books[iBook].sheets[iSheet].iFieldNP;
-					info.NumPk = books[iBook].sheets[iSheet].iNumPK;
-					info.bNumPk = bNumPK;
-					writeTxtParam(tmpFile, it, info);	// Запись параметра
-				}
+				for (size_t j = 0; j < it->sheets[i].signals.size(); j++) 
+					writeTxtParam(tmpFile, it->sheets[i].signals[j], info);	// Запись параметра
+
 				tmpFile.close();
 			}
 			else continue;
@@ -358,73 +416,67 @@ void CReport::getTxt(vector <bookData> books, CString pathToSave, bool bNumPK) {
 }
 
 // Запись сигнала в txt файл
-void CReport::writeTxtParam(ofstream& file, list <signalData>::iterator it, sheetInfo info) {
-	CString buffer = it->sTitleParamField[0];
+void CReport::writeTxtParam(ofstream& file, const signalData& signal, const sheetInfo& info) {
+	CString buffer = signal.title[0];
 
-	if (buffer.Find(_T("Резерв")) == -1) {
-		buffer.Format(_T("PAR=%s\n"), it->sTitleParamField[1]);	// Запись обозначения сигнала
+	if (buffer.Find(RESERVE_SIGNAL) == -1) {
+		buffer.Format(_T("PAR=%s\n"), signal.title[1]);	// Запись обозначения сигнала
 		file << CT2A(buffer);
 
 		buffer.Replace(_T("\""), _T("\\\""));
-		buffer.Format(_T("\t NAME=\"%s\"\n"), it->sTitleParamField[0]); // Наименования сигнала
+		buffer.Format(_T("\t NAME=\"%s\"\n"), signal.title[0]); // Наименования сигнала
 		file << CT2A(buffer);
 
-		if (!it->sDimensionField.IsEmpty()) {
-			buffer.Format(_T("\t UNIT=\"%s\"\n"), it->sDimensionField);	// Размерности
+		if (!signal.dimension.IsEmpty()) {
+			buffer.Format(_T("\t UNIT=\"%s\"\n"), signal.dimension);	// Размерности
 			file << CT2A(buffer);
 		}
 
 		// Установка набора
-		if (info.NumPk != -1 && info.bNumPk)
-			buffer.Format(_T("\t SET=%d:%d\n"), info.NumPk, info.NP);
+		if (info.pk != 0 && info.bPK)
+			buffer.Format(_T("\t SET=%d:%d\n"), info.pk, info.np);
 		else
-			buffer.Format(_T("\t SET=%d\n"), info.NP);
+			buffer.Format(_T("\t SET=%d\n"), info.np);
 		file << CT2A(buffer);
 
-		int max = (it->iBit[1] == 0 ? it->iBit[0] : it->iBit[1]);
+		int max = (signal.bit[1] == 0 ? signal.bit[0] : signal.bit[1]);
 
 		// Запись номера слова и битов
-		if (it->b2NumWordField) { 
+		if (signal.numWord.size() == 2) { 
 			file << "\t MERGE\n";
-			buffer.Format(_T("\t\t WDADDR = %d,%d,%d\n"), it->iNumWord[0], it->iBit[0], max);
+			buffer.Format(_T("\t\t WDADDR = %d,%d,%d\n"), signal.numWord[0], signal.bit[0], max);
 			file << CT2A(buffer);
-			buffer.Format(_T("\t\t WDADDR = %d,%d,%d\n"), it->iNumWord[1], it->iBit[0], max);
+			buffer.Format(_T("\t\t WDADDR = %d,%d,%d\n"), signal.numWord[1], signal.bit[0], max);
 			file << CT2A(buffer);
 			file << "\t END_MERGE\n";
 		}
 		else {
-			buffer.Format(_T("\t\t WDADDR = %d,%d,%d\n"), it->iNumWord[0], it->iBit[0], max);
+			buffer.Format(_T("\t\t WDADDR = %d,%d,%d\n"), signal.numWord[0], signal.bit[0], max);
 			file << CT2A(buffer);
 		}
 
 		// Мин, макс, цср
-		if (it->dMinMaxCsrVal[1] != 0 && it->dMinMaxCsrVal[2] != 0) { 
+		if (signal.max != signal.csr != DBL_MIN) { 
 			file << "\t VALDESCR\n";
-			file << (it->bCommentField ? "\t\t SIGNED\n" : "\t\t UNSIGNED\n");
+			file << (signal.bitSign ? "\t\t SIGNED\n" : "\t\t UNSIGNED\n");
 
-			buffer = it->sMinMaxCsrValField[0];
-			buffer.Replace(_T(","), _T("."));
-			buffer.Format(_T("\t\t MIN = %s\n"), buffer);
+			buffer.Format(_T("\t\t MIN = %lf\n"), signal.min);
 			file << CT2A(buffer);
 
-			buffer = it->sMinMaxCsrValField[1];
-			buffer.Replace(_T(","), _T("."));
-			buffer.Format(_T("\t\t MAX = %s\n"), buffer);
+			buffer.Format(_T("\t\t MAX = %lf\n"), signal.max);
 			file << CT2A(buffer);
 
-			buffer = it->sMinMaxCsrValField[2];
-			buffer.Replace(_T(","), _T("."));
-			buffer.Format(_T("\t\t MSB = %s\n"), buffer);
+			buffer.Format(_T("\t\t MSB = %lf\n"), signal.csr);
 			file << CT2A(buffer);
 
 			file << "\t END_VALDESCR\n";
 		}
 
 		// Запись комментариев
-		if (!it->sCommentField.IsEmpty()) {	
+		if (!signal.comment.IsEmpty()) {	
 			file << "\t COMMENT\n";
 
-			buffer = it->sCommentField;
+			buffer = signal.comment;
 			buffer.Replace(_T("\""), _T("\\\""));
 			buffer.Replace(_T("\n"), _T("\"\n\t\t\""));
 			buffer.Format(_T("\t\t\"%s\"\n"), buffer);
@@ -437,4 +489,3 @@ void CReport::writeTxtParam(ofstream& file, list <signalData>::iterator it, shee
 }
 
 #pragma endregion
-*/
