@@ -182,13 +182,13 @@ void CTest::simanticNumWord(const vector <int>& num, const bool& flag, bool* rep
 		vector <CString> tmp;
 		tmp.push_back(errRemarks[0]);
 		for (size_t i = 0; i < num.size(); i++) {
-			if (!repiter[num[i] - 1])		// Поиск совпадений 
-				tmp.push_back(_T("Слово с таким номером встречалось ранее на листе"));
+			//if (!repiter[num[i] - 1])		// Поиск совпадений 
+				//tmp.push_back(_T("Слово с таким номером встречалось ранее на листе"));
 
 			if (num[i] > 32)	// Слово должно быть не больше 32
 				tmp.push_back(_T("Значение номера слова должно быть меньше 32"));
 			else
-				repiter[num[i] - 1] = false; // Отметка о том, что эти слово имеется на этом листе
+				*(repiter + num[i] - 1) = false; // Отметка о том, что эти слово имеется на этом листе
 		}
 		if (tmp.size() > 1)
 			for (size_t i = 0; i < tmp.size(); i++)
@@ -198,7 +198,7 @@ void CTest::simanticNumWord(const vector <int>& num, const bool& flag, bool* rep
 
 // Проверка наименований сигнала
 void CTest::simanticTitle(sheetData* sheet, const CString& title, const bool& flag, vector <CString>& error) {
-	if (!flag) {
+	if (flag) {
 		if (findRepiteInSheet(title, sheet)) {
 			error.push_back(errRemarks[1]);
 			error.push_back(_T("Сигнал с таким обозначением присутсвует на этом листе"));

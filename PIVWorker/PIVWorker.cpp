@@ -190,12 +190,12 @@ void CPIVWorker::Test() {
 
 #pragma endregion
 
-/*
+
 #pragma region REPORT
 
 // Начало создания отчета
-void CPIVWorker::Report(CString path) {
-	pathReport = path;
+void CPIVWorker::Report(const CString& path) {
+	this->path = path;
 	StartReport();
 }
 
@@ -205,7 +205,7 @@ void CPIVWorker::Report() { StartReport(); }
 // Начало создания отчета об ошибках
 void CPIVWorker::StartReport()
 {
-	if (pathReport.IsEmpty())
+	if (path.IsEmpty())
 		AfxMessageBox(_T("Папка для сохранения отчета не указана!"));
 	else {
 		if (getStatusThread(primary)) {
@@ -222,15 +222,14 @@ void CPIVWorker::StartReport()
 void CPIVWorker::MakeReport() {
 	CReport report;
 	CString pathFile, msg;
-	report.getReport(books, errorDB, pathReport);
-	pathFile.Format(_T("%s\\Отчет.html"), pathReport);
-	msg.Format(_T("Создание отчета завершено!\n\nРасположение: %s\nОткрыть для просмотра?"), pathReport);
+	report.getReport(books, Db, path);
+	pathFile.Format(_T("%s\\Отчет.html"), path);
+	msg.Format(_T("Создание отчета завершено!\n\nРасположение: %s\nОткрыть для просмотра?"), pathFile);
 	if (AfxMessageBox(msg, MB_YESNO | MB_ICONQUESTION) == IDYES);
 		ShellExecute(0, L"open", pathFile, NULL, NULL, SW_NORMAL);	
 }
 
 #pragma endregion
-*/
 
 #pragma region CLOSE
 
@@ -356,8 +355,8 @@ void Thread(CPIVWorker& piv) {
 		piv.Read();
 	else if (piv.hCmd == piv.command.test)
 		piv.Test();
-	//else if (piv.hCmd == piv.command.report)
-		//piv.MakeReport();
+	else if (piv.hCmd == piv.command.report)
+		piv.MakeReport();
 	//else if (piv.hCmd == piv.command.txt)
 		//piv.GenerateTxt();
 	else if (piv.hCmd == piv.command.close)

@@ -257,14 +257,14 @@ void CMainDlg::OnPivClose()
 // Анализировать протоколы
 void CMainDlg::OnPivAnalyze()
 {
-	//piv.TestExcel();
-	//setMenu(2);
+	piv.TestExcel();
+	setMenu(2);
 }
 
 // Открыть отчет
 void CMainDlg::OnPivReport()
 {
-	/*BROWSEINFO	bi;
+	BROWSEINFO	bi;
 	TCHAR	szDisplayName[MAX_PATH];
 	LPITEMIDLIST	pidl;
 
@@ -282,7 +282,7 @@ void CMainDlg::OnPivReport()
 	}
 
 	piv.Report(folder);	// Генерация отчета
-	setMenu(4);*/
+	setMenu(4);
 }
 
 // Открыть папку с отчетом

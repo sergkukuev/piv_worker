@@ -9,7 +9,7 @@ using namespace std;
 #pragma region Data
 
 #define RESERVE_SIGNAL _T("Резерв")
-
+#define REMARKS_SIZE 7
 // Флаги ошибки преобразования данных из ячейки
 struct convertError {
 	bool num = false;	// Для номера слова
@@ -73,7 +73,7 @@ struct errorSet {
 };
 
 // Шапки таблицы
-const CString errRemarks[7] = {
+const CString errRemarks[REMARKS_SIZE] = {
 	// Номер параметра
 	_T("Замечание. Поле \"№ слова\" заполнено не верно."),
 	// Обозначение параметра

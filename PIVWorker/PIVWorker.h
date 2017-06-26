@@ -51,7 +51,7 @@ public:
 	//void TestExcel(const CString& pathToExcel);				// Проверка одной книги
 	//void TestExcel(const vector <CString>& pathToExcel);	// Проверка выбранных книг
 
-	void Report(CString path);		// Создание отчета об ошибках
+	void Report(const CString& path);		// Создание отчета об ошибках
 	void Report();					// (перегрузка)
 	
 	void CreateTxt(CString path);	// Создание txt файлов
@@ -68,6 +68,7 @@ private:
 	
 	list <bookData> books;		// Данные о прочитанных ПИВ
 	vector <CString> buffer;	// Вектор временного хранения путей файлов
+	CString path;
 	list <errorSet> Db;			// База ошибок
 
 	bool bNumPK = false;		// Нужно ли устанавливать в txt подкадры

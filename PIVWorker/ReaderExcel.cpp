@@ -153,7 +153,7 @@ void CReaderExcel::getMinMaxCsr(signalData& signal, CWorkExcel& work, const long
 	signal.csr = getDouble(work.cellValue(row, column), signal.flags.csr);
 
 	// —брос флагов, если одновременно все параметры пусты
-	if (signal.min == signal.max == signal.csr == DBL_MIN) {
+	if (signal.min == DBL_MIN && signal.max == DBL_MIN && signal.csr == DBL_MIN) {
 		signal.flags.min = false;
 		signal.flags.max = false;
 		signal.flags.csr = false;
@@ -227,11 +227,13 @@ double CReaderExcel::getDouble(const CString& field, bool& flag) {
 	char* end;
 	errno = 0;
 
-	CStringA tmp(field);
+	CString temp = field;
+	temp.Trim();
+	CStringA tmp(temp);
 	char* str = new char[tmp.GetLength() + 1];
 	strcpy_s(str, tmp.GetLength() + 1, tmp);
 
-	if (!field.IsEmpty()) {
+	if (!temp.IsEmpty()) {
 		result = strtod(str, &end);
 		(*end != 0 || errno != 0) ? flag = true : flag = flag;
 	}

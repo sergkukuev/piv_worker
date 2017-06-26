@@ -194,6 +194,7 @@ long CWorkExcel::getMerge(long& row, const long& column) {
 		field = cellValue(tmpRow, column);
 		tmpRow++; result++;
 	} 
+	if (result != 1) result--;
 
 	return result;
 }
