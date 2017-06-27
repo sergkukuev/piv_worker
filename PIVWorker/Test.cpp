@@ -101,14 +101,14 @@ void CTest::checkNP(signalData& signal, const int& np, vector <errorSignal>& syn
 
 	if (np == 0) {
 		tmp.error.push_back(errRemarks[6]);
-		tmp.error.push_back(_T("Отсутствует номер набора параметров"));
+		tmp.error.push_back(L"Отсутствует номер набора параметров");
 		syntax.push_back(tmp);
 	}
 
 	// Минимально и максимальное значение должно соответствовать номер набора
 	if (!signal.flags.min && !signal.flags.max)
 		if (signal.min != np || signal.min != np)
-			tmp.error.push_back(_T("Значение не соответствует значению в примечании"));
+			tmp.error.push_back(L"Значение не соответствует значению в примечании");
 }
 
 // Инициализация репитеров
@@ -124,11 +124,11 @@ void CTest::initRepiter(bool* num, bool** bits) {
 
 // Проверка числовых параметров 
 void CTest::syntaxValue(const convertError& flags, vector <CString>& error) {
-	checkValueByFlag(_T("№ слова"), 0, flags.num, error);
-	checkValueByFlag(_T("минимума"), 2, flags.min, error);
-	checkValueByFlag(_T("максимума"), 3, flags.max, error);
-	checkValueByFlag(_T("цср"), 4, flags.csr, error);
-	checkValueByFlag(_T("битов"), 5, flags.bit, error);
+	checkValueByFlag(L"№ слова", 0, flags.num, error);
+	checkValueByFlag(L"минимума", 2, flags.min, error);
+	checkValueByFlag(L"максимума", 3, flags.max, error);
+	checkValueByFlag(L"цср", 4, flags.csr, error);
+	checkValueByFlag(L"битов", 5, flags.bit, error);
 }
 
 // Проверка числовых параметров по набору флагов
@@ -151,11 +151,12 @@ bool CTest::syntaxTitle(const vector <CString>& title, vector <CString>& error) 
 		error.push_back(errRemarks[1]);
 		bool bFind = false;	// Найдена ли ошибка из набора регулярных выражений
 		vector <string> incorrect = { "^[ \t\n]*$", "[ \t\n]+", "^[^A-Za-z][A-Za-z0-9_]*$", "([A-Za-z0-9_]*[А-Яа-я]+[A-Za-z0-9_]*)+", "_$" };
-		vector <CString> description = { _T("Значение в поле отсутствует. (Возможно сигнал зарезервирован, но \"Резерв\" не написано)"), 
-										_T("Значение в поле содержит пробел"),
-										_T("Значение в поле начинается не с латинской буквы"),
-										_T("Значение в поле содержит кириллицу"), 
-										_T("Значение в поле заканчивается на '_'") };
+		vector <CString> description = { L"Значение в поле отсутствует. (Возможно сигнал зарезервирован, но \"Резерв\" не написано)", 
+										L"Значение в поле содержит пробел",
+										L"Значение в поле начинается не с латинской буквы",
+										L"Значение в поле содержит кириллицу", 
+										L"Значение в поле заканчивается на '_'" };
+		// Поиск ошибки (обход по набору регулярок)
 		for (size_t i = 0; i < incorrect.size(); i++) {
 			regex reg(incorrect[i]);
 			if (regex_search(tmp, reg)) {
@@ -163,9 +164,9 @@ bool CTest::syntaxTitle(const vector <CString>& title, vector <CString>& error) 
 				bFind = true;
 			}
 		}
-		if (!bFind) {
+		if (!bFind) {	// Неопознанная ошибка
 			UndefinedError exc;
-			exc.SetParam(title[0] + title[1]);
+			exc.SetParam(title[0] + L';' + title[1]);
 			throw exc;
 		}
 	}
@@ -186,7 +187,7 @@ void CTest::simanticNumWord(const vector <int>& num, const bool& flag, bool* rep
 				//tmp.push_back(_T("Слово с таким номером встречалось ранее на листе"));
 
 			if (num[i] > 32)	// Слово должно быть не больше 32
-				tmp.push_back(_T("Значение номера слова должно быть меньше 32"));
+				tmp.push_back(L"Значение номера слова должно быть меньше 32");
 			else
 				*(repiter + num[i] - 1) = false; // Отметка о том, что эти слово имеется на этом листе
 		}
@@ -201,7 +202,7 @@ void CTest::simanticTitle(sheetData* sheet, const CString& title, const bool& fl
 	if (flag) {
 		if (findRepiteInSheet(title, sheet)) {
 			error.push_back(errRemarks[1]);
-			error.push_back(_T("Сигнал с таким обозначением присутсвует на этом листе"));
+			error.push_back(L"Сигнал с таким обозначением присутсвует на этом листе");
 		}
 	}
 }
@@ -226,20 +227,20 @@ void CTest::simanticValue(const signalData& signal, vector <CString>& error) {
 
 		if (signal.max - nMax > 2) {
 			error.push_back(errRemarks[3]);
-			error.push_back(_T("Нельзя упаковать данное значение"));
+			error.push_back(L"Нельзя упаковать данное значение");
 		}
 		else if (((abs(signal.min) > (nMax + nMin)) || (abs(signal.min) < nMin)) && signal.min != 0) {
 			error.push_back(errRemarks[3]);
-			error.push_back(_T("Нельзя упаковать данное значение"));
+			error.push_back(L"Нельзя упаковать данное значение");
 		}
 
 		if ((signal.min < 0) && !signal.bitSign) {
 			error.push_back(errRemarks[2]);
-			error.push_back(_T("Не может быть отрицательным числом или не верно задан знаковый бит в поле \"Примечание\""));
+			error.push_back(L"Не может быть отрицательным числом или не верно задан знаковый бит в поле \"Примечание\"");
 		}
 		else if ((signal.min >= 0) && signal.bitSign) {
 			error.push_back(errRemarks[2]);
-			error.push_back(_T("Должно быть отрицательным числом или не верно задан знаковый бит в поле \"Примечание\""));
+			error.push_back(L"Должно быть отрицательным числом или не верно задан знаковый бит в поле \"Примечание\"");
 		}
 	}
 }
@@ -251,12 +252,12 @@ void CTest::simanticBits(const signalData& signal, bool** repiter, vector <CStri
 		if (signal.numWord.size() * 2 == signal.bit.size()) {
 			if (!checkCrossBits(signal.bit, signal.numWord, repiter)) {
 				error.push_back(errRemarks[5]);
-				error.push_back(_T("Бит(ы) перекрывает(ют)ся"));
+				error.push_back(L"Бит(ы) перекрывает(ют)ся");
 			}
 		}
 		else {
 			error.push_back(errRemarks[5]);
-			(signal.numWord.size() == 1) ? error.push_back(_T("Должен быть один интервал")) : error.push_back(_T("Должно быть два интервала"));
+			(signal.numWord.size() == 1) ? error.push_back(L"Должен быть один интервал") : error.push_back(L"Должно быть два интервала");
 		}
 	}
 }
@@ -290,8 +291,8 @@ bool CTest::findRepiteInSheet(const CString& field, sheetData* sheet) {
 
 	if (result > 1)
 		return true;
-
-	return false;
+	else
+		return false;
 }
 
 #pragma endregion

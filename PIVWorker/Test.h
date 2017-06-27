@@ -5,7 +5,7 @@
 
 #include <regex>
 
-#define ERROR_DATA _T("Не удалось прочитать значение %s. (Поле содержит недопустимые символы или лишние '.' и ',')")
+#define ERROR_DATA L"Не удалось прочитать значение %s. (Поле пустое или содержит недопустимые символы)"
 #define MAX_NUMWORD 32
 #define MAX_BITS 32
 
@@ -18,13 +18,13 @@ public:
 
 private:
 	void getErrors(sheetData* sheet, vector <errorSignal>& syntax, vector <errorSignal>& simantic); // Проверка на ошибки
-	void getWarnings(sheetData* sheet, vector <errorSignal>& warning);		// Проверка на замечания
+	void getWarnings(sheetData* sheet, vector <errorSignal>& warning);								// Проверка на замечания
 
 	void checkNP(signalData& signal, const int& np, vector <errorSignal>& syntax);	// Проверка ошибок, связанных с номером набора
 	void initRepiter(bool* num, bool** bits);	// Инициализация репитеров
 	
 	// Синтаксический анализ
-	void syntaxValue(const convertError& flags, vector <CString>& error);	// Проверка числовых параметров
+	void syntaxValue(const convertError& flags, vector <CString>& error);			// Проверка числовых параметров
 	bool syntaxTitle(const vector <CString>& title, vector <CString>& error);		// Проверка синтаксиса идентификатора
 
 	void checkValueByFlag(const CString& field, const int& indx, const bool& flag, vector <CString>& error); // Проверка числовых параметров по набору флагов
@@ -36,5 +36,5 @@ private:
 	void simanticBits(const signalData& signal, bool** repiter, vector <CString>& error);		// Проверка используемых разрядов
 	
 	bool checkCrossBits(const vector <int>& bits, const vector <int>& numWord, bool** repiter); // Проверка перекрытия битов
-	bool findRepiteInSheet(const CString& field, sheetData* sheet);
+	bool findRepiteInSheet(const CString& field, sheetData* sheet);				// Поиск повторений на листе
 };
