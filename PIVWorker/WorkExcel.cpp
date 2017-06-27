@@ -3,7 +3,7 @@
 
 // Конструктор
 CWorkExcel::CWorkExcel(void) {
-	if (!app.CreateDispatch(_T("Excel.Application"), NULL))
+	if (!app.CreateDispatch(L"Excel.Application", NULL))
 		throw AccessExcelException();
 	app.put_Visible(FALSE);
 	app.put_UserControl(FALSE);
@@ -182,19 +182,19 @@ long CWorkExcel::getMerge(long& row, const long& column) {
 	long result = 1;
 
 	// Ищем первое непустое значение в таблице, выше ячейки
-	while (field.IsEmpty() && tmpRow >= first.row) {
+	while (field.IsEmpty() && tmpRow > first.row) {
 		tmpRow--;
 		field = cellValue(tmpRow, column);
 	}
 	row = tmpRow;	tmpRow++;
 	if (tmpRow <= last.row)
 		field = cellValue(tmpRow, column);
-	// Идем вниз до первого непутого значения в таблице 
-	while (field.IsEmpty() && tmpRow <= last.row) {
-		field = cellValue(tmpRow, column);
+	// Идем вниз до первого непустого значения в таблице 
+	while (field.IsEmpty() && tmpRow < last.row) {
 		tmpRow++; result++;
+		field = cellValue(tmpRow, column);
 	} 
-	if (result != 1) result--;
+	if (tmpRow == last.row) result++;
 
 	return result;
 }

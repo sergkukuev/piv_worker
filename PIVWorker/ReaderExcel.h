@@ -7,7 +7,7 @@
 #include <cstdlib>
 #include <cerrno>
 
-#define SIGN_FIELD _T("Зн-4")
+#define SIGN_FIELD L"Зн-4"
 
 // Класс для чтения протоколов из excel файлов
 class CReaderExcel	{

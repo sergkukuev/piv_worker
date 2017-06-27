@@ -4,28 +4,19 @@
 // Конструктор
 CReaderExcel::CReaderExcel() {
 	// Установка набора заголовков
-	header.list.push_back(vector<CString>{ _T("№ слов"), _T("№ слова"), _T("№ п/п"), _T("№ слова в подадресе") });			// Для номера слова
-	header.list.push_back(vector<CString>{ _T("Наименование параметра"), _T("Наименование сигнала") });						// Для наименование параметра
-	header.list.push_back(vector<CString>{ _T("Обозначение сигнала"), _T("Условное обозначение параметра / сигнала") });	// Для сигнала
-	header.list.push_back(vector<CString>{ _T("Размерность"), _T("Единица измерения") });									// Для единицы изменерения
-	header.list.push_back(vector<CString>{ _T("Минимальное значение"), _T("Миним. значение"), _T("Минимал значение") });	// Минимальное значение
-	header.list.push_back(vector<CString>{ _T("Максимальное значение"), _T("Максим. значение"), _T("Максимал значение") });	// Максимальное значение
-	header.list.push_back(vector<CString>{ _T("Цена старшего разряда") });													// Для цср
-	header.list.push_back(vector<CString>{ _T("Используемые разряды"), _T("Используе-мые разряды") });						// Для используемых разрядов
-	header.list.push_back(vector<CString>{ _T("Примечание") });																// Комментарии (пояснения)
+	header.list.push_back(vector<CString>{ L"№ слов", L"№ слова", L"№ п/п", L"№ слова в подадресе" });				// Для номера слова
+	header.list.push_back(vector<CString>{ L"Наименование параметра", L"Наименование сигнала" });					// Для наименование параметра
+	header.list.push_back(vector<CString>{ L"Обозначение сигнала", L"Условное обозначение параметра / сигнала" });	// Для сигнала
+	header.list.push_back(vector<CString>{ L"Размерность", L"Единица измерения" });									// Для единицы изменерения
+	header.list.push_back(vector<CString>{ L"Минимальное значение", L"Миним. значение", L"Минимал значение" });		// Минимальное значение
+	header.list.push_back(vector<CString>{ L"Максимальное значение", L"Максим. значение", L"Максимал значение" });	// Максимальное значение
+	header.list.push_back(vector<CString>{ L"Цена старшего разряда" });												// Для цср
+	header.list.push_back(vector<CString>{ L"Используемые разряды", L"Используе-мые разряды" });					// Для используемых разрядов
+	header.list.push_back(vector<CString>{ L"Примечание" });														// Комментарии (пояснения)
 
 	// Добавление всех видов расширений excel файлов
-	extension.push_back(_T("xlsx"));	// Текущий основной формат
-	extension.push_back(_T("xls"));		// Основной формат до 2003 года
-	/*extension.push_back(_T("xlsm"));
-	extension.push_back(_T("xlsb"));
-	extension.push_back(_T("xltx"));
-	extension.push_back(_T("xltm"));
-	extension.push_back(_T("xml"));
-	extension.push_back(_T("xlam"));
-	extension.push_back(_T("xla"));
-	extension.push_back(_T("xlw"));
-	extension.push_back(_T("xlr"));*/
+	extension.push_back(L"xlsx");	// Текущий основной формат
+	extension.push_back(L"xls");	// Основной формат до 2003 года
 }
 
 // Деструктор
@@ -266,9 +257,10 @@ CString CReaderExcel::getComment(CWorkExcel& work, const long& row, const int& s
 	for (int i = 0; i < size; i++) {
 		CString tmp = work.cellValue(row + i, column);
 		tmp.Trim();
-		if (!tmp.IsEmpty())
+		if (!tmp.IsEmpty()) {
 			(tmp.Find(SIGN_FIELD) != -1) ? flag = true : flag = flag;
-			result += _T("\n") + tmp;
+			result += L"\n" + tmp;
+		}
 	}
 		
 	return result;
@@ -295,8 +287,8 @@ bool CReaderExcel::isRemark(CWorkExcel& work, const long& row) {
 	for (long i = 1; i < header.size; i++) {
 		long column = header.adress[i];
 		CString tmp = work.cellValue(row, column);
-		result = (tmp.Find(_T("Примечания:")) > -1 ||
-			tmp.Find(_T("Примечание:")) > -1) ? true : result;
+		result = (tmp.Find(REMARK1) > -1 ||
+			tmp.Find(REMARK2) > -1) ? true : result;
 	}
 
 	return result;

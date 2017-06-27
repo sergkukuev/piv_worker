@@ -35,9 +35,11 @@ struct Cell {
 	long column;	// Столбец
 };
 
-#define LINE_FIELD _T("Линия")
-#define NP_FIELD _T("NP=")
-#define PK_FIELD _T('№')
+#define LINE_FIELD L"Линия"
+#define NP_FIELD L"NP="
+#define PK_FIELD L'№'
+#define REMARK1 L"Примечания:"
+#define REMARK2 L"Примечание:"
 
 // Класс чтения данных из Excel 
 class CWorkExcel {
