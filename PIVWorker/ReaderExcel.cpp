@@ -187,19 +187,18 @@ vector <int> CReaderExcel::stepGetBits(const CString& bits, bool& flag) {
 	result.push_back(-1);
 
 	// Поиск индекса разделителей
-	int indxDel = num.Find(_T('.'));
+	int indxDel = num.Find(L'.');
 	if (indxDel == -1)
-		indxDel = num.Find(_T('…'));
+		indxDel = num.Find(L'…');
 
 	if (indxDel == -1)	// Разделителей нет, используется один разряд
 		result[0] = getInt(num, flag);
 	else {
-		CString num2 = num;	
-		int posDot = num.ReverseFind(_T('.'));
-
+		int posDot = num.ReverseFind(L'.');
 		if (posDot != -1)
-			indxDel = posDot;
+			num.Delete(indxDel, posDot - indxDel);
 
+		CString num2 = num;
 		num.Delete(indxDel, num.GetLength());	// Первое число
 		num.Trim();
 		result[0] = getInt(num, flag);
@@ -215,16 +214,16 @@ vector <int> CReaderExcel::stepGetBits(const CString& bits, bool& flag) {
 // Конвертер double значения
 double CReaderExcel::getDouble(const CString& field, bool& flag) {
 	double result = DBL_MIN;
-	char* end;
-	errno = 0;
-
 	CString temp = field;
 	temp.Trim();
+	temp.Replace(L',', L'.');
 	CStringA tmp(temp);
 	char* str = new char[tmp.GetLength() + 1];
 	strcpy_s(str, tmp.GetLength() + 1, tmp);
 
 	if (!temp.IsEmpty()) {
+		char* end;
+		errno = 0;
 		result = strtod(str, &end);
 		(*end != 0 || errno != 0) ? flag = true : flag = flag;
 	}
@@ -238,10 +237,17 @@ double CReaderExcel::getDouble(const CString& field, bool& flag) {
 // Конвертер int значения
 int CReaderExcel::getInt(const CString& field, bool& flag) {
 	int result = -1;
+	CString temp = field;
+	temp.Trim();
+	CStringA tmp(temp);
+	char* str = new char[tmp.GetLength() + 1];
+	strcpy_s(str, tmp.GetLength() + 1, tmp);
 
 	if (!field.IsEmpty()) {
-		result = _wtoi(field);
-		(result == 0) ? flag = true : flag = flag;
+		char* end;
+		errno = 0;
+		result = strtol(str, &end, 10);
+		(*end != 0 || errno != 0) ? flag = true : flag = flag;
 	}
 	else
 		flag = true;
