@@ -344,7 +344,7 @@ int CReport::countError(const vector<errorSignal>& set) {
 // Установка количества набора данных (всего, с ошибками, без)
 void CReport::setAmount(list <bookData>& books) {
 	for (list <bookData>::iterator it = books.begin(); it != books.end(); it++) {
-		amount.all += it->sheets.size();
+		amount.all += (int)it->sheets.size();
 		for (size_t j = 0; j < it->sheets.size(); j++)
 			if (it->sheets[j].error)
 				amount.withError++;
@@ -451,7 +451,7 @@ void CReport::writeTxtParam(ofstream& file, const signalData& signal, const shee
 		}
 
 		// Мин, макс, цср
-		if (signal.max != signal.csr != DBL_MIN) { 
+		if (signal.max != DBL_MIN && signal.csr != DBL_MIN) { 
 			file << "\t VALDESCR\n";
 			file << (signal.bitSign ? "\t\t SIGNED\n" : "\t\t UNSIGNED\n");
 

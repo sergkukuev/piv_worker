@@ -225,7 +225,7 @@ void CPIVWorker::MakeReport() {
 	report.getReport(books, Db, path);
 	pathFile.Format(_T("%s\\Отчет.html"), path);
 	msg.Format(_T("Создание отчета завершено!\n\nРасположение: %s\nОткрыть для просмотра?"), pathFile);
-	if (AfxMessageBox(msg, MB_YESNO | MB_ICONQUESTION) == IDYES);
+	if (AfxMessageBox(msg, MB_YESNO | MB_ICONQUESTION) == IDYES)
 		ShellExecute(0, L"open", pathFile, NULL, NULL, SW_NORMAL);	
 }
 
