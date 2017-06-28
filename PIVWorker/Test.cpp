@@ -61,7 +61,10 @@ void CTest::getErrors(sheetData* sheet, vector <errorSignal>& syntax, vector <er
 				simanticNumWord(sheet->signals[i].numWord, sheet->signals[i].flags.num, numRepit, tmp.error);
 				simanticTitle(sheet, sheet->signals[i].title[1], correctTitle, tmp.error);
 				simanticValue(sheet->signals[i], tmp.error);
-				simanticBits(sheet->signals[i], bitRepit, tmp.error);
+				
+				CString prevTitle;
+				(i > 0) ? prevTitle = sheet->signals[i - 1].title[0] : prevTitle = L"";
+				simanticBits(sheet->signals[i], prevTitle, bitRepit, tmp.error);
 
 				if (!tmp.error.empty()) {
 					sheet->error = true;
@@ -99,17 +102,19 @@ void CTest::getWarnings(sheetData* sheet, vector <errorSignal>& warning) {
 void CTest::checkNP(signalData& signal, const int& np, vector <errorSignal>& syntax) {
 	errorSignal tmp;
 	tmp.signal = &signal;
+	tmp.error.push_back(errRemarks[6]);
 
-	if (np == 0) {
-		tmp.error.push_back(errRemarks[6]);
+	if (np == 0)
 		tmp.error.push_back(L"Отсутствует номер набора параметров");
-		syntax.push_back(tmp);
+	else {
+		// Минимально и максимальное значение должно соответствовать номер набора
+		if (!signal.flags.min && !signal.flags.max)
+			if (signal.min != np || signal.max != np)
+				tmp.error.push_back(L"Значение не соответствует значению в примечании");
 	}
 
-	// Минимально и максимальное значение должно соответствовать номер набора
-	if (!signal.flags.min && !signal.flags.max)
-		if (signal.min != np || signal.min != np)
-			tmp.error.push_back(L"Значение не соответствует значению в примечании");
+	if (tmp.error.size() > 1) 
+		syntax.push_back(tmp);
 }
 
 // Инициализация репитеров
@@ -212,10 +217,8 @@ void CTest::simanticTitle(sheetData* sheet, const CString& title, const bool& fl
 void CTest::simanticValue(const signalData& signal, vector <CString>& error) {
 	if (!signal.flags.min && !signal.flags.max && !signal.flags.csr && !signal.flags.bit) {
 		int nBit = 0;
-		if (signal.bit.size() == 4)
-			nBit = (signal.bit[1] - signal.bit[0]) + (signal.bit[3] - signal.bit[2]) + 2;
-		else
-			nBit = (signal.bit[1] - signal.bit[0]) + 1;
+		(signal.bit.size() == 4) ? nBit = (signal.bit[1] - signal.bit[0]) + (signal.bit[3] - signal.bit[2]) + 2 :
+									nBit = (signal.bit[1] - signal.bit[0]) + 1;
 
 		// Выделение бита под знак, если он присутствует
 		if (signal.bitSign) nBit--;
@@ -226,12 +229,12 @@ void CTest::simanticValue(const signalData& signal, vector <CString>& error) {
 
 		double nMax = (signal.csr * 2) - nMin;	
 
-		if (signal.max - nMax > 2) {
+		if (signal.max - nMax > 0) {
 			error.push_back(errRemarks[3]);
 			error.push_back(L"Нельзя упаковать данное значение");
 		}
 		else if (((abs(signal.min) > (nMax + nMin)) || (abs(signal.min) < nMin)) && signal.min != 0) {
-			error.push_back(errRemarks[3]);
+			error.push_back(errRemarks[2]);
 			error.push_back(L"Нельзя упаковать данное значение");
 		}
 
@@ -247,11 +250,11 @@ void CTest::simanticValue(const signalData& signal, vector <CString>& error) {
 }
 
 // Проверка используемых разрядов
-void CTest::simanticBits(const signalData& signal, bool** repiter, vector <CString>& error) {
+void CTest::simanticBits(const signalData& signal, const CString& prevTitle, bool** repiter, vector <CString>& error) {
 	// Кол-во № слов должно совпадать с кол-вами интервалов исп. разрядов
 	if (!signal.flags.num && !signal.flags.bit) {
 		if (signal.numWord.size() * 2 == signal.bit.size()) {
-			if (!checkCrossBits(signal.bit, signal.numWord, repiter)) {
+			if (!checkCrossBits(signal.bit, signal.numWord, repiter) && !checkTitle(signal.title[0], prevTitle)) {
 				error.push_back(errRemarks[5]);
 				error.push_back(L"Бит(ы) перекрывает(ют)ся");
 			}
@@ -261,6 +264,20 @@ void CTest::simanticBits(const signalData& signal, bool** repiter, vector <CStri
 			(signal.numWord.size() == 1) ? error.push_back(L"Должен быть один интервал") : error.push_back(L"Должно быть два интервала");
 		}
 	}
+}
+
+// Проверка двух наименований на совпадение
+bool CTest::checkTitle(const CString& next, const CString& prev) {
+	CString first = next, second = prev;
+
+	int indx = first.ReverseFind(L',');
+	first.Delete(indx, first.GetLength() - indx);
+	indx = second.ReverseFind(L',');
+	second.Delete(indx, second.GetLength() - indx);
+
+	bool result;
+	(first.CompareNoCase(second) == 0 && indx != -1) ? result = true : result = false;
+	return result;
 }
 
 // Проверка на перекрытие битов

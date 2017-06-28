@@ -33,8 +33,9 @@ private:
 	void simanticNumWord(const vector <int>& numeric, const bool& flag, bool* repiter, vector <CString>& error);		// Проверка номера слова
 	void simanticTitle(sheetData* sheet, const CString& title, const bool& flag, vector <CString>& error);				// Проверка наименований сигнала
 	void simanticValue(const signalData& signal, vector <CString>& error);						// Проверка минимального, максимального и цср
-	void simanticBits(const signalData& signal, bool** repiter, vector <CString>& error);		// Проверка используемых разрядов
+	void simanticBits(const signalData& signal, const CString& prevTitle, bool** repiter, vector <CString>& error);		// Проверка используемых разрядов
 	
 	bool checkCrossBits(const vector <int>& bits, const vector <int>& numWord, bool** repiter); // Проверка перекрытия битов
+	bool checkTitle(const CString& next, const CString& prev);					// Проверка двух наименований на совпадение
 	bool findRepiteInSheet(const CString& field, sheetData* sheet);				// Поиск повторений на листе
 };
