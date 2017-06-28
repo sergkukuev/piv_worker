@@ -186,22 +186,27 @@ CString CReport::writeErrors(sheetData* sheet, const vector <errorSignal>& db, c
 // Запись сигнала
 void CReport::writeSignal(ofstream& file, const errorSignal& set) {
 	CString buffer;
-	file << CT2A(getNumWord(set.signal->numWord, set.error));
-	file << CT2A(getTitle(set.signal->title, set.error));
+	file << CT2A(writeParam(set.signal->numWord.field, findRemark(set.error, errRemarks[0])));
+
+	buffer.Format(L"\t\t\t\t<td align=\"center\"> &nbsp %s</td>\n", set.signal->title[0]);
+	file << CT2A(buffer);
+
+	file << CT2A(writeParam(set.signal->title[1], findRemark(set.error, errRemarks[1])));
 	
 	buffer.Format(L"\t\t\t\t<td align=\"center\"> &nbsp %s</td>\n", set.signal->dimension);
 	file << CT2A(buffer);
 
-	file << CT2A(getDouble(set.signal->min, set.error, errRemarks[2]));
-	file << CT2A(getDouble(set.signal->max, set.error, errRemarks[3]));
-	file << CT2A(getDouble(set.signal->csr, set.error, errRemarks[4]));
+	file << CT2A(writeParam(set.signal->min.field, findRemark(set.error, errRemarks[2])));
+	file << CT2A(writeParam(set.signal->max.field, findRemark(set.error, errRemarks[3])));
+	file << CT2A(writeParam(set.signal->csr.field, findRemark(set.error, errRemarks[4])));
 
-	file << CT2A(getBit(set.signal->bit, set.error));
-	file << CT2A(getComment(set.signal->comment, set.error));
+	file << CT2A(writeParam(set.signal->bit.field, findRemark(set.error, errRemarks[5])));
+	file << CT2A(writeParam(set.signal->comment, findRemark(set.error, errRemarks[6])));
 
 	file << "\t\t\t</tr>\n"
 		"\t\t\t<tr>\n";
 
+	// Запись всех ошибок
 	for (size_t j = 0; j < set.error.size(); j++) {
 		if (IsRemark(set.error[j])) {
 			if (j != 0) {
@@ -229,55 +234,11 @@ void CReport::writeSignal(ofstream& file, const errorSignal& set) {
 		"\t\t\t</tr>\n";
 }
 
-CString CReport::getNumWord(const vector <int>& numWord, const vector <CString>& error) {
+// Запись параметра сигнала
+CString CReport::writeParam(const CString& field, const bool& color) {
 	CString result;
-	CString color;
-	findRemark(error, errRemarks[0]) ? color = L"bgcolor = \"#FDFCD0\"" : color = L"";
-	numWord.size() == 1 ? result.Format(L"\t\t\t\t<td align=\"center\" %s> &nbsp %d</td>\n", color, numWord[0]) : 
-						  result.Format(L"\t\t\t\t<td align=\"center\" %s> &nbsp %d, %d</td>\n", color, numWord[0], numWord[1]);
-	return result;
-}
-
-CString CReport::getTitle(const vector <CString>& title, const vector <CString>& error) {
-	CString result;
-	CString color;
-	findRemark(error, errRemarks[1]) ? color = L"bgcolor = \"#FDFCD0\"" : color = L"";
-	result.Format(L"\t\t\t\t<td align=\"center\"> &nbsp %s</td>\n\t\t\t\t<td align=\"center\" %s> &nbsp %s</td>\n", title[0], color, title[1]);
-	return result;
-}
-
-CString CReport::getDouble(const double& value, const vector <CString>& error, const CString& remark) {
-	CString result;
-	CString color;
-	findRemark(error, remark) ? color = L"bgcolor = \"#FDFCD0\"" : color = L"";
-	value != DBL_MIN ? result.Format(L"\t\t\t\t<td align=\"center\" %s> &nbsp %lf</td>\n", color, value) :
-		result.Format(L"\t\t\t\t<td align=\"center\" %s> &nbsp </td>\n", color);
-	return result;
-}
-
-CString CReport::getBit(const vector <int>& bit, const vector <CString>& error) {
-	CString result, bit2 = L"</td>\n";
-	CString color;
-	findRemark(error, errRemarks[5]) ? color = L"bgcolor = \"#FDFCD0\"" : color = L"";
-	
-	(bit[1] != -1) ? result.Format(L"\t\t\t\t<td align=\"center\" %s> &nbsp %d...%d", color, bit[0], bit[1]) :
-		result.Format(L"\t\t\t\t<td align=\"center\" %s> &nbsp %d", color, bit[0]);
-	if (bit.size() == 4) {
-		(bit[3] != -1) ? bit2.Format(L", %d...%d</td>\n", bit[2], bit[3]) :
-			bit2.Format(L", %d</td>\n", bit[2]);
-	}
-	result.Format(L"%s%s", result, bit2);
-
-	return result;
-}
-
-CString CReport::getComment(const CString& comment, const vector <CString>& error) {
-	CString result;
-	CString color;
-	CString tmp = comment;
-	tmp.Replace(L"\n", L"\n\t\t\t\t\t\t\t\t\t\t\t");
-	findRemark(error, errRemarks[6]) ? color = L"bgcolor = \"#FDFCD0\"" : color = L"";
-	result.Format(L"              <td align=\"center\" %s> &nbsp %s</td>\n", color, tmp);
+	color ? result = L"bgcolor = \"#FDFCD0\"" : result = L"";
+	result.Format(L"\t\t\t\t<td align=\"center\" %s> &nbsp %s</td>\n", result, field);
 	return result;
 }
 
@@ -433,35 +394,35 @@ void CReport::writeTxtParam(ofstream& file, const signalData& signal, const shee
 			buffer.Format(_T("\t SET=%d\n"), info.np);
 		file << CT2A(buffer);
 
-		int max = (signal.bit[1] == -1 ? signal.bit[0] : signal.bit[1]);
+		int max = (signal.bit.vec[1] == -1 ? signal.bit.vec[0] : signal.bit.vec[1]);
 
 		// Запись номера слова и битов
-		if (signal.numWord.size() == 2) { 
+		if (signal.numWord.vec.size() == 2) { 
 			file << "\t MERGE\n";
-			buffer.Format(_T("\t\t WDADDR = %d,%d,%d\n"), signal.numWord[0], signal.bit[0], max);
+			buffer.Format(_T("\t\t WDADDR = %d,%d,%d\n"), signal.numWord.vec[0], signal.bit.vec[0], max);
 			file << CT2A(buffer);
-			max = (signal.bit[3] == -1) ? signal.bit[2] : signal.bit[3];
-			buffer.Format(_T("\t\t WDADDR = %d,%d,%d\n"), signal.numWord[1], signal.bit[2], max);
+			max = (signal.bit.vec[3] == -1) ? signal.bit.vec[2] : signal.bit.vec[3];
+			buffer.Format(_T("\t\t WDADDR = %d,%d,%d\n"), signal.numWord.vec[1], signal.bit.vec[2], max);
 			file << CT2A(buffer);
 			file << "\t END_MERGE\n";
 		}
 		else {
-			buffer.Format(_T("\t\t WDADDR = %d,%d,%d\n"), signal.numWord[0], signal.bit[0], max);
+			buffer.Format(_T("\t\t WDADDR = %d,%d,%d\n"), signal.numWord.vec[0], signal.bit.vec[0], max);
 			file << CT2A(buffer);
 		}
 
 		// Мин, макс, цср
-		if (signal.max != DBL_MIN && signal.csr != DBL_MIN) { 
+		if (signal.max.value != DBL_MIN && signal.csr.value != DBL_MIN) { 
 			file << "\t VALDESCR\n";
 			file << (signal.bitSign ? "\t\t SIGNED\n" : "\t\t UNSIGNED\n");
 
-			buffer.Format(_T("\t\t MIN = %lf\n"), signal.min);
+			buffer.Format(_T("\t\t MIN = %lf\n"), signal.min.value);
 			file << CT2A(buffer);
 
-			buffer.Format(_T("\t\t MAX = %lf\n"), signal.max);
+			buffer.Format(_T("\t\t MAX = %lf\n"), signal.max.value);
 			file << CT2A(buffer);
 
-			buffer.Format(_T("\t\t MSB = %lf\n"), signal.csr);
+			buffer.Format(_T("\t\t MSB = %lf\n"), signal.csr.value);
 			file << CT2A(buffer);
 
 			file << "\t END_VALDESCR\n";

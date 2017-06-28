@@ -47,7 +47,7 @@ void CTest::getErrors(sheetData* sheet, vector <errorSignal>& syntax, vector <er
 				// Проход по синтаксическим ошибкам
 				errorSignal tmp;
 				tmp.signal = &sheet->signals[i];
-				syntaxValue(sheet->signals[i].flags, tmp.error);
+				syntaxValue(sheet->signals[i], tmp.error);
 				sheet->signals[i].title[1].Trim();
 				correctTitle = syntaxTitle(sheet->signals[i].title, tmp.error);
 				
@@ -58,8 +58,8 @@ void CTest::getErrors(sheetData* sheet, vector <errorSignal>& syntax, vector <er
 				}
 
 				// Проход по семантическми ошибкам
-				simanticNumWord(sheet->signals[i].numWord, sheet->signals[i].flags.num, numRepit, tmp.error);
-				simanticTitle(sheet, sheet->signals[i].title[1], correctTitle, tmp.error);
+				simanticNumWord(sheet->signals[i].numWord, numRepit, tmp.error);
+				simanticTitle(sheet, (int)i, sheet->signals[i].title[1], correctTitle, tmp.error);
 				simanticValue(sheet->signals[i], tmp.error);
 				
 				CString prevTitle;
@@ -108,8 +108,8 @@ void CTest::checkNP(signalData& signal, const int& np, vector <errorSignal>& syn
 		tmp.error.push_back(L"Отсутствует номер набора параметров");
 	else {
 		// Минимально и максимальное значение должно соответствовать номер набора
-		if (!signal.flags.min && !signal.flags.max)
-			if (signal.min != np || signal.max != np)
+		if (!signal.min.flag && !signal.max.flag)
+			if (signal.min.value != np || signal.max.value != np)
 				tmp.error.push_back(L"Значение не соответствует значению в примечании");
 	}
 
@@ -129,12 +129,12 @@ void CTest::initRepiter(bool* num, bool** bits) {
 #pragma region Syntax
 
 // Проверка числовых параметров 
-void CTest::syntaxValue(const convertError& flags, vector <CString>& error) {
-	checkValueByFlag(L"№ слова", 0, flags.num, error);
-	checkValueByFlag(L"минимума", 2, flags.min, error);
-	checkValueByFlag(L"максимума", 3, flags.max, error);
-	checkValueByFlag(L"цср", 4, flags.csr, error);
-	checkValueByFlag(L"битов", 5, flags.bit, error);
+void CTest::syntaxValue(const signalData& signal, vector <CString>& error) {
+	checkValueByFlag(L"№ слова", 0, signal.numWord.flag, error);
+	checkValueByFlag(L"минимума", 2, signal.min.flag, error);
+	checkValueByFlag(L"максимума", 3, signal.max.flag, error);
+	checkValueByFlag(L"цср", 4, signal.csr.flag, error);
+	checkValueByFlag(L"битов", 5, signal.bit.flag, error);
 }
 
 // Проверка числовых параметров по набору флагов
@@ -184,18 +184,18 @@ bool CTest::syntaxTitle(const vector <CString>& title, vector <CString>& error) 
 #pragma region Simantic
 
 // Проверка номера слова
-void CTest::simanticNumWord(const vector <int>& num, const bool& flag, bool* repiter, vector <CString>& error) {
-	if (!flag) {
+void CTest::simanticNumWord(const intData& num, bool* repiter, vector <CString>& error) {
+	if (!num.flag) {
 		vector <CString> tmp;
 		tmp.push_back(errRemarks[0]);
-		for (size_t i = 0; i < num.size(); i++) {
+		for (size_t i = 0; i < num.vec.size(); i++) {
 			//if (!repiter[num[i] - 1])		// Поиск совпадений 
 				//tmp.push_back(_T("Слово с таким номером встречалось ранее на листе"));
 
-			if (num[i] > 32)	// Слово должно быть не больше 32
+			if (num.vec[i] > 32)	// Слово должно быть не больше 32
 				tmp.push_back(L"Значение номера слова должно быть меньше 32");
 			else
-				*(repiter + num[i] - 1) = false; // Отметка о том, что эти слово имеется на этом листе
+				*(repiter + num.vec[i] - 1) = false; // Отметка о том, что эти слово имеется на этом листе
 		}
 		if (tmp.size() > 1)
 			for (size_t i = 0; i < tmp.size(); i++)
@@ -204,9 +204,9 @@ void CTest::simanticNumWord(const vector <int>& num, const bool& flag, bool* rep
 }
 
 // Проверка наименований сигнала
-void CTest::simanticTitle(sheetData* sheet, const CString& title, const bool& flag, vector <CString>& error) {
+void CTest::simanticTitle(sheetData* sheet, const int& indx, const CString& title, const bool& flag, vector <CString>& error) {
 	if (flag) {
-		if (findRepiteInSheet(title, sheet)) {
+		if (findRepiteInSheet(title, sheet, indx)) {
 			error.push_back(errRemarks[1]);
 			error.push_back(L"Сигнал с таким обозначением присутсвует на этом листе");
 		}
@@ -215,34 +215,34 @@ void CTest::simanticTitle(sheetData* sheet, const CString& title, const bool& fl
 
 // Проверка минимального, максимального и цср
 void CTest::simanticValue(const signalData& signal, vector <CString>& error) {
-	if (!signal.flags.min && !signal.flags.max && !signal.flags.csr && !signal.flags.bit) {
+	if (!signal.min.flag && !signal.max.flag && !signal.csr.flag && !signal.bit.flag) {
 		int nBit = 0;
-		(signal.bit.size() == 4) ? nBit = (signal.bit[1] - signal.bit[0]) + (signal.bit[3] - signal.bit[2]) + 2 :
-									nBit = (signal.bit[1] - signal.bit[0]) + 1;
+		(signal.bit.vec.size() == 4) ? nBit = (signal.bit.vec[1] - signal.bit.vec[0]) + (signal.bit.vec[3] - signal.bit.vec[2]) + 2 :
+									nBit = (signal.bit.vec[1] - signal.bit.vec[0]) + 1;
 
 		// Выделение бита под знак, если он присутствует
 		if (signal.bitSign) nBit--;
 
-		double nMin = signal.csr;
+		double nMin = signal.csr.value;
 		for (int i = 1; i <= nBit; i++)
 			nMin = nMin / 2;
 
-		double nMax = (signal.csr * 2) - nMin;	
+		double nMax = (signal.csr.value * 2) - nMin;	
 
-		if (signal.max - nMax > 0) {
+		if (signal.max.value - nMax >= 2) {
 			error.push_back(errRemarks[3]);
 			error.push_back(L"Нельзя упаковать данное значение");
 		}
-		else if (((abs(signal.min) > (nMax + nMin)) || (abs(signal.min) < nMin)) && signal.min != 0) {
+		else if (((abs(signal.min.value) > (nMax + nMin)) || (abs(signal.min.value) < nMin)) && signal.min.value != 0) {
 			error.push_back(errRemarks[2]);
 			error.push_back(L"Нельзя упаковать данное значение");
 		}
 
-		if ((signal.min < 0) && !signal.bitSign) {
+		if ((signal.min.value < 0) && !signal.bitSign) {
 			error.push_back(errRemarks[2]);
 			error.push_back(L"Не может быть отрицательным числом или не верно задан знаковый бит в поле \"Примечание\"");
 		}
-		else if ((signal.min >= 0) && signal.bitSign) {
+		else if ((signal.min.value >= 0) && signal.bitSign) {
 			error.push_back(errRemarks[2]);
 			error.push_back(L"Должно быть отрицательным числом или не верно задан знаковый бит в поле \"Примечание\"");
 		}
@@ -252,16 +252,16 @@ void CTest::simanticValue(const signalData& signal, vector <CString>& error) {
 // Проверка используемых разрядов
 void CTest::simanticBits(const signalData& signal, const CString& prevTitle, bool** repiter, vector <CString>& error) {
 	// Кол-во № слов должно совпадать с кол-вами интервалов исп. разрядов
-	if (!signal.flags.num && !signal.flags.bit) {
-		if (signal.numWord.size() * 2 == signal.bit.size()) {
-			if (!checkCrossBits(signal.bit, signal.numWord, repiter) && !checkTitle(signal.title[0], prevTitle)) {
+	if (!signal.numWord.flag && !signal.bit.flag) {
+		if (signal.numWord.vec.size() * 2 == signal.bit.vec.size()) {
+			if (!checkCrossBits(signal.bit.vec, signal.numWord.vec, repiter) && !checkTitle(signal.title[0], prevTitle)) {
 				error.push_back(errRemarks[5]);
 				error.push_back(L"Бит(ы) перекрывает(ют)ся");
 			}
 		}
 		else {
 			error.push_back(errRemarks[5]);
-			(signal.numWord.size() == 1) ? error.push_back(L"Должен быть один интервал") : error.push_back(L"Должно быть два интервала");
+			(signal.numWord.vec.size() == 1) ? error.push_back(L"Должен быть один интервал") : error.push_back(L"Должно быть два интервала");
 		}
 	}
 }
@@ -301,9 +301,9 @@ bool CTest::checkCrossBits(const vector <int>& bits, const vector <int>& numWord
 }
 
 // Поиск повторений идентификатора на листе
-bool CTest::findRepiteInSheet(const CString& field, sheetData* sheet) {
+bool CTest::findRepiteInSheet(const CString& field, sheetData* sheet, const int& start) {
 	int result = 0;
-	for (size_t i = 0; i < sheet->signals.size(); i++)
+	for (size_t i = start; i < sheet->signals.size(); i++)
 		if (sheet->signals[i].title[1].Compare(field) == 0)
 			result++;
 

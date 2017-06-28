@@ -10,27 +10,30 @@ using namespace std;
 
 #define RESERVE_SIGNAL L"Резерв"
 #define REMARKS_SIZE 7
-// Флаги ошибки преобразования данных из ячейки
-struct convertError {
-	bool num = false;	// Для номера слова
-	bool min = false;	// Минимум
-	bool max = false;	// Максимум
-	bool csr = false;	// Цср
-	bool bit = false;	// Для битов
+
+// Хранение номера слова и битов
+struct intData {
+	vector <int> vec;	// Значение
+	CString field;		// Ячейка в исходном виде
+	bool flag = false;	// Флаг наличия ошибки при конвертации
+};
+
+// Хранение мин, макс и цср
+struct doubleData {
+	double value = DBL_MIN;	// Значение
+	CString field;			// Ячейка в исходном виде
+	bool flag = false;		// Флаг наличия ошибки при конвертации
 };
 
 //	Данные сигнала
 struct signalData {
-	vector <int> numWord;						// Номера слов
+	intData numWord;							// Номера слов
 	vector <CString> title = { L"", L""};		// Название параметра и идентификатор
 	CString dimension;							// Размерность
-	double min = DBL_MIN, max = DBL_MIN,		// Мин, макс
-			csr = DBL_MIN;						// Цср
-	vector <int> bit;							// Используемые разряды
+	doubleData min, max, csr;					// Мин, макс, цср
+	intData bit;								// Используемые разряды
 	CString comment;							// Примечание
 	bool bitSign = false;						// Флаг наличия знака
-
-	convertError flags;						// Флаги ошибки преобразования данных ячейки в числа
 };
 
 // Лист

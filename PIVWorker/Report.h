@@ -24,6 +24,12 @@ struct sheetInfo {
 	bool bPK;	// Нужно ли устанавливать номер подкадра
 };
 
+// Информация о наборе ошибок
+struct errorInfo {
+	vector <errorSignal> error;	// Набор ошибок (синтаксических, семантических или предупреждений)
+	CString folder;				// Папка сохранения
+};
+
 // Класс генерации отчета
 class CReport {
 public:
@@ -44,13 +50,8 @@ private:
 	void writeBook(ofstream& file, list <errorSet>::iterator& it);		// Запись всех ошибок из книги
 	void writeSheets(ofstream& file, list <errorSet>::iterator& it);	// Запись всех ошибок с листов 
 	CString writeErrors(sheetData* sheet, const vector <errorSignal>& errors, const CString& folder, const CString& bookName);	// Запись ошибок с одного листа
-	void writeSignal(ofstream& file, const errorSignal& set);	// Запись сигнала
-
-	CString getNumWord(const vector <int>& numWord, const vector <CString>& error);
-	CString getTitle(const vector <CString>& title, const vector <CString>& error);
-	CString getDouble(const double& value, const vector <CString>& error, const CString& remark);
-	CString getComment(const CString& comment, const vector <CString>& error);
-	CString getBit(const vector <int>& bit, const vector <CString>& error);
+	void writeSignal(ofstream& file, const errorSignal& set);		// Запись сигнала
+	CString writeParam(const CString& field, const bool& color);	// Запись параметра сигнала
 
 	// Вспомогательные функции
 	void errorTable(ofstream& file);				// Таблица с общей информацией о количестве ошибок
@@ -60,7 +61,6 @@ private:
 
 	bool findRemark(const vector <CString>& error, const CString& remark);	// Найти строку заголовка в ошибках
 	bool IsRemark(const CString& field);	// Является ли строка ошибкой или заголовком
-	void hightlightError(ofstream& file, const vector <int>& light, const int& indx, const CString& field);	// Подсветка нужного параметра
 
 	// ГЕНЕРАЦИЯ TXT ФАЙЛОВ
 	void writeTxtParam(ofstream& file, const signalData& signal, const sheetInfo& info);	// Запись сигнала в txt файл*/

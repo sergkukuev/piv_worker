@@ -79,7 +79,7 @@ void CReaderExcel::getSignals(vector <signalData>& signals, CWorkExcel& work) {
 		// Чтение параметров одного сигнала
 		column = header.adress[header.iNumWord];
 		merge = work.cPrevEmpty(row, column);
-		signal.numWord = getNumWord(work.cellValue(row, column), signal.flags.num);
+		signal.numWord = getNumWord(work.cellValue(row, column));
 		
 		column = header.adress[header.iName];	row = i;
 		merge = work.cNextEmpty(row, column) + work.cPrevEmpty(row, column);
@@ -94,7 +94,7 @@ void CReaderExcel::getSignals(vector <signalData>& signals, CWorkExcel& work) {
 		getMinMaxCsr(signal, work, row);	
 		
 		column = header.adress[header.iBits];
-		signal.bit = getBits(work.cellValue(row, column), signal.flags.bit);
+		signal.bit = getBits(work.cellValue(row, column));
 
 		signal.comment = getComment(work, row, merge, signal.bitSign);
 
@@ -108,72 +108,83 @@ void CReaderExcel::getSignals(vector <signalData>& signals, CWorkExcel& work) {
 }
 
 // Получить номера слов из ячейки в числа
-vector <int> CReaderExcel::getNumWord(const CString& field, bool& flag) {
+intData CReaderExcel::getNumWord(const CString& field) {
+	intData result;
 	CString numeric = field;
 	int posDot = numeric.Find(_T(','));
-	vector <int> result;
-	result.push_back(-1);
+	vector <int> vec;
+	vec.push_back(-1);
 
 	if (posDot == -1) {
 		numeric.Trim();
-		result[0] = getInt(numeric, flag);
+		vec[0] = getInt(numeric, result.flag);
 	}
 	else {
-		result.push_back(-1);
+		vec.push_back(-1);
 		CString numeric2 = numeric;	
 		numeric.Delete(posDot, numeric.GetLength());	// Первое число
 		numeric.Trim();
-		result[0] = getInt(numeric, flag);
+		vec[0] = getInt(numeric, result.flag);
 
 		numeric2.Delete(0, posDot + 1);					// Второе число
 		numeric2.Trim();
-		result[1] = getInt(numeric2, flag);
+		vec[1] = getInt(numeric2, result.flag);
 	}
+
+	result.vec = vec;
+	result.field = field;
 	return result;
 }
 
 // Получить значения мин, макс и цср
 void CReaderExcel::getMinMaxCsr(signalData& signal, CWorkExcel& work, const long& row) {
 	long column = header.adress[header.iMin];
-	signal.min = getDouble(work.cellValue(row, column), signal.flags.min);
+	signal.min.field = work.cellValue(row, column);
+	signal.min.value = getDouble(signal.min.field, signal.min.flag);
 
 	column = header.adress[header.iMax];
-	signal.max = getDouble(work.cellValue(row, column), signal.flags.max);
+	signal.max.field = work.cellValue(row, column);
+	signal.max.value = getDouble(signal.max.field, signal.max.flag);
 
 	column = header.adress[header.iCSR];
-	signal.csr = getDouble(work.cellValue(row, column), signal.flags.csr);
+	signal.csr.field = work.cellValue(row, column);
+	signal.csr.value = getDouble(signal.csr.field, signal.csr.flag);
 
 	// Сброс флагов, если одновременно все параметры пусты
-	if (signal.min == DBL_MIN && signal.max == DBL_MIN && signal.csr == DBL_MIN) {
-		signal.flags.min = false;
-		signal.flags.max = false;
-		signal.flags.csr = false;
+	if (signal.min.value == DBL_MIN && signal.max.value == DBL_MIN && signal.csr.value == DBL_MIN) {
+		signal.min.flag = false;
+		signal.max.flag = false;
+		signal.csr.flag = false;
 	}
 }
 
 // Перевод из используемых разрядов из строки в числа
-vector <int> CReaderExcel::getBits(const CString& field, bool& flag) {
+intData CReaderExcel::getBits(const CString& field) {
+	intData result;
 	CString bits = field;
 	int posDot = bits.Find(_T(','));
-	vector <int> result;
+	vector <int> vec;
 
 	// Для одного промежутка
 	if (posDot == -1)
-		result = stepGetBits(bits, flag);
+		vec = stepGetBits(bits, result.flag);
 	else { // Для двух промежутков
 		CString bits2 = bits;
 		bits2.Delete(0, posDot + 1);
 		bits.Delete(posDot, bits.GetLength());
 		bits.Trim();	bits2.Trim();
 
-		result = stepGetBits(bits, flag);
-		result[1] = -1;
-		result.resize(4);
+		vec = stepGetBits(bits, result.flag);
+		vec[1] = -1;
+		vec.resize(4);
 
-		vector <int> result2 = stepGetBits(bits2, flag);
-		for (size_t i = 0; i < result2.size(); i++)
-			result[i + 2] = result2[i];
+		vector <int> vec2 = stepGetBits(bits2, result.flag);
+		for (size_t i = 0; i < vec2.size(); i++)
+			vec[i + 2] = vec2[i];
 	}
+
+	result.field = field;
+	result.vec = vec;
 	return result;
 }
 
