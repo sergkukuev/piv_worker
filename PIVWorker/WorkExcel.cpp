@@ -175,26 +175,61 @@ bool CWorkExcel::findCell(const CString& field, Cell& cell) {
 	return false;
 }
 
-// Кол-во пустых ячеек по стобцам
-long CWorkExcel::getMerge(long& row, const long& column) {
+// Кол-во пустых ячеек после 
+long CWorkExcel::cPrevEmpty(long& row, const long& column) {
 	CString field = cellValue(row, column);
-	long tmpRow = row;
-	long result = 1;
+	long result = 0;
 
 	// Ищем первое непустое значение в таблице, выше ячейки
-	while (field.IsEmpty() && tmpRow > first.row) {
-		tmpRow--;
-		field = cellValue(tmpRow, column);
+	while (field.IsEmpty() && row > first.row) {
+		row--; result++;
+		field = cellValue(row, column);
 	}
-	row = tmpRow;	tmpRow++;
-	if (tmpRow <= last.row)
-		field = cellValue(tmpRow, column);
+
+	return result;
+}
+
+// Кол-во пустых ячеек после 
+long CWorkExcel::cNextEmpty(const long& row, const long& column) {
+	CString field = cellValue(row + 1, column);
+	long result = 1, tmpRow = row + 1;
+
 	// Идем вниз до первого непустого значения в таблице 
 	while (field.IsEmpty() && tmpRow < last.row) {
 		tmpRow++; result++;
 		field = cellValue(tmpRow, column);
-	} 
+	}
+
 	if (tmpRow == last.row) result++;
 
 	return result;
+}
+
+// Количество слитых ячеек
+long CWorkExcel::getMerge(long& row, const long& column) {
+	CString cell;
+	cell.Format(_T("%s%d"), longToChar(column), row);
+	
+	CRange range = sheet.get_Range(COleVariant(cell), COleVariant(cell));
+	range = range.get_MergeArea();
+	range = range.get_Rows();
+	row = range.get_Row();
+
+	return range.get_Count();
+}
+
+// Преобразование long к char
+CString CWorkExcel::longToChar(const long& column) {
+	CString result;
+	(column <= 26) ? result.Format(L"%c", static_cast<char>(column + 64)) : stepLongToChar(column, result);
+	return result;
+}
+
+// Если в обозначении ячейки уже больше одной буквы
+void CWorkExcel::stepLongToChar(const long& column, CString& result) {
+	long iA = column / 26;
+	long iB = column % 26;
+
+	if (iB == 0)	iB = 26;
+	result.Format(L"%s%s%s", result, longToChar(iA), static_cast<char>(iB + 64));
 }

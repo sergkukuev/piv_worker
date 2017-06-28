@@ -60,10 +60,12 @@ public:
 	int npValue(const Header& head);	// Получение номера набора
 	int pkValue(const Header& head);	// Получение значения номера подкадра			
 
-	VARIANT cellValue(const long& row, const long& column);	// Получение значения ячейки
-	VARIANT cellValue(const Cell& cell);					// Перегрузка
-	long getMerge(long& row, const long& column);			// Кол-во пустых ячеек по стобцам
-	bool findHeader(Header& header);						// Поиск заголовков на текущем листе
+	VARIANT cellValue(const long& row, const long& column);		// Получение значения ячейки
+	VARIANT cellValue(const Cell& cell);						// Перегрузка
+	long cPrevEmpty(long& row, const long& column);				// Количество пустых ячеек до
+	long cNextEmpty(const long& row, const long& column);		// Количество пустых ячеек после 
+	long getMerge(long& row, const long& column);				// Кол-во слитых ячеек
+	bool findHeader(Header& header);							// Поиск заголовков на текущем листе
 
 private:
 	CApplication app;	// Приложение excel
@@ -76,5 +78,7 @@ private:
 	Cell first, last;		// Индексы первой и последней ячейки
 
 	bool findCell(const CString& field, Cell& cell);	// Поиск ячейки по содержимому, в противном cell(-1,-1)
+	CString longToChar(const long& column);				// Преобразование long к char
+	void stepLongToChar(const long& column, CString& result);	// Если в обозначении ячейки уже больше одной буквы
 };
 

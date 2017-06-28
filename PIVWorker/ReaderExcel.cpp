@@ -78,11 +78,11 @@ void CReaderExcel::getSignals(vector <signalData>& signals, CWorkExcel& work) {
 
 		// Чтение параметров одного сигнала
 		column = header.adress[header.iNumWord];
-		merge = work.getMerge(row, column);
+		merge = work.cPrevEmpty(row, column);
 		signal.numWord = getNumWord(work.cellValue(row, column), signal.flags.num);
 		
 		column = header.adress[header.iName];	row = i;
-		merge = work.getMerge(row, column);
+		merge = work.cNextEmpty(row, column) + work.cPrevEmpty(row, column);
 		signal.title[0] = work.cellValue(row, column);
 
 		column = header.adress[header.iSignal];
@@ -98,8 +98,8 @@ void CReaderExcel::getSignals(vector <signalData>& signals, CWorkExcel& work) {
 
 		signal.comment = getComment(work, row, merge, signal.bitSign);
 
-		bool bEmpty = isEmpty(work, row);	// Проверка на пустую строку
-		bool bRemark = isRemark(work, row);	// Проверка на примечание
+		bool bEmpty = isEmpty(work, row);		// Проверка на пустую строку
+		bool bRemark = isRemark(work, row);		// Проверка на примечание
 
 		// Добавление сигнала
 		if (!bEmpty && !bRemark)
@@ -258,17 +258,19 @@ int CReaderExcel::getInt(const CString& field, bool& flag) {
 // Чтение примечания
 CString CReaderExcel::getComment(CWorkExcel& work, const long& row, const int& size, bool& flag) {
 	long column = header.adress[header.iComment];
+	long tmpRow = row;
+	int merge = work.getMerge(tmpRow, column);
 	CString result;
 
-	for (int i = 0; i < size; i++) {
-		CString tmp = work.cellValue(row + i, column);
+	(size > merge) ? merge = size : merge = merge;
+	for (int i = 0; i < merge; i++) {
+		CString tmp = work.cellValue(tmpRow + i, column);
 		tmp.Trim();
 		if (!tmp.IsEmpty()) {
 			(tmp.Find(SIGN_FIELD) != -1) ? flag = true : flag = flag;
-			result += L"\n" + tmp;
+			result.IsEmpty() ? result = tmp : result += L'\n' + tmp;
 		}
 	}
-		
 	return result;
 }
 
