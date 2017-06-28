@@ -87,7 +87,6 @@ private:
 
 	CString nameFromPath(const CString& path);	// Выделение имени из файла
 	bool findBook(const CString& pathToExcel);	// Поиск индекса протокола в открытых ПИВ (в противном -1)
-	int findReportBook(const CString& name);	// Поиск индекса протокола в базе ошибок (в противном -1)
 
 	bool getStatusThread(const HANDLE& h);	// Проверка доступности потока
 	void closeThread(HANDLE& h);			// Закрытие потока

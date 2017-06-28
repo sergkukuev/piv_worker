@@ -33,7 +33,7 @@ void CReport::makeReport(list <bookData>& books, list <errorSet>& Db) {
 
 	errorTable(file);
 
-	if (amount.withError != 0)
+	if (amount.error != 0)
 		startWrite(file, Db);
 	else
 		file << "\t\t<h2>Ошибок и замечаний нет!</h2>\n";
@@ -407,7 +407,7 @@ void CReport::writeTxtParam(ofstream& file, const signalData& signal, const shee
 			file << "\t END_MERGE\n";
 		}
 		else {
-			buffer.Format(_T("\t\t WDADDR = %d,%d,%d\n"), signal.numWord.vec[0], signal.bit.vec[0], max);
+			buffer.Format(_T("\t WDADDR = %d,%d,%d\n"), signal.numWord.vec[0], signal.bit.vec[0], max);
 			file << CT2A(buffer);
 		}
 

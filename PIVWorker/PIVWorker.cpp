@@ -285,12 +285,11 @@ void CPIVWorker::Close() {
 
 #pragma endregion
 
-/*
 #pragma region TXT
 
 // Создание txt файлов
 void CPIVWorker::CreateTxt(CString path) {
-	pathReport = path;
+	this->path = path;
 	StartTxt();
 }
 
@@ -299,7 +298,7 @@ void CPIVWorker::CreateTxt() { StartTxt(); }
 
 // // Начало создания txt файлов
 void CPIVWorker::StartTxt() {
-	if (pathReport.IsEmpty())
+	if (path.IsEmpty())
 		AfxMessageBox(_T("Папка для сохранения txt файлов не указана!"));
 	else {
 		if (getStatusThread(primary)) {
@@ -316,22 +315,13 @@ void CPIVWorker::StartTxt() {
 void CPIVWorker::GenerateTxt() {
 	CReport report;
 	CString msg;
-	report.getTxt(books,pathReport, bNumPK);
-	msg.Format(_T("Создание txt файлов завершено!\n\nРасположение: %s\nОткрыть для просмотра?"), pathReport);
+	report.getTxt(books,path, bNumPK);
+	msg.Format(_T("Создание txt файлов завершено!\n\nРасположение: %s\nОткрыть для просмотра?"), path);
 	if (AfxMessageBox(msg, MB_YESNO | MB_ICONQUESTION) == IDYES);
-		ShellExecute(0, L"open", pathReport, NULL, NULL, SW_NORMAL);
+		ShellExecute(0, L"open", path, NULL, NULL, SW_NORMAL);
 }
 
 #pragma endregion
-
-// Поиск индекса прочитанной книги в базе ошибок
-int CPIVWorker::findReportBook(CString name) {
-	for (size_t i = 0; i < errorDB.syntax.size(); i++)
-		if (name.Compare(errorDB.syntax[i].name) == 0)
-			return i;
-
-	return -1;
-} */
 
 // Поиск индекса прочитанной книги в базе книг
 bool CPIVWorker::findBook(const CString& pathToExcel) {
@@ -357,8 +347,8 @@ void Thread(CPIVWorker& piv) {
 		piv.Test();
 	else if (piv.hCmd == piv.command.report)
 		piv.MakeReport();
-	//else if (piv.hCmd == piv.command.txt)
-		//piv.GenerateTxt();
+	else if (piv.hCmd == piv.command.txt)
+		piv.GenerateTxt();
 	else if (piv.hCmd == piv.command.close)
 		piv.Close();
 	else

@@ -237,7 +237,7 @@ void CMainDlg::OnPivOpen()
 // Закрытие протокола
 void CMainDlg::OnPivClose()
 {
-	/*vector <CString> del;	// Пути всех удаленных пив
+	vector <CString> del;	// Пути всех удаленных пив
 	int nCount = lsBox->GetSelCount();	// Получите индексы всех выбранных элементов.
 	CArray<int, int> sel;
 
@@ -251,7 +251,7 @@ void CMainDlg::OnPivClose()
 		lsBox->DeleteString(i);
 	}
 	piv.CloseExcel(del);
-	setMenu(3);*/
+	setMenu(3);
 }
 
 // Анализировать протоколы
@@ -288,13 +288,13 @@ void CMainDlg::OnPivReport()
 // Открыть папку с отчетом
 void CMainDlg::OnPivRepFolder()
 {
-	//ShellExecute(0, L"Explore", folder, NULL, NULL, SW_NORMAL);
+	ShellExecute(0, L"Explore", folder, NULL, NULL, SW_NORMAL);
 }
 
 // Генерировать txt отчет
 void CMainDlg::OnPivTxtGenerate()
 {
-	/*BROWSEINFO	bi;
+	BROWSEINFO	bi;
 	TCHAR	szDisplayName[MAX_PATH];
 	LPITEMIDLIST	pidl;
 
@@ -318,7 +318,7 @@ void CMainDlg::OnPivTxtGenerate()
 	else
 		piv.setStatusNumPK(true);
 
-	piv.CreateTxt(folder);*/
+	piv.CreateTxt(folder);
 }
 
 // Информация о приложении
@@ -331,11 +331,11 @@ void CMainDlg::OnAppInform()
 // Закрыть все протоколы
 void CMainDlg::OnPivCloseAll()
 {
-	/*vector <CString> tmp = path;
+	vector <CString> tmp = path;
 	path.clear();
 	lsBox->ResetContent();
 	piv.CloseExcel(tmp);
-	setMenu(3);*/
+	setMenu(3);
 }
 
 #pragma endregion
