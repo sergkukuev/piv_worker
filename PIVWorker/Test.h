@@ -24,16 +24,17 @@ private:
 	void initRepiter(bool* num, bool** bits);	// Инициализация репитеров
 	
 	// Синтаксический анализ
-	void syntaxValue(const signalData& signal, vector <CString>& error);			// Проверка числовых параметров
+	bool syntaxValue(const signalData& signal, vector <CString>& error);			// Проверка числовых параметров
+	bool syntaxBits(const intData& bits, vector <CString>& error);					// Проверка используемых разрядов
 	bool syntaxTitle(const vector <CString>& title, vector <CString>& error);		// Проверка синтаксиса идентификатора
 
 	void checkValueByFlag(const CString& field, const int& indx, const bool& flag, vector <CString>& error); // Проверка числовых параметров по набору флагов
 
 	// Семантический анализ
-	void simanticNumWord(const intData& numWord, bool* repiter, vector <CString>& error);		// Проверка номера слова
-	void simanticTitle(sheetData* sheet, const int& indx, const CString& title, const bool& flag, vector <CString>& error);				// Проверка наименований сигнала
-	void simanticValue(const signalData& signal, vector <CString>& error);						// Проверка минимального, максимального и цср
-	void simanticBits(const signalData& signal, const CString& prevTitle, bool** repiter, vector <CString>& error);		// Проверка используемых разрядов
+	bool simanticNumWord(const intData& numWord, bool* repiter, vector <CString>& error);		// Проверка номера слова
+	bool simanticTitle(sheetData* sheet, const int& indx, const CString& title, const bool& flag, vector <CString>& error);				// Проверка наименований сигнала
+	bool simanticValue(const signalData& signal, vector <CString>& error);						// Проверка минимального, максимального и цср
+	bool simanticBits(const signalData& signal, const CString& prevTitle, bool** repiter, vector <CString>& error);		// Проверка используемых разрядов
 	
 	bool checkCrossBits(const vector <int>& bits, const vector <int>& numWord, bool** repiter); // Проверка перекрытия битов
 	bool checkTitle(const CString& next, const CString& prev);							// Проверка двух наименований на совпадение
