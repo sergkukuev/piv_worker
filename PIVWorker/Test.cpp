@@ -48,6 +48,7 @@ void CTest::getErrors(sheetData* sheet, vector <errorSignal>& syntax, vector <er
 				errorSignal tmp;
 				tmp.signal = &sheet->signals[i];
 				syntaxValue(sheet->signals[i].flags, tmp.error);
+				sheet->signals[i].title[1].Trim();
 				correctTitle = syntaxTitle(sheet->signals[i].title, tmp.error);
 				
 				if (!tmp.error.empty()) {
