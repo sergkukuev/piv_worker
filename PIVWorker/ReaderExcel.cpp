@@ -265,7 +265,7 @@ CString CReaderExcel::getComment(CWorkExcel& work, const long& row, const int& s
 	(size > merge) ? merge = size : merge = merge;
 	for (int i = 0; i < merge; i++) {
 		CString tmp = work.cellValue(tmpRow + i, column);
-		tmp.Trim();
+		tmp.Trim();	
 		if (!tmp.IsEmpty()) {
 			(tmp.Find(SIGN_FIELD) != -1) ? flag = true : flag = flag;
 			result.IsEmpty() ? result = tmp : result += L'\n' + tmp;

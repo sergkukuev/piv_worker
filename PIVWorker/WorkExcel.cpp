@@ -191,16 +191,17 @@ long CWorkExcel::cPrevEmpty(long& row, const long& column) {
 
 // Кол-во пустых ячеек после 
 long CWorkExcel::cNextEmpty(const long& row, const long& column) {
-	CString field = cellValue(row + 1, column);
-	long result = 1, tmpRow = row + 1;
+	CString field = cellValue(row, column);
+	long result = 0, tmpRow = row;
 
 	// Идем вниз до первого непустого значения в таблице 
-	while (field.IsEmpty() && tmpRow < last.row) {
+	do {
 		tmpRow++; result++;
-		field = cellValue(tmpRow, column);
-	}
+		if (tmpRow <= last.row) 
+			field = cellValue(tmpRow, column);
+	} while (field.IsEmpty() && tmpRow <= last.row);
 
-	if (tmpRow == last.row) result++;
+	//?????????if (field.IsEmpty() && tmpRow == last.row) result++;
 
 	return result;
 }
