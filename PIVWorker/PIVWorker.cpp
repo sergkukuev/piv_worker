@@ -43,7 +43,7 @@ struct MyData {
 
 MyData mD;
 
-// инициализация CPIVWorkerApp
+// инициализация CPIVWorker
 int main() {
 	int nRetCode = 0;
 
@@ -90,6 +90,12 @@ CPIVWorker::~CPIVWorker() { CloseExcel(); }
 // Установка статуса записи номера подкардра
 void CPIVWorker::setStatusNumPK(const bool& status) { bNumPK = status; }
 
+// Получения статуса потока
+bool CPIVWorker::getStatusThread(CString& status) { 
+	status = hStatus;
+	return getStatusThread(primary);
+};
+
 #pragma region READ
 
 // Получение путей для чтения
@@ -108,11 +114,14 @@ void CPIVWorker::ReadExcel(const CString& pathToExcel) {
 void CPIVWorker::StartRead() {
 	if (getStatusThread(primary)) {
 		hCmd = command.open;
+		hStatus = L"Выполняется чтение протоколов ИВ...";
 		mD.object = this;
 		primary = CreateThread(NULL, 0, PrimaryThread, &mD, 0, 0);
 	}
-	else
-		AfxMessageBox(_T("Поток занят! Подождите окончания процесса!"));
+	else {
+		hStatus = THREAD_BUSY;
+		AfxMessageBox(THREAD_BUSY);
+	}
 }
 
 // Чтение ПИВ
@@ -123,9 +132,11 @@ void CPIVWorker::Read() {
 			if (!findBook(buffer[i]))
 				books.push_back(reader.getBook(buffer[i]));
 	
-		AfxMessageBox(_T("Чтение завершено успешно!"), MB_ICONINFORMATION);
+		AfxMessageBox(L"Чтение завершено успешно!", MB_ICONINFORMATION);
+		hStatus = L"Чтение протоколов ИВ завершено...";
 	}
 	catch (MyException &exc) {
+		hStatus = L"Ошибка чтения протоколов ИВ...";
 		AfxMessageBox(exc.GetMsg(), MB_ICONERROR);
 	}
 
@@ -142,11 +153,15 @@ void CPIVWorker::Read() {
 void CPIVWorker::TestExcel() {
 	if (getStatusThread(primary)) {
 		hCmd = command.test;
+		hStatus = L"Выполняется проверка протоколов ИВ...";
 		mD.object = this;
 		primary = CreateThread(NULL, 0, PrimaryThread, &mD, 0, 0);
 	}
-	else
-		AfxMessageBox(_T("Поток занят! Подождите окончания процесса!"));
+	else {
+		hStatus = THREAD_BUSY;
+		AfxMessageBox(THREAD_BUSY);
+	}
+		
 }
 
 /*// Проверка одной книги
@@ -180,9 +195,11 @@ void CPIVWorker::Test() {
 			CTest tester;	// класс проверки книг
 			Db = tester.Start(books);
 		}
-		AfxMessageBox(_T("Проверка протоколов завершена успешно!"), MB_ICONINFORMATION);
+		hStatus = L"Проверка протоколов ИВ завершена...";
+		AfxMessageBox(L"Проверка протоколов завершена успешно!", MB_ICONINFORMATION);
 	}
 	catch (MyException &exc) {
+		hStatus = L"При проверки протоколов ИВ возникла ошибка...";
 		AfxMessageBox(exc.GetMsg(), MB_ICONERROR);
 	}
 	closeThread(primary);
@@ -210,23 +227,34 @@ void CPIVWorker::StartReport()
 	else {
 		if (getStatusThread(primary)) {
 			hCmd = command.report;
+			hStatus = L"Подготовка отчета об ошибках...";
 			mD.object = this;
 			primary = CreateThread(NULL, 0, PrimaryThread, &mD, 0, 0);
 		}
-		else
-			AfxMessageBox(_T("Поток занят! Подождите окончания процесса!"));
+		else {
+			hStatus = THREAD_BUSY;
+			AfxMessageBox(THREAD_BUSY);
+		}
 	}
 }
 
 // Создание отчета
 void CPIVWorker::MakeReport() {
-	CReport report;
-	CString pathFile, msg;
-	report.getReport(books, Db, path);
-	pathFile.Format(_T("%s\\Отчет.html"), path);
-	msg.Format(_T("Создание отчета завершено!\n\nРасположение: %s\nОткрыть для просмотра?"), pathFile);
-	if (AfxMessageBox(msg, MB_YESNO | MB_ICONQUESTION) == IDYES)
-		ShellExecute(0, L"open", pathFile, NULL, NULL, SW_NORMAL);	
+	try {
+		CReport report;
+		CString pathFile, msg;
+		
+		report.getReport(books, Db, path);
+		pathFile.Format(_T("%s\\Отчет.html"), path);
+		msg.Format(_T("Создание отчета завершено!\n\nРасположение: %s\nОткрыть для просмотра?"), pathFile);
+		if (AfxMessageBox(msg, MB_YESNO | MB_ICONQUESTION) == IDYES)
+			ShellExecute(0, L"open", pathFile, NULL, NULL, SW_NORMAL);
+		hStatus = L"Создание отчета об ошибках завершено...";
+	}
+	catch (MyException &exc) {
+		hStatus = L"При создании отчета об ошибках возникла ошибка...";
+		AfxMessageBox(exc.GetMsg(), MB_ICONERROR);
+	}
 }
 
 #pragma endregion
@@ -258,10 +286,13 @@ void CPIVWorker::StartClose() {
 	if (getStatusThread(primary)) {
 		hCmd = command.close;
 		mD.object = this;
+		hStatus = L"Подготовка к закрытию протоколов ИВ...";
 		primary = CreateThread(NULL, 0, PrimaryThread, &mD, 0, 0);
 	}
-	else
-		AfxMessageBox(_T("Поток занят! Подождите окончания процесса!"));
+	else {
+		hStatus = THREAD_BUSY;
+		AfxMessageBox(THREAD_BUSY);
+	}
 }
 
 // Закрытие книг(и) ПИВ
@@ -281,6 +312,7 @@ void CPIVWorker::Close() {
 		buffer.clear();
 		buffer.shrink_to_fit();
 	}
+	hStatus = L"Закрытие протоколов завершено...";
 }
 
 #pragma endregion
@@ -299,26 +331,37 @@ void CPIVWorker::CreateTxt() { StartTxt(); }
 // // Начало создания txt файлов
 void CPIVWorker::StartTxt() {
 	if (path.IsEmpty())
-		AfxMessageBox(_T("Папка для сохранения txt файлов не указана!"));
+		AfxMessageBox(L"Папка для сохранения txt файлов не указана!");
 	else {
 		if (getStatusThread(primary)) {
 			hCmd = command.txt;
 			mD.object = this;
+			hStatus = L"Идет преобразование протоколов ИВ в txt формат...";
 			primary = CreateThread(NULL, 0, PrimaryThread, &mD, 0, 0);
 		}
-		else
-			AfxMessageBox(_T("Поток занят! Подождите окончания процесса!"));
+		else {
+			hStatus = THREAD_BUSY;
+			AfxMessageBox(THREAD_BUSY);
+		}
+			
 	}
 }
 
 // Начало генерации txt файлов 
 void CPIVWorker::GenerateTxt() {
-	CReport report;
-	CString msg;
-	report.getTxt(books,path, bNumPK);
-	msg.Format(_T("Создание txt файлов завершено!\n\nРасположение: %s\nОткрыть для просмотра?"), path);
-	if (AfxMessageBox(msg, MB_YESNO | MB_ICONQUESTION) == IDYES)
-		ShellExecute(0, L"open", path, NULL, NULL, SW_NORMAL);
+	try {
+		CReport report;
+		CString msg;
+		report.getTxt(books, path, bNumPK);
+		hStatus = L"Преобразование в txt завершено...";
+		msg.Format(L"Создание txt файлов завершено!\n\nРасположение: %s\nОткрыть для просмотра?", path);
+		if (AfxMessageBox(msg, MB_YESNO | MB_ICONQUESTION) == IDYES)
+			ShellExecute(0, L"open", path, NULL, NULL, SW_NORMAL);
+	}
+	catch (MyException &exc) {
+		hStatus = L"При преобразовании в txt возникла ошибка...";
+		AfxMessageBox(exc.GetMsg(), MB_ICONERROR);
+	}
 }
 
 #pragma endregion
@@ -351,8 +394,10 @@ void Thread(CPIVWorker& piv) {
 		piv.GenerateTxt();
 	else if (piv.hCmd == piv.command.close)
 		piv.Close();
-	else
-		AfxMessageBox(_T("Неопознанная команда!"), MB_ICONWARNING);
+	else {
+		AfxMessageBox(L"Неопознанная команда!", MB_ICONWARNING);
+		piv.hStatus = L"Неопознанная команда выполнения...";
+	}
 }
 
 // Проверка потока на доступность
@@ -370,6 +415,8 @@ void CPIVWorker::closeThread(HANDLE& h) {
 		CloseHandle(h);
 		h = NULL;
 	}
-	else
-		AfxMessageBox(_T("Не удалось закрыть поток! (Возможно он даже не открывался)"));
+	else {
+		hStatus = L"Неудачное закрытие потока, перезапустите приложение...";
+		AfxMessageBox(L"Не удалось закрыть поток. Он и не открывался.");
+	}
 }

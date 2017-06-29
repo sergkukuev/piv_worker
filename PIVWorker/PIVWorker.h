@@ -24,6 +24,8 @@
 // Про реализацию данного класса см. PIVWorker.cpp
 //
 
+#define THREAD_BUSY L"Поток занят! Подождите окончания процесса!"
+
 // команды
 struct cmd_set {
 	const int open = 0;		// открыть 
@@ -51,13 +53,14 @@ public:
 	//void TestExcel(const CString& pathToExcel);				// Проверка одной книги
 	//void TestExcel(const vector <CString>& pathToExcel);	// Проверка выбранных книг
 
-	void Report(const CString& path);		// Создание отчета об ошибках
-	void Report();					// (перегрузка)
+	void Report(const CString& path);	// Создание отчета об ошибках
+	void Report();						// (перегрузка)
 	
 	void CreateTxt(CString path);	// Создание txt файлов
 	void CreateTxt();				// (перегрузка)
 
 	void setStatusNumPK(const bool& status);	// Установка флага bNumPK
+	bool getStatusThread(CString& status);		// Получения статуса потока
 
 protected:
 	friend void Thread(CPIVWorker& piv);	// Дружественная функция для запуска определенной операции
@@ -65,10 +68,11 @@ protected:
 private:
 	const cmd_set command;	// Набор команд
 	int hCmd;	// Команда для потока (0 - открыть ПИВ, 1 - анализировать, 2 - отчет, 3 - txt, 4 - закрыть)
-	
+	CString hStatus = L"";	// Статус работы DLL
+
 	list <bookData> books;		// Данные о прочитанных ПИВ
 	vector <CString> buffer;	// Вектор временного хранения путей файлов
-	CString path;
+	CString path;				// Путь сохранения отчетов
 	list <errorSet> Db;			// База ошибок
 
 	bool bNumPK = false;		// Нужно ли устанавливать в txt подкадры

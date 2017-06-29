@@ -328,6 +328,8 @@ void CReport::setAmountError(list <errorSet>& db) {
 
 // Начало генерации txt файлов
 void CReport::getTxt(list <bookData>& books, const CString& pathToSave, const bool& bNumPK) {
+	if (pathToSave.IsEmpty())
+		throw EmptyPathException();
 	// Создание директории
 	path = pathToSave;
 	path.Format(L"%s\\Text", pathToSave);
