@@ -317,7 +317,7 @@ void CPIVWorker::GenerateTxt() {
 	CString msg;
 	report.getTxt(books,path, bNumPK);
 	msg.Format(_T("Создание txt файлов завершено!\n\nРасположение: %s\nОткрыть для просмотра?"), path);
-	if (AfxMessageBox(msg, MB_YESNO | MB_ICONQUESTION) == IDYES);
+	if (AfxMessageBox(msg, MB_YESNO | MB_ICONQUESTION) == IDYES)
 		ShellExecute(0, L"open", path, NULL, NULL, SW_NORMAL);
 }
 

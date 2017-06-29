@@ -8,9 +8,9 @@
 #endif
 
 #ifdef PIV_WORKER_EXPORTS
-#define PIV_WORKER_API __declspec(dllexport)
+#define PIV_DECLARE __declspec(dllimport)
 #else
-#define PIV_WORKER_API __declspec(dllimport)
+#define PIV_DECLARE __declspec(dllexport)
 #endif
 
 #include "StructPIV.h"		// структуры протоколов
@@ -33,7 +33,7 @@ struct cmd_set {
 	const int close = 4;	// закрыть
 };
 
-class PIV_WORKER_API CPIVWorker	{
+class PIV_DECLARE CPIVWorker	{
 public:
 	HANDLE primary;	// Основной поток
 
