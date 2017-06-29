@@ -7,12 +7,25 @@ CTest::CTest() {	}
 // Деструктор
 CTest::~CTest()	{	}
 
+// Проверки на ошибки одного протокола
+errorSet CTest::Start(bookData& book) {
+	errorSet result;
+	*result.book = book;
+	for (size_t j = 0; j < book.sheets.size(); j++) {
+		errorSheet tmp;
+		tmp.sheet = &book.sheets[j];
+		getErrors(&book.sheets[j], tmp.syntax, tmp.simantic);
+		getWarnings(&book.sheets[j], tmp.warning);
+		result.set.push_back(tmp);
+	}
+	return result;
+}
+
 // Проверка на все ошибки
 list <errorSet> CTest::Start(list <bookData>& books) {	
 	list <errorSet> errors;
-	list <bookData>::iterator it = books.begin();
 
-	for (it = books.begin(); it != books.end(); it++) {
+	for (list <bookData>::iterator it = books.begin(); it != books.end(); it++) {
 		errorSet error;
 		error.book = it;
 		for (size_t j = 0; j < it->sheets.size(); j++) {
@@ -367,8 +380,8 @@ bool CTest::findRepiteInSheet(const CString& field, sheetData* sheet, const int&
 	for (size_t i = start; i < sheet->signals.size(); i++)
 		if (sheet->signals[i].title[1].Compare(field) == 0)
 			result++;
-	(result > 1)? result = true : result = false;
-	return result;
+	(result > 1)? res = true : res = false;
+	return res;
 }
 
 #pragma endregion

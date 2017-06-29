@@ -14,6 +14,7 @@ public:
 	CTest();	// Конструктор
 	~CTest();	// Деструктор
 
+	errorSet Start(bookData& book);					// Проверка на ошибки одного протокола
 	list <errorSet> Start(list <bookData>& books);	// Проверка на все ошибки
 
 private:
