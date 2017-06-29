@@ -31,7 +31,8 @@ public:
 	~CReport();	// Деструктор
 
 	void getReport(list <bookData>& books, list <errorSet>& Db, const CString& pathToSave);	// Генерация отчета о ошибках
-	void getTxt(list <bookData>& books, const CString& pathToSave, const bool& bNumPK);			// Генерация txt файлов
+	void getTxt(list <bookData>& books, const CString& pathToSave, const bool& bNumPK);		// Генерация txt файлов
+	void getTxt(const bookData& book, const CString& pathToSave, const bool& bNumPK);		// Генерация txt для одного протокола
 
 private:
 	CString path;	// Путь для сохранения отчета
@@ -57,6 +58,7 @@ private:
 	bool IsRemark(const CString& field);	// Является ли строка ошибкой или заголовком
 
 	// ГЕНЕРАЦИЯ TXT ФАЙЛОВ
-	void writeTxtParam(ofstream& file, const signalData& signal, const sheetInfo& info);	// Запись сигнала в txt файл*/
+	void writeTxtParam(ofstream& file, const signalData& signal, const sheetInfo& info);	// Запись сигнала в txt файл
+	void Generate(const bookData& book, const bool& bNumPK);								// Генерация txt для книги
 };
 

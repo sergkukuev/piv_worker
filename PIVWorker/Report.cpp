@@ -326,6 +326,18 @@ void CReport::setAmountError(list <errorSet>& db) {
 
 #pragma region GenerateTxt
 
+// Начало генерации txt для одного протокола
+void CReport::getTxt(const bookData& book, const CString& pathToSave, const bool& bNumPK) {
+	if (pathToSave.IsEmpty())
+		throw EmptyPathException();
+	// Создание директории
+	path = pathToSave;
+	path.Format(L"%s\\Text", pathToSave);
+	CreateDirectory(path, NULL);
+
+	Generate(book, bNumPK);
+}
+
 // Начало генерации txt файлов
 void CReport::getTxt(list <bookData>& books, const CString& pathToSave, const bool& bNumPK) {
 	if (pathToSave.IsEmpty())
@@ -335,39 +347,47 @@ void CReport::getTxt(list <bookData>& books, const CString& pathToSave, const bo
 	path.Format(L"%s\\Text", pathToSave);
 	CreateDirectory(path, NULL);
 
+	// Обход по книгам
+	for (list <bookData>::iterator it = books.begin(); it != books.end(); it++)
+		Generate(*it, bNumPK);
+}
+
+// Генерация txt для книги
+void CReport::Generate(const bookData& book, const bool& bNumPK) {
+	CString tPath = path;
+	tPath.Format(L"%s\\%s", path, book.name);
+	CreateDirectory(tPath, NULL);
+
 	CString filePath = path;
-	filePath.Format(L"%s\\_ProtocolMain.txt", path);
+	filePath.Format(L"%s\\_ProtocolMain.txt", tPath);
 
 	// Открытие главного файла для записи
 	ofstream mainFile;
 	mainFile.open(filePath);
 
-	// Обход по книгам
-	for (list <bookData>::iterator it = books.begin(); it != books.end(); it++) {
-		// Обход по страницам
-		for (size_t i = 0; i < it->sheets.size(); i++) {
-			if (!it->sheets[i].error) { // Если нет на странице ошибок
-				ofstream tmpFile;
-				CString name;
-				sheetInfo info;
+	// Обход по страницам
+	for (size_t i = 0; i < book.sheets.size(); i++) {
+		if (!book.sheets[i].error) { // Если нет на странице ошибок
+			ofstream tmpFile;
+			CString name;
+			sheetInfo info;
 
-				info.np = it->sheets[i].np;
-				info.pk = it->sheets[i].pk;
-				info.bPK = bNumPK;
+			info.np = book.sheets[i].np;
+			info.pk = book.sheets[i].pk;
+			info.bPK = bNumPK;
 
-				// Создание txt файла для записи
-				name.Format(L"NP_%d_%s.txt", info.np, it->sheets[i].name);
-				filePath.Format(L"%s\\%s", path, name);
-				tmpFile.open(filePath);
-				mainFile << "#include \""; mainFile << CT2A(name); mainFile << "\"\n";
+			// Создание txt файла для записи
+			name.Format(L"NP_%d_%s.txt", info.np, book.sheets[i].name);
+			filePath.Format(L"%s\\%s", tPath, name);
+			tmpFile.open(filePath);
+			mainFile << "#include \""; mainFile << CT2A(name); mainFile << "\"\n";
 
-				for (size_t j = 0; j < it->sheets[i].signals.size(); j++) 
-					writeTxtParam(tmpFile, it->sheets[i].signals[j], info);	// Запись параметра
+			for (size_t j = 0; j < book.sheets[i].signals.size(); j++)
+				writeTxtParam(tmpFile, book.sheets[i].signals[j], info);	// Запись параметра
 
-				tmpFile.close();
-			}
-			else continue;
+			tmpFile.close();
 		}
+		else continue;
 	}
 	mainFile.close();
 }
