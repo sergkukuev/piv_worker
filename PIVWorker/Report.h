@@ -24,12 +24,6 @@ struct sheetInfo {
 	bool bPK;	// Нужно ли устанавливать номер подкадра
 };
 
-// Информация о наборе ошибок
-struct errorInfo {
-	vector <errorSignal> error;	// Набор ошибок (синтаксических, семантических или предупреждений)
-	CString folder;				// Папка сохранения
-};
-
 // Класс генерации отчета
 class CReport {
 public:
