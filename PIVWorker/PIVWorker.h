@@ -45,20 +45,23 @@ public:
 	void ReadExcel(const CString& pathToExcel);				// Получение пути ПИВ для чтения
 	void ReadExcel(const vector <CString>& pathToExcel);	// (перегрузка)
 	
-	void CloseExcel();								// Закрытие всех книг
-	void CloseExcel(const CString& pathToExcel);	// Закрытие одной книги
-	void CloseExcel(const vector <CString>& pathToExcel);
+	void CloseExcel();										// Закрытие всех книг
+	void CloseExcel(const CString& pathToExcel);			// Закрытие одной книги
+	void CloseExcel(const vector <CString>& pathToExcel);	// Закрытие выбранных книг
 
-	void TestExcel();				// Проверка всех книг
-	//void TestExcel(const CString& pathToExcel);				// Проверка одной книги
-	//void TestExcel(const vector <CString>& pathToExcel);	// Проверка выбранных книг
+	void TestExcel();										// Проверка всех книг
+	void TestExcel(const CString& pathToExcel);				// Проверка одной книги
+	void TestExcel(const vector <CString>& pathToExcel);	// Проверка выбранных книг
 
-	void Report(const CString& path);	// Создание отчета об ошибках
-	void Report();						// (перегрузка)
+	void Report();											// Создание отчета об ошибках
+	void Report(const CString& pathToExcel);				// Добавление в отчет отчета о одной книге
+	void Report(const vector <CString>& pathToExcel);		// Добавление в отчет отчета о нескольких книг
 	
-	void CreateTxt(CString path);	// Создание txt файлов
-	void CreateTxt();				// (перегрузка)
+	void CreateTxt();										// Создание для всех протоколов
+	void CreateTxt(const CString& pathToExcel);				// Создание txt для одного протокола
+	void CreateTxt(const vector<CString>& pathToExcel);		// Создание для выбранных протоколов
 
+	void setPathToSave(const CString& path);	// Установка пути для артефактов
 	void setStatusNumPK(const bool& status);	// Установка флага bNumPK
 	bool getStatusThread(CString& status);		// Получения статуса потока
 
@@ -78,19 +81,25 @@ private:
 	bool bNumPK = false;		// Нужно ли устанавливать в txt подкадры
 
 	void StartRead();	// Начало чтения протоколов
+	void StartTest();	// Начало анализа протоколов
 	void StartClose();	// Начало закрытия протоколов
 	void StartReport();	// Начало создания отчета об ошибках
 	void StartTxt();	// Начало создания txt файлов
 	
 	void Read();		// Чтение протоколов
+	void Refresh(const bookData& book);	// Обновление протокола
+
 	void Test();		// Проверка всех книг
-	void MakeReport();	// Создание отчета
+	void Refresh(const errorSet& set);	// Обновление ошибок
+
+	void MakeReport();	// Создание отчета об ошибках
 	void GenerateTxt();	// Генерировать в txt файл
 	
 	void Close();		// Закрыть книги
 
 	CString nameFromPath(const CString& path);	// Выделение имени из файла
 	bool findBook(const CString& pathToExcel);	// Поиск индекса протокола в открытых ПИВ (в противном -1)
+	bookData& getBook(const CString& path);		// Получение ссылки на книгу в списке
 
 	bool getStatusThread(const HANDLE& h);	// Проверка доступности потока
 	void closeThread(HANDLE& h);			// Закрытие потока

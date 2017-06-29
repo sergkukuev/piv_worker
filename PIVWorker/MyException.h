@@ -57,10 +57,9 @@ private:
 // Исключения для класса Test
 class UndefinedError : public MyException {
 public:
-	void SetParam(CString param) { this->param = param; }
-	void SetName(CString name) { this->name = name; }
-	virtual CString GetMsg() 
-	{
+	void SetParam(const CString& param) { this->param = param; }
+	void SetName(const CString& name) { this->name = name; }
+	virtual CString GetMsg() {
 		CString result = L"Параметр сигнала с неизвестной ошибкой!";
 		result.Format(L"%s\n (Имя листа: %s, Параметр: %s)", result, name, param);
 		return result; 
@@ -68,6 +67,18 @@ public:
 private:
 	CString name = L"";	// Имя листа, на котором найдена неизвестная ошибка
 	CString param = L"";	// Параметр, который обрабатывался
+};
+
+class UndefinedBook : public MyException {
+public:
+	void SetName(const CString& name) { this->name = name; }
+	virtual CString GetMsg() {
+		CString result;
+		result.Format(L"Книга \"%s\" не была прочитана, ее проверка невозможна.", name);
+		return result;
+	}
+private: 
+	CString name = L"";	// Имя неопознанной книги
 };
 
 // Исключения для класс Report
