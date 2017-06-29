@@ -232,16 +232,16 @@ bool CTest::simanticNumWord(const intData& num, bool* repiter, vector <CString>&
 	if (!num.flag) {
 		vector <CString> tmp;
 		tmp.push_back(errRemarks[0]);
-		for (size_t i = 0; i < num.vec.size(); i++) {
+		for (size_t i = 0; i < num.value.size(); i++) {
 			//if (!repiter[num[i] - 1])		// Поиск совпадений 
 				//tmp.push_back(_T("Слово с таким номером встречалось ранее на листе"));
 
-			if (num.vec[i] > 32) {	// Слово должно быть не больше 32
+			if (num.value[i] > 32) {	// Слово должно быть не больше 32
 				result = false;
 				tmp.push_back(L"Значение номера слова должно быть меньше 32");
 			}
 			else
-				*(repiter + num.vec[i] - 1) = false; // Отметка о том, что эти слово имеется на этом листе
+				*(repiter + num.value[i] - 1) = false; // Отметка о том, что эти слово имеется на этом листе
 		}
 		if (tmp.size() > 1)
 			for (size_t i = 0; i < tmp.size(); i++)
@@ -268,8 +268,8 @@ bool CTest::simanticValue(const signalData& signal, vector <CString>& error) {
 	bool result = true;
 	if (!signal.min.flag && !signal.max.flag && !signal.csr.flag && !signal.bit.flag) {
 		int nBit = 0;
-		(signal.bit.vec.size() == 4) ? nBit = (signal.bit.vec[1] - signal.bit.vec[0]) + (signal.bit.vec[3] - signal.bit.vec[2]) + 2 :
-									nBit = (signal.bit.vec[1] - signal.bit.vec[0]) + 1;
+		(signal.bit.value.size() == 4) ? nBit = (signal.bit.value[1] - signal.bit.value[0]) + (signal.bit.value[3] - signal.bit.value[2]) + 2 :
+									nBit = (signal.bit.value[1] - signal.bit.value[0]) + 1;
 
 		// Выделение бита под знак, если он присутствует
 		if (signal.bitSign) nBit--;
@@ -310,8 +310,8 @@ bool CTest::simanticBits(const signalData& signal, const CString& prevTitle, boo
 	bool result = true;
 	// Кол-во № слов должно совпадать с кол-вами интервалов исп. разрядов
 	if (!signal.numWord.flag && !signal.bit.flag) {
-		if (signal.numWord.vec.size() * 2 == signal.bit.vec.size()) {
-			if (!checkCrossBits(signal.bit.vec, signal.numWord.vec, repiter) && !checkTitle(signal.title[0], prevTitle)) {
+		if (signal.numWord.value.size() * 2 == signal.bit.value.size()) {
+			if (!checkCrossBits(signal.bit.value, signal.numWord.value, repiter) && !checkTitle(signal.title[0], prevTitle)) {
 				result = false;
 				error.push_back(errRemarks[5]);
 				error.push_back(L"Бит(ы) перекрывает(ют)ся");
@@ -320,7 +320,7 @@ bool CTest::simanticBits(const signalData& signal, const CString& prevTitle, boo
 		else {
 			result = false;
 			error.push_back(errRemarks[5]);
-			(signal.numWord.vec.size() == 1) ? error.push_back(L"Должен быть один интервал") : error.push_back(L"Должно быть два интервала");
+			(signal.numWord.value.size() == 1) ? error.push_back(L"Должен быть один интервал") : error.push_back(L"Должно быть два интервала");
 		}
 	}
 	return result;

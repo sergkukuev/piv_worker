@@ -128,7 +128,7 @@ void CReport::writeSheets(ofstream& file, list <errorSet>::iterator& it) {
 CString CReport::writeErrors(sheetData* sheet, const vector <errorSignal>& db, const CString& folder, const CString& bookName) {
 	CString pathFile;
 	// Создание директории под книгу
-	pathFile.Format(_T("%s%s\\%s"), path, folder, bookName);
+	pathFile.Format(L"%s%s\\%s", path, folder, bookName);
 	CreateDirectory(pathFile, NULL);
 	
 	CString result;	// Результирующая строка для записи ссылки в главный файл
@@ -136,8 +136,8 @@ CString CReport::writeErrors(sheetData* sheet, const vector <errorSignal>& db, c
 
 	if (count > 0)
 	{
-		pathFile.Format(_T("%s\\%s.html"), pathFile, sheet->name);
-		result.Format(_T("\t\t\t\t\t\t<dt><a href=\"%s\">%d</a></dt>\n"), pathFile, count);	// Формирование результирующей строки
+		pathFile.Format(L"%s\\%s.html", pathFile, sheet->name);
+		result.Format(L"\t\t\t\t\t\t<dt><a href=\"%s\">%d</a></dt>\n", pathFile, count);	// Формирование результирующей строки
 		
 		ofstream file;
 		file.open(pathFile);
@@ -178,7 +178,7 @@ CString CReport::writeErrors(sheetData* sheet, const vector <errorSignal>& db, c
 		file.close();
 	}
 	else
-		result.Format(_T("\t\t\t\t\t\t<dt>-</dt>\n")); // Формирование результирующей строки
+		result.Format(L"\t\t\t\t\t\t<dt>-</dt>\n"); // Формирование результирующей строки
 
 	return result;
 }
@@ -211,17 +211,17 @@ void CReport::writeSignal(ofstream& file, const errorSignal& set) {
 		if (IsRemark(set.error[j])) {
 			if (j != 0) {
 				file << "\t\t\t\t\t</ul>\n";
-				buffer.Format(_T("              &nbsp %s\n"), set.error[j]);
+				buffer.Format(L"\t\t\t\t&nbsp %s\n", set.error[j]);
 				file << CT2A(buffer);
 			}
 			else {
-				buffer.Format(_T("\t\t\t\t<td colspan=\"9\" bgcolor = \"#FDFCD0\"> &nbsp %s\n"), set.error[j]);
+				buffer.Format(L"\t\t\t\t<td colspan=\"9\" bgcolor = \"#FDFCD0\"> &nbsp %s\n", set.error[j]);
 				file << CT2A(buffer);
 			}
 			file << "\t\t\t\t\t<ul>\n";
 		}
 		else {
-			buffer.Format(_T("\t\t\t\t\t<li>%s</li>\n"), set.error[j]);
+			buffer.Format(L"\t\t\t\t\t<li>%s</li>\n", set.error[j]);
 			file << CT2A(buffer);
 		}
 	}
@@ -330,11 +330,11 @@ void CReport::setAmountError(list <errorSet>& db) {
 void CReport::getTxt(list <bookData>& books, const CString& pathToSave, const bool& bNumPK) {
 	// Создание директории
 	path = pathToSave;
-	path.Format(_T("%s\\Text"), pathToSave);
+	path.Format(L"%s\\Text", pathToSave);
 	CreateDirectory(path, NULL);
 
 	CString filePath = path;
-	filePath.Format(_T("%s\\_ProtocolMain.txt"), pathToSave);
+	filePath.Format(L"%s\\_ProtocolMain.txt", path);
 
 	// Открытие главного файла для записи
 	ofstream mainFile;
@@ -354,8 +354,8 @@ void CReport::getTxt(list <bookData>& books, const CString& pathToSave, const bo
 				info.bPK = bNumPK;
 
 				// Создание txt файла для записи
-				name.Format(_T("NP_%d_%s.txt"), info.np, it->sheets[i].name);
-				filePath.Format(_T("%s\\%s"), path, name);
+				name.Format(L"NP_%d_%s.txt", info.np, it->sheets[i].name);
+				filePath.Format(L"%s\\%s", path, name);
 				tmpFile.open(filePath);
 				mainFile << "#include \""; mainFile << CT2A(name); mainFile << "\"\n";
 
@@ -375,72 +375,72 @@ void CReport::writeTxtParam(ofstream& file, const signalData& signal, const shee
 	CString buffer = signal.title[0];
 
 	if (buffer.Find(RESERVE_SIGNAL) == -1) {
-		buffer.Format(_T("PAR=%s\n"), signal.title[1]);	// Запись обозначения сигнала
+		buffer.Format(L"PAR=%s\n", signal.title[1]);	// Запись обозначения сигнала
 		file << CT2A(buffer);
 
-		buffer.Replace(_T("\""), _T("\\\""));
-		buffer.Format(_T("\t NAME=\"%s\"\n"), signal.title[0]); // Наименования сигнала
+		buffer.Replace(L"\"", L"\\\"");
+		buffer.Format(L"\tNAME=\"%s\"\n", signal.title[0]); // Наименования сигнала
 		file << CT2A(buffer);
 
 		if (!signal.dimension.IsEmpty()) {
-			buffer.Format(_T("\t UNIT=\"%s\"\n"), signal.dimension);	// Размерности
+			buffer.Format(L"\tUNIT=\"%s\"\n", signal.dimension);	// Размерности
 			file << CT2A(buffer);
 		}
 
 		// Установка набора
 		if (info.pk != 0 && info.bPK)
-			buffer.Format(_T("\t SET=%d:%d\n"), info.pk, info.np);
+			buffer.Format(L"\tSET=%d:%d\n", info.pk, info.np);
 		else
-			buffer.Format(_T("\t SET=%d\n"), info.np);
+			buffer.Format(L"\tSET=%d\n", info.np);
 		file << CT2A(buffer);
 
-		int max = (signal.bit.vec[1] == -1 ? signal.bit.vec[0] : signal.bit.vec[1]);
+		int max = (signal.bit.value[1] == -1 ? signal.bit.value[0] : signal.bit.value[1]);
 
 		// Запись номера слова и битов
-		if (signal.numWord.vec.size() == 2) { 
-			file << "\t MERGE\n";
-			buffer.Format(_T("\t\t WDADDR = %d,%d,%d\n"), signal.numWord.vec[0], signal.bit.vec[0], max);
+		if (signal.numWord.value.size() == 2) { 
+			file << "\tMERGE\n";
+			buffer.Format(L"\t\tWDADDR = %d,%d,%d\n", signal.numWord.value[0], signal.bit.value[0], max);
 			file << CT2A(buffer);
-			max = (signal.bit.vec[3] == -1) ? signal.bit.vec[2] : signal.bit.vec[3];
-			buffer.Format(_T("\t\t WDADDR = %d,%d,%d\n"), signal.numWord.vec[1], signal.bit.vec[2], max);
+			max = (signal.bit.value[3] == -1) ? signal.bit.value[2] : signal.bit.value[3];
+			buffer.Format(L"\t\tWDADDR = %d,%d,%d\n", signal.numWord.value[1], signal.bit.value[2], max);
 			file << CT2A(buffer);
-			file << "\t END_MERGE\n";
+			file << "\tEND_MERGE\n";
 		}
 		else {
-			buffer.Format(_T("\t WDADDR = %d,%d,%d\n"), signal.numWord.vec[0], signal.bit.vec[0], max);
+			buffer.Format(L"\tWDADDR = %d,%d,%d\n", signal.numWord.value[0], signal.bit.value[0], max);
 			file << CT2A(buffer);
 		}
 
 		// Мин, макс, цср
 		if (signal.max.value != DBL_MIN && signal.csr.value != DBL_MIN) { 
-			file << "\t VALDESCR\n";
-			file << (signal.bitSign ? "\t\t SIGNED\n" : "\t\t UNSIGNED\n");
+			file << "\tVALDESCR\n";
+			file << (signal.bitSign ? "\t\tSIGNED\n" : "\t\tUNSIGNED\n");
 
-			buffer.Format(_T("\t\t MIN = %lf\n"), signal.min.value);
+			buffer.Format(L"\t\tMIN = %lf\n", signal.min.value);
 			file << CT2A(buffer);
 
-			buffer.Format(_T("\t\t MAX = %lf\n"), signal.max.value);
+			buffer.Format(L"\t\tMAX = %lf\n", signal.max.value);
 			file << CT2A(buffer);
 
-			buffer.Format(_T("\t\t MSB = %lf\n"), signal.csr.value);
+			buffer.Format(L"\t\tMSB = %lf\n", signal.csr.value);
 			file << CT2A(buffer);
 
-			file << "\t END_VALDESCR\n";
+			file << "\tEND_VALDESCR\n";
 		}
 
 		// Запись комментариев
 		if (!signal.comment.IsEmpty()) {	
-			file << "\t COMMENT\n";
+			file << "\tCOMMENT\n";
 
 			buffer = signal.comment;
-			buffer.Replace(_T("\""), _T("\\\""));
-			buffer.Replace(_T("\n"), _T("\"\n\t\t\""));
-			buffer.Format(_T("\t\t\"%s\"\n"), buffer);
+			buffer.Replace(L"\"", L"\\\"");
+			buffer.Replace(L"\n", L"\"\n\t\t\"");
+			buffer.Format(L"\t\t\"%s\"\n", buffer);
 
 			file << CT2A(buffer);
-			file << "\t END_COMMENT\n";
+			file << "\tEND_COMMENT\n";
 		}
-		file << "END_PAR \n\n";
+		file << "END_PAR\n\n";
 	}
 }
 

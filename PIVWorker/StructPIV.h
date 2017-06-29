@@ -13,7 +13,7 @@ using namespace std;
 
 // Хранение номера слова и битов
 struct intData {
-	vector <int> vec;	// Значение
+	vector <int> value;	// Значение
 	CString field;		// Ячейка в исходном виде
 	bool flag = false;	// Флаг наличия ошибки при конвертации
 };

@@ -131,7 +131,7 @@ intData CReaderExcel::getNumWord(const CString& field) {
 		vec[1] = getInt(numeric2, result.flag);
 	}
 
-	result.vec = vec;
+	result.value = vec;
 	result.field = field;
 	return result;
 }
@@ -184,7 +184,7 @@ intData CReaderExcel::getBits(const CString& field) {
 	}
 
 	result.field = field;
-	result.vec = vec;
+	result.value = vec;
 	return result;
 }
 
