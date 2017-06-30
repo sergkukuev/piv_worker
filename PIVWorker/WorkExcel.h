@@ -1,65 +1,84 @@
 #pragma once
 
-#ifdef WORK_EXCEL_EXPORTS
-#define WORK_EXCEL_API __declspec(dllexport)
-#else
-#define WORK_EXCEL_API __declspec(dllimport)
-#endif
-
 #include "excel\CApplication.h"
 #include "excel\CRange.h"
 #include "excel\CWorkbook.h"
 #include "excel\CWorkbooks.h"
 #include "excel\CWorksheet.h"
 #include "excel\CWorksheets.h"
-#include "excel\Enum.h"
+#include "MyException.h"
 
 #include <cstring>
+#include <vector>
+
+// Структура заголовка
+struct Header {
+	std::vector <std::vector<CString>> list;	// Список допустимых заголовков 
+	static const int size = 10;		// Количество заголовков
+	long adress[size];				// Массив адресов для заголовков
+
+	const int iRow = 0;			//	Индекс строки в массиве адресов
+	const int iNumWord = 1;		//	Индекс слова в массиве адресов
+	const int iName = 2;		//	Индекс наименования сигнала в массиве адресов
+	const int iSignal = 3;		//	Индекс идентификатора сигнала в массиве адресов
+	const int iDimension = 4;	//	Индекс размерности в массиве адресов
+	const int iMin = 5;			//	Индекс мин.знач. в массиве адресов
+	const int iMax = 6;			//	Индекс макс.знач. в массиве адресов
+	const int iCSR = 7;			//	Индекс цср в массиве адресов
+	const int iBits = 8;		//	Индекс битов в массиве адресов
+	const int iComment = 9;		//	Индекс примечаний в массиве адресов
+};
 
 // Адрес ячейки
 struct Cell {
-	long row;
-	long column;
+	long row;		// Строка
+	long column;	// Столбец
 };
 
-class WORK_EXCEL_API CWorkExcel {
+#define LINE_FIELD L"Линия"
+#define NP_FIELD L"NP="
+#define PK_FIELD L'№'
+#define REMARK1 L"Примечания:"
+#define REMARK2 L"Примечание:"
+
+// Класс чтения данных из Excel 
+class CWorkExcel {
 public:
-	CWorkExcel(void);						// конструктор
-	CWorkExcel(CString& pathToTemplate);	// конструктор с параметром
-	~CWorkExcel();							// деструктор
+	CWorkExcel(void);	// Конструктор
+	~CWorkExcel(void);	// Деструктор
+	
+	bool openBook(const CString& path);		// Открытие книги
+	CString bookName();						// Имя книги из файла
+	CString bookName(const CString& path);	// Имя книги из пути
 
-	void openWorkBook(CString& pathToTemplate);		// открытие рабочей книги
-	void closeWorkBooks();							// закрытие всех книг
+	bool openSheet(const long& index);	// Открытие листа
+	CString sheetName();				// Имя листа
+	long countSheets();					// Количество листов в книги
+	long countRows();					// Количество столбцов на текущем листе
 
-	void setActivBook(long& iBook);					// задание активной книги
-	void setActivSheet(long& iSheet);				// задание активного листа
-	
-	CString getNameBook();							// получение названия книги
-	CString getNameSheet();							// получение названия листа
-	
-	int getCountBooks();							// получение кол-во открытых книг
-	int getCountSheets();							// получение кол-ва листов в активной книге
-	
-	int getMergeCount(Cell& cell);						// количество объедененных ячеек
-	long getStartMerge(Cell& cell);						// стартовая позиция объеденения ячеек
-	CString getCellValue(Cell& cell);					// получение значения их ячейки 
-	bool findOneDateCells(CString& findString, Cell& cell);	// поиск строки в активном листе
+	VARIANT lineValue();				// Получение значения линии передачи
+	int npValue(const Header& head);	// Получение номера набора
+	int pkValue(const Header& head);	// Получение значения номера подкадра			
+
+	VARIANT cellValue(const long& row, const long& column);		// Получение значения ячейки
+	VARIANT cellValue(const Cell& cell);						// Перегрузка
+	long cPrevEmpty(long& row, const long& column);				// Количество пустых ячеек до
+	long cNextEmpty(const long& row, const long& column);		// Количество пустых ячеек после 
+	long getMerge(long& row, const long& column);				// Кол-во слитых ячеек
+	bool findHeader(Header& header);							// Поиск заголовков на текущем листе
 
 private:
-	CApplication _application = nullptr;	// объект Excel
-	CWorkbooks _excelBooks = nullptr;		// все открытые книги
-	CWorkbook _workBook = nullptr;			// активная книга
-	CWorksheets _excelSheets = nullptr;		// все листы в активной книге
-	CWorksheet _workSheet = nullptr;		// активный лист в активной книге
+	CApplication app;	// Приложение excel
+	CWorkbooks books;	// Книги
+	CWorkbook book;		// Книга
+	CWorksheets sheets;	// Листы в книге
+	CWorksheet sheet;	// Лист
 
-	int _countBooks = 0;					// количество открытых книг
-	int _countSheetsActivBook = 0;			// количество листов в активной книге
+	COleSafeArray* cells;	// Данные листа
+	Cell first, last;		// Индексы первой и последней ячейки
 
-	bool initApplication();					// инициализация объекта Excel и указателя
-	void destroyApplication();				// уничтожение объекта Excel и указателя
-	void setCountBooks();					// задание количества открытых книг
-	void setCountSheets();					// задание количества листов в активной книге
-
-	CString convertToChar(int& iCol);		// функция получения буквенного обозначения ячейки из номера колонки
+	bool findCell(const CString& field, Cell& cell);	// Поиск ячейки по содержимому, в противном cell(-1,-1)
+	CString longToChar(const long& column);				// Преобразование long к char
+	void stepLongToChar(const long& column, CString& result);	// Если в обозначении ячейки уже больше одной буквы
 };
 

@@ -239,18 +239,18 @@ void CMainDlg::OnPivClose()
 {
 	vector <CString> del;	// Пути всех удаленных пив
 	int nCount = lsBox->GetSelCount();	// Получите индексы всех выбранных элементов.
-	CArray<int, int> sel;
+	CArray<int> sel;
 
 	sel.SetSize(nCount);
 	lsBox->GetSelItems(nCount, sel.GetData());
 
 	for (size_t i = 0; i < sel.GetSize(); i++)
-	{
-		del.push_back(path[i]);
-		path.erase(path.begin() + i);
-		lsBox->DeleteString(i);
+	{	
+		del.push_back(path[sel[i]]);
+		path.erase(path.begin() + sel[i]);
+		lsBox->DeleteString(sel[i]);
 	}
-	piv.CloseExcel(del);
+	(del.empty()) ? AfxMessageBox(L"Файлы для удаления не выбраны!") : piv.CloseExcel(del);
 	setMenu(3);
 }
 
@@ -281,7 +281,8 @@ void CMainDlg::OnPivReport()
 		folder = szDisplayName;
 	}
 
-	piv.Report(folder);	// Генерация отчета
+	piv.setPathToSave(folder);
+	piv.Report();	// Генерация отчета
 	setMenu(4);
 }
 
@@ -313,12 +314,10 @@ void CMainDlg::OnPivTxtGenerate()
 
 	CButton *pCheck = (CButton*)GetDlgItem(IDC_CHECK_NUMPK);
 
-	if (pCheck == BST_UNCHECKED)
-		piv.setStatusNumPK(false);
-	else
-		piv.setStatusNumPK(true);
+	(pCheck == BST_UNCHECKED) ? piv.setStatusNumPK(false) : piv.setStatusNumPK(true);
 
-	piv.CreateTxt(folder);
+	piv.setPathToSave(folder);
+	piv.CreateTxt();
 }
 
 // Информация о приложении
@@ -334,7 +333,7 @@ void CMainDlg::OnPivCloseAll()
 	vector <CString> tmp = path;
 	path.clear();
 	lsBox->ResetContent();
-	piv.CloseExcel(tmp);
+	piv.CloseExcel();
 	setMenu(3);
 }
 
@@ -343,16 +342,14 @@ void CMainDlg::OnPivCloseAll()
 // Добаление путей файлов
 void CMainDlg::AddPath(CString fullPath, CString name)
 {
+	bool result = true;
+
 	if (!path.empty())
-	{
 		for (size_t i = 0; i < path.size(); i++)
-			if (fullPath.Compare(path[i]) != 0)
-			{
-				path.push_back(fullPath); // Заполнение, если такого файла еще нет
-				lsBox->AddString(name);
-			}
-	}
-	else
+			if (fullPath.Compare(path[i]) == 0)
+				result = false;
+	
+	if (result)
 	{
 		path.push_back(fullPath);
 		lsBox->AddString(name);

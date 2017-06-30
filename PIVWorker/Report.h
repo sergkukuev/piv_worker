@@ -2,46 +2,63 @@
 
 #include <fstream>
 #include "StructPIV.h"
+#include "MyException.h"
 
-struct Amount	// Структура подсчета наборов данных и их ошибок
-{
-	int allSets = 0;
-	int setsWithError = 0;
-	int setsWithoutError = 0;
+#define SYNTAX_FOLDER _T("\\Error\\Syntax")
+#define SIMANTIC_FOLDER _T("\\Error\\Simantic")
+#define WARNING_FOLDER _T("\\Warning")
+
+// Количество наборов данных и их ошибок
+struct Amount	{
+	int all = 0;
+	int withError = 0;
+	int withoutError = 0;
 	int error = 0;
 	int warning = 0;
 };
 
+// Информация со страницы протокола
+struct sheetInfo {
+	int np;		// Номер набора
+	int pk;		// Номер подкадра
+	bool bPK;	// Нужно ли устанавливать номер подкадра
+};
+
 // Класс генерации отчета
-class CReport
-{
+class CReport {
 public:
 	CReport();	// Конструктор
 	~CReport();	// Деструктор
 
-	bool Generate(vector <bookData> books, errorSet errorDB);	// Генерация отчета
-	void setPath(CString path);	// Установка пути сохранения
+	void getReport(list <bookData>& books, list <errorSet>& Db, const CString& pathToSave);	// Генерация отчета о ошибках
+	void getTxt(list <bookData>& books, const CString& pathToSave, const bool& bNumPK);		// Генерация txt файлов
+	void getTxt(const bookData& book, const CString& pathToSave, const bool& bNumPK);		// Генерация txt для одного протокола
 
 private:
-	CString path;	// Путь сохранения
-	Amount amount;	// Количество наборов данных и их ошибок
+	CString path;	// Путь для сохранения отчета
+	Amount amount;	// Информация о количестве сигналов, с ошибками и без и прочее
 
-	vector <bookData> books;	// книги
-	errorSet errorDB;			// База ошибок
+	// ГЕНЕРАЦИЯ ОТЧЕТА О ЗАМЕЧАНИЯХ
+	void makeReport(list <bookData>& books, list <errorSet>& Db);	// Генерация отчета
 
-	void startGenerate();	// Начало генерации отчета
-	void makeReport();		// Генерация не пустого отчета
-	void makeEmptyReport();	// Генерация пустого отчета
+	void startWrite(ofstream& file, list <errorSet>& Db);				// Начало генерации отчета о замечаниях
+	void writeBook(ofstream& file, list <errorSet>::iterator& it);		// Запись всех ошибок из книги
+	void writeSheets(ofstream& file, list <errorSet>::iterator& it);	// Запись всех ошибок с листов 
+	CString writeErrors(sheetData* sheet, const vector <errorSignal>& errors, const CString& folder, const CString& bookName);	// Запись ошибок с одного листа
+	void writeSignal(ofstream& file, const errorSignal& set);		// Запись сигнала
+	CString writeParam(const CString& field, const bool& color);	// Запись параметра сигнала
 
-	void writeSheets(ofstream& file, int cBooks);		// Создание страниц
-	void writeError(ofstream& file, errorBookData error, CString folder);	// Создание страницы с ошибками
-	
-	void Clear();			// Очистка переменных
-	int getSetsAmount();	// Количество наборов данных
-	int getSetsAmountWithError();	// Количество наборов данных с ошибкой
-	int getErrorAmount(vector <errorBookData> error);	// Количество ошибок
+	// Вспомогательные функции
+	void errorTable(ofstream& file);				// Таблица с общей информацией о количестве ошибок
+	int countError(const vector<errorSignal>& set);	// Подсчет количества ошибок на листе
+	void setAmount(list <bookData>& books);			// Установка количества набора данных (всего, с ошибками, без)
+	void setAmountError(list <errorSet>& Db);		// Установка количества ошибок и замечаний
 
-	void hightlightError(ofstream& file, int tIndx, int Indx, CString field);	// Подсветка нужного параметра
-	int getIndexErrorField(list<errorSignalData>::iterator it);					// Поиск индекса параметра
+	bool findRemark(const vector <CString>& error, const CString& remark);	// Найти строку заголовка в ошибках
+	bool IsRemark(const CString& field);	// Является ли строка ошибкой или заголовком
+
+	// ГЕНЕРАЦИЯ TXT ФАЙЛОВ
+	void writeTxtParam(ofstream& file, const signalData& signal, const sheetInfo& info);	// Запись сигнала в txt файл
+	void Generate(const bookData& book, const bool& bNumPK);								// Генерация txt для книги
 };
 

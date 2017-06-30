@@ -2,49 +2,42 @@
 
 #include "StructPIV.h"
 #include "MyException.h"
-#include "ErrBase.h"
 
-class CTest
-{
+#include <regex>
+
+#define ERROR_DATA L"Не удалось прочитать значение %s. (Поле пустое или содержит недопустимые символы)"
+#define MAX_NUMWORD 32
+#define MAX_BITS 32
+
+class CTest {
 public:
 	CTest();	// Конструктор
 	~CTest();	// Деструктор
 
-	errorOneSet Start(bookData& book);	// Проверка на все ошибки
+	errorSet Start(bookData& book);					// Проверка на ошибки одного протокола
+	list <errorSet> Start(list <bookData>& books);	// Проверка на все ошибки
 
 private:
+	void getErrors(sheetData* sheet, vector <errorSignal>& syntax, vector <errorSignal>& simantic); // Проверка на ошибки
+	void getWarnings(sheetData* sheet, vector <errorSignal>& warning);								// Проверка на замечания
 
-	CErrBase ErrorBase;	// База ошибок
-	errorOneSet error;
-	int NP = 0;
-
-	void Syntax(errorBookData& errBook, bookData& book);	// Проверка на синтаксические ошибки
-	void Simantic(errorBookData& errBook, bookData& book);	// Проверка на семантические ошибки
-	void Warning(errorBookData& errBook, bookData& book);	// Проверка на замечания
-	list <CString> testField(CString field, errorData errStruct);	// Проверка поля на ошибки
-	errorSignalData getErrSignal(list<signalData>::iterator it, list <CString> error);	// Создание записи ошибки сигнала
+	void checkNP(signalData& signal, const int& np, vector <errorSignal>& syntax);	// Проверка ошибок, связанных с номером набора
+	void initRepiter(bool* num, bool** bits);	// Инициализация репитеров
 	
-	// Синтаксические
-	bool syntaxNumWord(errorSheetData& sheet, list<signalData>::iterator& it);		// Проверка номера слова
-	bool syntaxTitleParam(errorSheetData& sheet, list<signalData>::iterator& it);	// Проверка наименований сигнала
-	bool syntaxMinMaxCSR(errorSheetData& sheet, list<signalData>::iterator& it);	// Проверка минимального, максимального и цср
-	bool syntaxBits(errorSheetData& sheet, list<signalData>::iterator& it);			// Проверка используемых разрядов
-	bool syntaxComment(errorSheetData& sheet, list<signalData>::iterator& it, bool begin);		// Проверка коментариев
+	// Синтаксический анализ
+	bool syntaxValue(const signalData& signal, vector <CString>& error);			// Проверка числовых параметров
+	bool syntaxBits(const intData& bits, vector <CString>& error);					// Проверка используемых разрядов
+	bool syntaxTitle(const vector <CString>& title, vector <CString>& error);		// Проверка синтаксиса идентификатора
 
-	// Семантические
-	bool simanticNumWord(errorSheetData& sheet, list<signalData>::iterator& it, bool wRep[]);		// Проверка номера слова
-	bool simanticTitleParam(errorSheetData& sheet, list<signalData>::iterator& it, bookData book, int iSheet);	// Проверка наименований сигнала
-	bool simanticMinMaxCSR(errorSheetData& sheet, list<signalData>::iterator& it, int currNP, bool begin);	// Проверка минимального, максимального и цср
-	bool simanticBits(errorSheetData& sheet, list<signalData>::iterator& it, bool tRep[][32]);			// Проверка используемых разрядов
+	void checkValueByFlag(const CString& field, const int& indx, const bool& flag, vector <CString>& error); // Проверка числовых параметров по набору флагов
 
-	bool findRepiteInBook(CString field, bookData book);	// Поиск повторений в книге
-	bool findRepiteInSheet(CString field, sheetData sheet);	// Поиск повторений в листе
-	bool checkCrossBits(list<signalData>::iterator& it, bool repiter[][32]);	// Проверка на перекрытия битов
-	void translateNumWord(list<signalData>::iterator& it);	// Перевод № слова из строки в числа
-	void translateMMC(list<signalData>::iterator& it);	// Перевод мин, макс и цср
-	double stepTranslateMMC(CString value);					// Дополнительная функция для перевода разрядов
-	void translateBits(list<signalData>::iterator& it);		// Перевод используемых разрядов из строки в числа
-	vector <int> stepTranslateBits(CString bits);			// Дополнительная функция для перевода разрядов
-	void translateComment(list<signalData>::iterator& it);	// Перевод значения знака или NP набора из примечания
+	// Семантический анализ
+	bool simanticNumWord(const intData& numWord, bool* repiter, vector <CString>& error);		// Проверка номера слова
+	bool simanticTitle(sheetData* sheet, const int& indx, const CString& title, const bool& flag, vector <CString>& error);				// Проверка наименований сигнала
+	bool simanticValue(const signalData& signal, vector <CString>& error);						// Проверка минимального, максимального и цср
+	bool simanticBits(const signalData& signal, const CString& prevTitle, bool** repiter, vector <CString>& error);		// Проверка используемых разрядов
+	
+	bool checkCrossBits(const vector <int>& bits, const vector <int>& numWord, bool** repiter); // Проверка перекрытия битов
+	bool checkTitle(const CString& next, const CString& prev);							// Проверка двух наименований на совпадение
+	bool findRepiteInSheet(const CString& field, sheetData* sheet, const int& start);	// Поиск повторений на листе
 };
-

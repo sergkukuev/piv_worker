@@ -2,255 +2,297 @@
 #include "ReaderExcel.h"
 
 // Конструктор
-CReaderExcel::CReaderExcel()
-{
+CReaderExcel::CReaderExcel() {
 	// Установка набора заголовков
-	header.list.push_back(list<CString>{ _T("№ слов"), _T("№ п/п"), _T("№ слова в подадресе") });						// Для номера слова
-	header.list.push_back(list<CString>{ _T("Наименование параметра"), _T("Наименование сигнала") });					// Для наименование параметра
-	header.list.push_back(list<CString>{ _T("Обозначение сигнала"), _T("Условное обозначение параметра / сигнала") });	// Для сигнала
-	header.list.push_back(list<CString>{ _T("Размерность"), _T("Единица измерения") });									// Для единицы изменерения
-	header.list.push_back(list<CString>{ _T("Минимальное значение"), _T("Миним. значение"), _T("Минимал значение") });	// Минимальное значение
-	header.list.push_back(list<CString>{ _T("Максимальное значение"), _T("Максим. значение"), _T("Максимал значение") });// Максимальное значение
-	header.list.push_back(list<CString>{ _T("Цена старшего разряда") });												// Для цср
-	header.list.push_back(list<CString>{ _T("Используемые разряды"), _T("Используе-мые разряды") });					// Для используемых разрядов
-	header.list.push_back(list<CString>{ _T("Примечание") });															// Комментарии (пояснения)
+	header.list.push_back(vector<CString>{ L"№ слов", L"№ слова", L"№ п/п", L"№ слова в подадресе" });				// Для номера слова
+	header.list.push_back(vector<CString>{ L"Наименование параметра", L"Наименование сигнала" });					// Для наименование параметра
+	header.list.push_back(vector<CString>{ L"Обозначение сигнала", L"Условное обозначение параметра / сигнала" });	// Для сигнала
+	header.list.push_back(vector<CString>{ L"Размерность", L"Единица измерения" });									// Для единицы изменерения
+	header.list.push_back(vector<CString>{ L"Минимальное значение", L"Миним. значение", L"Минимал значение" });		// Минимальное значение
+	header.list.push_back(vector<CString>{ L"Максимальное значение", L"Максим. значение", L"Максимал значение" });	// Максимальное значение
+	header.list.push_back(vector<CString>{ L"Цена старшего разряда" });												// Для цср
+	header.list.push_back(vector<CString>{ L"Используемые разряды", L"Используе-мые разряды" });					// Для используемых разрядов
+	header.list.push_back(vector<CString>{ L"Примечание" });														// Комментарии (пояснения)
 
 	// Добавление всех видов расширений excel файлов
-	extension.push_back(_T("xlsx"));	// Текущий основной формат
-	extension.push_back(_T("xlsm"));
-	extension.push_back(_T("xlsb"));
-	extension.push_back(_T("xltx"));
-	extension.push_back(_T("xltm"));
-	extension.push_back(_T("xls"));		// Основной формат до 2003 года
-	extension.push_back(_T("xml"));
-	extension.push_back(_T("xlam"));
-	extension.push_back(_T("xla"));
-	extension.push_back(_T("xlw"));
-	extension.push_back(_T("xlr"));
+	extension.push_back(L"xlsx");	// Текущий основной формат
+	extension.push_back(L"xls");	// Основной формат до 2003 года
 }
 
 // Деструктор
-CReaderExcel::~CReaderExcel()
-{
+CReaderExcel::~CReaderExcel() {
 	header.list.clear();
+	header.list.shrink_to_fit();
 	extension.clear();
+	extension.shrink_to_fit();
 }
 
 // Чтение одной книги
-bookData CReaderExcel::getBook(CString pathToExcel)
-{
-	if (!checkExtension(pathToExcel))
-		throw BadTypeException();
-
-	CWorkExcel work;
+bookData CReaderExcel::getBook(const CString& pathToExcel) {
 	bookData book;
+	CWorkExcel work;
 
-	work.openWorkBook(pathToExcel);	// Открытие книги
+	if (!checkExtension(pathToExcel)) {
+		BadTypeException exc;
+		exc.setName(work.bookName(pathToExcel));
+		throw exc;
+	}
 
-	if (work.getCountBooks() == 0)
-		throw NoBooksException();
+	if (!work.openBook(pathToExcel))
+		throw ReadBookException();
 
-	long clBook = (long)1;
-	work.setActivBook(clBook);
-
-	book.name = work.getNameBook();
-	book.sheets.resize(work.getCountSheets());
-
-	book.sheets = getSheets(work);
-
-	work.closeWorkBooks();	// Закрытие книги
-
+	book.name = work.bookName();
+	getSheets(book.sheets, work);
+	
 	return book;
 }
 
-// Чтение книг
-vector <bookData> CReaderExcel::getBooks(vector <CString> pathToExcel)
-{
-	for (size_t i = 0; i < pathToExcel.size(); i++)
-		if (!checkExtension(pathToExcel[i]))
-			throw BadTypeException();
-
-	CWorkExcel work;
-	vector <bookData> books;
-
-	// Открытие книг
-	for (size_t i = 0; i < pathToExcel.size(); i++)
-		work.openWorkBook(pathToExcel[i]);
-
-	if (work.getCountBooks() == 0)
-		throw NoBooksException();
-
-	books.resize(work.getCountBooks());
-
-	for (int i = 1; i < books.size() + 1; i++)
-	{
-		long clBooks = static_cast<long>(i);
-
-		work.setActivBook(clBooks);
-		books[i - 1].name = work.getNameBook();
-		books[i - 1].sheets.resize(work.getCountSheets());
-
-		books[i - 1].sheets = getSheets(work);
-	}
-
-	work.closeWorkBooks();	// Закрытие книг
-
-	return books;
-}
-
 // Чтение листов
-vector <sheetData> CReaderExcel::getSheets(CWorkExcel& work)
-{
-	vector <sheetData> sheets;
-	sheets.resize(work.getCountSheets());
+void CReaderExcel::getSheets(vector <sheetData>& sheets, CWorkExcel& work) {
+	sheets.resize(work.countSheets());
+	for (long i = 1; i < work.countSheets() + 1; i++) {
+		work.openSheet((long)i);
+		// Поиск заголовков на листе
+		if (!work.findHeader(header)) {
+			NotAllHeaderException exc;
+			exc.setParam(sheets[i - 1].name, work.bookName());
+			throw exc;
+		}
 
-	for (int i = 1; i < work.getCountSheets() + 1; i++)
-	{
-		long iSheet = static_cast<long> (i);
-
-		work.setActivSheet(iSheet);
-		sheets[i - 1].name = work.getNameSheet();
-		sheets[i - 1].iFieldNP = -1;
-		sheets[i - 1].iNumPK = -1;
-
-		if (!findHeader(work))		// Поиск заголовков на листе
-			throw NotAllHeaderException();
-
-		sheets[i - 1].bError = false;
-
-		sheets[i - 1].iNumPK = getNumPK(work);
+		sheets[i - 1].name = work.sheetName();
+		sheets[i - 1].line = work.lineValue();
+		sheets[i - 1].np = work.npValue(header);
+		sheets[i - 1].pk = work.pkValue(header);
 
 		header.adress[header.iRow]++;
 
-		sheets[i - 1].signals = getSignals(work);
+		getSignals(sheets[i - 1].signals, work);
 	}
-
-	return sheets;
-}
-
-// Поиск номера кадра (в противном случае будет равен -1)
-int CReaderExcel::getNumPK(CWorkExcel& work)
-{
-	// Переход к столбцу примечаний
-	Cell cell;
-	cell.row = static_cast<long> (header.adress[header.iRow] - 1);
-	cell.column = static_cast<long> (header.adress[header.iComment]);
-
-	int iNumPK = -1;	// Индекс подкадра
-
-	if (work.getCellValue(cell) != "")
-	{
-		CString sNumPK = work.getCellValue(cell);
-		int i = 0;
-
-		while (i != -1)
-		{
-			i = sNumPK.Find(_T("№"), i == 0 ? i : i + 1);
-			i = i == sNumPK.GetLength() ? -1 : i;
-			iNumPK = i == -1 ? iNumPK : i;
-		}
-
-		if (iNumPK != -1)
-			sNumPK.Delete(0, iNumPK + 1);
-
-		sNumPK = sNumPK.Trim();
-		iNumPK = _wtoi(sNumPK);
-	}
-
-	return iNumPK;
 }
 
 // Чтение параметров на листе
-list <signalData> CReaderExcel::getSignals(CWorkExcel& work)
-{
-	list <signalData> signals;
-	bool bRemark = false;	// Является ли строка примечанием
-	int cEmpty = 0;			// Счетчик пустых строк
-
-	do
-	{
+void CReaderExcel::getSignals(vector <signalData>& signals, CWorkExcel& work) {
+	for (long merge, i = header.adress[header.iRow]; i < work.countRows() + 1; i += merge) {
 		signalData signal;
-		Cell cell;
+		long column, row = i;
 
-		cell.row = static_cast<long> (header.adress[header.iRow]);
+		// Чтение параметров одного сигнала
+		column = header.adress[header.iNumWord];
+		merge = work.cPrevEmpty(row, column);
+		signal.numWord = getNumWord(work.cellValue(row, column));
 		
-		// Чтение параметров:
-		// Наименование параетра и обозначение сигнала
-		cell.column = static_cast<long> (header.adress[header.iName]);
-		signal.sTitleParamField[0] = getCell(work, cell);
-		long cMergeName = work.getMergeCount(cell);
+		column = header.adress[header.iName];	row = i;
+		merge = work.cNextEmpty(row, column) + work.cPrevEmpty(row, column);
+		signal.title[0] = work.cellValue(row, column);
 
-		cell.column = static_cast<long> (header.adress[header.iSignal]);
-		signal.sTitleParamField[1] = getCell(work, cell);
+		column = header.adress[header.iSignal];
+		signal.title[1] = work.cellValue(row, column);
 
-		signal.bTitleParamField = false;
+		column = header.adress[header.iDimension];
+		signal.dimension = work.cellValue(row, column);
 
-		// Чтение номера слова
-		cell.column = static_cast<long> (header.adress[header.iNumWord]);
-		signal.sNumWordField = getCell(work, cell, cMergeName);
+		getMinMaxCsr(signal, work, row);	
 		
-		signal.b2NumWordField = false;
-		signal.bNumWordField = false;
+		column = header.adress[header.iBits];
+		signal.bit = getBits(work.cellValue(row, column));
 
-		// Чтение размерности, min, max и csr
-		cell.column = static_cast<long> (header.adress[header.iDimension]);
-		signal.sDimensionField = getCell(work, cell, cMergeName);
+		signal.comment = getComment(work, row, merge, signal.bitSign);
 
-		cell.column = static_cast<long> (header.adress[header.iMin]);
-		signal.sMinMaxCsrValField[0] = getCell(work, cell, cMergeName);
-		signal.bMinValField = false;
-
-		cell.column = static_cast<long> (header.adress[header.iMax]);
-		signal.sMinMaxCsrValField[1] = getCell(work, cell, cMergeName);
-		signal.bMaxValField = false;
-
-		cell.column = static_cast<long> (header.adress[header.iCSR]);
-		signal.sMinMaxCsrValField[2] = getCell(work, cell, cMergeName);
-		signal.bCsrValField = false;
-
-		// Чтение разрядов
-		cell.column = static_cast<long> (header.adress[header.iBits]);
-		signal.sBitField = getCell(work, cell, cMergeName);
-		signal.bBitField = false;
-		signal.b2BitField = false;
-		signal.iBitSigns = 0;
-		signal.bBitSigns = false;
-
-		// Чтение комментариев
-		cell.column = static_cast<long> (header.adress[header.iComment]);
-		signal.sCommentField = getCell(work, cell, cMergeName);
-		signal.bCommentField = false;
-
-		bool bEmpty = IsEmpty(work, cell.row);
-		bRemark = IsRemark(work, cell.row);
-
-		if (bEmpty)
-			cEmpty++;	// инкрементация счетчика пустых строк
-		else
-			cEmpty = 0;	// сброс счетчика
+		bool bEmpty = isEmpty(work, row);		// Проверка на пустую строку
+		bool bRemark = isRemark(work, row);		// Проверка на примечание
 
 		// Добавление сигнала
 		if (!bEmpty && !bRemark)
 			signals.push_back(signal);
+	}
+}
 
-		header.adress[header.iRow] += cMergeName;
+// Получить номера слов из ячейки в числа
+intData CReaderExcel::getNumWord(const CString& field) {
+	intData result;
+	CString numeric = field;
+	int posDot = numeric.Find(_T(','));
+	vector <int> vec;
+	vec.push_back(-1);
 
-	} while (cEmpty < MAX_EMPTY_STRING && !bRemark);
+	if (posDot == -1) {
+		numeric.Trim();
+		vec[0] = getInt(numeric, result.flag);
+	}
+	else {
+		vec.push_back(-1);
+		CString numeric2 = numeric;	
+		numeric.Delete(posDot, numeric.GetLength());	// Первое число
+		numeric.Trim();
+		vec[0] = getInt(numeric, result.flag);
 
-	return signals;
+		numeric2.Delete(0, posDot + 1);					// Второе число
+		numeric2.Trim();
+		vec[1] = getInt(numeric2, result.flag);
+	}
+
+	result.value = vec;
+	result.field = field;
+	return result;
+}
+
+// Получить значения мин, макс и цср
+void CReaderExcel::getMinMaxCsr(signalData& signal, CWorkExcel& work, const long& row) {
+	long column = header.adress[header.iMin];
+	signal.min.field = work.cellValue(row, column);
+	signal.min.value = getDouble(signal.min.field, signal.min.flag);
+
+	column = header.adress[header.iMax];
+	signal.max.field = work.cellValue(row, column);
+	signal.max.value = getDouble(signal.max.field, signal.max.flag);
+
+	column = header.adress[header.iCSR];
+	signal.csr.field = work.cellValue(row, column);
+	signal.csr.value = getDouble(signal.csr.field, signal.csr.flag);
+
+	// Сброс флагов, если одновременно все параметры пусты
+	if (signal.min.value == DBL_MIN && signal.max.value == DBL_MIN && signal.csr.value == DBL_MIN) {
+		signal.min.flag = false;
+		signal.max.flag = false;
+		signal.csr.flag = false;
+	}
+}
+
+// Перевод из используемых разрядов из строки в числа
+intData CReaderExcel::getBits(const CString& field) {
+	intData result;
+	CString bits = field;
+	int posDot = bits.Find(_T(','));
+	vector <int> vec;
+
+	// Для одного промежутка
+	if (posDot == -1)
+		vec = stepGetBits(bits, result.flag);
+	else { // Для двух промежутков
+		CString bits2 = bits;
+		bits2.Delete(0, posDot + 1);
+		bits.Delete(posDot, bits.GetLength());
+		bits.Trim();	bits2.Trim();
+
+		vec = stepGetBits(bits, result.flag);
+		vec[1] = -1;
+		vec.resize(4);
+
+		vector <int> vec2 = stepGetBits(bits2, result.flag);
+		for (size_t i = 0; i < vec2.size(); i++)
+			vec[i + 2] = vec2[i];
+	}
+
+	result.field = field;
+	result.value = vec;
+	return result;
+}
+
+// Дополнительная функция для перевода разрядов
+vector <int> CReaderExcel::stepGetBits(const CString& bits, bool& flag) {
+	vector <int> result;
+	CString num = bits;
+	num.Trim();
+
+	result.push_back(-1);
+	result.push_back(-1);
+
+	// Поиск индекса разделителей
+	int indxDel = num.Find(L'.');
+	if (indxDel == -1)
+		indxDel = num.Find(L'…');
+
+	if (indxDel == -1)	// Разделителей нет, используется один разряд
+		result[0] = getInt(num, flag);
+	else {
+		int posDot = num.ReverseFind(L'.');
+		if (posDot != -1)
+			num.Delete(indxDel, posDot - indxDel);
+
+		CString num2 = num;
+		num.Delete(indxDel, num.GetLength());	// Первое число
+		num.Trim();
+		result[0] = getInt(num, flag);
+
+		num2.Delete(0, indxDel + 1);	// Второе число
+		num2.Trim();
+		result[1] = getInt(num2, flag);
+	}
+
+	return result;
+}
+
+// Конвертер double значения
+double CReaderExcel::getDouble(const CString& field, bool& flag) {
+	double result = DBL_MIN;
+	CString temp = field;
+	temp.Trim();
+	temp.Replace(L',', L'.');
+	CStringA tmp(temp);
+	char* str = new char[tmp.GetLength() + 1];
+	strcpy_s(str, tmp.GetLength() + 1, tmp);
+
+	if (!temp.IsEmpty()) {
+		char* end;
+		errno = 0;
+		result = strtod(str, &end);
+		(*end != 0 || errno != 0) ? flag = true : flag = flag;
+	}
+	else
+		flag = true;
+
+	delete[] str;
+	return result;
+}
+
+// Конвертер int значения
+int CReaderExcel::getInt(const CString& field, bool& flag) {
+	int result = -1;
+	CString temp = field;
+	temp.Trim();
+	CStringA tmp(temp);
+	char* str = new char[tmp.GetLength() + 1];
+	strcpy_s(str, tmp.GetLength() + 1, tmp);
+
+	if (!field.IsEmpty()) {
+		char* end;
+		errno = 0;
+		result = strtol(str, &end, 10);
+		(*end != 0 || errno != 0) ? flag = true : flag = flag;
+	}
+	else
+		flag = true;
+
+	return result;
+}
+
+// Чтение примечания
+CString CReaderExcel::getComment(CWorkExcel& work, const long& row, const int& size, bool& flag) {
+	long column = header.adress[header.iComment];
+	long tmpRow = row;
+	int merge = work.getMerge(tmpRow, column);
+	CString result;
+
+	(size > merge) ? merge = size : merge = merge;
+	for (int i = 0; i < merge; i++) {
+		CString tmp = work.cellValue(tmpRow + i, column);
+		tmp.Trim();	
+		if (!tmp.IsEmpty()) {
+			(tmp.Find(SIGN_FIELD) != -1) ? flag = true : flag = flag;
+			result.IsEmpty() ? result = tmp : result += L'\n' + tmp;
+		}
+	}
+	return result;
 }
 
 // Проверка строки на пустоту
-bool CReaderExcel::IsEmpty(CWorkExcel& work, long row)
-{
+bool CReaderExcel::isEmpty(CWorkExcel& work, const long& row) {
 	bool result = true;
-	Cell cell;
 
-	cell.row = row;
-	for (long i = 1; i < header.size; i++)
-	{
-		cell.column = static_cast<long> (header.adress[i]);
-		if (work.getCellValue(cell) != "")
+	for (long i = 1; i < header.size; i++) {
+		long column = header.adress[i];
+		CString tmp = work.cellValue(row, column);
+		if (!tmp.IsEmpty())
 			result = false;
 	}
 
@@ -258,86 +300,28 @@ bool CReaderExcel::IsEmpty(CWorkExcel& work, long row)
 }
 
 // Является ли строка примечанием
-bool CReaderExcel::IsRemark(CWorkExcel& work, long row)
-{
-	bool result = true;
-	Cell cell;
+bool CReaderExcel::isRemark(CWorkExcel& work, const long& row) {
+	bool result = false;
 
-	cell.row = row;
-	for (long i = 1; i < header.size; i++)
-	{
-		cell.column = static_cast<long> (header.adress[i]);
-		result = (work.getCellValue(cell).Find(_T("Примечания:")) > -1 ||
-			work.getCellValue(cell).Find(_T("Примечание:")) > -1) ? true : false;
-	}
-
-	return result;
-}
-
-// Чтение ячейки
-CString CReaderExcel::getCell(CWorkExcel& work, Cell cell, long cName)
-{
-	CString result;
-	long size = work.getMergeCount(cell);
-
-	// Если слитая ячейка наименования больше, чем текущее, значит читаем все ячейки в количестве слитых ячеек наименования
-	if (cName > size)	
-	{
-		long start = work.getStartMerge(cell);
-		for (long i = start; i < start + cName; i++)
-		{
-			cell.row = i;
-			CString tmp = work.getCellValue(cell);
-
-			if (i != (start + size - 1) || (!result.IsEmpty() && !tmp.IsEmpty()))
-				result += _T(", ");
-
-			if (!tmp.IsEmpty())
-				result += work.getCellValue(cell);
-		}
-	}
-	else
-	{
-		cell.row = work.getStartMerge(cell);
-		result = work.getCellValue(cell);
+	for (long i = 1; i < header.size; i++) {
+		long column = header.adress[i];
+		CString tmp = work.cellValue(row, column);
+		result = (tmp.Find(REMARK1) > -1 ||
+			tmp.Find(REMARK2) > -1) ? true : result;
 	}
 
 	return result;
 }
 
 // Проверка расширения
-bool CReaderExcel::checkExtension(CString path)
-{
-	int posDot = path.Find(_T("."), path.GetLength() - 5);	// Поиск точечки
-
-	CString pathExtension = path.Mid(posDot + 1);	// Выделение расширения из пути
+bool CReaderExcel::checkExtension(const CString& path) {
+	bool result = false;
+	int dotPos = path.ReverseFind(_T('.'));	// Поиск точечки
+	CString ext = path.Mid(dotPos + 1);		// Выделение расширения из пути
 
 	for (size_t i = 0; i < extension.size(); i++)
-		if (pathExtension.CompareNoCase(extension[i]) == 0)
-			return true;
+		if (ext.CompareNoCase(extension[i]) == 0)
+			result = true;
 
-	return false;
-}
-
-// Поиск индексов заголовков
-bool CReaderExcel::findHeader(CWorkExcel& work)
-{
-	for (size_t i = 0; i < header.list.size(); i++)
-	{
-		list<CString>::iterator it = header.list[i].begin();
-		bool bFind = false;
-		Cell cell;
-
-		for (it; !bFind; it++)	// Поиск хотя бы одного варианта заголовка из списка
-		{
-			if ((it == header.list[i].end()) && !bFind)	// Ничего не нашли и список закончился
-				return false;
-
-			bFind = work.findOneDateCells(*it, cell);
-		}
-		header.adress[header.iRow] = cell.row;
-		header.adress[i + 1] = cell.column;
-	}
-
-	return true;
+	return result;
 }

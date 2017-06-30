@@ -1,505 +1,235 @@
-#include "stdafx.h"
+п»ї#include "stdafx.h"
 #include "Test.h"
 
-// Конструктор
-CTest::CTest()
-{
+// РљРѕРЅСЃС‚СЂСѓРєС‚РѕСЂ
+CTest::CTest() {	}
+
+// Р”РµСЃС‚СЂСѓРєС‚РѕСЂ
+CTest::~CTest()	{	}
+
+// РџСЂРѕРІРµСЂРєРё РЅР° РѕС€РёР±РєРё РѕРґРЅРѕРіРѕ РїСЂРѕС‚РѕРєРѕР»Р°
+errorSet CTest::Start(bookData& book) {
+	errorSet result;
+	*result.book = book;
+	for (size_t j = 0; j < book.sheets.size(); j++) {
+		errorSheet tmp;
+		tmp.sheet = &book.sheets[j];
+		getErrors(&book.sheets[j], tmp.syntax, tmp.simantic);
+		getWarnings(&book.sheets[j], tmp.warning);
+		result.set.push_back(tmp);
+	}
+	return result;
 }
 
-// Деструктор
-CTest::~CTest()
-{
+// РџСЂРѕРІРµСЂРєР° РЅР° РІСЃРµ РѕС€РёР±РєРё
+list <errorSet> CTest::Start(list <bookData>& books) {	
+	list <errorSet> errors;
+
+	for (list <bookData>::iterator it = books.begin(); it != books.end(); it++) {
+		errorSet error;
+		error.book = it;
+		for (size_t j = 0; j < it->sheets.size(); j++) {
+			errorSheet tmp;
+			tmp.sheet = &it->sheets[j];
+			getErrors(&it->sheets[j], tmp.syntax, tmp.simantic);
+			getWarnings(&it->sheets[j], tmp.warning);
+			error.set.push_back(tmp);
+		}
+		errors.push_back(error);
+	}
+
+	return errors;
 }
 
-// Проверка на все ошибки
-errorOneSet CTest::Start(bookData& book) 
-{	
-	// Синтаксические ошибки
-	error.syntax.sheets.resize(book.sheets.size());
-	error.syntax.name = book.name;
-	Syntax(error.syntax, book);
+// РџСЂРѕРІРµСЂРєР° РЅР° РѕС€РёР±РєРё
+void CTest::getErrors(sheetData* sheet, vector <errorSignal>& syntax, vector <errorSignal>& simantic) {
+	checkNP(sheet->signals[0], sheet->np, syntax);
+	try {
+		bool *numRepit = new bool[MAX_NUMWORD];		// РџРѕРІС‚РѕСЂРµРЅРёСЏ СЃР»РѕРІ
+		bool **bitRepit = new bool*[MAX_NUMWORD];	// РџРѕРІС‚РѕСЂРµРЅРёСЏ Р±РёС‚РѕРІ
+		for (int i = 0; i < MAX_NUMWORD; i++)
+			bitRepit[i] = new bool[MAX_BITS];
 
-	// Семантические ошибки
-	error.simantic.sheets.resize(book.sheets.size());
-	error.simantic.name = book.name;
-	Simantic(error.simantic, book);
+		initRepiter(numRepit, bitRepit);	// РРЅРёС†РёР°Р»РёР·Р°С†РёСЏ
 
-	// Замечания
-	error.warning.sheets.resize(book.sheets.size());
-	error.warning.name = book.name;
-	Warning(error.warning, book);
-	
-	return error;
+		for (size_t i = 0; i < sheet->signals.size(); i++) {
+
+			if (sheet->signals[i].title[0].CompareNoCase(RESERVE_SIGNAL) != 0) { // РџСЂРѕРІРµСЂРєР° РЅР° СЂРµР·РµСЂРІРЅРѕСЃС‚СЊ
+				bool correctTitle = true, result = true;
+
+				// РџСЂРѕС…РѕРґ РїРѕ СЃРёРЅС‚Р°РєСЃРёС‡РµСЃРєРёРј РѕС€РёР±РєР°Рј
+				errorSignal tmp;
+				tmp.signal = &sheet->signals[i];
+				syntaxValue(sheet->signals[i], tmp.error) ? result = result : result = false;
+				sheet->signals[i].bit.field.Trim();
+				syntaxBits(sheet->signals[i].bit, tmp.error) ? result = result : result = false;
+				sheet->signals[i].title[1].Trim();
+				correctTitle = syntaxTitle(sheet->signals[i].title, tmp.error) ? result = result : result = false;
+				
+				if (!tmp.error.empty()) {
+					syntax.push_back(tmp);
+					tmp.error.clear();
+				}
+
+				// РџСЂРѕС…РѕРґ РїРѕ СЃРµРјР°РЅС‚РёС‡РµСЃРєРјРё РѕС€РёР±РєР°Рј
+				simanticNumWord(sheet->signals[i].numWord, numRepit, tmp.error) ? result = result : result = false;
+				simanticTitle(sheet, (int)i, sheet->signals[i].title[1], correctTitle, tmp.error) ? result = result : result = false;
+				simanticValue(sheet->signals[i], tmp.error) ? result = result : result = false;
+				
+				CString prevTitle;
+				(i > 0) ? prevTitle = sheet->signals[i - 1].title[0] : prevTitle = L"";
+				simanticBits(sheet->signals[i], prevTitle, bitRepit, tmp.error) ? result = result : result = false;
+
+				if (!tmp.error.empty())
+					simantic.push_back(tmp);
+
+				if (!result)
+					sheet->error = true;
+			}
+		}
+
+		// Р’С‹СЃРІРѕР±РѕР¶РґРµРЅРёРµ РїР°РјСЏС‚Рё
+		delete[] numRepit;
+		for (int i = 0; i < MAX_BITS; i++)
+			delete[] bitRepit[i];
+		delete[] bitRepit;
+	}
+	catch (UndefinedError& exc) {
+		exc.SetName(sheet->name);
+		throw exc;
+	}
+}
+
+// РџСЂРѕРІРµСЂРєР° РЅР° Р·Р°РјРµС‡Р°РЅРёСЏ
+void CTest::getWarnings(sheetData* sheet, vector <errorSignal>& warning) {
+	for (size_t i = 1; i < sheet->signals.size(); i++) {
+
+		if (sheet->signals[i].title[0].CompareNoCase(RESERVE_SIGNAL) != 0) { // РџСЂРѕРІРµСЂРєР° РЅР° СЂРµР·РµСЂРІРЅРѕСЃС‚СЊ
+			errorSignal tmp;
+			tmp.signal = &sheet->signals[i];
+			// РџСЂРѕРІРµСЂРєР° РЅР° РїСЂРёСЃСѓС‚СЃС‚РІРёРµ РїР°СЂР°РјРµС‚СЂРѕРІ РІ РєРЅРёРіРµ
+			warning.push_back(tmp);
+		}
+	}
+}
+
+// РџСЂРѕРІРµСЂРєР° РѕС€РёР±РѕРє, СЃРІСЏР·Р°РЅРЅС‹С… СЃ РЅРѕРјРµСЂРѕРј РЅР°Р±РѕСЂР°
+void CTest::checkNP(signalData& signal, const int& np, vector <errorSignal>& syntax) {
+	errorSignal tmp;
+	tmp.signal = &signal;
+	tmp.error.push_back(errRemarks[6]);
+
+	if (np == 0)
+		tmp.error.push_back(L"РћС‚СЃСѓС‚СЃС‚РІСѓРµС‚ РЅРѕРјРµСЂ РЅР°Р±РѕСЂР° РїР°СЂР°РјРµС‚СЂРѕРІ");
+	else {
+		// РњРёРЅРёРјР°Р»СЊРЅРѕ Рё РјР°РєСЃРёРјР°Р»СЊРЅРѕРµ Р·РЅР°С‡РµРЅРёРµ РґРѕР»Р¶РЅРѕ СЃРѕРѕС‚РІРµС‚СЃС‚РІРѕРІР°С‚СЊ РЅРѕРјРµСЂ РЅР°Р±РѕСЂР°
+		if (!signal.min.flag && !signal.max.flag)
+			if (signal.min.value != np || signal.max.value != np)
+				tmp.error.push_back(L"Р—РЅР°С‡РµРЅРёРµ РЅРµ СЃРѕРѕС‚РІРµС‚СЃС‚РІСѓРµС‚ Р·РЅР°С‡РµРЅРёСЋ РІ РїСЂРёРјРµС‡Р°РЅРёРё");
+	}
+
+	if (tmp.error.size() > 1) 
+		syntax.push_back(tmp);
+}
+
+// РРЅРёС†РёР°Р»РёР·Р°С†РёСЏ СЂРµРїРёС‚РµСЂРѕРІ
+void CTest::initRepiter(bool* num, bool** bits) {
+	for (int i = 0; i < MAX_NUMWORD; i++) {
+		num[i] = true;
+		for (int j = 0; j < MAX_BITS; j++)
+			bits[i][j] = true;
+	}
 }
 
 #pragma region Syntax
 
-// Проверка на синтаксические ошибки
-void CTest::Syntax(errorBookData& errBook, bookData& book)
-{
-	for (size_t cSheet = 0; cSheet < errBook.sheets.size(); cSheet++)
-	{
-		errBook.sheets[cSheet].name = book.sheets[cSheet].name;
-
-		for (list <signalData>::iterator it = book.sheets[cSheet].signals.begin(); it != book.sheets[cSheet].signals.end(); it++)
-		{
-			try 
-			{
-				bool begin = true, result = true;
-				if (it != book.sheets[cSheet].signals.begin())	begin = false;
-				if (it->sTitleParamField->Compare(_T("Резерв")) != 0)
-				{
-					result = syntaxNumWord(errBook.sheets[cSheet], it);
-					(!syntaxTitleParam(errBook.sheets[cSheet], it)) ? result = false : result = result;
-					(!syntaxMinMaxCSR(errBook.sheets[cSheet], it)) ? result = false : result = result;
-					(!syntaxBits(errBook.sheets[cSheet], it)) ? result = false : result = result;
-					(!syntaxComment(errBook.sheets[cSheet], it, begin)) ? result = false : result = result;
-				}
-				
-				if (NP != 0)
-				{
-					book.sheets[cSheet].iFieldNP = NP;	// Установка номера набора (translateComment)
-					NP = 0;
-				}
-
-				if (!result)	// Установка флага, что на листе есть ошибка
-					book.sheets[cSheet].bError = true;
-			}
-			catch (UndefinedError& exc)
-			{
-				exc.SetName(errBook.sheets[cSheet].name);
-				throw exc;
-			}
-		}
-	}
-}
-
-// Проверка номера слова
-bool CTest::syntaxNumWord(errorSheetData& sheet, list<signalData>::iterator& it)
-{
-	list <CString> error = testField(it->sNumWordField, ErrorBase.getNumWord());
-
-	if (error.empty())
-	{
-		translateNumWord(it);	// Преобразование слов в числа
-		return true;
-	}
-	
-	error.push_front(errRemarks[0]);
-	errorSignalData signal = getErrSignal(it, error);
-	sheet.signals.push_back(signal);
-	it->bNumWordField = true;
-	return false;
-}
-
-// Проверка наименований сигнала
-bool CTest::syntaxTitleParam(errorSheetData& sheet, list<signalData>::iterator& it)
-{
-	list <CString> error = testField(it->sTitleParamField[1], ErrorBase.getTitleParam());
-
-	if (error.empty())
-		return true;
-
-	error.push_front(errRemarks[1]);
-	errorSignalData signal = getErrSignal(it, error);
-	sheet.signals.push_back(signal);
-	it->bTitleParamField = true;
-	return false;
-}
-
-// Проверка минимального, максимального и цср
-bool CTest::syntaxMinMaxCSR(errorSheetData& sheet, list<signalData>::iterator& it)
-{
-	list <CString> errMin, errMax, errCSR;
-	bool result = true;
-
-	if (!it->sMinMaxCsrValField[0].IsEmpty() || !it->sMinMaxCsrValField[0].IsEmpty() || !it->sMinMaxCsrValField[0].IsEmpty())
-	{
-		errMin = testField(it->sMinMaxCsrValField[0], ErrorBase.getMinMaxCSR());
-		errMax = testField(it->sMinMaxCsrValField[1], ErrorBase.getMinMaxCSR());
-		errCSR = testField(it->sMinMaxCsrValField[2], ErrorBase.getMinMaxCSR());
-	}
-
-	if (!errMin.empty())
-	{
-		errMin.push_front(errRemarks[2]);
-		errorSignalData signal = getErrSignal(it, errMin);
-		sheet.signals.push_back(signal);
-		it->bMinValField = true;
-		result = false;
-	}
-
-	if (!errMax.empty())
-	{
-		errMax.push_front(errRemarks[3]);
-		errorSignalData signal = getErrSignal(it, errMax);
-		sheet.signals.push_back(signal);
-		it->bMaxValField = true;
-		result = false;
-	}
-
-	if (!errCSR.empty())
-	{
-		errCSR.push_front(errRemarks[4]);
-		errorSignalData signal = getErrSignal(it, errCSR);
-		sheet.signals.push_back(signal);
-		it->bCsrValField = true;
-		result = false;
-	}
-
-	if (result)
-		translateMMC(it);
-
+// РџСЂРѕРІРµСЂРєР° С‡РёСЃР»РѕРІС‹С… РїР°СЂР°РјРµС‚СЂРѕРІ 
+bool CTest::syntaxValue(const signalData& signal, vector <CString>& error) {
+	bool result;
+	checkValueByFlag(L"в„– СЃР»РѕРІР°", 0, signal.numWord.flag, error);
+	checkValueByFlag(L"РјРёРЅРёРјСѓРјР°", 2, signal.min.flag, error);
+	checkValueByFlag(L"РјР°РєСЃРёРјСѓРјР°", 3, signal.max.flag, error);
+	checkValueByFlag(L"С†СЃСЂ", 4, signal.csr.flag, error);
+	//checkValueByFlag(L"Р±РёС‚РѕРІ", 5, signal.bit.flag, error);
+	(signal.numWord.flag || signal.min.flag || signal.max.flag || signal.csr.flag) ? result = false : result = true;
 	return result;
 }
 
-// Проверка используемых разрядов
-bool CTest::syntaxBits(errorSheetData& sheet, list<signalData>::iterator& it)
-{
-	list <CString> error = testField(it->sBitField, ErrorBase.getBits());
-
-	if (error.empty())
-	{
-		translateBits(it);
-		return true;
+// РџСЂРѕРІРµСЂРєР° С‡РёСЃР»РѕРІС‹С… РїР°СЂР°РјРµС‚СЂРѕРІ РїРѕ РЅР°Р±РѕСЂСѓ С„Р»Р°РіРѕРІ
+void CTest::checkValueByFlag(const CString& field, const int& indx, const bool& flag, vector <CString>& error) {
+	if (flag) {
+		error.push_back(errRemarks[indx]);
+		CString message;
+		message.Format(ERROR_DATA, field);
+		error.push_back(message);
 	}
-
-	error.push_front(errRemarks[5]);
-	errorSignalData signal = getErrSignal(it, error);
-	sheet.signals.push_back(signal);
-	it->bBitField = true;
-
-	return false;
 }
 
-// Проверка комментариев
-bool CTest::syntaxComment(errorSheetData& sheet, list<signalData>::iterator& it, bool begin)
-{
-	list <CString> error;
-	string field = CT2A(it->sCommentField);
+// РџСЂРѕРІРµСЂРєР° Р±РёС‚РѕРІ
+bool CTest::syntaxBits(const intData& bits, vector <CString>& error) {
+	regex correct("^[0-9]+((вЂ¦|[.]{3})[0-9]+)?(,[ \t]?[0-9]+((вЂ¦|[.]{3})[0-9]+)?)?$");
+	string tmp = CT2A(bits.field);
+	bool result = regex_match(tmp, correct);
 
-	if (begin)
-	{
-		bool bNP = regex_search(field, ErrorBase.getComment().error[0]);	// Проверка на набор параметров
-		if (bNP)
-			error.push_back(ErrorBase.getComment().description[0]);
-	}
-	else
-	{
-		bool zn = regex_search(field, ErrorBase.getComment().error[1]);	// Проверка на знак
-		if (zn)
-		{
-			error.push_back(ErrorBase.getComment().description[1]);
-			it->bBitSigns = true;
-		}		
-	}
-
-	if (error.empty())
-	{
-		translateComment(it);	// Достать значение знакового бита или NP набора, если они есть
-		return true;
-	}
-
-	error.push_front(errRemarks[6]);
-	errorSignalData signal = getErrSignal(it, error);
-	sheet.signals.push_back(signal);
-	return false;
-}
-
-// Проверка поля на ошибки
-list <CString> CTest::testField(CString field, errorData errStruct)
-{
-	string temp = CT2A(field);
-	list <CString> error;	// Набор найденных ошибок в поле
-	bool result = false;
-
-	result = regex_match(temp, errStruct.correct);	// Проверка на корректную регулярку
-
-	if (result)	return error;
-
-	for (size_t i = 0; i < errStruct.error.size(); i++)	// Перебор базы ошибок
-		if (regex_search(temp, errStruct.error[i]))
-		{
-			error.push_back(errStruct.description[i]);
-			result = true;
-		}
-
-	if (!result)	// исключение, если в базе ошибок такая ошибка не предусмотрена
-	{
-		UndefinedError exc;
-		exc.SetParam(field);
-		throw exc;
-	}
-
-	return error;
-}
-
-#pragma endregion 
-
-// Замечания
-void CTest::Warning(errorBookData& errBook, bookData& book)
-{
-	for (size_t cSheet = 0; cSheet < errBook.sheets.size(); cSheet++)
-	{
-		errBook.sheets[cSheet].name = book.sheets[cSheet].name;
-
-		for (list <signalData>::iterator it = book.sheets[cSheet].signals.begin(); it != book.sheets[cSheet].signals.end(); it++)
-		{
-			list <CString> error;
-
-			if (!it->bTitleParamField)
-				if (findRepiteInBook(it->sTitleParamField[1], book))
-					error.push_back(ErrorBase.sim.TitleRepBook);
-			
-			if (!error.empty())
-			{
-				error.push_front(errRemarks[1]);
-				errorSignalData signal = getErrSignal(it, error);
-				errBook.sheets[cSheet].signals.push_back(signal);
-				it->bTitleParamField = true;
+	if (!result) {
+		error.push_back(errRemarks[5]);
+		bool bFind = false;	// РќР°Р№РґРµРЅР° Р»Рё РѕС€РёР±РєР° РёР· РЅР°Р±РѕСЂР° СЂРµРіСѓР»СЏСЂРЅС‹С… РІС‹СЂР°Р¶РµРЅРёР№
+		vector <string> incorrect = { "^[ \t\n]*$", "[^0-9., \tвЂ¦]+", "[0-9.вЂ¦]*[ \t]+[0-9.вЂ¦]*", "[0-9]*[.]{1,2}[0-9]*",
+			"^(вЂ¦|[.]{3})[0-9]+" , "[0-9]+(вЂ¦|[.]{3})$", "(,[ \t]?)+[0-9.вЂ¦]*(,[ \t]?)+", "^[0-9]*[.]{1,2}[0-9]*,[ \t]?",
+			"^(вЂ¦|[.]{3})[0-9]+,[ \t]?", "^[0-9]+(вЂ¦|[.]{3}),[ \t]?",  ",[ \t]?([0-9]*[.]{1,2}[0-9]*)$"",[ \t]?([0-9]*[.]{1,2}[0-9]*)$",
+			",[ \t]?(вЂ¦|[.]{3})[0-9]+$", ",[ \t]?[0-9]+(вЂ¦|[.]{3})$", "[0-9]*[.]{1,2}[0-9]*,[ \t]?[0-9]*[.]{1,2}[0-9]*" };
+		vector <CString> description = { L"Р—РЅР°С‡РµРЅРёРµ РІ РїРѕР»Рµ РѕС‚СЃСѓС‚СЃС‚РІСѓРµС‚.", L"РџРѕР»Рµ СЃРѕРґРµСЂР¶РёС‚ РЅРµРґРѕРїСѓСЃС‚РёРјС‹Рµ СЃРёРјРІРѕР»С‹.", L"РџРѕР»Рµ СЃРѕРґРµСЂР¶РёС‚ Р»РёС€РЅРёРµ РїСЂРѕР±РµР»С‹. Р”РѕРїСѓСЃРєР°РµС‚СЃСЏ С‚РѕР»СЊРєРѕ РїРѕСЃР»Рµ Р·Р°РїСЏС‚РѕР№.", 
+			L"РќРµРІРµСЂРЅРѕРµ РѕР±РѕР·РЅР°С‡РµРЅРёРµ РїСЂРѕРјРµР¶СѓС‚РєР°.", L"РћС‚СЃСѓС‚СЃС‚РІСѓРµС‚ Р·РЅР°С‡РµРЅРёРµ РІ РЅР°С‡Р°Р»Рµ РїСЂРѕРјРµР¶СѓС‚РєР°.", L"РћС‚СЃСѓС‚СЃС‚РІСѓРµС‚ Р·РЅР°С‡РµРЅРёРµ РІ РєРѕРЅС†Рµ РїСЂРѕРјРµР¶СѓС‚РєР°.", 
+			L"Р—РЅР°С‡РµРЅРёРµ РІ РїРѕР»Рµ СЃРѕРґРµСЂР¶РёС‚ Р±РѕР»РµРµ РѕРґРЅРѕР№ Р·Р°РїСЏС‚РѕР№.", L"РќРµРІРµСЂРЅРѕРµ РѕР±РѕР·РЅР°С‡РµРЅРёРµ РїСЂРѕРјРµР¶СѓС‚РєР° РґРѕ Р·Р°РїСЏС‚РѕР№.", L"РћС‚СЃСѓС‚СЃС‚РІСѓРµС‚ Р·РЅР°С‡РµРЅРёРµ РІ РЅР°С‡Р°Р»Рµ РїСЂРѕРјРµР¶СѓС‚РєР° РґРѕ Р·Р°РїСЏС‚РѕР№.", 
+			L"РћС‚СЃСѓС‚СЃС‚РІСѓРµС‚ Р·РЅР°С‡РµРЅРёРµ РІ РєРѕРЅС†Рµ РїСЂРѕРјРµР¶СѓС‚РєР° РґРѕ Р·Р°РїСЏС‚РѕР№.", L"РќРµРІРµСЂРЅРѕРµ РѕР±РѕР·РЅР°С‡РµРЅРёРµ РїСЂРѕРјРµР¶СѓС‚РєР° РїРѕСЃР»Рµ Р·Р°РїСЏС‚РѕР№.",  L"РћС‚СЃСѓС‚СЃС‚РІСѓРµС‚ Р·РЅР°С‡РµРЅРёРµ РІ РЅР°С‡Р°Р»Рµ РїСЂРѕРјРµР¶СѓС‚РєР° РїРѕСЃР»Рµ Р·Р°РїСЏС‚РѕР№.",
+			L"РћС‚СЃСѓС‚СЃС‚РІСѓРµС‚ Р·РЅР°С‡РµРЅРёРµ РІ РєРѕРЅС†Рµ РїСЂРѕРјРµР¶СѓС‚РєР° РїРѕСЃР»Рµ Р·Р°РїСЏС‚РѕР№.", L"РќРµРІРµСЂРЅРѕРµ РѕР±РѕР·РЅР°С‡РµРЅРёРµ РѕР±РѕРёС… РїСЂРѕРјРµР¶СѓС‚РєРѕРІ." };
+		// РџРѕРёСЃРє РѕС€РёР±РєРё (РѕР±С…РѕРґ РїРѕ РЅР°Р±РѕСЂСѓ СЂРµРіСѓР»СЏСЂРѕРє)
+		for (size_t i = 0; i < incorrect.size(); i++) {
+			regex reg(incorrect[i]);
+			if (regex_search(tmp, reg)) {
+				if (i == 3 || i == 7 || i == 10 || i == 13)	// РћС€РёР±РєРё, СЃРІСЏР·Р°РЅРЅС‹Рµ СЃ РїСЂРѕРјРµР¶СѓС‚РєР°РјРё (С‡С‚РѕР±С‹ РјРѕР¶РЅРѕ Р±С‹Р»Рѕ РіРµРЅРµСЂРёСЂРѕРІР°С‚СЊ РІ С‚Р°РєРѕРј СЃР»СѓС‡Р°Рµ СЃРєСЂРёРїС‚С‹)
+					result = true;
+				error.push_back(description[i]);
+				bFind = true;
 			}
 		}
-	}
-}
-
-#pragma region Simantic
-
-// Проверка на семантические ошибки
-void CTest::Simantic(errorBookData& errBook, bookData& book)
-{
-	for (size_t cSheet = 0; cSheet < errBook.sheets.size(); cSheet++)
-	{
-		errBook.sheets[cSheet].name = book.sheets[cSheet].name;
-		bool wRepite[32];		// Для отслеживания повторений слов
-		bool tRepiter[32][32];	// Для отслеживания бито перекрытия
-
-		for (list <signalData>::iterator it = book.sheets[cSheet].signals.begin(); it != book.sheets[cSheet].signals.end(); it++)
-		{
-			bool begin = true, result = true;
-			if (it != book.sheets[cSheet].signals.begin())	begin = false;
-			if (it->sTitleParamField->Compare(_T("Резерв")) != 0)
-			{
-				result = simanticNumWord(errBook.sheets[cSheet], it, wRepite);
-				(!simanticTitleParam(errBook.sheets[cSheet], it, book, cSheet)) ? result = false : result = result;
-				(!simanticMinMaxCSR(errBook.sheets[cSheet], it, book.sheets[cSheet].iFieldNP, begin)) ? result = false : result = result;
-				//(!simanticBits(errBook.sheets[cSheet], it, tRepiter)) ? result = false : result = result;
-			}
-			if (!result)	// Установка флага, что на листе есть ошибка
-				book.sheets[cSheet].bError = true;
+		if (!bFind) {	// РќРµРѕРїРѕР·РЅР°РЅРЅР°СЏ РѕС€РёР±РєР°
+			UndefinedError exc;
+			exc.SetParam(bits.field);
+			throw exc;
 		}
 	}
-}
-
-// Проверка номера слова
-bool CTest::simanticNumWord(errorSheetData& sheet, list<signalData>::iterator& it, bool wRep[])
-{
-	list <CString> error;
-
-	if (!it->bNumWordField)
-	{
-		if (it->iNumWord[0] > 32 || it->iNumWord[1] > 32)	// Слово должно быть не больше 32
-			error.push_back(ErrorBase.sim.NumMore32);
-
-		if (it->iNumWord[1] > 0)
-			if (!wRep[it->iNumWord[1] - 1])	// Поиск совпадений № слов для второго слова
-				error.push_back(ErrorBase.sim.NumRepite);
-		else if (!wRep[it->iNumWord[0] - 1])	// Для первого
-			error.push_back(ErrorBase.sim.NumRepite);
-
-		// Отметка о том, что эти слова на этом листе
-		wRep[it->iNumWord[0] - 1] = false;
-		if (it->iNumWord[1] > 0)
-			wRep[it->iNumWord[1] - 1] = false;
-	}
-
-	if (error.empty())
-		return true;
-
-	error.push_front(errRemarks[0]);
-	errorSignalData signal = getErrSignal(it, error);
-	sheet.signals.push_back(signal);
-
-	return false;
-}
-
-// Проверка идентификатора
-bool CTest::simanticTitleParam(errorSheetData& errSheet, list<signalData>::iterator& it, bookData book, int iSheet)	// Прокинуть книгу и индекс листа
-{
-	list <CString> error;
-
-	if (!it->bTitleParamField)
-		if (findRepiteInSheet(it->sTitleParamField[1], book.sheets[iSheet]))
-			error.push_back(ErrorBase.sim.TitleRepSheet);
-
-	if (error.empty())
-		return true;
-
-	error.push_front(errRemarks[1]);
-	errorSignalData signal = getErrSignal(it, error);
-	errSheet.signals.push_back(signal);
-	it->bTitleParamField = true;
-
-	return false;
-}
-
-// Проверка минимального, максимального и цср
-bool CTest::simanticMinMaxCSR(errorSheetData& sheet, list<signalData>::iterator& it, int currNP, bool begin)
-{
-	list <CString> errMin, errMax;
-
-	if (!it->bMinValField && !it->bMaxValField && !it->bCsrValField && !it->bBitField && !it->bBitSigns)
-	{
-		if (begin)
-		{
-			if (it->dMinMaxCsrVal[0] != currNP)
-				errMin.push_back(ErrorBase.sim.MMCNotNote);
-			if (it->dMinMaxCsrVal[1] != currNP)
-				errMax.push_back(ErrorBase.sim.MMCNotNote);
-		}
-
-		// Подсчет битов
-		int nBit = 0;
-		if (it->b2BitField)
-			nBit = (it->iBit[1] - it->iBit[0]) + (it->iBit[3] - it->iBit[2]) + 2;
-		else
-			nBit = it->iBit[1] - it->iBit[0] + 1;
-
-		if (it->bCommentField)	// Если есть знаковое описание, то -1 бит	
-			nBit--;
-
-		// Подсчет минимума и максимума
-		int nMin = it->dMinMaxCsrVal[2];	// мин
-		for (int i = 1; i <= nBit; i++)
-			nMin = nMin / 2;
-
-		int nMax = (it->dMinMaxCsrVal[2] * 2) - nMin;	// макс
-
-		if (it->dMinMaxCsrVal[1] - nMax > 2)
-			errMax.push_back(ErrorBase.sim.MMCNotPkg);
-		else if (( (abs(it->dMinMaxCsrVal[0]) > (nMax + nMin)) || (abs(it->dMinMaxCsrVal[0]) < nMin)) && it->dMinMaxCsrVal[0] != 0)
-			errMin.push_back(ErrorBase.sim.MMCNotPkg);
-
-		if ((it->dMinMaxCsrVal[0] < 0) && !it->bCommentField)
-			errMin.push_back(ErrorBase.sim.MMCNotNegative);
-		else if ((it->dMinMaxCsrVal[0] >= 0) && it->bCommentField)
-			errMin.push_back(ErrorBase.sim.MMCNegative);
-	}
-
-	if (errMin.empty() && errMax.empty())
-		return true;
-	else if (!errMin.empty())
-	{
-		errMin.push_front(errRemarks[2]);
-		errorSignalData signal = getErrSignal(it, errMin);
-		sheet.signals.push_back(signal);
-	}
-	else
-	{
-		errMax.push_front(errRemarks[3]);
-		errorSignalData signal = getErrSignal(it, errMax);
-		sheet.signals.push_back(signal);
-	}
-
-	return false;
-}
-
-// Проверка используемых разрядов
-bool CTest::simanticBits(errorSheetData& sheet, list<signalData>::iterator& it, bool tRep[][32])
-{
-	list <CString> error;
+	return result;
 	
-	if (!it->bNumWordField && !it->bBitField)
-	{
-		if (it->b2NumWordField == it->b2BitField)	// Кол-во № слов должно совпадать с кол-вами интервалов исп. разрядов
-		{
-			if (!checkCrossBits(it, tRep))	// Проверка на перекрытие
-				error.push_back(ErrorBase.sim.BitsCross);	
-
-			if (it->bCommentField && !it->bBitSigns)
-				if (it->iBitSigns != it->iBit[0])
-					error.push_back(ErrorBase.sim.BitsNotSetSign);
-		}
-		else
-		{
-			if (it->b2NumWordField)
-				error.push_back(ErrorBase.sim.BitsOneInter);
-			if (it->b2BitField)
-				error.push_back(ErrorBase.sim.BitsTwoInter);
-		}
-	}
-
-	if (error.empty())
-		return true;
-
-	error.push_front(errRemarks[5]);
-	errorSignalData signal = getErrSignal(it, error);
-	sheet.signals.push_back(signal);
-
-	return false;
 }
 
-// Проверка на перекрытие битов
-bool CTest::checkCrossBits(list<signalData>::iterator& it, bool repiter[][32])
-{
-	bool result = false;
-	int nInterval;
-	(it->b2BitField) ? nInterval = 2 : nInterval = 1;
+// РџСЂРѕРІРµСЂРєР° СЃРёРЅС‚Р°РєСЃРёСЃР° РёРґРµРЅС‚РёС„РёРєР°С‚РѕСЂР°
+bool CTest::syntaxTitle(const vector <CString>& title, vector <CString>& error) {
+	regex correct("^[A-Za-z][A-Za-z0-9_]*$");
+	string tmp = CT2A(title[1]);
+	bool result = regex_match(tmp, correct);
 
-	for (int i = 0; i < nInterval; i++)
-	{
-		int start, end;
-
-		if (i == 0)
-		{
-			start = it->iBit[0];
-			end = it->iBit[1];
-		}
-		else
-		{
-			start = it->iBit[2];
-			end = it->iBit[3];
-		}
-
-		if (end == 0)
-			end = start;
-
-		// int param_povt_f = -1, param_povt_s = -1;
-		// CString boot = _T("");
-
-		for (; start <= end; start++)
-		{
-			if (repiter[it->iNumWord[i] - 1][start - 1])
-				repiter[it->iNumWord[i] - 1][start - 1] = false;
-			else
-				result = true;
-			/*{
-				result = true;
-				if (param_povt_f == -1)
-				{
-					param_povt_f = start_bit;
-					boot.Format(_T("%d"), param_povt_f);
-				}
-
-				if (param_povt_s == -1)
-					param_povt_s = start_bit;
-
-				if ((start_bit - param_povt_s) > 1)
-				{
-					if (param_povt_f == param_povt_s)
-						boot.Format(_T("%s,%d"), boot, param_povt_s);
-					else
-						boot.Format(_T("%s...%d,%d"), boot, param_povt_s, start_bit);
-					param_povt_f = start;
-					param_povt_s = start;
-				}
-
-				if ((start - param_povt_s) == 1)
-					param_povt_s = start;
+	if (!result) {
+		error.push_back(errRemarks[1]);
+		bool bFind = false;	// РќР°Р№РґРµРЅР° Р»Рё РѕС€РёР±РєР° РёР· РЅР°Р±РѕСЂР° СЂРµРіСѓР»СЏСЂРЅС‹С… РІС‹СЂР°Р¶РµРЅРёР№
+		vector <string> incorrect = { "^[ \t\n]*$", "[ \t\n]+", "^[^A-Za-z][A-Za-z0-9_]*$", "([A-Za-z0-9_]*[Рђ-РЇР°-СЏ]+[A-Za-z0-9_]*)+", "_$" };
+		vector <CString> description = { L"Р—РЅР°С‡РµРЅРёРµ РІ РїРѕР»Рµ РѕС‚СЃСѓС‚СЃС‚РІСѓРµС‚. (Р’РѕР·РјРѕР¶РЅРѕ СЃРёРіРЅР°Р» Р·Р°СЂРµР·РµСЂРІРёСЂРѕРІР°РЅ, РЅРѕ \"Р РµР·РµСЂРІ\" РЅРµ РЅР°РїРёСЃР°РЅРѕ)", 
+										L"Р—РЅР°С‡РµРЅРёРµ РІ РїРѕР»Рµ СЃРѕРґРµСЂР¶РёС‚ РїСЂРѕР±РµР»",
+										L"Р—РЅР°С‡РµРЅРёРµ РІ РїРѕР»Рµ РЅР°С‡РёРЅР°РµС‚СЃСЏ РЅРµ СЃ Р»Р°С‚РёРЅСЃРєРѕР№ Р±СѓРєРІС‹",
+										L"Р—РЅР°С‡РµРЅРёРµ РІ РїРѕР»Рµ СЃРѕРґРµСЂР¶РёС‚ РєРёСЂРёР»Р»РёС†Сѓ", 
+										L"Р—РЅР°С‡РµРЅРёРµ РІ РїРѕР»Рµ Р·Р°РєР°РЅС‡РёРІР°РµС‚СЃСЏ РЅР° '_'" };
+		// РџРѕРёСЃРє РѕС€РёР±РєРё (РѕР±С…РѕРґ РїРѕ РЅР°Р±РѕСЂСѓ СЂРµРіСѓР»СЏСЂРѕРє)
+		for (size_t i = 0; i < incorrect.size(); i++) {
+			regex reg(incorrect[i]);
+			if (regex_search(tmp, reg)) {
+				error.push_back(description[i]);
+				bFind = true;
 			}
-
-			if (start == end)
-				if (param_povt_f != param_povt_s)
-					boot.Format(_T("%s...%d"), boot, param_povt_s);*/
+		}
+		if (!bFind) {	// РќРµРѕРїРѕР·РЅР°РЅРЅР°СЏ РѕС€РёР±РєР°
+			UndefinedError exc;
+			exc.SetParam(title[0] + L';' + title[1]);
+			throw exc;
 		}
 	}
 	return result;
@@ -507,202 +237,151 @@ bool CTest::checkCrossBits(list<signalData>::iterator& it, bool repiter[][32])
 
 #pragma endregion
 
-// Поиск повторений в книге
-bool CTest::findRepiteInBook(CString field, bookData book)
-{
-	int result = 0;
+#pragma region Simantic
 
-	for (size_t iSheet = 0; iSheet < book.sheets.size(); iSheet++)
-	{
-		list<signalData>::iterator& it = book.sheets[iSheet].signals.begin();	it++;
-		for (; it != book.sheets[iSheet].signals.end(); it++)
-			if (it->sTitleParamField[1].Compare(field) == 0)
-				result++;
+// РџСЂРѕРІРµСЂРєР° РЅРѕРјРµСЂР° СЃР»РѕРІР°
+bool CTest::simanticNumWord(const intData& num, bool* repiter, vector <CString>& error) {
+	bool result = true;
+	if (!num.flag) {
+		vector <CString> tmp;
+		tmp.push_back(errRemarks[0]);
+		for (size_t i = 0; i < num.value.size(); i++) {
+			//if (!repiter[num[i] - 1])		// РџРѕРёСЃРє СЃРѕРІРїР°РґРµРЅРёР№ 
+				//tmp.push_back(_T("РЎР»РѕРІРѕ СЃ С‚Р°РєРёРј РЅРѕРјРµСЂРѕРј РІСЃС‚СЂРµС‡Р°Р»РѕСЃСЊ СЂР°РЅРµРµ РЅР° Р»РёСЃС‚Рµ"));
+
+			if (num.value[i] > 32) {	// РЎР»РѕРІРѕ РґРѕР»Р¶РЅРѕ Р±С‹С‚СЊ РЅРµ Р±РѕР»СЊС€Рµ 32
+				result = false;
+				tmp.push_back(L"Р—РЅР°С‡РµРЅРёРµ РЅРѕРјРµСЂР° СЃР»РѕРІР° РґРѕР»Р¶РЅРѕ Р±С‹С‚СЊ РјРµРЅСЊС€Рµ 32");
+			}
+			else
+				*(repiter + num.value[i] - 1) = false; // РћС‚РјРµС‚РєР° Рѕ С‚РѕРј, С‡С‚Рѕ СЌС‚Рё СЃР»РѕРІРѕ РёРјРµРµС‚СЃСЏ РЅР° СЌС‚РѕРј Р»РёСЃС‚Рµ
+		}
+		if (tmp.size() > 1)
+			for (size_t i = 0; i < tmp.size(); i++)
+				error.push_back(tmp[i]);
 	}
-	
-	if (result > 1)
-		return true;
-
-	return false;
-}
-
-// Поиск повторений на листе
-bool CTest::findRepiteInSheet(CString field, sheetData sheet)
-{
-	int result = 0;
-	list<signalData>::iterator& it = sheet.signals.begin(); it++;
-	for (; it != sheet.signals.end(); it++)
-		if (it->sTitleParamField[1].Compare(field) == 0)
-			result++;
-
-	if (result > 1)
-		return true;
-
-	return false;
-}
-
-// Создание записи ошибки сигнала
-errorSignalData CTest::getErrSignal(list<signalData>::iterator it, list <CString> error)
-{
-	errorSignalData signal;
-
-	signal.sNumWordField = it->sNumWordField;
-	signal.sTitleParamField[0] = it->sTitleParamField[0];
-	signal.sTitleParamField[1] = it->sTitleParamField[1];
-	signal.sDimensionField = it->sDimensionField;
-	signal.sMinMaxCsrValField[0] = it->sMinMaxCsrValField[0];
-	signal.sMinMaxCsrValField[1] = it->sMinMaxCsrValField[1];
-	signal.sMinMaxCsrValField[2] = it->sMinMaxCsrValField[2];
-	signal.sBitField = it->sBitField;
-	signal.sCommentField = it->sCommentField;
-	signal.sErrorField = error;
-	
-	return signal;
-}
-
-// Перевод номеров слов из строки в числа
-void CTest::translateNumWord(list<signalData>::iterator& it)
-{
-	CString num = it->sNumWordField;
-	int indxDot = num.Find(_T(','));
-
-	if (indxDot == -1)
-	{
-		num.Trim();	// Удаление пробелов
-		it->iNumWord[0] = _wtoi(num);
-	}
-	else
-	{
-		CString num2 = num;	// Второе число
-		num2.Delete(0, indxDot + 1);
-		num2.Trim();
-		it->iNumWord[1] = _wtoi(num2);
-
-		num.Delete(indxDot, num.GetLength());	// Первое число
-		num.Trim();
-		it->iNumWord[0] = _wtoi(num);
-
-		it->b2NumWordField = true; // Установка флага присутствия двух слов
-	}
-}
-
-// Перевод из мин, макс и цср
-void CTest::translateMMC(list<signalData>::iterator& it)
-{
-	it->dMinMaxCsrVal[0] = stepTranslateMMC(it->sMinMaxCsrValField[0]);
-	it->dMinMaxCsrVal[1] = stepTranslateMMC(it->sMinMaxCsrValField[1]);
-	it->dMinMaxCsrVal[2] = stepTranslateMMC(it->sMinMaxCsrValField[2]);
-}
-
-// Дополнительная функция перевода мин, макс, цср
-double CTest::stepTranslateMMC(CString value)
-{
-	value.Replace(_T(','), _T('.'));
-	return _wtof(value);
-}
-
-// Перевод из используемых разрядов из строки в числа
-void CTest::translateBits(list<signalData>::iterator& it)
-{
-	CString bits = it->sBitField;
-	int indxDot = bits.Find(_T(','));
-
-	if (indxDot == -1)	// Для одного промежутка
-	{
-		vector <int> tmp = stepTranslateBits(bits);
-
-		it->iBit[0] = tmp[0];
-		it->iBit[1] = tmp[1];
-	}
-	else  // Для двух промежутков
-	{
-		CString bits2 = bits;
-		bits2.Delete(0, indxDot + 1);
-		bits.Delete(indxDot, bits.GetLength());
-		bits.Trim();	bits2.Trim();
-
-		vector <int> tmp = stepTranslateBits(bits);
-		it->iBit[0] = tmp[0];
-		it->iBit[1] = tmp[1];
-
-		tmp.clear();
-		tmp = stepTranslateBits(bits2);
-		it->iBit[2] = tmp[0];
-		it->iBit[3] = tmp[1];
-
-		it->b2BitField = true; // Установка флага для двух промежутков
-	}
-}
-
-// Дополнительная функция для перевода разрядов
-vector <int> CTest::stepTranslateBits(CString bits)
-{
-	vector <int> result = { 0, 0 };
-	bits.Trim();
-
-	// Поиск индекса разделителей
-	int indxDel = bits.Find(_T('.'));
-	if (indxDel == -1)
-		indxDel = bits.Find(_T('…'));
-	else
-		bits.Delete(indxDel, 2);	// Удалям две последующие точки
-
-	if (indxDel == -1)	// Разделителей нет, используется один разряд
-		result[0] = _wtoi(bits);
-	else
-	{
-		CString num = bits;
-		CString num2 = num;	// Второе число
-
-		num.Delete(indxDel, num.GetLength());	// Первое число
-		num.Trim();
-		result[0] = _wtoi(num);
-
-		num2.Delete(0, indxDel + 1);
-		num2.Trim();
-		result[1] = _wtoi(num2);
-	}
-
 	return result;
 }
 
-// Перевод знакового бита или NP набора, если он есть
-void CTest::translateComment(list<signalData>::iterator& it)
-{
-	int indx = it->sCommentField.Find(_T("Зн-"));
-	CString tmp = it->sCommentField;
-
-	if (indx != -1)	// Чтение знакового бита
-	{
-		tmp.Delete(0, indx + 3);
-		
-		int iSpace = tmp.Find(_T(' '));
-		if (iSpace == -1)
-			iSpace = tmp.Find(_T('\n'));
-		if (iSpace == -1)
-			iSpace = tmp.Find(_T('\0'));
-
-		tmp.Delete(iSpace, tmp.GetLength());
-
-		it->iBitSigns = _wtoi(tmp);
-
-		it->bCommentField = true;	// Установка флага присутствия знака в примечании
+// РџСЂРѕРІРµСЂРєР° РЅР°РёРјРµРЅРѕРІР°РЅРёР№ СЃРёРіРЅР°Р»Р°
+bool CTest::simanticTitle(sheetData* sheet, const int& indx, const CString& title, const bool& flag, vector <CString>& error) {
+	bool result = true;
+	if (flag) {
+		if (findRepiteInSheet(title, sheet, indx)) {
+			result = false;
+			error.push_back(errRemarks[1]);
+			error.push_back(L"РЎРёРіРЅР°Р» СЃ С‚Р°РєРёРј РѕР±РѕР·РЅР°С‡РµРЅРёРµРј РїСЂРёСЃСѓС‚СЃРІСѓРµС‚ РЅР° СЌС‚РѕРј Р»РёСЃС‚Рµ");
+		}
 	}
-
-	indx = tmp.Find(_T("NP="));
-
-	if (indx != -1)	// Чтение NP
-	{
-		tmp.Delete(0, indx + 3);
-
-		int iSpace = tmp.Find(_T(' '));
-		if (iSpace == -1)
-			iSpace = tmp.Find(_T('\n'));
-		if (iSpace == -1)
-			iSpace = tmp.Find(_T('\0'));
-
-		tmp.Delete(iSpace, tmp.GetLength());
-
-		NP = _wtoi(tmp);
-	}
+	return result;
 }
+
+// РџСЂРѕРІРµСЂРєР° РјРёРЅРёРјР°Р»СЊРЅРѕРіРѕ, РјР°РєСЃРёРјР°Р»СЊРЅРѕРіРѕ Рё С†СЃСЂ
+bool CTest::simanticValue(const signalData& signal, vector <CString>& error) {
+	bool result = true;
+	if (!signal.min.flag && !signal.max.flag && !signal.csr.flag && !signal.bit.flag) {
+		int nBit = 0;
+		(signal.bit.value.size() == 4) ? nBit = (signal.bit.value[1] - signal.bit.value[0]) + (signal.bit.value[3] - signal.bit.value[2]) + 2 :
+									nBit = (signal.bit.value[1] - signal.bit.value[0]) + 1;
+
+		// Р’С‹РґРµР»РµРЅРёРµ Р±РёС‚Р° РїРѕРґ Р·РЅР°Рє, РµСЃР»Рё РѕРЅ РїСЂРёСЃСѓС‚СЃС‚РІСѓРµС‚
+		if (signal.bitSign) nBit--;
+
+		double nMin = signal.csr.value;
+		for (int i = 1; i <= nBit; i++)
+			nMin = nMin / 2;
+
+		double nMax = (signal.csr.value * 2) - nMin;	
+
+		if (signal.max.value - nMax >= 2) {
+			result = false;
+			error.push_back(errRemarks[3]);
+			error.push_back(L"РќРµР»СЊР·СЏ СѓРїР°РєРѕРІР°С‚СЊ РґР°РЅРЅРѕРµ Р·РЅР°С‡РµРЅРёРµ");
+		}
+		else if (((abs(signal.min.value) > (nMax + nMin)) || (abs(signal.min.value) < nMin)) && signal.min.value != 0) {
+			result = false;
+			error.push_back(errRemarks[2]);
+			error.push_back(L"РќРµР»СЊР·СЏ СѓРїР°РєРѕРІР°С‚СЊ РґР°РЅРЅРѕРµ Р·РЅР°С‡РµРЅРёРµ");
+		}
+
+		if ((signal.min.value < 0) && !signal.bitSign) {
+			result = false;
+			error.push_back(errRemarks[2]);
+			error.push_back(L"РќРµ РјРѕР¶РµС‚ Р±С‹С‚СЊ РѕС‚СЂРёС†Р°С‚РµР»СЊРЅС‹Рј С‡РёСЃР»РѕРј РёР»Рё РЅРµ РІРµСЂРЅРѕ Р·Р°РґР°РЅ Р·РЅР°РєРѕРІС‹Р№ Р±РёС‚ РІ РїРѕР»Рµ \"РџСЂРёРјРµС‡Р°РЅРёРµ\"");
+		}
+		else if ((signal.min.value >= 0) && signal.bitSign) {
+			result = false;
+			error.push_back(errRemarks[2]);
+			error.push_back(L"Р”РѕР»Р¶РЅРѕ Р±С‹С‚СЊ РѕС‚СЂРёС†Р°С‚РµР»СЊРЅС‹Рј С‡РёСЃР»РѕРј РёР»Рё РЅРµ РІРµСЂРЅРѕ Р·Р°РґР°РЅ Р·РЅР°РєРѕРІС‹Р№ Р±РёС‚ РІ РїРѕР»Рµ \"РџСЂРёРјРµС‡Р°РЅРёРµ\"");
+		}
+	}
+	return result;
+}
+
+// РџСЂРѕРІРµСЂРєР° РёСЃРїРѕР»СЊР·СѓРµРјС‹С… СЂР°Р·СЂСЏРґРѕРІ
+bool CTest::simanticBits(const signalData& signal, const CString& prevTitle, bool** repiter, vector <CString>& error) {
+	bool result = true;
+	// РљРѕР»-РІРѕ в„– СЃР»РѕРІ РґРѕР»Р¶РЅРѕ СЃРѕРІРїР°РґР°С‚СЊ СЃ РєРѕР»-РІР°РјРё РёРЅС‚РµСЂРІР°Р»РѕРІ РёСЃРї. СЂР°Р·СЂСЏРґРѕРІ
+	if (!signal.numWord.flag && !signal.bit.flag) {
+		if (signal.numWord.value.size() * 2 == signal.bit.value.size()) {
+			if (!checkCrossBits(signal.bit.value, signal.numWord.value, repiter) && !checkTitle(signal.title[0], prevTitle)) {
+				result = false;
+				error.push_back(errRemarks[5]);
+				error.push_back(L"Р‘РёС‚(С‹) РїРµСЂРµРєСЂС‹РІР°РµС‚(СЋС‚)СЃСЏ");
+			}
+		}
+		else {
+			result = false;
+			error.push_back(errRemarks[5]);
+			(signal.numWord.value.size() == 1) ? error.push_back(L"Р”РѕР»Р¶РµРЅ Р±С‹С‚СЊ РѕРґРёРЅ РёРЅС‚РµСЂРІР°Р»") : error.push_back(L"Р”РѕР»Р¶РЅРѕ Р±С‹С‚СЊ РґРІР° РёРЅС‚РµСЂРІР°Р»Р°");
+		}
+	}
+	return result;
+}
+
+// РџСЂРѕРІРµСЂРєР° РґРІСѓС… РЅР°РёРјРµРЅРѕРІР°РЅРёР№ РЅР° СЃРѕРІРїР°РґРµРЅРёРµ
+bool CTest::checkTitle(const CString& next, const CString& prev) {
+	CString first = next, second = prev;
+
+	int indx = first.ReverseFind(L',');
+	first.Delete(indx, first.GetLength() - indx);
+	indx = second.ReverseFind(L',');
+	second.Delete(indx, second.GetLength() - indx);
+
+	bool result;
+	(first.CompareNoCase(second) == 0 && indx != -1) ? result = true : result = false;
+	return result;
+}
+
+// РџСЂРѕРІРµСЂРєР° РЅР° РїРµСЂРµРєСЂС‹С‚РёРµ Р±РёС‚РѕРІ
+bool CTest::checkCrossBits(const vector <int>& bits, const vector <int>& numWord, bool** repiter) {
+	bool result = true;
+	for (size_t j = 0; j < 2; j += 2)
+		for (size_t i = 0; i < numWord.size(); i++) {
+			int end, start = bits[j];
+			(bits[j + 1] == -1) ? end = start : end = bits[j + 1];
+			
+			if (numWord[i] != -1) {
+				for (; start <= end; start++) {
+					if (repiter[numWord[i] - 1][start - 1])	// РѕС‚РјРµС‚РєР° РІ РјР°С‚СЂРёС†Рµ Рѕ РЅР°Р»РёС‡РёРё Р±РёС‚Р°
+						repiter[numWord[i] - 1][start - 1] = false;
+					else
+						result = false;
+				}
+			}
+		}
+	return result;
+}
+
+// РџРѕРёСЃРє РїРѕРІС‚РѕСЂРµРЅРёР№ РёРґРµРЅС‚РёС„РёРєР°С‚РѕСЂР° РЅР° Р»РёСЃС‚Рµ
+bool CTest::findRepiteInSheet(const CString& field, sheetData* sheet, const int& start) {
+	int result = 0;
+	bool res = true;
+	for (size_t i = start; i < sheet->signals.size(); i++)
+		if (sheet->signals[i].title[1].Compare(field) == 0)
+			result++;
+	(result > 1)? res = true : res = false;
+	return res;
+}
+
+#pragma endregion

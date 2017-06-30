@@ -37,36 +37,30 @@
 // Единственный объект CPIVWorkerApp
 CWinApp theApp;
 
-struct MyData
-{
+struct MyData {
 	CPIVWorker* object;
 };
 
 MyData mD;
 
-// инициализация CPIVWorkerApp
-int main()
-{
+// инициализация CPIVWorker
+int main() {
 	int nRetCode = 0;
 
 	HMODULE hModule = ::GetModuleHandle(nullptr);
 
-	if (hModule != nullptr)
-	{
+	if (hModule != nullptr) {
 		// инициализировать MFC, а также печать и сообщения об ошибках про сбое
-		if (!AfxWinInit(hModule, nullptr, ::GetCommandLine(), 0))
-		{
+		if (!AfxWinInit(hModule, nullptr, ::GetCommandLine(), 0)) {
 			// TODO: измените код ошибки соответственно своим потребностям
 			wprintf(L"Критическая ошибка: сбой при инициализации MFC\n");
 			nRetCode = 1;
 		}
-		else
-		{
+		else {
 			// TODO: Вставьте сюда код для приложения.
 		}
 	}
-	else
-	{
+	else {
 		// TODO: Измените код ошибки соответственно своим потребностям
 		wprintf(L"Критическая ошибка: неудачное завершение GetModuleHandle\n");
 		nRetCode = 1;
@@ -75,8 +69,7 @@ int main()
 	return nRetCode;
 }
 
-DWORD WINAPI PrimaryThread(LPVOID lpParam)
-{
+DWORD WINAPI PrimaryThread(LPVOID lpParam) {
 	CoInitialize(NULL);
 	SetThreadPriorityBoost(GetCurrentThread(), TRUE);
 	MyData* myD = static_cast<MyData*>(lpParam);
@@ -92,128 +85,139 @@ DWORD WINAPI PrimaryThread(LPVOID lpParam)
 CPIVWorker::CPIVWorker() { }
 
 // Деструктор
-CPIVWorker::~CPIVWorker()
-{
-	path.clear();
-	books.clear();
-	errorDB.syntax.clear();
-	errorDB.simantic.clear();
-	errorDB.warning.clear();
-	buffer.clear();
+CPIVWorker::~CPIVWorker() { 
+	Close();
 }
 
-void CPIVWorker::setStatusNumPK(bool status)
-{
-	bNumPK = status;
-}
+// Установка статуса записи номера подкардра
+void CPIVWorker::setStatusNumPK(const bool& status) { bNumPK = status; }
+
+// Установка путей для артефактов
+void CPIVWorker::setPathToSave(const CString& path) { this->path = path; }
+
+// Получения статуса потока
+bool CPIVWorker::getStatusThread(CString& status) { 
+	status = hStatus;
+	return getStatusThread(primary);
+};
 
 #pragma region READ
 
 // Получение путей для чтения
-void CPIVWorker::ReadExcel(vector <CString> pathToExcel)
-{
+void CPIVWorker::ReadExcel(const vector <CString>& pathToExcel) {
 	buffer = pathToExcel;
 	StartRead();
 }
 
 // Получение пути для чтения
-void CPIVWorker::ReadExcel(CString pathToExcel)
-{
+void CPIVWorker::ReadExcel(const CString& pathToExcel) {
 	buffer.push_back(pathToExcel);
 	StartRead();
 }
 
 // Начало чтения
-void CPIVWorker::StartRead()
-{
-	if (getStatusThread(primary))
-	{
+void CPIVWorker::StartRead() {
+	if (getStatusThread(primary)) {
 		hCmd = command.open;
+		hStatus = L"Выполняется чтение протоколов ИВ...";
 		mD.object = this;
 		primary = CreateThread(NULL, 0, PrimaryThread, &mD, 0, 0);
 	}
-	else
-		AfxMessageBox(_T("Поток занят! Подождите окончания процесса!"));
+	else {
+		hStatus = THREAD_BUSY;
+		AfxMessageBox(THREAD_BUSY);
+	}
 }
 
 // Чтение ПИВ
-void CPIVWorker::ReadExcel()
-{
-	try
-	{
-		for (size_t i = 0; i < buffer.size(); i++)
-		{
-			CReaderExcel reader;	// класс чтения книг
-
-			if (findIndexBook(buffer[i]) == -1)		// Если такой книги еще нет
-			{
-				books.push_back(reader.getBook(buffer[i]));
-				path.push_back(buffer[i]);
-			}
+void CPIVWorker::Read() {
+	try {
+		CReaderExcel reader;	// класс чтения книг
+		for (size_t i = 0; i < buffer.size(); i++) {
+			bookData book = reader.getBook(buffer[i]);
+			findBook(buffer[i]) ? Refresh(book) : books.push_back(book);
 		}
-		AfxMessageBox(_T("Чтение завершено успешно!"), MB_ICONINFORMATION);
+		AfxMessageBox(L"Чтение завершено успешно!", MB_ICONINFORMATION);
+		hStatus = L"Чтение протоколов ИВ завершено...";
 	}
-	catch (MyException &exc)
-	{
+	catch (MyException &exc) {
+		hStatus = L"Ошибка чтения протоколов ИВ...";
 		AfxMessageBox(exc.GetMsg(), MB_ICONERROR);
 	}
-
-	buffer.clear();
 	closeThread(primary);
+}
+
+// Обновление протокола
+void CPIVWorker::Refresh(const bookData& book) {
+	for (list <bookData>::iterator it = books.begin(); it != books.end(); it++)
+		if (it->name.CompareNoCase(book.name) == 0) 
+			*it = book;
 }
 
 #pragma endregion
 
 #pragma region TEST
 
-// Начало тестирования
-void CPIVWorker::TestExcel()
-{
-	if (getStatusThread(primary))
-	{
+// Проверка всех книг
+void CPIVWorker::TestExcel() { StartTest(); }
+
+// Проверка одной книги
+void CPIVWorker::TestExcel(const CString& path) {
+	buffer.push_back(path);
+	StartTest();
+}
+
+// Првоерка выбранных книг
+void CPIVWorker::TestExcel(const vector<CString>& path) {
+	buffer = path;
+	StartTest();
+}
+
+// Начало проверки всех книг
+void CPIVWorker::StartTest() {
+	if (getStatusThread(primary)) {
 		hCmd = command.test;
+		hStatus = L"Выполняется проверка протоколов ИВ...";
 		mD.object = this;
 		primary = CreateThread(NULL, 0, PrimaryThread, &mD, 0, 0);
 	}
-	else
-		AfxMessageBox(_T("Поток занят! Подождите окончания процесса!"));
+	else {
+		hStatus = THREAD_BUSY;
+		AfxMessageBox(THREAD_BUSY);
+	}
 }
 
-// Проверка всех открытых книг
-void CPIVWorker::Test()
-{
-	try
-	{
-		for (size_t i = 0; i < books.size(); i++)
-		{
-			CTest tester;	// класс проверки книг
-			errorOneSet errBook;
-
-			errBook = tester.Start(books[i]);
-
-			int indx = findReportBook(errBook.syntax.name);	// поиск в базе отчетов данной книги
-
-			if (indx != -1)	// Обновление отчета
-			{
-				errorDB.syntax[indx] = errBook.syntax;
-				errorDB.simantic[indx] = errBook.simantic;
-				errorDB.warning[indx] = errBook.warning;
-			}
-			else // Добавление нового отчета
-			{
-				errorDB.syntax.push_back(errBook.syntax);
-				errorDB.simantic.push_back(errBook.simantic);
-				errorDB.warning.push_back(errBook.warning);
-			}
-				
+// Проверка книг
+void CPIVWorker::Test() {
+	try {
+		if (buffer.empty()) {
+			CTest tester;	// проверка всех книг
+			Db = tester.Start(books);
 		}
-		AfxMessageBox(_T("Проверка протоколов завершена успешно!"), MB_ICONINFORMATION);
+		else {
+			// проверка требуемых книг
+			for (size_t i = 0; i < buffer.size(); i++) {
+				bookData& pBook = getBook(buffer[i]);
+				CTest tester;
+				if (findBook(buffer[i]))
+					Refresh(tester.Start(pBook));
+			}
+		}
+		hStatus = L"Проверка протоколов ИВ завершена...";
+		AfxMessageBox(L"Проверка протоколов завершена успешно!", MB_ICONINFORMATION);
 	}
-	catch (MyException &exc)
-	{
+	catch (MyException &exc) {
+		hStatus = L"При проверки протоколов ИВ возникла ошибка...";
 		AfxMessageBox(exc.GetMsg(), MB_ICONERROR);
 	}
 	closeThread(primary);
+}
+
+// Обновление ошибок
+void CPIVWorker::Refresh(const errorSet& set) {
+	for (list <errorSet>::iterator it = Db.begin(); it != Db.end(); it++)
+		if (it->book->name.CompareNoCase(set.book->name) == 0)
+			*it = set;
 }
 
 #pragma endregion
@@ -221,47 +225,44 @@ void CPIVWorker::Test()
 #pragma region REPORT
 
 // Начало создания отчета
-void CPIVWorker::Report(CString path)
-{
-	pathReport = path;
-	StartReport();
-}
-
-// Начало создания отчета (перегрузка)
-void CPIVWorker::Report()
-{
-	StartReport();
-}
+void CPIVWorker::Report() { StartReport(); }
 
 // Начало создания отчета об ошибках
 void CPIVWorker::StartReport()
 {
-	if (pathReport.IsEmpty())
+	if (path.IsEmpty())
 		AfxMessageBox(_T("Папка для сохранения отчета не указана!"));
-	else
-	{
-		if (getStatusThread(primary))
-		{
+	else {
+		if (getStatusThread(primary)) {
 			hCmd = command.report;
+			hStatus = L"Подготовка отчета об ошибках...";
 			mD.object = this;
 			primary = CreateThread(NULL, 0, PrimaryThread, &mD, 0, 0);
 		}
-		else
-			AfxMessageBox(_T("Поток занят! Подождите окончания процесса!"));
+		else {
+			hStatus = THREAD_BUSY;
+			AfxMessageBox(THREAD_BUSY);
+		}
 	}
 }
 
 // Создание отчета
-void CPIVWorker::MakeReport()
-{
-	CReport report;
-	CString pathFile, msg;
-	report.setPath(pathReport);
-	report.Generate(books, errorDB);
-	pathFile.Format(_T("%s\\Отчет.html"), pathReport);
-	msg.Format(_T("Создание отчета завершено!\n\nРасположение: %s\nОткрыть для просмотра?"), pathReport);
-	if (AfxMessageBox(msg, MB_YESNO | MB_ICONQUESTION) == IDYES);
-		ShellExecute(0, L"open", pathFile, NULL, NULL, SW_NORMAL);	
+void CPIVWorker::MakeReport() {
+	try {
+		CReport report;
+		report.getReport(books, Db, path);
+		CString pathFile, msg;
+		pathFile.Format(_T("%s\\Отчет.html"), path);
+		msg.Format(_T("Создание отчета завершено!\n\nРасположение: %s\nОткрыть для просмотра?"), pathFile);
+		if (AfxMessageBox(msg, MB_YESNO | MB_ICONQUESTION) == IDYES)
+			ShellExecute(0, L"open", pathFile, NULL, NULL, SW_NORMAL);
+		hStatus = L"Создание отчета об ошибках завершено...";
+	}
+	catch (MyException &exc) {
+		hStatus = L"При создании отчета об ошибках возникла ошибка...";
+		AfxMessageBox(exc.GetMsg(), MB_ICONERROR);
+	}
+	closeThread(primary);
 }
 
 #pragma endregion
@@ -269,138 +270,147 @@ void CPIVWorker::MakeReport()
 #pragma region CLOSE
 
 // Закрытие книг ПИВ
-void CPIVWorker::CloseExcel(vector <CString> pathToExcel)
-{
-	buffer = pathToExcel;
-	StartClose();
-}
+void CPIVWorker::CloseExcel() { StartClose(); }
 
 // Закрытие книги ПИВ
-void CPIVWorker::CloseExcel(CString pathToExcel)
-{
+void CPIVWorker::CloseExcel(const CString& pathToExcel) {
 	buffer.push_back(pathToExcel);
 	StartClose();
 }
 
+// Закрытие книги ПИВ
+void CPIVWorker::CloseExcel(const vector <CString>& pathToExcel) {
+	buffer = pathToExcel;
+	StartClose();
+}
+
 // Начало закрытия
-void CPIVWorker::StartClose()
-{
-	if (getStatusThread(primary))
-	{
+void CPIVWorker::StartClose() {
+	if (getStatusThread(primary)) {
 		hCmd = command.close;
 		mD.object = this;
+		hStatus = L"Подготовка к закрытию протоколов ИВ...";
 		primary = CreateThread(NULL, 0, PrimaryThread, &mD, 0, 0);
 	}
-	else
-		AfxMessageBox(_T("Поток занят! Подождите окончания процесса!"));
+	else {
+		hStatus = THREAD_BUSY;
+		AfxMessageBox(THREAD_BUSY);
+	}
 }
 
 // Закрытие книг(и) ПИВ
-void CPIVWorker::CloseExcel()
-{
-	for (size_t i = 0; i < buffer.size(); i++)
-	{
-		int iBook = findIndexBook(buffer[i]);
+void CPIVWorker::Close() {
+	if (buffer.empty()) {
+		books.clear();
+		Db.clear();
+	}
+	else {
+		for (size_t i = 0; i < buffer.size(); i++) {
+			for (list <errorSet>::iterator it = Db.begin(); it != Db.end();)
+				it->book->name.CompareNoCase(nameFromPath(buffer[i])) == 0 ? Db.erase(it++) : it++;
 
-		if (iBook != -1)
-		{
-			int iReport = findReportBook(books[iBook].name);
-
-			if (iReport != -1)	// Чистим в базе ошибок
-			{
-				errorDB.syntax.erase(errorDB.syntax.begin() + iReport);
-				vector<errorBookData>(errorDB.syntax).swap(errorDB.syntax);
-
-				errorDB.simantic.erase(errorDB.simantic.begin() + iReport);
-				vector<errorBookData>(errorDB.simantic).swap(errorDB.simantic);
-
-				errorDB.warning.erase(errorDB.warning.begin() + iReport);
-				vector<errorBookData>(errorDB.warning).swap(errorDB.warning);
-			}
-
-			// Чистим пути и книжку
-			books.erase(books.begin() + iBook);
-			vector<bookData>(books).swap(books);
-
-			path.erase(path.begin() + iBook);
-			vector<CString>(path).swap(path);
+			for (list <bookData>::iterator it = books.begin(); it != books.end();)
+				it->name.CompareNoCase(nameFromPath(buffer[i])) == 0 ? books.erase(it++) : it++;
 		}
 	}
+	hStatus = L"Закрытие протоколов завершено...";
+	closeThread(primary);
 }
 
 #pragma endregion
 
 #pragma region TXT
 
-// Создание txt файлов
-void CPIVWorker::CreateTxt(CString path)
-{
-	pathReport = path;
+// Создание для выбранных протоколов
+void CPIVWorker::CreateTxt(const CString& path) {
+	buffer.push_back(path);
 	StartTxt();
 }
 
-// Создание txt файлов (перегрузка)
-void CPIVWorker::CreateTxt()
-{
+// Создание для выбранных протоколов
+void CPIVWorker::CreateTxt(const vector<CString>& path) {
+	buffer = path;
 	StartTxt();
 }
+
+// Создание для всех протоколов
+void CPIVWorker::CreateTxt() { StartTxt(); }
 
 // // Начало создания txt файлов
-void CPIVWorker::StartTxt()
-{
-	if (pathReport.IsEmpty())
-		AfxMessageBox(_T("Папка для сохранения txt файлов не указана!"));
-	else
-	{
-		if (getStatusThread(primary))
-		{
+void CPIVWorker::StartTxt() {
+	if (path.IsEmpty())
+		AfxMessageBox(L"Папка для сохранения txt файлов не указана!");
+	else {
+		if (getStatusThread(primary)) {
 			hCmd = command.txt;
 			mD.object = this;
+			hStatus = L"Идет преобразование протоколов ИВ в txt формат...";
 			primary = CreateThread(NULL, 0, PrimaryThread, &mD, 0, 0);
 		}
-		else
-			AfxMessageBox(_T("Поток занят! Подождите окончания процесса!"));
+		else {
+			hStatus = THREAD_BUSY;
+			AfxMessageBox(THREAD_BUSY);
+		}
 	}
 }
 
 // Начало генерации txt файлов 
-void CPIVWorker::GenerateTxt()
-{
-	CRepTxt txtFile;
-	CString msg;
-	txtFile.Generate(books,pathReport, bNumPK);
-	msg.Format(_T("Создание txt файлов завершено!\n\nРасположение: %s\nОткрыть для просмотра?"), pathReport);
-	if (AfxMessageBox(msg, MB_YESNO | MB_ICONQUESTION) == IDYES);
-		ShellExecute(0, L"open", pathReport, NULL, NULL, SW_NORMAL);
+void CPIVWorker::GenerateTxt() {
+	try {
+		if (buffer.empty()) {
+			CReport report;
+			report.getTxt(books, path, bNumPK);
+		}
+		else {
+			for (size_t i = 0; i < buffer.size(); i++) {
+				CReport report;
+				bookData& pBook = getBook(buffer[i]);
+				report.getTxt(pBook, path, bNumPK);
+			}
+		}
+		hStatus = L"Преобразование в txt завершено...";
+		AfxMessageBox(L"Создание txt файлов завершено!", MB_ICONINFORMATION);
+	}
+	catch (MyException &exc) {
+		hStatus = L"При преобразовании в txt возникла ошибка...";
+		AfxMessageBox(exc.GetMsg(), MB_ICONERROR);
+	}
+	closeThread(primary);
 }
 
 #pragma endregion
 
-// Поиск индекса прочитанной книги в базе ошибок
-int CPIVWorker::findReportBook(CString name)
-{
-	for (size_t i = 0; i < errorDB.syntax.size(); i++)
-		if (name.Compare(errorDB.syntax[i].name) == 0)
-			return i;
-
-	return -1;
+// Получение ссылки на книге в листе
+bookData& CPIVWorker::getBook(const CString& path) {
+	for (list<bookData>::iterator it = books.begin(); it != books.end(); it++)
+		if (nameFromPath(path).CompareNoCase(it->name) == 0)
+			return *it;
+	
+	UndefinedBook exc;
+	exc.SetName(nameFromPath(path));
+	throw exc;
 }
 
 // Поиск индекса прочитанной книги в базе книг
-int CPIVWorker::findIndexBook(CString pathToExcel)
-{
-	for (size_t i = 0; i < path.size(); i++)
-		if (pathToExcel.Compare(path[i]) == 0)
-			return i;
+bool CPIVWorker::findBook(const CString& pathToExcel) {
+	bool result = false;
+	for (list<bookData>::iterator it = books.begin(); it != books.end(); it++)
+		if (nameFromPath(pathToExcel).Compare(it->name) == 0)
+			result = true;
 
-	return -1;
+	return result;
+}
+
+// Получение имени файла
+CString CPIVWorker::nameFromPath(const CString& path) {
+	int startPos = path.ReverseFind(_T('\\')) + 1;
+	return path.Mid(startPos, path.GetLength());
 }
 
 // Дружественная функция для запуска определенной операции
-void Thread(CPIVWorker& piv)
-{
+void Thread(CPIVWorker& piv) {
 	if (piv.hCmd == piv.command.open)
-		piv.ReadExcel();
+		piv.Read();
 	else if (piv.hCmd == piv.command.test)
 		piv.Test();
 	else if (piv.hCmd == piv.command.report)
@@ -408,34 +418,32 @@ void Thread(CPIVWorker& piv)
 	else if (piv.hCmd == piv.command.txt)
 		piv.GenerateTxt();
 	else if (piv.hCmd == piv.command.close)
-		piv.CloseExcel();
-	else
-		AfxMessageBox(_T("Неопознанная команда!"), MB_ICONWARNING);
+		piv.Close();
+	else {
+		AfxMessageBox(L"Неопознанная команда!", MB_ICONWARNING);
+		piv.hStatus = L"Неопознанная команда выполнения...";
+	}
 }
 
 // Проверка потока на доступность
-bool CPIVWorker::getStatusThread(HANDLE h)
-{
+bool CPIVWorker::getStatusThread(const HANDLE& h) {
 	DWORD ty;
 	bool result = true;
 	GetExitCodeThread(h, &ty);
-
-	if (ty != STILL_ACTIVE)
-		result = true;
-	else
-		result = false;
-
+	(ty != STILL_ACTIVE) ? result = true : result = false;
 	return result;
 }
 
 // Закрытие потока
-void CPIVWorker::closeThread(HANDLE& h)
-{
-	if (h != 0)
-	{
+void CPIVWorker::closeThread(HANDLE& h) {
+	buffer.clear();
+	buffer.shrink_to_fit();
+	if (h != 0) {
 		CloseHandle(h);
 		h = NULL;
 	}
-	else
-		AfxMessageBox(_T("Не удалось закрыть поток! (Возможно он даже не открывался)"));
+	else {
+		hStatus = L"Неудачное закрытие потока, перезапустите приложение...";
+		AfxMessageBox(L"Не удалось закрыть поток. Он и не открывался.");
+	}
 }

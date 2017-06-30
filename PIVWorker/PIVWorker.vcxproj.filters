@@ -36,13 +36,7 @@
     <ClCompile Include="Test.cpp">
       <Filter>Файлы исходного кода</Filter>
     </ClCompile>
-    <ClCompile Include="ErrBase.cpp">
-      <Filter>Файлы исходного кода</Filter>
-    </ClCompile>
     <ClCompile Include="Report.cpp">
-      <Filter>Файлы исходного кода</Filter>
-    </ClCompile>
-    <ClCompile Include="RepTxt.cpp">
       <Filter>Файлы исходного кода</Filter>
     </ClCompile>
   </ItemGroup>
@@ -77,9 +71,6 @@
     <ClInclude Include="excel\CWorksheets.h">
       <Filter>Заголовочные файлы\excel</Filter>
     </ClInclude>
-    <ClInclude Include="excel\Enum.h">
-      <Filter>Заголовочные файлы\excel</Filter>
-    </ClInclude>
     <ClInclude Include="StructPIV.h">
       <Filter>Заголовочные файлы</Filter>
     </ClInclude>
@@ -95,13 +86,7 @@
     <ClInclude Include="Test.h">
       <Filter>Заголовочные файлы</Filter>
     </ClInclude>
-    <ClInclude Include="ErrBase.h">
-      <Filter>Заголовочные файлы</Filter>
-    </ClInclude>
     <ClInclude Include="Report.h">
-      <Filter>Заголовочные файлы</Filter>
-    </ClInclude>
-    <ClInclude Include="RepTxt.h">
       <Filter>Заголовочные файлы</Filter>
     </ClInclude>
   </ItemGroup>
