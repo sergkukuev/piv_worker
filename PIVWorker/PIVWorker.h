@@ -54,8 +54,6 @@ public:
 	void TestExcel(const vector <CString>& pathToExcel);	// Проверка выбранных книг
 
 	void Report();											// Создание отчета об ошибках
-	void Report(const CString& pathToExcel);				// Добавление в отчет отчета о одной книге
-	void Report(const vector <CString>& pathToExcel);		// Добавление в отчет отчета о нескольких книг
 	
 	void CreateTxt();										// Создание для всех протоколов
 	void CreateTxt(const CString& pathToExcel);				// Создание txt для одного протокола

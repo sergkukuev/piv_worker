@@ -85,7 +85,9 @@ DWORD WINAPI PrimaryThread(LPVOID lpParam) {
 CPIVWorker::CPIVWorker() { }
 
 // Деструктор
-CPIVWorker::~CPIVWorker() { CloseExcel(); }
+CPIVWorker::~CPIVWorker() { 
+	Close();
+}
 
 // Установка статуса записи номера подкардра
 void CPIVWorker::setStatusNumPK(const bool& status) { bNumPK = status; }
@@ -223,12 +225,6 @@ void CPIVWorker::Refresh(const errorSet& set) {
 #pragma region REPORT
 
 // Начало создания отчета
-void CPIVWorker::Report(const CString& pathToExcel) {
-	StartReport();
-}
-
-
-// Начало создания отчета (перегрузка)
 void CPIVWorker::Report() { StartReport(); }
 
 // Начало создания отчета об ошибках
@@ -254,9 +250,8 @@ void CPIVWorker::StartReport()
 void CPIVWorker::MakeReport() {
 	try {
 		CReport report;
-		CString pathFile, msg;
-		
 		report.getReport(books, Db, path);
+		CString pathFile, msg;
 		pathFile.Format(_T("%s\\Отчет.html"), path);
 		msg.Format(_T("Создание отчета завершено!\n\nРасположение: %s\nОткрыть для просмотра?"), pathFile);
 		if (AfxMessageBox(msg, MB_YESNO | MB_ICONQUESTION) == IDYES)
@@ -267,6 +262,7 @@ void CPIVWorker::MakeReport() {
 		hStatus = L"При создании отчета об ошибках возникла ошибка...";
 		AfxMessageBox(exc.GetMsg(), MB_ICONERROR);
 	}
+	closeThread(primary);
 }
 
 #pragma endregion
@@ -304,22 +300,21 @@ void CPIVWorker::StartClose() {
 
 // Закрытие книг(и) ПИВ
 void CPIVWorker::Close() {
-	/*if (buffer.empty()) {
+	if (buffer.empty()) {
 		books.clear();
 		Db.clear();
 	}
 	else {
 		for (size_t i = 0; i < buffer.size(); i++) {
 			for (list <errorSet>::iterator it = Db.begin(); it != Db.end();)
-				findBook(buffer[i]) ? Db.erase(it) : it++;
+				it->book->name.CompareNoCase(nameFromPath(buffer[i])) == 0 ? Db.erase(it++) : it++;
 
 			for (list <bookData>::iterator it = books.begin(); it != books.end();)
-				findBook(buffer[i]) ? books.erase(it++) : it++;
+				it->name.CompareNoCase(nameFromPath(buffer[i])) == 0 ? books.erase(it++) : it++;
 		}
-		buffer.clear();
-		buffer.shrink_to_fit();
-	}*/
+	}
 	hStatus = L"Закрытие протоколов завершено...";
+	closeThread(primary);
 }
 
 #pragma endregion
