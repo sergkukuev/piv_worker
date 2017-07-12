@@ -33,6 +33,7 @@ struct cmd_set {
 	const int report = 2;	// отчет
 	const int txt = 3;		// txt
 	const int close = 4;	// закрыть
+	const int load = 5;		// загрузить пив (открыть, анализ, отчет и txt сразу)
 };
 
 class PIV_DECLARE CPIVWorker	{
@@ -41,6 +42,8 @@ public:
 
 	CPIVWorker();	// Конструктор
 	~CPIVWorker();	// Деструктор
+
+	void LoadExcel(const vector <CString>& pathToExcel, const CString& pathToReport);	// Загрузка списка пив для проекта и их дальнейшая проверка
 
 	void ReadExcel(const CString& pathToExcel);				// Получение пути ПИВ для чтения
 	void ReadExcel(const vector <CString>& pathToExcel);	// (перегрузка)
@@ -68,8 +71,7 @@ protected:
 
 private:
 	const cmd_set command;	// Набор команд
-	int hCmd;	// Команда для потока (0 - открыть ПИВ, 1 - анализировать, 2 - отчет, 3 - txt, 4 - закрыть)
-	CString hStatus = L"";	// Статус работы DLL
+	int hCmd;				// Команда для потока из набора CMD_SET
 
 	list <bookData> books;		// Данные о прочитанных ПИВ
 	vector <CString> buffer;	// Вектор временного хранения путей файлов
@@ -84,20 +86,21 @@ private:
 	void StartReport();	// Начало создания отчета об ошибках
 	void StartTxt();	// Начало создания txt файлов
 	
-	void Read();		// Чтение протоколов
-	void Refresh(const bookData& book);	// Обновление протокола
+	void Load();		// Загрузка протоколов, обработка и вывод отчетов
+	void Read(const bool& hClose = true);	// Чтение протоколов
+	void Refresh(const bookData& book);		// Обновление протокола
 
-	void Test();		// Проверка всех книг
-	void Refresh(const errorSet& set);	// Обновление ошибок
+	void Test(const bool& hClose = true);	// Проверка всех книг
+	void Refresh(const errorSet& set);		// Обновление ошибок
 
-	void MakeReport();	// Создание отчета об ошибках
-	void GenerateTxt();	// Генерировать в txt файл
+	void MakeReport(const bool& hClose = true);		// Создание отчета об ошибках
+	void GenerateTxt(const bool& hClose = true);	// Генерировать в txt файл
 	
-	void Close();		// Закрыть книги
+	void Close();	// Закрыть книгу(и)
 
 	CString nameFromPath(const CString& path);	// Выделение имени из файла
-	bool findBook(const CString& pathToExcel);	// Поиск индекса протокола в открытых ПИВ (в противном -1)
-	bookData& getBook(const CString& path);		// Получение ссылки на книгу в списке
+	bool findBook(const CString& pathToExcel);	// Поиск книги в списке
+	bookData getBook(const CString& path);		// Получение книги в списке
 
 	bool getStatusThread(const HANDLE& h);	// Проверка доступности потока
 	void closeThread(HANDLE& h);			// Закрытие потока
