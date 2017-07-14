@@ -3,6 +3,7 @@
 #include <cstring>
 #include <list>
 #include <vector>
+#include "DLL.h"			// Макрос определения импорта и экспорта DLL
 
 using namespace std;
 

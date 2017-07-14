@@ -7,16 +7,7 @@
 	#error "включить stdafx.h до включения этого файла в PCH"
 #endif
 
-#ifdef PIV_WORKER_EXPORTS
-#define PIV_DECLARE __declspec(dllimport)
-#else
-#define PIV_DECLARE __declspec(dllexport)
-#endif
-
 #include "StructPIV.h"		// структуры протоколов
-#include "ReaderExcel.h"	// чтение протоколов
-#include "Test.h"			// проверка на ошибки протоколов
-#include "Report.h"			// создание отчетов об ошибках
 #include "resource.h"		// основные символы
 
 

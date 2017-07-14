@@ -1,7 +1,9 @@
 #pragma once
 
+#include "DLL.h"			// Макрос определения импорта и экспорта DLL
+
 // Базовый класс исключений
-class MyException	{
+class PIV_DECLARE MyException	{
 public:
 	MyException() {};
 	virtual ~MyException() {};

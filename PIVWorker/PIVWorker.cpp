@@ -3,6 +3,9 @@
 
 #include "stdafx.h"
 #include "PIVWorker.h"
+#include "ReaderExcel.h"	// чтение протоколов
+#include "Test.h"			// проверка на ошибки протоколов
+#include "Report.h"			// создание отчетов об ошибках
 
 #ifdef _DEBUG
 #define new DEBUG_NEW

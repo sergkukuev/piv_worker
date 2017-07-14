@@ -25,7 +25,7 @@ struct sheetInfo {
 };
 
 // Класс генерации отчета
-class CReport {
+class PIV_DECLARE CReport {
 public:
 	CReport();	// Конструктор
 	~CReport();	// Деструктор
