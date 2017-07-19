@@ -10,7 +10,7 @@ CTest::~CTest()	{	}
 // Проверки на ошибки одного протокола
 errorSet CTest::Start(bookData& book) {
 	errorSet result;
-	*result.book = book;
+	result.book = &book;
 	for (size_t j = 0; j < book.sheets.size(); j++) {
 		errorSheet tmp;
 		tmp.sheet = &book.sheets[j];
@@ -27,7 +27,7 @@ list <errorSet> CTest::Start(list <bookData>& books) {
 
 	for (list <bookData>::iterator it = books.begin(); it != books.end(); it++) {
 		errorSet error;
-		error.book = it;
+		error.book = &*it;
 		for (size_t j = 0; j < it->sheets.size(); j++) {
 			errorSheet tmp;
 			tmp.sheet = &it->sheets[j];
