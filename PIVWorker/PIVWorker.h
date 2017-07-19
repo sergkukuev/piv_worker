@@ -27,6 +27,8 @@ public:
 	CPIV();		// Конструктор
 	~CPIV();	// Деструктор
 
+	HANDLE primary;				// Основной поток
+
 	void Open(const vector<CString>& pathToExcel, const CString& pathToReport);	// Открыть ПИВ и задать путь для артефактов (чтение, проверка, выдача артефактов)
 	void Open(const vector<CString>& pathToExcel);								// Открыть ПИВ и использовать старый путь для артефактов
 
@@ -48,7 +50,6 @@ private:
 	pivData project;	// Данные проекта
 	pivData other;		// Данные остальных протоколов
 
-	HANDLE primary;				// Основной поток
 	const cmd_set command;		// Набор команд
 	int hCmd;					// Команда для потока
 
