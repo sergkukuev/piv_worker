@@ -10,6 +10,18 @@ public:
 	virtual CString GetMsg() { return L"Неизвестная ошибка!"; };
 };
 
+class BookNotFound : public MyException {
+public:
+	void setName(const CString& name) { this->name = name; }
+	virtual CString GetMsg() {
+		CString result;
+		result.Format(L"Книга \"%s\" в памяти отсутствует!", name);
+		return result;
+	};
+private:
+	CString name = L"";
+};
+
 // Исключения класса CReaderExcel
 class BadTypeException: public MyException	{
 public:

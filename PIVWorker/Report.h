@@ -30,7 +30,7 @@ public:
 	CReport();	// Конструктор
 	~CReport();	// Деструктор
 
-	void getReport(list <bookData>& books, list <errorSet>& Db, const CString& pathToSave);	// Генерация отчета о ошибках
+	void getReport(pivData& data, const CString& pathToSave);	// Генерация отчета о ошибках
 	void getTxt(list <bookData>& books, const CString& pathToSave, const bool& bNumPK);		// Генерация txt файлов
 	void getTxt(const bookData& book, const CString& pathToSave, const bool& bNumPK);		// Генерация txt для одного протокола
 
@@ -39,7 +39,7 @@ private:
 	Amount amount;	// Информация о количестве сигналов, с ошибками и без и прочее
 
 	// ГЕНЕРАЦИЯ ОТЧЕТА О ЗАМЕЧАНИЯХ
-	void makeReport(list <bookData>& books, list <errorSet>& Db);	// Генерация отчета
+	void makeReport(list <errorSet>& Db);	// Генерация отчета
 
 	void startWrite(ofstream& file, list <errorSet>& Db);				// Начало генерации отчета о замечаниях
 	void writeBook(ofstream& file, list <errorSet>::iterator& it);		// Запись всех ошибок из книги

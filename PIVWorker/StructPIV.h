@@ -92,3 +92,9 @@ const CString errRemarks[REMARKS_SIZE] = {
 };
 
 #pragma endregion
+
+// Структура хранения данных ПИВ
+struct pivData {
+	list <bookData> books;	// Данные о прочитанных ПИВ
+	list <errorSet> db;		// База ошибок
+};

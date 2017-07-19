@@ -10,20 +10,20 @@ CReport::~CReport()	{	}
 #pragma region GenerateReport
 
 // Генерация отчета об ошибках
-void CReport::getReport(list <bookData>& books, list<errorSet>& Db, const CString& pathToSave) {
+void CReport::getReport(pivData& data, const CString& pathToSave) {
 	if (pathToSave.IsEmpty())
 		throw EmptyPathException();
 
 	path = pathToSave;
 	// Подсчет количества наборов и ошибок
-	setAmount(books);
-	setAmountError(Db);
+	setAmount(data.books);
+	setAmountError(data.db);
 
-	makeReport(books, Db);
+	makeReport(data.db);
 }
 
 // Генерация отчета
-void CReport::makeReport(list <bookData>& books, list <errorSet>& Db) {
+void CReport::makeReport(list <errorSet>& db) {
 	ofstream file;	// Поток записи в файл
 	CString tPath;	// Путь к текущему файлу
 
@@ -34,7 +34,7 @@ void CReport::makeReport(list <bookData>& books, list <errorSet>& Db) {
 	errorTable(file);
 
 	if (amount.error != 0)
-		startWrite(file, Db);
+		startWrite(file, db);
 	else
 		file << "\t\t<h2>Ошибок и замечаний нет!</h2>\n";
 	
