@@ -14,8 +14,7 @@
 
 // Диалоговое окно CAboutDlg используется для описания сведений о приложении
 
-class CAboutDlg : public CDialogEx
-{
+class CAboutDlg : public CDialogEx {
 public:
 	CAboutDlg();
 
@@ -33,55 +32,20 @@ protected:
 public:
 };
 
-CAboutDlg::CAboutDlg() : CDialogEx(IDD_ABOUTBOX)
-{
-}
+CAboutDlg::CAboutDlg() : CDialogEx(IDD_ABOUTBOX) {	}
 
-void CAboutDlg::DoDataExchange(CDataExchange* pDX)
-{
+void CAboutDlg::DoDataExchange(CDataExchange* pDX) {
 	CDialogEx::DoDataExchange(pDX);
 }
 
 BEGIN_MESSAGE_MAP(CAboutDlg, CDialogEx)
 END_MESSAGE_MAP()
 
-
-// диалоговое окно CMainDlg
-struct MyData
-{
-	CMainDlg* object;
-};
-
-MyData mD;
-
-// Поток для проверки доступности потока класса CPIVWorker
-DWORD WINAPI CheckThread(LPVOID lpParam)
-{
-	CoInitialize(NULL);
-	SetThreadPriorityBoost(GetCurrentThread(), TRUE);
-	MyData* myD = static_cast<MyData*>(lpParam);
-
-	waitThread(*(myD->object));
-
-	CoUninitialize();
-
-	return 0;
-}
-
-// Ожидание доступности потока класса CPIVWorker
-void waitThread(CMainDlg& object)
-{
-	WaitForSingleObject(object.piv.primary, INFINITE);
-}
-
-CMainDlg::CMainDlg(CWnd* pParent /*=NULL*/)
-	: CDialog(IDD_PIVWORKERAPP_DIALOG, pParent)
-{
+CMainDlg::CMainDlg(CWnd* pParent /*=NULL*/) : CDialog(IDD_PIVWORKERAPP_DIALOG, pParent) {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 }
 
-void CMainDlg::DoDataExchange(CDataExchange* pDX)
-{
+void CMainDlg::DoDataExchange(CDataExchange* pDX) {
 	CDialog::DoDataExchange(pDX);
 }
 
@@ -89,13 +53,19 @@ BEGIN_MESSAGE_MAP(CMainDlg, CDialog)
 	ON_WM_SYSCOMMAND()
 	ON_WM_PAINT()
 	ON_WM_QUERYDRAGICON()
+	
 	ON_COMMAND(ID_PIV_OPEN, &CMainDlg::OnPivOpen)
+	ON_COMMAND(ID_OPEN_PROJECT, &CMainDlg::OnOpenProject)
 	ON_COMMAND(ID_PIV_CLOSE, &CMainDlg::OnPivClose)
 	ON_COMMAND(ID_PIV_CLOSE_ALL, &CMainDlg::OnPivCloseAll)
-	ON_COMMAND(ID_REP_OPEN, &CMainDlg::OnPivReport)
+	//ON_COMMAND(ID_PIV_REFRESH, &CMainDlg::OnPivRefresh)
+	
+	ON_COMMAND(ID_SET_FOLDER, &CMainDlg::OnPivSetFolder)
+	ON_COMMAND(ID_PROJECT_REPORT, &CMainDlg::OnProjectReport)
+	ON_COMMAND(ID_REP_OPEN, &CMainDlg::OnOtherReport)
 	ON_COMMAND(ID_REP_FOLDER, &CMainDlg::OnPivRepFolder)
 	ON_COMMAND(ID_TXT_OPEN, &CMainDlg::OnPivTxtOpen)
-	ON_COMMAND(ID_OPEN_PROJECT, &CMainDlg::OnOpenProject)
+
 	ON_COMMAND(ID_APP_INFORM, &CMainDlg::OnAppInform)
 	ON_WM_CONTEXTMENU()
 END_MESSAGE_MAP()
@@ -103,8 +73,7 @@ END_MESSAGE_MAP()
 
 // обработчики сообщений CMainDlg
 
-BOOL CMainDlg::OnInitDialog()
-{
+BOOL CMainDlg::OnInitDialog() {
 	CDialog::OnInitDialog();
 
 	// Добавление пункта "О программе..." в системное меню.
@@ -114,14 +83,12 @@ BOOL CMainDlg::OnInitDialog()
 	ASSERT(IDM_ABOUTBOX < 0xF000);
 
 	CMenu* pSysMenu = GetSystemMenu(FALSE);
-	if (pSysMenu != NULL)
-	{
+	if (pSysMenu != NULL) {
 		BOOL bNameValid;
 		CString strAboutMenu;
 		bNameValid = strAboutMenu.LoadString(IDS_ABOUTBOX);
 		ASSERT(bNameValid);
-		if (!strAboutMenu.IsEmpty())
-		{
+		if (!strAboutMenu.IsEmpty()) {
 			pSysMenu->AppendMenu(MF_SEPARATOR);
 			pSysMenu->AppendMenu(MF_STRING, IDM_ABOUTBOX, strAboutMenu);
 		}
@@ -142,6 +109,8 @@ BOOL CMainDlg::OnInitDialog()
 	pStatusBar = new CStatusBarCtrl();
 	pStatusBar->Create(WS_CHILD | WS_VISIBLE | LBS_MULTIPLESEL | CBRS_BOTTOM, CRect(2, 0, 576, 388), this, AFX_IDW_STATUS_BAR);
 
+	m_subMenu.LoadMenuW(IDR_CONTEXT_MENU);
+
 	// Задает значок для этого диалогового окна.  Среда делает это автоматически,
 	//  если главное окно приложения не является диалоговым
 	SetIcon(m_hIcon, TRUE);			// Крупный значок
@@ -154,15 +123,12 @@ BOOL CMainDlg::OnInitDialog()
 	return TRUE;  // возврат значения TRUE, если фокус не передан элементу управления
 }
 
-void CMainDlg::OnSysCommand(UINT nID, LPARAM lParam)
-{
-	if ((nID & 0xFFF0) == IDM_ABOUTBOX)
-	{
+void CMainDlg::OnSysCommand(UINT nID, LPARAM lParam) {
+	if ((nID & 0xFFF0) == IDM_ABOUTBOX) {
 		CAboutDlg dlgAbout;
 		dlgAbout.DoModal();
 	}
-	else
-	{
+	else {
 		CDialog::OnSysCommand(nID, lParam);
 	}
 }
@@ -171,10 +137,8 @@ void CMainDlg::OnSysCommand(UINT nID, LPARAM lParam)
 //  чтобы нарисовать значок.  Для приложений MFC, использующих модель документов или представлений,
 //  это автоматически выполняется рабочей областью.
 
-void CMainDlg::OnPaint()
-{
-	if (IsIconic())
-	{
+void CMainDlg::OnPaint() {
+	if (IsIconic()) {
 		CPaintDC dc(this); // контекст устройства для рисования
 
 		SendMessage(WM_ICONERASEBKGND, reinterpret_cast<WPARAM>(dc.GetSafeHdc()), 0);
@@ -190,24 +154,115 @@ void CMainDlg::OnPaint()
 		// Нарисуйте значок
 		dc.DrawIcon(x, y, m_hIcon);
 	}
-	else
-	{
+	else {
 		CDialog::OnPaint();
 	}
 }
 
 // Система вызывает эту функцию для получения отображения курсора при перемещении
 //  свернутого окна.
-HCURSOR CMainDlg::OnQueryDragIcon()
-{
+HCURSOR CMainDlg::OnQueryDragIcon() {
 	return static_cast<HCURSOR>(m_hIcon);
 }
 
 #pragma region MenuButton
 
 // Открытие проекта
-void CMainDlg::OnOpenProject() 
-{
+void CMainDlg::OnOpenProject()  {
+	CString folder;
+	OpenFile(pList, folder);
+	path.empty() ? AfxMessageBox(L"Протоколы не выбраны!", MB_ICONWARNING) : piv.Open(path, folder);
+	logicMenu();
+}
+
+// Открытие протоколов
+void CMainDlg::OnPivOpen() {
+	CString folder;
+	OpenFile(pListOther, folder);
+	piv.setPathToSave(folder);
+	path.empty() ? AfxMessageBox(L"Протоколы не выбраны!", MB_ICONWARNING) : piv.Add(path);
+	logicMenu();
+}
+
+// Закрытие протокола
+void CMainDlg::OnPivClose() {
+	vector <CString> del;					// Пути всех удаленных пив
+	int nCount = pListOther->GetSelCount();	// Получите индексы всех выбранных элементов.
+	CArray<int> sel;
+
+	sel.SetSize(nCount);
+	pList->GetSelItems(nCount, sel.GetData());
+
+	for (size_t i = 0; i < sel.GetSize(); i++) {	
+		del.push_back(path[sel[i]]);
+		path.erase(path.begin() + sel[i]);
+		pList->DeleteString(sel[i]);
+	}
+	(del.empty()) ? AfxMessageBox(L"Файлы для удаления не выбраны!") : piv.Close(del);
+	logicMenu();
+}
+
+//Установить директорию для отчетов и txt
+void CMainDlg::OnPivSetFolder() {
+	CEdit* edt = (CEdit *)(this->GetDlgItem(IDC_PATH));
+	CString folder;
+	folder = getFolder();
+	piv.setPathToSave(folder);
+	edt->SetWindowTextW(folder);
+}
+
+// Открыть отчет по остальным
+void CMainDlg::OnOtherReport() {
+	CEdit* edit = (CEdit *)this->GetDlgItem(IDC_PATH);
+	CString pathFile;
+	edit->GetWindowTextW(pathFile);
+	pathFile.Format(L"%s\\Artefacts\\Other\\Отчет.html", pathFile);
+	ShellExecute(0, L"Open", pathFile, NULL, NULL, SW_NORMAL);
+}
+
+// Открыть отчет по проекту
+void CMainDlg::OnProjectReport() {
+	CEdit* edit = (CEdit *)this->GetDlgItem(IDC_PATH);
+	CString pathFile;
+	edit->GetWindowTextW(pathFile);
+	pathFile.Format(L"%s\\Artefacts\\Project\\Отчет.html", pathFile);
+	ShellExecute(0, L"Open", pathFile, NULL, NULL, SW_NORMAL);
+}
+
+// Открыть папку с отчетом
+void CMainDlg::OnPivRepFolder() {
+	CEdit* edit = (CEdit *)this->GetDlgItem(IDC_PATH);
+	CString folder;
+	edit->GetWindowTextW(folder);
+	folder.Format(L"%s\\Artefacts", folder);
+	ShellExecute(0, L"Explore", folder, NULL, NULL, SW_NORMAL);
+}
+
+// Открыть txt отчет
+void CMainDlg::OnPivTxtOpen() {
+	CEdit* edit = (CEdit *)this->GetDlgItem(IDC_PATH);
+	CString folder;
+	edit->GetWindowTextW(folder);
+	folder.Format(L"%s\\%s\\Text", folder, L"Artefacts");
+	ShellExecute(0, L"Explore", folder, NULL, NULL, SW_NORMAL);
+}
+
+// Информация о приложении
+void CMainDlg::OnAppInform() {
+	CAboutDlg aboutDlg;
+	aboutDlg.DoModal();
+}
+
+// Закрыть все протоколы
+void CMainDlg::OnPivCloseAll() {
+	pListOther->ResetContent();
+	piv.Close();
+}
+
+#pragma endregion
+
+// Открытие файлов
+void CMainDlg::OpenFile(CListBox* list, CString& folder) {
 	CWnd* TheWindow = GetActiveWindow();
 	CFileDialog openDialog(true, NULL, NULL, OFN_ALLOWMULTISELECT + OFN_HIDEREADONLY, NULL, TheWindow);
 
@@ -215,125 +270,26 @@ void CMainDlg::OnOpenProject()
 	openDialog.m_ofn.lpstrTitle = TEXT("Выберите все протоколы проекта");
 
 	CEdit* edt = (CEdit *)(this->GetDlgItem(IDC_PATH));
-	CString folder;
 	edt->GetWindowTextW(folder);
 
-	if (folder.IsEmpty())
+	if (folder.IsEmpty()) {
 		folder = getFolder();
+		edt->SetWindowTextW(folder);
+	}
 
 	CButton *pCheck = (CButton*)GetDlgItem(IDC_CHECK_NUMPK);
 	(pCheck == BST_UNCHECKED) ? piv.setStatusNumPK(false) : piv.setStatusNumPK(true);
 
 	if (openDialog.DoModal() == IDOK)
-		readPath(openDialog, pList);
-
-	path.empty() ? AfxMessageBox(L"Протоколы не выбраны!") : piv.Open(path, folder);
+		readPath(openDialog, list);
 }
-// Открытие протоколов
-void CMainDlg::OnPivOpen()
-{
-	CWnd* TheWindow = GetActiveWindow();
-	CFileDialog openDialog(true, NULL, NULL, OFN_ALLOWMULTISELECT + OFN_HIDEREADONLY, NULL, TheWindow);
-
-	openDialog.m_ofn.lpstrFilter = _T("Excel files(*.xls;*.xlsx)\0*.xls;*.xlsx\0All files(*.*)\0*.*\0\0");
-	openDialog.m_ofn.lpstrTitle = TEXT("Выберите все протоколы проекта");
-
-	CButton *pCheck = (CButton*)GetDlgItem(IDC_CHECK_NUMPK);
-	(pCheck == BST_UNCHECKED) ? piv.setStatusNumPK(false) : piv.setStatusNumPK(true);
-
-	if (openDialog.DoModal() == IDOK)
-		readPath(openDialog, pListOther);
-
-	path.empty() ? AfxMessageBox(L"Протоколы не выбраны!") : piv.Add(path);
-}
-
-// Закрытие протокола
-void CMainDlg::OnPivClose()
-{
-	vector <CString> del;	// Пути всех удаленных пив
-	int nCount = pList->GetSelCount();	// Получите индексы всех выбранных элементов.
-	CArray<int> sel;
-
-	sel.SetSize(nCount);
-	pList->GetSelItems(nCount, sel.GetData());
-
-	for (size_t i = 0; i < sel.GetSize(); i++)
-	{	
-		del.push_back(path[sel[i]]);
-		path.erase(path.begin() + sel[i]);
-		pList->DeleteString(sel[i]);
-	}
-	(del.empty()) ? AfxMessageBox(L"Файлы для удаления не выбраны!") : piv.Close(del);
-}
-
-// Открыть отчет
-void CMainDlg::OnPivReport()
-{
-	BROWSEINFO	bi;
-	TCHAR	szDisplayName[MAX_PATH];
-	LPITEMIDLIST	pidl;
-
-	ZeroMemory(&bi, sizeof(bi));
-	bi.hwndOwner = NULL;
-	bi.pszDisplayName = szDisplayName;
-	bi.lpszTitle = TEXT("Выберите папку для сохранения отчета");
-	bi.ulFlags = BIF_NEWDIALOGSTYLE; //or BIF_VALIDATE//BIF_RETURNONLYFSDIRS;
-	pidl = SHBrowseForFolder(&bi);
-
-	if (pidl)
-	{
-		SHGetPathFromIDList(pidl, szDisplayName);
-		CEdit* edit = (CEdit *)this->GetDlgItem(IDC_PATH);
-		edit->SetWindowTextW(szDisplayName);
-	}
-
-	piv.setPathToSave(szDisplayName);
-}
-
-// Открыть папку с отчетом
-void CMainDlg::OnPivRepFolder()
-{
-	CEdit* edit = (CEdit *)this->GetDlgItem(IDC_PATH);
-	CString folder;
-	edit->GetWindowTextW(folder);
-	ShellExecute(0, L"Explore", folder, NULL, NULL, SW_NORMAL);
-}
-
-// Открыть txt отчет
-void CMainDlg::OnPivTxtOpen()
-{
-	CEdit* edit = (CEdit *)this->GetDlgItem(IDC_PATH);
-	CString folder;
-	edit->GetWindowTextW(folder);
-	ShellExecute(0, L"Explore", folder, NULL, NULL, SW_NORMAL);
-
-	folder.Format(L"%s\\Text", folder);
-
-	//CButton *pCheck = (CButton*)GetDlgItem(IDC_CHECK_NUMPK);
-	//(pCheck == BST_UNCHECKED) ? piv.setStatusNumPK(false) : piv.setStatusNumPK(true);
-}
-
-// Информация о приложении
-void CMainDlg::OnAppInform()
-{
-	CAboutDlg aboutDlg;
-	aboutDlg.DoModal();
-}
-
-// Закрыть все протоколы
-void CMainDlg::OnPivCloseAll()
-{
-	pList->ResetContent();
-	piv.Close();
-}
-
-#pragma endregion
 
 // Получить путь папки для сохранения
 CString CMainDlg::getFolder() {
 	BROWSEINFO	bi;
 	TCHAR	szDisplayName[MAX_PATH];
 	LPITEMIDLIST	pidl;
+	CString folder = L"";
 
 	ZeroMemory(&bi, sizeof(bi));
 	bi.hwndOwner = NULL;
@@ -347,8 +303,8 @@ CString CMainDlg::getFolder() {
 		CEdit* edt = (CEdit *)(this->GetDlgItem(IDC_PATH));
 		edt->SetWindowTextW(szDisplayName);
 	}
-
-	return szDisplayName;
+	
+	return folder;
 }
 
 // Получение набора путей из диалогового окна
@@ -363,8 +319,7 @@ void CMainDlg::readPath(const CFileDialog& dlg, CListBox* list) {
 		CString fullPath = dlg.GetNextPathName(pos);
 		CString name = dlg.GetFileName();
 
-		if (name == L"")
-		{
+		if (name == L"") {
 			CString _path = dlg.GetPathName();
 			CString tmp = fullPath;
 			tmp.Delete(0, _path.GetLength() + 1);
@@ -375,8 +330,7 @@ void CMainDlg::readPath(const CFileDialog& dlg, CListBox* list) {
 }
 
 // Добаление путей файлов
-void CMainDlg::AddPath(CString fullPath, CString name, CListBox* list)
-{
+void CMainDlg::AddPath(CString fullPath, CString name, CListBox* list) {
 	bool result = true;
 
 	if (!path.empty())
@@ -384,17 +338,14 @@ void CMainDlg::AddPath(CString fullPath, CString name, CListBox* list)
 			if (fullPath.Compare(path[i]) == 0)
 				result = false;
 	
-	if (result)
-	{
+	if (result) {
 		path.push_back(fullPath);
 		list->AddString(name);
 	}
 }
 
 // Обработка контекстного меню
-void CMainDlg::OnContextMenu(CWnd* pWnd, CPoint point)
-{
-	CMenu m_Menu;	// Меню 
+void CMainDlg::OnContextMenu(CWnd* pWnd, CPoint point) {
 	CMenu* menu;	// Указатель на подменю
 	CRect rect;		// Объект текущего диалогового окна
 	this->GetWindowRect(&rect);	
@@ -403,9 +354,58 @@ void CMainDlg::OnContextMenu(CWnd* pWnd, CPoint point)
 	pointWnd.x = point.x - rect.left;	// Центр окна: 298
 	pointWnd.y = point.y - rect.top;	// Условия вывода меню по Y: от 80 до 340
 
-	m_Menu.LoadMenuW(IDR_CONTEXT_MENU);
-	pointWnd.x < 298 ? menu = m_Menu.GetSubMenu(0) : menu = m_Menu.GetSubMenu(1); // Выбор подменю
+	pointWnd.x < 298 ? menu = m_subMenu.GetSubMenu(0) : menu = m_subMenu.GetSubMenu(1); // Выбор подменю
 
 	if (pointWnd.y > 80 && pointWnd.y < 340)
 		menu->TrackPopupMenu(TPM_LEFTALIGN | TPM_TOPALIGN, point.x, point.y, this);
+}
+
+// Отображение меню и подменю
+void CMainDlg::logicMenu() {
+	CMenu* m_Menu = GetMenu();
+	CMenu* menu;
+
+	// Установка общего меню
+	if (pList->GetCount() > 0 || pListOther->GetCount() > 0) {
+		m_Menu->EnableMenuItem(ID_REP_FOLDER, MFS_ENABLED);
+		m_Menu->EnableMenuItem(ID_TXT_OPEN, MFS_ENABLED);
+	}
+	else {
+		m_Menu->EnableMenuItem(ID_REP_FOLDER, MFS_GRAYED);
+		m_Menu->EnableMenuItem(ID_TXT_OPEN, MFS_GRAYED);
+	}
+
+	// Установка подменю для "ПИВ проекта"
+	menu = m_subMenu.GetSubMenu(0);
+	if (pList->GetCount() > 0) {
+		menu->EnableMenuItem(ID_PIV_REFRESH, MFS_ENABLED);
+		menu->EnableMenuItem(ID_TXT_OPEN, MFS_ENABLED);
+		menu->EnableMenuItem(ID_PROJECT_REPORT, MFS_ENABLED);
+	}
+	else {
+		menu->EnableMenuItem(ID_PIV_REFRESH, MFS_GRAYED);
+		menu->EnableMenuItem(ID_TXT_OPEN, MFS_GRAYED);
+		menu->EnableMenuItem(ID_PROJECT_REPORT, MFS_GRAYED);
+	}
+
+	// Установка подменю для "остальных ПИВ"
+	menu = m_subMenu.GetSubMenu(1);
+	if (pListOther->GetCount() > 0) {
+		m_Menu->EnableMenuItem(ID_PIV_CLOSE, MFS_ENABLED);
+		m_Menu->EnableMenuItem(ID_PIV_CLOSE_ALL, MFS_ENABLED);
+		menu->EnableMenuItem(ID_PIV_CLOSE, MFS_ENABLED);
+		menu->EnableMenuItem(ID_PIV_CLOSE_ALL, MFS_ENABLED);
+		menu->EnableMenuItem(ID_PIV_REFRESH, MFS_ENABLED);
+		menu->EnableMenuItem(ID_REP_OPEN, MFS_ENABLED);
+		menu->EnableMenuItem(ID_TXT_OPEN, MFS_ENABLED);
+	}
+	else {
+		m_Menu->EnableMenuItem(ID_PIV_CLOSE, MFS_GRAYED);
+		m_Menu->EnableMenuItem(ID_PIV_CLOSE_ALL, MFS_GRAYED);
+		menu->EnableMenuItem(ID_PIV_CLOSE, MFS_GRAYED);
+		menu->EnableMenuItem(ID_PIV_CLOSE_ALL, MFS_GRAYED);
+		menu->EnableMenuItem(ID_PIV_REFRESH, MFS_GRAYED);
+		menu->EnableMenuItem(ID_REP_OPEN, MFS_GRAYED);
+		menu->EnableMenuItem(ID_TXT_OPEN, MFS_GRAYED);
+	}
 }
