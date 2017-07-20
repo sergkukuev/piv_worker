@@ -184,6 +184,25 @@ void CMainDlg::OnPivOpen() {
 	logicMenu();
 }
 
+// Обновление протоколов
+void CMainDlg::OnPivRefresh() {
+	CPoint point;
+	GetCursorPos(&point);
+
+	CRect rect;		// Объект текущего диалогового окна
+	this->GetWindowRect(&rect);
+
+	CPoint pointWnd;	// Координаты относительно окна
+	pointWnd.x = point.x - rect.left;	// Центр окна: 298
+	pointWnd.y = point.y - rect.top;	// Условия вывода меню по Y: от 80 до 340
+
+	if (pointWnd.x < 298);
+		// Выбрать отмеченные протоколы из левого списка
+	else;
+		// Выбрать из правого списка
+	//piv.Refresh(файлики)
+}
+
 // Закрытие протокола
 void CMainDlg::OnPivClose() {
 	vector <CString> del;					// Пути всех удаленных пив
@@ -302,6 +321,7 @@ CString CMainDlg::getFolder() {
 		SHGetPathFromIDList(pidl, szDisplayName);
 		CEdit* edt = (CEdit *)(this->GetDlgItem(IDC_PATH));
 		edt->SetWindowTextW(szDisplayName);
+		folder = szDisplayName;
 	}
 	
 	return folder;
