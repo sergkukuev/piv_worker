@@ -45,6 +45,7 @@ protected:
 	afx_msg void OnSysCommand(UINT nID, LPARAM lParam);
 	afx_msg void OnPaint();
 	afx_msg HCURSOR OnQueryDragIcon();
+	afx_msg void OnContextMenu(CWnd* pWnd, CPoint point);	// Обработка контекстного меню
 	DECLARE_MESSAGE_MAP()
 	friend void waitThread(CMainDlg& object);	// Дружественная функция для ожидания окончания потока
 

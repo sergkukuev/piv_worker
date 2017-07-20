@@ -34,7 +34,6 @@ CPIVWorkerApp::CPIVWorkerApp()
 
 CPIVWorkerApp theApp;
 
-
 // инициализация CPIVWorkerApp
 
 BOOL CPIVWorkerApp::InitInstance()

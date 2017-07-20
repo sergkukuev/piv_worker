@@ -97,6 +97,7 @@ BEGIN_MESSAGE_MAP(CMainDlg, CDialog)
 	ON_COMMAND(ID_TXT_OPEN, &CMainDlg::OnPivTxtOpen)
 	ON_COMMAND(ID_OPEN_PROJECT, &CMainDlg::OnOpenProject)
 	ON_COMMAND(ID_APP_INFORM, &CMainDlg::OnAppInform)
+	ON_WM_CONTEXTMENU()
 END_MESSAGE_MAP()
 
 
@@ -388,4 +389,23 @@ void CMainDlg::AddPath(CString fullPath, CString name, CListBox* list)
 		path.push_back(fullPath);
 		list->AddString(name);
 	}
+}
+
+// Обработка контекстного меню
+void CMainDlg::OnContextMenu(CWnd* pWnd, CPoint point)
+{
+	CMenu m_Menu;	// Меню 
+	CMenu* menu;	// Указатель на подменю
+	CRect rect;		// Объект текущего диалогового окна
+	this->GetWindowRect(&rect);	
+
+	CPoint pointWnd;	// Координаты относительно окна
+	pointWnd.x = point.x - rect.left;	// Центр окна: 298
+	pointWnd.y = point.y - rect.top;	// Условия вывода меню по Y: от 80 до 340
+
+	m_Menu.LoadMenuW(IDR_CONTEXT_MENU);
+	pointWnd.x < 298 ? menu = m_Menu.GetSubMenu(0) : menu = m_Menu.GetSubMenu(1); // Выбор подменю
+
+	if (pointWnd.y > 80 && pointWnd.y < 340)
+		menu->TrackPopupMenu(TPM_LEFTALIGN | TPM_TOPALIGN, point.x, point.y, this);
 }
