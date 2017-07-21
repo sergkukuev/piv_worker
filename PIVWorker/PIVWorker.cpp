@@ -56,16 +56,38 @@ DWORD WINAPI PrimaryThread(LPVOID lpParam) {
 }
 
 // Конструктор
-CPIV::CPIV() { }
+CPIV::CPIV() { 
+	hLogPipe = CreateFile(pipeName, GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL);
+}
 
 // Деструктор
 CPIV::~CPIV() {
 	Close();
 	CloseProject();
+	CloseHandle(hLogPipe);
 }
 
 // Установить путь для хранения артефактов
-void CPIV::setPathToSave(const CString& pathToReport) { path = pathToReport; }
+void CPIV::setPathToSave(const CString& pathToReport) { 
+	SHFILEOPSTRUCT fos;
+	ZeroMemory(&fos, sizeof(fos));
+
+	// Установка функций для переноса папки артефактов
+	fos.wFunc = FO_MOVE;
+	path.Format(L"%s\\Artefacts", path);
+	path.AppendChar(0);
+	path.AppendChar(0);
+	CString to = pathToReport;
+	to.AppendChar(0);
+	to.AppendChar(0);
+	
+	fos.pFrom = path;
+	fos.pTo = to;
+	fos.fFlags = FOF_NOCONFIRMATION | FOF_NOCONFIRMMKDIR | FOF_NOERRORUI | FOF_SILENT;
+	
+	SHFileOperation(&fos);
+	path = pathToReport; 
+}
 
 // Установить флаг bNumPK
 void CPIV::setStatusNumPK(const bool& status) { bNumPK = status; }
@@ -115,7 +137,9 @@ void CPIV::OpenExcel() {
 		report.getReport(project, tPath);
 		report.getTxt(project.books, path, bNumPK);
 		closeThread(primary);
-		AfxMessageBox(L"Открытие завершено!", MB_ICONINFORMATION);
+		
+		WriteLog("Открытие проекта завершено");	// Логирование
+		//AfxMessageBox(L"Открытие завершено!", MB_ICONINFORMATION);
 	}
 	catch (MyException& exc) {
 		AfxMessageBox(exc.GetMsg(), MB_ICONERROR);
@@ -173,7 +197,9 @@ void CPIV::AddExcel() {
 		CreateDirectory(tPath, NULL);
 		report.getReport(other, tPath);	// Обновление отчета
 		closeThread(primary);
-		AfxMessageBox(L"Добавление завершено!", MB_ICONINFORMATION);
+		
+		WriteLog("Добавление ПИВ завершено");	// Логирование
+		//AfxMessageBox(L"Добавление завершено!", MB_ICONINFORMATION);
 	}
 	catch (MyException& exc) {
 		AfxMessageBox(exc.GetMsg(), MB_ICONERROR);
@@ -241,7 +267,9 @@ void CPIV::RefreshExcel() {
 		if (flagOther)
 			report.getReport(other, path);
 		closeThread(primary);
-		AfxMessageBox(L"Обновление завершено!", MB_ICONINFORMATION);
+		
+		WriteLog("Обновление ПИВ завершено");	// Логирование
+		//AfxMessageBox(L"Обновление завершено!", MB_ICONINFORMATION);
 	}
 	catch (MyException& exc) {
 		AfxMessageBox(exc.GetMsg(), MB_ICONERROR);
@@ -294,6 +322,7 @@ void CPIV::CloseExcel() {
 			it->name.Compare(nameFromPath(buffer[i])) == 0 ? other.books.erase(it++) : it++;
 	}
 	closeThread(primary);
+	WriteLog("Закрытие завершено");	// Логирование
 }
 #pragma endregion
 
@@ -309,7 +338,7 @@ void Thread(CPIV& piv) {
 	else if (piv.hCmd == piv.command.close)
 		piv.CloseExcel();
 	else
-		AfxMessageBox(L"Неопознанная команда!", MB_ICONWARNING);
+		AfxMessageBox(L"Неопознанная команда!", MB_ICONERROR);
 }
 
 // Обновление ПИВ и ошибок
@@ -377,6 +406,14 @@ void CPIV::closeThread(HANDLE& h) {
 		h = NULL;
 	}
 	else
-		AfxMessageBox(L"Не удалось закрыть поток. Он и не открывался.");
+		AfxMessageBox(L"Не удалось закрыть поток. Он и не открывался.", MB_ICONERROR);
+}
+
+// Запись в именованный канал
+void CPIV::WriteLog(char szBuf[256]) {
+	if (hLogPipe != INVALID_HANDLE_VALUE) {
+		DWORD  cbWritten;
+		WriteFile(hLogPipe, szBuf, strlen(szBuf) + 1, &cbWritten, NULL);
+	}
 }
 #pragma endregion

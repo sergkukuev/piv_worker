@@ -27,7 +27,7 @@ public:
 	CPIV();		// Конструктор
 	~CPIV();	// Деструктор
 
-	HANDLE primary;				// Основной поток
+	LPWSTR pipeName = L"\\\\.\\pipe\\log"; // Имя канала
 
 	void Open(const vector<CString>& pathToExcel, const CString& pathToReport);	// Открыть ПИВ и задать путь для артефактов (чтение, проверка, выдача артефактов)
 	void Open(const vector<CString>& pathToExcel);								// Открыть ПИВ и использовать старый путь для артефактов
@@ -47,6 +47,9 @@ public:
 protected:
 	friend void Thread(CPIV& piv);	// Дружественная функция для запуска операции в потоке
 private:
+	HANDLE primary;		// Основной поток
+	HANDLE hLogPipe;	// Именованный канал логирования
+
 	pivData project;	// Данные проекта
 	pivData other;		// Данные остальных протоколов
 
@@ -70,6 +73,7 @@ private:
 	void RefreshExcel();	// Обновление ПИВ
 	void CloseExcel();		// Закрытие ПИВ
 
+	void WriteLog(char szBuf[256]);	// Логирование
 
 	void Refresh(pivData& data, const bookData& book, const errorSet& error);	// Обновление ПИВ и ошибок
 	void Refresh(pivData& data, const bookData& book);			// Обновление ПИВ
