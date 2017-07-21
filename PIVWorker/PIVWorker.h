@@ -70,9 +70,13 @@ private:
 	void RefreshExcel();	// Обновление ПИВ
 	void CloseExcel();		// Закрытие ПИВ
 
+
 	void Refresh(pivData& data, const bookData& book, const errorSet& error);	// Обновление ПИВ и ошибок
-	CString nameFromPath(const CString& path);					// Извлечение имени файла из его пути
-	bool IsContain(pivData& data, const CString& path);			// Проверка наличия файла в памяти
+	void Refresh(pivData& data, const bookData& book);			// Обновление ПИВ
+	void Refresh(pivData& data, const errorSet& error);			// Обновление ошибок
+	bookData& getBook(pivData& data, const CString& pathToExcel);		// Получить ссылку на книгу
+	CString nameFromPath(const CString& pathToExcel);					// Извлечение имени файла из его пути
+	bool IsContain(pivData& data, const CString& pathToExcel);			// Проверка наличия файла в памяти
 
 	bool getStatusThread(const HANDLE& h);	// Проверка доступности потока
 	void closeThread(HANDLE& h);			// Закрытие потока

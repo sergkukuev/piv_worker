@@ -331,8 +331,9 @@ void CReport::getTxt(const bookData& book, const CString& pathToSave, const bool
 	if (pathToSave.IsEmpty())
 		throw EmptyPathException();
 	// Создание директории
-	path = pathToSave;
-	path.Format(L"%s\\Text", pathToSave);
+	path = pathToSave + L"\\Artefacts";
+	CreateDirectory(path, NULL);
+	path.Format(L"%s\\Text", path);
 	CreateDirectory(path, NULL);
 
 	Generate(book, bNumPK);
@@ -343,8 +344,9 @@ void CReport::getTxt(list <bookData>& books, const CString& pathToSave, const bo
 	if (pathToSave.IsEmpty())
 		throw EmptyPathException();
 	// Создание директории
-	path = pathToSave;
-	path.Format(L"%s\\Text", pathToSave);
+	path = pathToSave + L"\\Artefacts";
+	CreateDirectory(path, NULL);
+	path.Format(L"%s\\Text", path);
 	CreateDirectory(path, NULL);
 
 	// Обход по книгам

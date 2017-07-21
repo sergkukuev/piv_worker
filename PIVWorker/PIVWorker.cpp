@@ -108,10 +108,14 @@ void CPIV::OpenExcel() {
 
 		// Генерация артефактов
 		CReport report;
-		report.getReport(project, path);
+		CString tPath = path + L"\\Artefacts";
+		CreateDirectory(tPath, NULL);
+		tPath.Format(L"%s\\Project", tPath);
+		CreateDirectory(tPath, NULL);
+		report.getReport(project, tPath);
 		report.getTxt(project.books, path, bNumPK);
-		AfxMessageBox(L"Открытие завершено!", MB_ICONINFORMATION);
 		closeThread(primary);
+		AfxMessageBox(L"Открытие завершено!", MB_ICONINFORMATION);
 	}
 	catch (MyException& exc) {
 		AfxMessageBox(exc.GetMsg(), MB_ICONERROR);
@@ -155,20 +159,21 @@ void CPIV::AddExcel() {
 			bool contain = IsContain(other, buffer[i]);
 			CReaderExcel reader;
 			bookData book = reader.getBook(buffer[i]);
+			contain ? Refresh(other, book) : other.books.push_back(book);
+			
 			CTest tester;
-			errorSet error = tester.Start(book);
+			errorSet error = tester.Start(getBook(other, buffer[i]));
+			contain ? Refresh(other, error) : other.db.push_back(error);
 
-			if (!contain) {
-				other.books.push_back(book);
-				other.db.push_back(error);
-			}
-			else
-				Refresh(other, book, error);
 			report.getTxt(book, path, bNumPK);
 		}
-		report.getReport(other, path);	// Обновление отчета
-		AfxMessageBox(L"Добавление завершено!", MB_ICONINFORMATION);
+		CString tPath = path + L"\\Artefacts";
+		CreateDirectory(tPath, NULL);
+		tPath.Format(L"%s\\Other", tPath);
+		CreateDirectory(tPath, NULL);
+		report.getReport(other, tPath);	// Обновление отчета
 		closeThread(primary);
+		AfxMessageBox(L"Добавление завершено!", MB_ICONINFORMATION);
 	}
 	catch (MyException& exc) {
 		AfxMessageBox(exc.GetMsg(), MB_ICONERROR);
@@ -204,29 +209,39 @@ void CPIV::StartRefresh() {
 void CPIV::RefreshExcel() {
 	try {
 		CReport report;
+		bool flagProj = false, flagOther = false;
 		for (size_t i = 0; i < buffer.size(); i++) {
 			// Добавление ПИВ и ошибок
-			bool contain = IsContain(project, buffer[i]);
 			CReaderExcel reader;
 			bookData book = reader.getBook(buffer[i]);
+
 			CTest tester;
-			errorSet error = tester.Start(book);
-
-			contain ? Refresh(project, book, error) : contain = IsContain(other, buffer[i]);
-
-			if (!contain) {
+			bool contain = IsContain(project, buffer[i]);
+			if (IsContain(project, buffer[i])) {
+				flagProj = true;
+				Refresh(project, book);
+				errorSet error = tester.Start(getBook(project, buffer[i]));
+				Refresh(project, error);
+			}
+			else if (IsContain(other, buffer[i])) {
+				flagOther = true;
+				Refresh(project, book);
+				errorSet error = tester.Start(getBook(project, buffer[i]));
+				Refresh(project, error);
+			}
+			else {
 				BookNotFound exc;
 				exc.setName(nameFromPath(buffer[i]));
 				throw exc;
 			}
-			else
-				Refresh(other, book, error);
 			report.getTxt(book, path, bNumPK);
 		}
-		report.getReport(project, path);
-		report.getReport(other, path);
-		AfxMessageBox(L"Обновление завершено!", MB_ICONINFORMATION);
+		if (flagProj)
+			report.getReport(project, path);
+		if (flagOther)
+			report.getReport(other, path);
 		closeThread(primary);
+		AfxMessageBox(L"Обновление завершено!", MB_ICONINFORMATION);
 	}
 	catch (MyException& exc) {
 		AfxMessageBox(exc.GetMsg(), MB_ICONERROR);
@@ -273,10 +288,10 @@ void CPIV::StartClose() {
 // Закрытие ПИВ, пути которых лежат в буфере
 void CPIV::CloseExcel() {
 	for (size_t i = 0; i < buffer.size(); i++) {
-		for (list <bookData>::iterator it = other.books.begin(); it != other.books.end();)
-			it->name.CompareNoCase(nameFromPath(buffer[i])) == 0 ? other.books.erase(it++) : it++;
 		for (list <errorSet>::iterator it = other.db.begin(); it != other.db.end();)
-			it->book->name.CompareNoCase(nameFromPath(buffer[i])) == 0 ? other.db.erase(it++) : it++;
+			it->book->name.Compare(nameFromPath(buffer[i])) == 0 ? other.db.erase(it++) : it++;
+		for (list <bookData>::iterator it = other.books.begin(); it != other.books.end();)
+			it->name.Compare(nameFromPath(buffer[i])) == 0 ? other.books.erase(it++) : it++;
 	}
 	closeThread(primary);
 }
@@ -306,6 +321,27 @@ void CPIV::Refresh(pivData& data, const bookData& book, const errorSet& error) {
 	for (list <errorSet>::iterator it = data.db.begin(); it != data.db.end(); it++)
 		if (error.book->name.Compare(it->book->name) == 0)
 			*it = error;
+}
+
+// Обновление ПИВ
+void CPIV::Refresh(pivData& data, const bookData& book) {
+	for (list <bookData>::iterator it = data.books.begin(); it != data.books.end(); it++)
+		if (book.name.Compare(it->name) == 0)
+			*it = book;
+}
+
+// Обновление ПИВ
+void CPIV::Refresh(pivData& data, const errorSet& error) {
+	for (list <errorSet>::iterator it = data.db.begin(); it != data.db.end(); it++)
+		if (error.book->name.Compare(it->book->name) == 0)
+			*it = error;
+}
+
+// Получить ссылку на книгу
+bookData& CPIV::getBook(pivData& data, const CString& path) {
+	for (list <bookData>::iterator it = data.books.begin(); it != data.books.end(); it++)
+		if (nameFromPath(path).Compare(it->name) == 0)
+			return *it;
 }
 
 // Извлечение имени файла из его пути
