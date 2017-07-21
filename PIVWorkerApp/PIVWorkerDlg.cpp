@@ -58,7 +58,7 @@ BEGIN_MESSAGE_MAP(CMainDlg, CDialog)
 	ON_COMMAND(ID_OPEN_PROJECT, &CMainDlg::OnOpenProject)
 	ON_COMMAND(ID_PIV_CLOSE, &CMainDlg::OnPivClose)
 	ON_COMMAND(ID_PIV_CLOSE_ALL, &CMainDlg::OnPivCloseAll)
-	//ON_COMMAND(ID_PIV_REFRESH, &CMainDlg::OnPivRefresh)
+	ON_COMMAND(ID_PIV_REFRESH, &CMainDlg::OnPivRefresh)
 	
 	ON_COMMAND(ID_SET_FOLDER, &CMainDlg::OnPivSetFolder)
 	ON_COMMAND(ID_PROJECT_REPORT, &CMainDlg::OnProjectReport)
@@ -170,17 +170,18 @@ HCURSOR CMainDlg::OnQueryDragIcon() {
 // Открытие проекта
 void CMainDlg::OnOpenProject()  {
 	CString folder;
-	OpenFile(pList, folder);
-	path.empty() ? AfxMessageBox(L"Протоколы не выбраны!", MB_ICONWARNING) : piv.Open(path, folder);
+	pProj.clear();
+	OpenFile(pList, folder, pProj);
+	pProj.empty() ? AfxMessageBox(L"Протоколы не выбраны!", MB_ICONWARNING) : piv.Open(pProj, folder);
 	logicMenu();
 }
 
 // Открытие протоколов
 void CMainDlg::OnPivOpen() {
 	CString folder;
-	OpenFile(pListOther, folder);
+	OpenFile(pListOther, folder, pOther);
 	piv.setPathToSave(folder);
-	path.empty() ? AfxMessageBox(L"Протоколы не выбраны!", MB_ICONWARNING) : piv.Add(path);
+	pOther.empty() ? AfxMessageBox(L"Протоколы не выбраны!", MB_ICONWARNING) : piv.Add(pOther);
 	logicMenu();
 }
 
@@ -196,26 +197,27 @@ void CMainDlg::OnPivRefresh() {
 	pointWnd.x = point.x - rect.left;	// Центр окна: 298
 	pointWnd.y = point.y - rect.top;	// Условия вывода меню по Y: от 80 до 340
 
-	if (pointWnd.x < 298);
-		// Выбрать отмеченные протоколы из левого списка
-	else;
-		// Выбрать из правого списка
-	//piv.Refresh(файлики)
+	vector <CString> path;
+	if (pointWnd.x < CENTER)
+		getFileForRefresh(pList, pProj, path);
+	else
+		getFileForRefresh(pListOther, pOther, path);
+	path.empty() ? AfxMessageBox(L"Протоколы для обновления не выбраны!") : piv.Refresh(path);
 }
 
 // Закрытие протокола
 void CMainDlg::OnPivClose() {
 	vector <CString> del;					// Пути всех удаленных пив
-	int nCount = pListOther->GetSelCount();	// Получите индексы всех выбранных элементов.
+	int nCount = pListOther->GetSelCount();	// Количество выделенных элементов.
 	CArray<int> sel;
 
 	sel.SetSize(nCount);
-	pList->GetSelItems(nCount, sel.GetData());
+	pListOther->GetSelItems(nCount, sel.GetData());
 
 	for (size_t i = 0; i < sel.GetSize(); i++) {	
-		del.push_back(path[sel[i]]);
-		path.erase(path.begin() + sel[i]);
-		pList->DeleteString(sel[i]);
+		del.push_back(pOther[sel[i]]);
+		pOther.erase(pOther.begin() + sel[i]);
+		pListOther->DeleteString(sel[i]);
 	}
 	(del.empty()) ? AfxMessageBox(L"Файлы для удаления не выбраны!") : piv.Close(del);
 	logicMenu();
@@ -275,13 +277,15 @@ void CMainDlg::OnAppInform() {
 // Закрыть все протоколы
 void CMainDlg::OnPivCloseAll() {
 	pListOther->ResetContent();
+	pOther.clear();
+	pOther.shrink_to_fit();
 	piv.Close();
 }
 
 #pragma endregion
 
 // Открытие файлов
-void CMainDlg::OpenFile(CListBox* list, CString& folder) {
+void CMainDlg::OpenFile(CListBox* list, CString& folder, vector <CString>& path) {
 	CWnd* TheWindow = GetActiveWindow();
 	CFileDialog openDialog(true, NULL, NULL, OFN_ALLOWMULTISELECT + OFN_HIDEREADONLY, NULL, TheWindow);
 
@@ -300,7 +304,7 @@ void CMainDlg::OpenFile(CListBox* list, CString& folder) {
 	(pCheck == BST_UNCHECKED) ? piv.setStatusNumPK(false) : piv.setStatusNumPK(true);
 
 	if (openDialog.DoModal() == IDOK)
-		readPath(openDialog, list);
+		readPath(openDialog, list, path);
 }
 
 // Получить путь папки для сохранения
@@ -328,9 +332,8 @@ CString CMainDlg::getFolder() {
 }
 
 // Получение набора путей из диалогового окна
-void CMainDlg::readPath(const CFileDialog& dlg, CListBox* list) {
+void CMainDlg::readPath(const CFileDialog& dlg, CListBox* list, vector <CString>& path) {
 	POSITION pos = dlg.GetStartPosition();
-	vector <CString> result;
 
 	if (list == pList)
 		list->ResetContent();
@@ -345,23 +348,35 @@ void CMainDlg::readPath(const CFileDialog& dlg, CListBox* list) {
 			tmp.Delete(0, _path.GetLength() + 1);
 			name = tmp;
 		}
-		AddPath(fullPath, name, list);	// Добавление файла
+		AddPath(fullPath, name, list, path);	// Добавление файла
 	}
 }
 
 // Добаление путей файлов
-void CMainDlg::AddPath(CString fullPath, CString name, CListBox* list) {
+bool CMainDlg::AddPath(const CString& fullPath, const CString& name, CListBox* list, vector <CString>& path) {
 	bool result = true;
 
-	if (!path.empty())
-		for (size_t i = 0; i < path.size(); i++)
-			if (fullPath.Compare(path[i]) == 0)
-				result = false;
+	for (size_t i = 0; i < path.size(); i++)
+		if (fullPath.Compare(path[i]) == 0)
+			result = false;
 	
 	if (result) {
 		path.push_back(fullPath);
 		list->AddString(name);
 	}
+	return result;
+}
+
+// Список файлов для обновления
+void CMainDlg::getFileForRefresh(CListBox* list, const vector <CString>& from, vector <CString>& path) {
+	int nCount = list->GetSelCount();	// Количество выделенных элементов.
+	CArray<int> sel;
+
+	sel.SetSize(nCount);
+	list->GetSelItems(nCount, sel.GetData());
+
+	for (size_t i = 0; i < sel.GetSize(); i++)
+		path.push_back(from[sel[i]]);
 }
 
 // Обработка контекстного меню
@@ -374,7 +389,7 @@ void CMainDlg::OnContextMenu(CWnd* pWnd, CPoint point) {
 	pointWnd.x = point.x - rect.left;	// Центр окна: 298
 	pointWnd.y = point.y - rect.top;	// Условия вывода меню по Y: от 80 до 340
 
-	pointWnd.x < 298 ? menu = m_subMenu.GetSubMenu(0) : menu = m_subMenu.GetSubMenu(1); // Выбор подменю
+	pointWnd.x < CENTER ? menu = m_subMenu.GetSubMenu(0) : menu = m_subMenu.GetSubMenu(1); // Выбор подменю
 
 	if (pointWnd.y > 80 && pointWnd.y < 340)
 		menu->TrackPopupMenu(TPM_LEFTALIGN | TPM_TOPALIGN, point.x, point.y, this);

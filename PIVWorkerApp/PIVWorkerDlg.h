@@ -6,6 +6,7 @@
 
 #include "PIVWorker.h"
 
+#define CENTER 298
 // диалоговое окно CMainDlg
 class CMainDlg : public CDialog
 {
@@ -24,13 +25,15 @@ public:
 
 // Реализация
 private:
-	CPIV piv;				// Переменная для работы с протоколами
-	vector <CString> path;	// Пути файлов
+	CPIV piv;					// Переменная для работы с протоколами
+	vector <CString> pProj;		// Пути файлов проекта
+	vector <CString> pOther;	// Пути остальных файлов
 	
-	void AddPath(CString fullPath, CString name, CListBox* list);	// Добавление путей файлов
-	void readPath(const CFileDialog& dlg, CListBox* list);			// Получить вектор путей из диалогового окна
+	bool AddPath(const CString& fullPath, const CString& name, CListBox* list, vector <CString>& path);	// Добавление путей файлов
+	void readPath(const CFileDialog& dlg, CListBox* list, vector <CString>& path);						// Получить вектор путей из диалогового окна
 	
-	void OpenFile(CListBox* list, CString& folder);	// Открытие файлов
+	void OpenFile(CListBox* list, CString& folder, vector<CString>& path);	// Открытие файлов
+	void getFileForRefresh(CListBox* list, const vector <CString>& from, vector <CString>& file);			// Список файлов для обновления
 	CString getFolder();	// Получение пути артефактов
 	void logicMenu();		// Отображение меню и подменю
 
