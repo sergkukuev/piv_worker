@@ -41,8 +41,70 @@ void CAboutDlg::DoDataExchange(CDataExchange* pDX) {
 BEGIN_MESSAGE_MAP(CAboutDlg, CDialogEx)
 END_MESSAGE_MAP()
 
+struct MyData {
+	CMainDlg* dlg;
+};
+
+MyData mD;
+
+DWORD WINAPI WaitThread(LPVOID lpParam) {
+	CoInitialize(NULL);
+	SetThreadPriorityBoost(GetCurrentThread(), TRUE);
+	MyData* myD = static_cast<MyData*>(lpParam);
+
+	Wait(*(myD->dlg));
+
+	CoUninitialize();
+	return 0;
+}
+
+void Wait(CMainDlg& application) {
+	application.PrintStatusBar();
+}
+
 CMainDlg::CMainDlg(CWnd* pParent /*=NULL*/) : CDialog(IDD_PIVWORKERAPP_DIALOG, pParent) {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
+
+	mD.dlg = this;
+	hWait = CreateThread(NULL, 0, WaitThread, &mD, 0, 0);
+}
+
+// Вывод логов в статус бар
+void CMainDlg::PrintStatusBar() {
+	//PROCESS_INFORMATION procInfo;
+	//STARTUPINFO SI;
+	HANDLE hLogPipe;
+	char buffer[256];
+	DWORD iNumBytesToRead = 255;
+	
+	/*ZeroMemory(&SI, sizeof(procInfo));
+	SI.cb = sizeof(STARTUPINFO);
+	ZeroMemory(&procInfo, sizeof(procInfo));
+	*/
+
+	hLogPipe = CreateNamedPipe(piv.pipeName,
+		PIPE_ACCESS_DUPLEX,
+		PIPE_TYPE_MESSAGE | PIPE_READMODE_MESSAGE | PIPE_WAIT,
+		PIPE_UNLIMITED_INSTANCES, 4096, 4096, NMPWAIT_USE_DEFAULT_WAIT, NULL);
+
+	while (hLogPipe != INVALID_HANDLE_VALUE) {
+		if (ConnectNamedPipe(hLogPipe, NULL) != 0) {
+			ReadFile(hLogPipe, buffer, iNumBytesToRead, &iNumBytesToRead, NULL);
+			buffer[iNumBytesToRead] = '\0';
+			CString temp(buffer);
+			
+			if (m_hWnd != NULL)
+				pStatusBar->SetWindowTextW(temp);
+		}
+		//DisconnectNamedPipe(hLogPipe);
+		CloseHandle(hLogPipe);
+		hLogPipe = CreateNamedPipe(piv.pipeName,
+		PIPE_ACCESS_DUPLEX,
+		PIPE_TYPE_MESSAGE | PIPE_READMODE_MESSAGE | PIPE_WAIT,
+		PIPE_UNLIMITED_INSTANCES, 4096, 4096, NMPWAIT_USE_DEFAULT_WAIT, NULL);
+	}
+	//DisconnectNamedPipe(hLogPipe);
+	CloseHandle(hLogPipe);
 }
 
 void CMainDlg::DoDataExchange(CDataExchange* pDX) {
@@ -95,19 +157,13 @@ BOOL CMainDlg::OnInitDialog() {
 	}
 
 	// Создание и настройка ListBox
-	//pLsBox = new CListBox();
-	//pLsBox->Create(WS_CHILD | WS_VISIBLE | LBS_MULTIPLESEL, CRect(10, 30, 300, 300), this, 0x118);
-	//pLsBox->GetItemHeight(20);
-
-	//pLsBoxOther = new CListBox();
-	//pLsBoxOther->Create(WS_CHILD | WS_VISIBLE | LBS_MULTIPLESEL, CRect(310, 330, 300, 300), this, 0x118);
-	//pLsBoxOther->GetItemHeight(20);
 	pList = (CListBox *)this->GetDlgItem(IDC_LIST_PROJECT);
 	pListOther = (CListBox *)this->GetDlgItem(IDC_LIST_OTHER);
 
 	// Создание и настройка строки состояния
 	pStatusBar = new CStatusBarCtrl();
 	pStatusBar->Create(WS_CHILD | WS_VISIBLE | LBS_MULTIPLESEL | CBRS_BOTTOM, CRect(2, 0, 576, 388), this, AFX_IDW_STATUS_BAR);
+	pStatusBar->SetWindowTextW(L"Приложение запущено...");
 
 	m_subMenu.LoadMenuW(IDR_CONTEXT_MENU);
 
@@ -169,24 +225,40 @@ HCURSOR CMainDlg::OnQueryDragIcon() {
 
 // Открытие проекта
 void CMainDlg::OnOpenProject()  {
+	pStatusBar->SetWindowTextW(L"Идет открытие проекта...");
+	
 	CString folder;
 	pProj.clear();
 	OpenFile(pList, folder, pProj);
-	pProj.empty() ? AfxMessageBox(L"Протоколы не выбраны!", MB_ICONWARNING) : piv.Open(pProj, folder);
+	if (pProj.empty()) {
+		pStatusBar->SetWindowTextW(L"Открытие проекта отменено...");
+		//AfxMessageBox(L"Протоколы не выбраны!", MB_ICONWARNING);
+	}
+	else 
+		piv.Open(pProj, folder);
 	logicMenu();
 }
 
 // Открытие протоколов
 void CMainDlg::OnPivOpen() {
+	pStatusBar->SetWindowTextW(L"Идет открытие ПИВ...");
+
 	CString folder;
 	OpenFile(pListOther, folder, pOther);
 	piv.setPathToSave(folder);
-	pOther.empty() ? AfxMessageBox(L"Протоколы не выбраны!", MB_ICONWARNING) : piv.Add(pOther);
+	if (pOther.empty()) {
+		pStatusBar->SetWindowTextW(L"Открытие ПИВ отменено...");
+		//AfxMessageBox(L"Протоколы не выбраны!", MB_ICONWARNING);
+	}
+	else
+		piv.Add(pOther);
 	logicMenu();
 }
 
 // Обновление протоколов
 void CMainDlg::OnPivRefresh() {
+	pStatusBar->SetWindowTextW(L"Идет обновление ПИВ...");
+	
 	CPoint point;
 	GetCursorPos(&point);
 
@@ -202,11 +274,18 @@ void CMainDlg::OnPivRefresh() {
 		getFileForRefresh(pList, pProj, path);
 	else
 		getFileForRefresh(pListOther, pOther, path);
-	path.empty() ? AfxMessageBox(L"Протоколы для обновления не выбраны!") : piv.Refresh(path);
+	if (path.empty()) {
+		pStatusBar->SetWindowTextW(L"Обновление ПИВ отменено...");
+		AfxMessageBox(L"ПИВ для обновления не выбраны!");
+	}
+	else 
+		piv.Refresh(path);
 }
 
 // Закрытие протокола
 void CMainDlg::OnPivClose() {
+	pStatusBar->SetWindowTextW(L"Идет закрытие ПИВ...");
+	
 	vector <CString> del;					// Пути всех удаленных пив
 	int nCount = pListOther->GetSelCount();	// Количество выделенных элементов.
 	CArray<int> sel;
@@ -214,12 +293,17 @@ void CMainDlg::OnPivClose() {
 	sel.SetSize(nCount);
 	pListOther->GetSelItems(nCount, sel.GetData());
 
-	for (size_t i = 0; i < sel.GetSize(); i++) {	
+	for (int i = 0; i < sel.GetSize(); i++) {	
 		del.push_back(pOther[sel[i]]);
 		pOther.erase(pOther.begin() + sel[i]);
 		pListOther->DeleteString(sel[i]);
 	}
-	(del.empty()) ? AfxMessageBox(L"Файлы для удаления не выбраны!") : piv.Close(del);
+	if (del.empty()) {
+		pStatusBar->SetWindowTextW(L"Закрытие ПИВ отменено...");
+		AfxMessageBox(L"ПИВ для удаления не выбраны!");
+	}
+	else
+		piv.Close(del);
 	logicMenu();
 }
 
@@ -230,6 +314,7 @@ void CMainDlg::OnPivSetFolder() {
 	folder = getFolder();
 	piv.setPathToSave(folder);
 	edt->SetWindowTextW(folder);
+	pStatusBar->SetWindowTextW(L"Изменена директория для отчетов...");
 }
 
 // Открыть отчет по остальным
@@ -239,6 +324,7 @@ void CMainDlg::OnOtherReport() {
 	edit->GetWindowTextW(pathFile);
 	pathFile.Format(L"%s\\Artefacts\\Other\\Отчет.html", pathFile);
 	ShellExecute(0, L"Open", pathFile, NULL, NULL, SW_NORMAL);
+	pStatusBar->SetWindowTextW(L"Открыт отчет остальных ПИВ...");
 }
 
 // Открыть отчет по проекту
@@ -248,6 +334,7 @@ void CMainDlg::OnProjectReport() {
 	edit->GetWindowTextW(pathFile);
 	pathFile.Format(L"%s\\Artefacts\\Project\\Отчет.html", pathFile);
 	ShellExecute(0, L"Open", pathFile, NULL, NULL, SW_NORMAL);
+	pStatusBar->SetWindowTextW(L"Открыт отчет проекта...");
 }
 
 // Открыть папку с отчетом
@@ -257,6 +344,7 @@ void CMainDlg::OnPivRepFolder() {
 	edit->GetWindowTextW(folder);
 	folder.Format(L"%s\\Artefacts", folder);
 	ShellExecute(0, L"Explore", folder, NULL, NULL, SW_NORMAL);
+	pStatusBar->SetWindowTextW(L"Открыта папка с отчетами...");
 }
 
 // Открыть txt отчет
@@ -266,6 +354,7 @@ void CMainDlg::OnPivTxtOpen() {
 	edit->GetWindowTextW(folder);
 	folder.Format(L"%s\\%s\\Text", folder, L"Artefacts");
 	ShellExecute(0, L"Explore", folder, NULL, NULL, SW_NORMAL);
+	pStatusBar->SetWindowTextW(L"Открыта папка с txt файлами...");
 }
 
 // Информация о приложении
@@ -276,6 +365,7 @@ void CMainDlg::OnAppInform() {
 
 // Закрыть все протоколы
 void CMainDlg::OnPivCloseAll() {
+	pStatusBar->SetWindowTextW(L"Закрытие всех протоколов...");
 	pListOther->ResetContent();
 	pOther.clear();
 	pOther.shrink_to_fit();
@@ -375,7 +465,7 @@ void CMainDlg::getFileForRefresh(CListBox* list, const vector <CString>& from, v
 	sel.SetSize(nCount);
 	list->GetSelItems(nCount, sel.GetData());
 
-	for (size_t i = 0; i < sel.GetSize(); i++)
+	for (int i = 0; i < sel.GetSize(); i++)
 		path.push_back(from[sel[i]]);
 }
 

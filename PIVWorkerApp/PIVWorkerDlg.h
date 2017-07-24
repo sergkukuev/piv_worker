@@ -28,6 +28,7 @@ private:
 	CPIV piv;					// Переменная для работы с протоколами
 	vector <CString> pProj;		// Пути файлов проекта
 	vector <CString> pOther;	// Пути остальных файлов
+	HANDLE hWait;
 	
 	bool AddPath(const CString& fullPath, const CString& name, CListBox* list, vector <CString>& path);	// Добавление путей файлов
 	void readPath(const CFileDialog& dlg, CListBox* list, vector <CString>& path);						// Получить вектор путей из диалогового окна
@@ -53,7 +54,7 @@ protected:
 	afx_msg void OnPaint();
 	afx_msg HCURSOR OnQueryDragIcon();
 	DECLARE_MESSAGE_MAP();
-
+	friend void Wait(CMainDlg& application);
 public:
 	// Обработчики функций
 	afx_msg void OnPivSetFolder();		// Установить папку для отчетов и txt
@@ -67,4 +68,6 @@ public:
 	afx_msg void OnPivRepFolder();		// Открыть папку с отчетом
 	afx_msg void OnPivTxtOpen();		// Открыть txt отчет
 	afx_msg void OnAppInform();			// Информация о проекте
+
+	void PrintStatusBar();
 };

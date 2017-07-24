@@ -56,15 +56,12 @@ DWORD WINAPI PrimaryThread(LPVOID lpParam) {
 }
 
 // Конструктор
-CPIV::CPIV() { 
-	hLogPipe = CreateFile(pipeName, GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL);
-}
+CPIV::CPIV() { }
 
 // Деструктор
 CPIV::~CPIV() {
 	Close();
 	CloseProject();
-	CloseHandle(hLogPipe);
 }
 
 // Установить путь для хранения артефактов
@@ -138,7 +135,7 @@ void CPIV::OpenExcel() {
 		report.getTxt(project.books, path, bNumPK);
 		closeThread(primary);
 		
-		WriteLog("Открытие проекта завершено");	// Логирование
+		WriteLog("Открытие проекта завершено...");	// Логирование
 		//AfxMessageBox(L"Открытие завершено!", MB_ICONINFORMATION);
 	}
 	catch (MyException& exc) {
@@ -186,7 +183,8 @@ void CPIV::AddExcel() {
 			contain ? Refresh(other, book) : other.books.push_back(book);
 			
 			CTest tester;
-			errorSet error = tester.Start(getBook(other, buffer[i]));
+			bookData& pBook = getBook(other, buffer[i]);
+			errorSet error = tester.Start(pBook);
 			contain ? Refresh(other, error) : other.db.push_back(error);
 
 			report.getTxt(book, path, bNumPK);
@@ -198,7 +196,7 @@ void CPIV::AddExcel() {
 		report.getReport(other, tPath);	// Обновление отчета
 		closeThread(primary);
 		
-		WriteLog("Добавление ПИВ завершено");	// Логирование
+		WriteLog("Добавление ПИВ завершено...");	// Логирование
 		//AfxMessageBox(L"Добавление завершено!", MB_ICONINFORMATION);
 	}
 	catch (MyException& exc) {
@@ -246,14 +244,16 @@ void CPIV::RefreshExcel() {
 			if (IsContain(project, buffer[i])) {
 				flagProj = true;
 				Refresh(project, book);
-				errorSet error = tester.Start(getBook(project, buffer[i]));
+				bookData& pBook = getBook(project, buffer[i]);
+				errorSet error = tester.Start(pBook);
 				Refresh(project, error);
 			}
 			else if (IsContain(other, buffer[i])) {
 				flagOther = true;
-				Refresh(project, book);
-				errorSet error = tester.Start(getBook(project, buffer[i]));
-				Refresh(project, error);
+				Refresh(other, book);
+				bookData& pBook = getBook(other, buffer[i]);
+				errorSet error = tester.Start(pBook);
+				Refresh(other, error);
 			}
 			else {
 				BookNotFound exc;
@@ -262,13 +262,19 @@ void CPIV::RefreshExcel() {
 			}
 			report.getTxt(book, path, bNumPK);
 		}
-		if (flagProj)
-			report.getReport(project, path);
-		if (flagOther)
-			report.getReport(other, path);
+		CString tPath = path + L"\\Artefacts";
+		if (flagProj) {
+			tPath.Format(L"%s\\Project", tPath);
+			report.getReport(project, tPath);
+		}
+			
+		if (flagOther) {
+			tPath.Format(L"%s\\Other", tPath);
+			report.getReport(other, tPath);
+		}
 		closeThread(primary);
 		
-		WriteLog("Обновление ПИВ завершено");	// Логирование
+		WriteLog("Обновление ПИВ завершено...");	// Логирование
 		//AfxMessageBox(L"Обновление завершено!", MB_ICONINFORMATION);
 	}
 	catch (MyException& exc) {
@@ -282,6 +288,7 @@ void CPIV::RefreshExcel() {
 void CPIV::Close() {
 	other.books.clear();
 	other.db.clear();
+	WriteLog("Закрытие ПИВ завершено...");	// Логирование
 }
 
 // Закрытие ПИВ проекта
@@ -322,7 +329,7 @@ void CPIV::CloseExcel() {
 			it->name.Compare(nameFromPath(buffer[i])) == 0 ? other.books.erase(it++) : it++;
 	}
 	closeThread(primary);
-	WriteLog("Закрытие завершено");	// Логирование
+	WriteLog("Закрытие ПИВ завершено...");	// Логирование
 }
 #pragma endregion
 
@@ -338,7 +345,7 @@ void Thread(CPIV& piv) {
 	else if (piv.hCmd == piv.command.close)
 		piv.CloseExcel();
 	else
-		AfxMessageBox(L"Неопознанная команда!", MB_ICONERROR);
+		AfxMessageBox(L"Ошибка: Неопознанная команда!", MB_ICONERROR);
 }
 
 // Обновление ПИВ и ошибок
@@ -371,6 +378,7 @@ bookData& CPIV::getBook(pivData& data, const CString& path) {
 	for (list <bookData>::iterator it = data.books.begin(); it != data.books.end(); it++)
 		if (nameFromPath(path).Compare(it->name) == 0)
 			return *it;
+	return *data.books.end();
 }
 
 // Извлечение имени файла из его пути
@@ -406,14 +414,14 @@ void CPIV::closeThread(HANDLE& h) {
 		h = NULL;
 	}
 	else
-		AfxMessageBox(L"Не удалось закрыть поток. Он и не открывался.", MB_ICONERROR);
+		AfxMessageBox(L"Ошибка: Не удалось закрыть поток!", MB_ICONERROR);
 }
 
 // Запись в именованный канал
 void CPIV::WriteLog(char szBuf[256]) {
-	if (hLogPipe != INVALID_HANDLE_VALUE) {
-		DWORD  cbWritten;
-		WriteFile(hLogPipe, szBuf, strlen(szBuf) + 1, &cbWritten, NULL);
-	}
+	HANDLE hLogPipe = CreateFile(pipeName, GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL);
+	DWORD  NumBytesToWrite;	
+	WriteFile(hLogPipe, szBuf, strlen(szBuf), &NumBytesToWrite, NULL);
+	CloseHandle(hLogPipe);
 }
 #pragma endregion

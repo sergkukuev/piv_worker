@@ -48,7 +48,6 @@ protected:
 	friend void Thread(CPIV& piv);	// Дружественная функция для запуска операции в потоке
 private:
 	HANDLE primary;		// Основной поток
-	HANDLE hLogPipe;	// Именованный канал логирования
 
 	pivData project;	// Данные проекта
 	pivData other;		// Данные остальных протоколов
