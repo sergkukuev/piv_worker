@@ -72,7 +72,8 @@ private:
 	void RefreshExcel();	// Обновление ПИВ
 	void CloseExcel();		// Закрытие ПИВ
 
-	void WriteLog(char szBuf[256]);	// Логирование
+	void WriteLog(char szBuf[256]);			// Логирование
+	void WriteError(const CString& msg);	// Запись ошибки в файл
 
 	void Refresh(pivData& data, const bookData& book, const errorSet& error);	// Обновление ПИВ и ошибок
 	void Refresh(pivData& data, const bookData& book);			// Обновление ПИВ

@@ -68,6 +68,9 @@ public:
 	afx_msg void OnPivRepFolder();		// Открыть папку с отчетом
 	afx_msg void OnPivTxtOpen();		// Открыть txt отчет
 	afx_msg void OnAppInform();			// Информация о проекте
+	afx_msg void OnBtnLog();			// Показать логи
+	afx_msg void OnLogClear();			// Очистить логи
 
 	void PrintStatusBar();
+	void WriteLog(CString msg = L"");			// Запись в файл
 };

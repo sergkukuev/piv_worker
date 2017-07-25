@@ -6,6 +6,8 @@
 #include "PIVWorkerApp.h"
 #include "PIVWorkerDlg.h"
 #include "afxdialogex.h"
+#include <fstream>
+#include <iostream>
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -93,8 +95,10 @@ void CMainDlg::PrintStatusBar() {
 			buffer[iNumBytesToRead] = '\0';
 			CString temp(buffer);
 			
-			if (m_hWnd != NULL)
-				pStatusBar->SetWindowTextW(temp);
+			if (m_hWnd != NULL) {
+				WriteLog(temp);
+				logicMenu();
+			}
 		}
 		//DisconnectNamedPipe(hLogPipe);
 		CloseHandle(hLogPipe);
@@ -129,6 +133,8 @@ BEGIN_MESSAGE_MAP(CMainDlg, CDialog)
 	ON_COMMAND(ID_TXT_OPEN, &CMainDlg::OnPivTxtOpen)
 
 	ON_COMMAND(ID_APP_INFORM, &CMainDlg::OnAppInform)
+	ON_COMMAND(IDC_BTN_LOG, &CMainDlg::OnBtnLog)
+	ON_COMMAND(IDC_BTN_LOG2, &CMainDlg::OnLogClear)
 	ON_WM_CONTEXTMENU()
 END_MESSAGE_MAP()
 
@@ -163,9 +169,19 @@ BOOL CMainDlg::OnInitDialog() {
 	// Создание и настройка строки состояния
 	pStatusBar = new CStatusBarCtrl();
 	pStatusBar->Create(WS_CHILD | WS_VISIBLE | LBS_MULTIPLESEL | CBRS_BOTTOM, CRect(2, 0, 576, 388), this, AFX_IDW_STATUS_BAR);
-	pStatusBar->SetWindowTextW(L"Приложение запущено...");
-
 	m_subMenu.LoadMenuW(IDR_CONTEXT_MENU);
+
+	// Установка текущей директории
+	CString str;
+	GetModuleFileName(NULL, str.GetBuffer(_MAX_PATH), _MAX_PATH);
+	str.ReleaseBuffer();
+	str.Delete(str.ReverseFind(L'\\'), str.GetLength());
+
+	CEdit* edt = (CEdit *)(this->GetDlgItem(IDC_PATH));
+	edt->SetWindowTextW(str);
+
+	WriteLog();
+	WriteLog(L"Приложение запущено");
 
 	// Задает значок для этого диалогового окна.  Среда делает это автоматически,
 	//  если главное окно приложения не является диалоговым
@@ -225,39 +241,37 @@ HCURSOR CMainDlg::OnQueryDragIcon() {
 
 // Открытие проекта
 void CMainDlg::OnOpenProject()  {
-	pStatusBar->SetWindowTextW(L"Идет открытие проекта...");
+	WriteLog(L"Идет открытие проекта");
 	
 	CString folder;
 	pProj.clear();
 	OpenFile(pList, folder, pProj);
 	if (pProj.empty()) {
-		pStatusBar->SetWindowTextW(L"Открытие проекта отменено...");
+		WriteLog(L"Открытие проекта отменено");
 		//AfxMessageBox(L"Протоколы не выбраны!", MB_ICONWARNING);
 	}
 	else 
 		piv.Open(pProj, folder);
-	logicMenu();
 }
 
 // Открытие протоколов
 void CMainDlg::OnPivOpen() {
-	pStatusBar->SetWindowTextW(L"Идет открытие ПИВ...");
+	WriteLog(L"Идет открытие ПИВ");
 
 	CString folder;
 	OpenFile(pListOther, folder, pOther);
 	piv.setPathToSave(folder);
 	if (pOther.empty()) {
-		pStatusBar->SetWindowTextW(L"Открытие ПИВ отменено...");
+		WriteLog(L"Открытие ПИВ отменено");
 		//AfxMessageBox(L"Протоколы не выбраны!", MB_ICONWARNING);
 	}
 	else
 		piv.Add(pOther);
-	logicMenu();
 }
 
 // Обновление протоколов
 void CMainDlg::OnPivRefresh() {
-	pStatusBar->SetWindowTextW(L"Идет обновление ПИВ...");
+	WriteLog(L"Идет обновление ПИВ");
 	
 	CPoint point;
 	GetCursorPos(&point);
@@ -275,7 +289,7 @@ void CMainDlg::OnPivRefresh() {
 	else
 		getFileForRefresh(pListOther, pOther, path);
 	if (path.empty()) {
-		pStatusBar->SetWindowTextW(L"Обновление ПИВ отменено...");
+		WriteLog(L"Обновление ПИВ отменено");
 		AfxMessageBox(L"ПИВ для обновления не выбраны!");
 	}
 	else 
@@ -284,7 +298,7 @@ void CMainDlg::OnPivRefresh() {
 
 // Закрытие протокола
 void CMainDlg::OnPivClose() {
-	pStatusBar->SetWindowTextW(L"Идет закрытие ПИВ...");
+	WriteLog(L"Идет закрытие ПИВ");
 	
 	vector <CString> del;					// Пути всех удаленных пив
 	int nCount = pListOther->GetSelCount();	// Количество выделенных элементов.
@@ -299,12 +313,11 @@ void CMainDlg::OnPivClose() {
 		pListOther->DeleteString(sel[i]);
 	}
 	if (del.empty()) {
-		pStatusBar->SetWindowTextW(L"Закрытие ПИВ отменено...");
+		WriteLog(L"Закрытие ПИВ отменено");
 		AfxMessageBox(L"ПИВ для удаления не выбраны!");
 	}
 	else
 		piv.Close(del);
-	logicMenu();
 }
 
 //Установить директорию для отчетов и txt
@@ -314,7 +327,7 @@ void CMainDlg::OnPivSetFolder() {
 	folder = getFolder();
 	piv.setPathToSave(folder);
 	edt->SetWindowTextW(folder);
-	pStatusBar->SetWindowTextW(L"Изменена директория для отчетов...");
+	WriteLog(L"Изменена директория для отчетов");
 }
 
 // Открыть отчет по остальным
@@ -323,8 +336,8 @@ void CMainDlg::OnOtherReport() {
 	CString pathFile;
 	edit->GetWindowTextW(pathFile);
 	pathFile.Format(L"%s\\Artefacts\\Other\\Отчет.html", pathFile);
-	ShellExecute(0, L"Open", pathFile, NULL, NULL, SW_NORMAL);
-	pStatusBar->SetWindowTextW(L"Открыт отчет остальных ПИВ...");
+	if (ShellExecute(0, L"Open", pathFile, NULL, NULL, SW_NORMAL) != 0)
+		AfxMessageBox(L"Отчет по остальным ПИВ отсутствует!", MB_ICONWARNING);
 }
 
 // Открыть отчет по проекту
@@ -333,8 +346,8 @@ void CMainDlg::OnProjectReport() {
 	CString pathFile;
 	edit->GetWindowTextW(pathFile);
 	pathFile.Format(L"%s\\Artefacts\\Project\\Отчет.html", pathFile);
-	ShellExecute(0, L"Open", pathFile, NULL, NULL, SW_NORMAL);
-	pStatusBar->SetWindowTextW(L"Открыт отчет проекта...");
+	if (ShellExecute(0, L"Open", pathFile, NULL, NULL, SW_NORMAL) != 0)
+		AfxMessageBox(L"Отчет по проекту отсутствует!", MB_ICONWARNING);
 }
 
 // Открыть папку с отчетом
@@ -344,7 +357,6 @@ void CMainDlg::OnPivRepFolder() {
 	edit->GetWindowTextW(folder);
 	folder.Format(L"%s\\Artefacts", folder);
 	ShellExecute(0, L"Explore", folder, NULL, NULL, SW_NORMAL);
-	pStatusBar->SetWindowTextW(L"Открыта папка с отчетами...");
 }
 
 // Открыть txt отчет
@@ -353,8 +365,8 @@ void CMainDlg::OnPivTxtOpen() {
 	CString folder;
 	edit->GetWindowTextW(folder);
 	folder.Format(L"%s\\%s\\Text", folder, L"Artefacts");
-	ShellExecute(0, L"Explore", folder, NULL, NULL, SW_NORMAL);
-	pStatusBar->SetWindowTextW(L"Открыта папка с txt файлами...");
+	if (ShellExecute(0, L"Explore", folder, NULL, NULL, SW_NORMAL) != 0)
+		AfxMessageBox(L"Txt файлы отсутствуют!", MB_ICONWARNING);
 }
 
 // Информация о приложении
@@ -365,14 +377,50 @@ void CMainDlg::OnAppInform() {
 
 // Закрыть все протоколы
 void CMainDlg::OnPivCloseAll() {
-	pStatusBar->SetWindowTextW(L"Закрытие всех протоколов...");
+	WriteLog(L"Закрытие всех протоколов");
 	pListOther->ResetContent();
 	pOther.clear();
 	pOther.shrink_to_fit();
 	piv.Close();
 }
 
+// Показать логи
+void CMainDlg::OnBtnLog() {
+	CEdit* edit = (CEdit *)this->GetDlgItem(IDC_PATH);
+	CString path;
+	edit->GetWindowTextW(path);
+	path.Format(L"%s\\Artefacts\\log.txt", path);
+	ShellExecute(0, L"Open", path, NULL, NULL, SW_NORMAL);
+}
+
+// Очистить логи
+void CMainDlg::OnLogClear() {
+	CEdit* edit = (CEdit *)this->GetDlgItem(IDC_PATH);
+	CString logPath;
+	edit->GetWindowTextW(logPath);
+	logPath.Format(L"%s\\Artefacts\\log.txt", logPath);
+	ofstream log;
+	log.open(logPath);
+	log.close();
+}
+
 #pragma endregion
+
+// Запись в лог файл
+void CMainDlg::WriteLog(CString msg) {
+	pStatusBar->SetWindowTextW(msg);
+	CEdit* edit = (CEdit *)this->GetDlgItem(IDC_PATH);
+	CString logPath;
+	SYSTEMTIME st;
+	GetLocalTime(&st);
+	msg.IsEmpty() ? msg.Format(L"============================================================\n") :
+					msg.Format(L"%02d:%02d:%02d %02d/%02d/%d:\t%s\n", st.wHour, st.wMinute, st.wSecond, st.wDay, st.wMonth, st.wYear, msg);
+	edit->GetWindowTextW(logPath);
+	logPath.Format(L"%s\\Artefacts\\log.txt", logPath);
+	ofstream log(logPath, ios::out | ios::app);
+	log << CT2A(msg);
+	log.close();
+}
 
 // Открытие файлов
 void CMainDlg::OpenFile(CListBox* list, CString& folder, vector <CString>& path) {

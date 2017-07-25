@@ -112,7 +112,7 @@ void CPIV::StartOpen() {
 		primary = CreateThread(NULL, 0, PrimaryThread, &mD, 0, 0);
 	}
 	else
-		AfxMessageBox(THREAD_BUSY);
+		WriteError(THREAD_BUSY);
 }
 
 // Открытие ПИВ, пути которых лежат в буфере
@@ -135,11 +135,11 @@ void CPIV::OpenExcel() {
 		report.getTxt(project.books, path, bNumPK);
 		closeThread(primary);
 		
-		WriteLog("Открытие проекта завершено...");	// Логирование
+		WriteLog("Открытие проекта завершено");	// Логирование
 		//AfxMessageBox(L"Открытие завершено!", MB_ICONINFORMATION);
 	}
 	catch (MyException& exc) {
-		AfxMessageBox(exc.GetMsg(), MB_ICONERROR);
+		WriteError(exc.GetMsg());
 	}
 }
 #pragma endregion
@@ -165,7 +165,7 @@ void CPIV::StartAdd() {
 		primary = CreateThread(NULL, 0, PrimaryThread, &mD, 0, 0);
 	}
 	else
-		AfxMessageBox(THREAD_BUSY);
+		WriteError(THREAD_BUSY);
 }
 
 // Добавление ПИВ, пути которых лежат в буфере
@@ -196,11 +196,11 @@ void CPIV::AddExcel() {
 		report.getReport(other, tPath);	// Обновление отчета
 		closeThread(primary);
 		
-		WriteLog("Добавление ПИВ завершено...");	// Логирование
+		WriteLog("Добавление ПИВ завершено");	// Логирование
 		//AfxMessageBox(L"Добавление завершено!", MB_ICONINFORMATION);
 	}
 	catch (MyException& exc) {
-		AfxMessageBox(exc.GetMsg(), MB_ICONERROR);
+		WriteError(exc.GetMsg());
 	}
 }
 #pragma endregion
@@ -226,7 +226,7 @@ void CPIV::StartRefresh() {
 		primary = CreateThread(NULL, 0, PrimaryThread, &mD, 0, 0);
 	}
 	else
-		AfxMessageBox(THREAD_BUSY);
+		WriteError(THREAD_BUSY);
 }
 
 // Обновление ПИВ
@@ -274,11 +274,11 @@ void CPIV::RefreshExcel() {
 		}
 		closeThread(primary);
 		
-		WriteLog("Обновление ПИВ завершено...");	// Логирование
+		WriteLog("Обновление ПИВ завершено");	// Логирование
 		//AfxMessageBox(L"Обновление завершено!", MB_ICONINFORMATION);
 	}
 	catch (MyException& exc) {
-		AfxMessageBox(exc.GetMsg(), MB_ICONERROR);
+		WriteError(exc.GetMsg());
 	}
 }
 #pragma endregion
@@ -288,7 +288,7 @@ void CPIV::RefreshExcel() {
 void CPIV::Close() {
 	other.books.clear();
 	other.db.clear();
-	WriteLog("Закрытие ПИВ завершено...");	// Логирование
+	WriteLog("Закрытие ПИВ завершено");	// Логирование
 }
 
 // Закрытие ПИВ проекта
@@ -317,7 +317,7 @@ void CPIV::StartClose() {
 		primary = CreateThread(NULL, 0, PrimaryThread, &mD, 0, 0);
 	}
 	else
-		AfxMessageBox(THREAD_BUSY);
+		WriteError(THREAD_BUSY);
 }
 
 // Закрытие ПИВ, пути которых лежат в буфере
@@ -329,7 +329,7 @@ void CPIV::CloseExcel() {
 			it->name.Compare(nameFromPath(buffer[i])) == 0 ? other.books.erase(it++) : it++;
 	}
 	closeThread(primary);
-	WriteLog("Закрытие ПИВ завершено...");	// Логирование
+	WriteLog("Закрытие ПИВ завершено");	// Логирование
 }
 #pragma endregion
 
@@ -345,7 +345,7 @@ void Thread(CPIV& piv) {
 	else if (piv.hCmd == piv.command.close)
 		piv.CloseExcel();
 	else
-		AfxMessageBox(L"Ошибка: Неопознанная команда!", MB_ICONERROR);
+		piv.WriteError(L"Ошибка: Неопознанная команда!");
 }
 
 // Обновление ПИВ и ошибок
@@ -414,7 +414,7 @@ void CPIV::closeThread(HANDLE& h) {
 		h = NULL;
 	}
 	else
-		AfxMessageBox(L"Ошибка: Не удалось закрыть поток!", MB_ICONERROR);
+		WriteError(L"Ошибка: Не удалось закрыть поток!");
 }
 
 // Запись в именованный канал
@@ -423,5 +423,20 @@ void CPIV::WriteLog(char szBuf[256]) {
 	DWORD  NumBytesToWrite;	
 	WriteFile(hLogPipe, szBuf, strlen(szBuf), &NumBytesToWrite, NULL);
 	CloseHandle(hLogPipe);
+}
+
+// Запись ошибки в файл
+void CPIV::WriteError(const CString& msg) {
+	SYSTEMTIME st;
+	CString str;
+	GetLocalTime(&st);
+	str.Format(L"%02d:%02d:%02d %02d/%02d/%d:\t%s\n", st.wHour, st.wMinute, st.wSecond, st.wDay, st.wMonth, st.wYear, msg);
+	CString logPath;
+	logPath.Format(L"%s\\Artefacts\\log.txt", path);
+	ofstream log(logPath, ios::out | ios::app);
+	log << CT2A(msg);
+	log.close();
+	
+	AfxMessageBox(msg, MB_ICONERROR);
 }
 #pragma endregion
