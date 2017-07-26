@@ -38,8 +38,11 @@ bookData CReaderExcel::getBook(const CString& pathToExcel) {
 		throw exc;
 	}
 
-	if (!work.openBook(pathToExcel))
-		throw ReadBookException();
+	if (!work.openBook(pathToExcel)) {
+		ReadBookException exc;
+		exc.setParam(work.bookName(pathToExcel));
+		throw exc;
+	}
 
 	book.name = work.bookName();
 	getSheets(book.sheets, work);

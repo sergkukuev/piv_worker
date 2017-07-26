@@ -9,7 +9,7 @@
 #define MAX_NUMWORD 32
 #define MAX_BITS 32
 
-class CTest {
+class PIV_DECLARE CTest {
 public:
 	CTest();	// Конструктор
 	~CTest();	// Деструктор

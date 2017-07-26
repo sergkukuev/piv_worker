@@ -10,7 +10,7 @@
 #define SIGN_FIELD L"Зн-4"
 
 // Класс для чтения протоколов из excel файлов
-class CReaderExcel	{
+class PIV_DECLARE CReaderExcel	{
 public:
 	CReaderExcel();		// Конструктор
 	~CReaderExcel();	// Деструктор

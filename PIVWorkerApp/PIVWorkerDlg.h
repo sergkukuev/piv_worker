@@ -6,6 +6,7 @@
 
 #include "PIVWorker.h"
 
+#define CENTER 298
 // диалоговое окно CMainDlg
 class CMainDlg : public CDialog
 {
@@ -24,36 +25,52 @@ public:
 
 // Реализация
 private:
-	CPIVWorker piv;			// Переменная для работы с протоколами
-	CString folder;			// Путь для отчета
-	vector <CString> path;	// Пути файлов
-	HANDLE hWait;	// Поток для доступности потока класса CPIVWorker
-	int command = 0;	// Номер команды для меню: 1 - открыть, 2 - анализировать, 3 - закрыть, 4 - генерировать отчет
-
-	CListBox* lsBox;	// Лист бокс
-	void setMenu(int command);	// Установка параметров меню
-	void AddPath(CString fullPath, CString name);	// Добавление путей файлов
+	CPIV piv;					// Переменная для работы с протоколами
+	vector <CString> pProj;		// Пути файлов проекта
+	vector <CString> pOther;	// Пути остальных файлов
+	HANDLE hWait;
+	
+	bool AddPath(const CString& fullPath, const CString& name, CListBox* list, vector <CString>& path);	// Добавление путей файлов
+	void readPath(const CFileDialog& dlg, CListBox* list, vector <CString>& path);						// Получить вектор путей из диалогового окна
+	
+	void OpenFile(CListBox* list, CString& folder, vector<CString>& path);	// Открытие файлов
+	void getFileForRefresh(CListBox* list, const vector <CString>& from, vector <CString>& file);			// Список файлов для обновления
+	CString getFolder();	// Получение пути артефактов
+	void logicMenu();		// Отображение меню и подменю
 
 protected:
-	HACCEL m_AccelTable;		// Таблица акселераторов
-	HICON m_hIcon;				// Иконка
+	CMenu m_subMenu;			// Подменю
+	CStatusBarCtrl* pStatusBar;	// Статус бар
+	CListBox* pList;			// Список ПИВ проекта
+	CListBox* pListOther;		// Список ПИВ остальных
+	HACCEL m_AccelTable;		// Таблица быстрыъ клавиш
+	HICON m_hIcon;
+
+	afx_msg void OnContextMenu(CWnd* pWnd, CPoint point);	// Обработка контекстного меню
 
 	// Созданные функции схемы сообщений
-	virtual BOOL OnInitDialog();
+	virtual BOOL OnInitDialog();	// Инициализация
 	afx_msg void OnSysCommand(UINT nID, LPARAM lParam);
 	afx_msg void OnPaint();
 	afx_msg HCURSOR OnQueryDragIcon();
-	DECLARE_MESSAGE_MAP()
-	friend void waitThread(CMainDlg& object);	// Дружественная функция для ожидания окончания потока
-
+	DECLARE_MESSAGE_MAP();
+	friend void Wait(CMainDlg& application);
 public:
-	void logicMenu();					// Логика работы меню
+	// Обработчики функций
+	afx_msg void OnPivSetFolder();		// Установить папку для отчетов и txt
+	afx_msg void OnPivRefresh();		// Обновление отчетов
+	afx_msg void OnOpenProject();		// Открытие проекта
 	afx_msg void OnPivOpen();			// Открытие протоколов
 	afx_msg void OnPivClose();			// Закрытие протокола
 	afx_msg void OnPivCloseAll();		// Закрыть все протоколы
-	afx_msg void OnPivAnalyze();		// Анализировать протоколы
-	afx_msg void OnPivReport();			// Открыть отчет
+	afx_msg void OnOtherReport();		// Открыть отчет по остальным
+	afx_msg void OnProjectReport();		// Открыть отчет по проекту
 	afx_msg void OnPivRepFolder();		// Открыть папку с отчетом
-	afx_msg void OnPivTxtGenerate();	// Генерировать txt отчет
+	afx_msg void OnPivTxtOpen();		// Открыть txt отчет
 	afx_msg void OnAppInform();			// Информация о проекте
+	afx_msg void OnBtnLog();			// Показать логи
+	afx_msg void OnLogClear();			// Очистить логи
+
+	void PrintStatusBar();
+	void WriteLog(CString msg = L"");			// Запись в файл
 };

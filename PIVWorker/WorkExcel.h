@@ -42,7 +42,7 @@ struct Cell {
 #define REMARK2 L"Примечание:"
 
 // Класс чтения данных из Excel 
-class CWorkExcel {
+class PIV_DECLARE CWorkExcel {
 public:
 	CWorkExcel(void);	// Конструктор
 	~CWorkExcel(void);	// Деструктор
