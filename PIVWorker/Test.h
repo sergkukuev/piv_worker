@@ -22,7 +22,7 @@ private:
 	void getWarnings(sheetData* sheet, vector <errorSignal>& warning);								// Проверка на замечания
 
 	void checkNP(signalData& signal, const int& np, vector <errorSignal>& syntax);	// Проверка ошибок, связанных с номером набора
-	void initRepiter(bool* num, bool** bits);	// Инициализация репитеров
+	void initRepiter(bool* num, bool* bits);	// Инициализация репитеров
 	
 	// Синтаксический анализ
 	bool syntaxValue(const signalData& signal, vector <CString>& error);			// Проверка числовых параметров
@@ -35,9 +35,9 @@ private:
 	bool simanticNumWord(const intData& numWord, bool* repiter, vector <CString>& error);		// Проверка номера слова
 	bool simanticTitle(sheetData* sheet, const int& indx, const CString& title, const bool& flag, vector <CString>& error);				// Проверка наименований сигнала
 	bool simanticValue(const signalData& signal, vector <CString>& error);						// Проверка минимального, максимального и цср
-	bool simanticBits(const signalData& signal, const CString& prevTitle, bool** repiter, vector <CString>& error);		// Проверка используемых разрядов
+	bool simanticBits(const signalData& signal, const CString& prevTitle, bool* repiter, vector <CString>& error);		// Проверка используемых разрядов
 	
-	bool checkCrossBits(const vector <int>& bits, const vector <int>& numWord, bool** repiter); // Проверка перекрытия битов
+	bool checkCrossBits(const vector <int>& bits, const vector <int>& numWord, bool* repiter); // Проверка перекрытия битов
 	bool checkTitle(const CString& next, const CString& prev);							// Проверка двух наименований на совпадение
 	bool findRepiteInSheet(const CString& field, sheetData* sheet, const int& start);	// Поиск повторений на листе
 };

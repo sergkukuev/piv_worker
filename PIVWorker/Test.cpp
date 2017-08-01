@@ -46,9 +46,7 @@ void CTest::getErrors(sheetData* sheet, vector <errorSignal>& syntax, vector <er
 	checkNP(sheet->signals[0], sheet->np, syntax);
 	try {
 		bool *numRepit = new bool[MAX_NUMWORD];		// Повторения слов
-		bool **bitRepit = new bool*[MAX_NUMWORD];	// Повторения битов
-		for (int i = 0; i < MAX_NUMWORD; i++)
-			bitRepit[i] = new bool[MAX_BITS];
+		bool *bitRepit = new bool[MAX_NUMWORD*MAX_BITS];	// Повторения битов
 
 		initRepiter(numRepit, bitRepit);	// Инициализация
 
@@ -90,8 +88,6 @@ void CTest::getErrors(sheetData* sheet, vector <errorSignal>& syntax, vector <er
 
 		// Высвобождение памяти
 		delete[] numRepit;
-		for (int i = 0; i < MAX_BITS; i++)
-			delete[] bitRepit[i];
 		delete[] bitRepit;
 	}
 	catch (UndefinedError& exc) {
@@ -133,11 +129,11 @@ void CTest::checkNP(signalData& signal, const int& np, vector <errorSignal>& syn
 }
 
 // Инициализация репитеров
-void CTest::initRepiter(bool* num, bool** bits) {
+void CTest::initRepiter(bool* num, bool* bits) {
 	for (int i = 0; i < MAX_NUMWORD; i++) {
 		num[i] = true;
 		for (int j = 0; j < MAX_BITS; j++)
-			bits[i][j] = true;
+			bits[i + j*MAX_BITS] = true;
 	}
 }
 
@@ -319,7 +315,7 @@ bool CTest::simanticValue(const signalData& signal, vector <CString>& error) {
 }
 
 // Проверка используемых разрядов
-bool CTest::simanticBits(const signalData& signal, const CString& prevTitle, bool** repiter, vector <CString>& error) {
+bool CTest::simanticBits(const signalData& signal, const CString& prevTitle, bool* repiter, vector <CString>& error) {
 	bool result = true;
 	// Кол-во № слов должно совпадать с кол-вами интервалов исп. разрядов
 	if (!signal.numWord.flag && !signal.bit.flag) {
@@ -354,7 +350,7 @@ bool CTest::checkTitle(const CString& next, const CString& prev) {
 }
 
 // Проверка на перекрытие битов
-bool CTest::checkCrossBits(const vector <int>& bits, const vector <int>& numWord, bool** repiter) {
+bool CTest::checkCrossBits(const vector <int>& bits, const vector <int>& numWord, bool* repiter) {
 	bool result = true;
 	for (size_t j = 0; j < 2; j += 2)
 		for (size_t i = 0; i < numWord.size(); i++) {
@@ -363,8 +359,8 @@ bool CTest::checkCrossBits(const vector <int>& bits, const vector <int>& numWord
 			
 			if (numWord[i] != -1) {
 				for (; start <= end; start++) {
-					if (repiter[numWord[i] - 1][start - 1])	// отметка в матрице о наличии бита
-						repiter[numWord[i] - 1][start - 1] = false;
+					if (repiter[numWord[i] - 1 + (start - 1) * MAX_BITS])	// отметка в матрице о наличии бита
+						repiter[numWord[i] - 1 + (start - 1) * MAX_BITS] = false;
 					else
 						result = false;
 				}
