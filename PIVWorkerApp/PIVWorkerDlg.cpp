@@ -179,6 +179,8 @@ BOOL CMainDlg::OnInitDialog() {
 
 	CEdit* edt = (CEdit *)(this->GetDlgItem(IDC_PATH));
 	edt->SetWindowTextW(str);
+	str.Format(L"%s\\Artefacts", str);
+	CreateDirectory(str, NULL);
 
 	WriteLog();
 	WriteLog(L"Приложение запущено");
