@@ -32,7 +32,6 @@ private:
 	double getDouble(const CString& field, bool& flag);	// Получение значения double (если есть)
 	int getInt(const CString& field, bool& flag);		// Получение значения int (если есть)
 
-
 	bool isEmpty(CWorkExcel& work, const long& row);	// Проверка строки на пустоту
 	bool isRemark(CWorkExcel& work, const long& row);	// Проверка строки на наличие примечания
 	bool checkExtension(const CString& path);			// Проверка расширений файлов

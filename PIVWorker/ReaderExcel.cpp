@@ -13,6 +13,7 @@ CReaderExcel::CReaderExcel() {
 	header.list.push_back(vector<CString>{ L"Цена старшего разряда" });												// Для цср
 	header.list.push_back(vector<CString>{ L"Используемые разряды", L"Используе-мые разряды" });					// Для используемых разрядов
 	header.list.push_back(vector<CString>{ L"Примечание" });														// Комментарии (пояснения)
+	header.list.push_back(vector<CString>{ L"Адрес"});																// Адрес (arinc)
 
 	// Добавление всех видов расширений excel файлов
 	extension.push_back(L"xlsx");	// Текущий основной формат
@@ -55,6 +56,8 @@ void CReaderExcel::getSheets(vector <sheetData>& sheets, CWorkExcel& work) {
 	sheets.resize(work.countSheets());
 	for (long i = 1; i < work.countSheets() + 1; i++) {
 		work.openSheet((long)i);
+		sheets[i - 1].name = work.sheetName();
+
 		// Поиск заголовков на листе
 		if (!work.findHeader(header)) {
 			NotAllHeaderException exc;
@@ -62,7 +65,7 @@ void CReaderExcel::getSheets(vector <sheetData>& sheets, CWorkExcel& work) {
 			throw exc;
 		}
 
-		sheets[i - 1].name = work.sheetName();
+		
 		sheets[i - 1].line = work.lineValue();
 		sheets[i - 1].np = work.npValue(header);
 		sheets[i - 1].pk = work.pkValue(header);
@@ -294,9 +297,11 @@ bool CReaderExcel::isEmpty(CWorkExcel& work, const long& row) {
 
 	for (long i = 1; i < header.size; i++) {
 		long column = header.adress[i];
-		CString tmp = work.cellValue(row, column);
-		if (!tmp.IsEmpty())
-			result = false;
+		if (header.adress[i] != -1) {
+			CString tmp = work.cellValue(row, column);
+			if (!tmp.IsEmpty())
+				result = false;
+		}
 	}
 
 	return result;
@@ -308,9 +313,11 @@ bool CReaderExcel::isRemark(CWorkExcel& work, const long& row) {
 
 	for (long i = 1; i < header.size; i++) {
 		long column = header.adress[i];
-		CString tmp = work.cellValue(row, column);
-		result = (tmp.Find(REMARK1) > -1 ||
-			tmp.Find(REMARK2) > -1) ? true : result;
+		if (header.adress[i] != -1) {
+			CString tmp = work.cellValue(row, column);
+			result = (tmp.Find(REMARK1) > -1 ||
+				tmp.Find(REMARK2) > -1) ? true : result;
+		}
 	}
 
 	return result;

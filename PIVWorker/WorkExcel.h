@@ -14,7 +14,7 @@
 // Структура заголовка
 struct Header {
 	std::vector <std::vector<CString>> list;	// Список допустимых заголовков 
-	static const int size = 10;		// Количество заголовков
+	static const int size = 11;		// Количество заголовков
 	long adress[size];				// Массив адресов для заголовков
 
 	const int iRow = 0;			//	Индекс строки в массиве адресов
@@ -27,6 +27,7 @@ struct Header {
 	const int iCSR = 7;			//	Индекс цср в массиве адресов
 	const int iBits = 8;		//	Индекс битов в массиве адресов
 	const int iComment = 9;		//	Индекс примечаний в массиве адресов
+	const int iAdress = 10;		//	Индекс адреса (arinc)
 };
 
 // Адрес ячейки
@@ -40,6 +41,7 @@ struct Cell {
 #define PK_FIELD L'№'
 #define REMARK1 L"Примечания:"
 #define REMARK2 L"Примечание:"
+#define ARINC L"РТМ"
 
 // Класс чтения данных из Excel 
 class PIV_DECLARE CWorkExcel {
@@ -77,6 +79,7 @@ private:
 	COleSafeArray* cells;	// Данные листа
 	Cell first, last;		// Индексы первой и последней ячейки
 
+	bool isArinc();			// Проверка на тип линии передачи (мкио, аринг)
 	bool findCell(const CString& field, Cell& cell);	// Поиск ячейки по содержимому, в противном cell(-1,-1)
 	CString longToChar(const long& column);				// Преобразование long к char
 	void stepLongToChar(const long& column, CString& result);	// Если в обозначении ячейки уже больше одной буквы

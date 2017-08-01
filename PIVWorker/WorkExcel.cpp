@@ -143,16 +143,30 @@ bool CWorkExcel::findHeader(Header& header) {
 		Cell cell = first;
 		
 		for (it; !bFind; it++) {
+			if (!isArinc() && i + 1 == header.iAdress)
+				break;
 			if ((it == header.list[i].end()) && !bFind)
 				return false;
 
 			bFind = findCell(*it, cell);
 		}
+		if (!isArinc() && i + 1 == header.iAdress) {
+			header.adress[i + 1] = -1;
+			continue;
+		}
+			
 		header.adress[header.iRow] = cell.row;
 		header.adress[i + 1] = cell.column;
 	}
-
 	return true;
+}
+
+// Проверка на тип линии передачи (мкио, аринг)
+bool CWorkExcel::isArinc() {
+	CString line = lineValue();
+	bool result;
+	line.Find(ARINC) != -1 ? result = true : result = false;
+	return result;
 }
 
 // Поиск ячейки по содержимому, в противном cell(-1,-1)
@@ -171,7 +185,6 @@ bool CWorkExcel::findCell(const CString& field, Cell& cell) {
 			}
 		}
 	}
-
 	return false;
 }
 
