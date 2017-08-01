@@ -338,8 +338,7 @@ void CMainDlg::OnOtherReport() {
 	CString pathFile;
 	edit->GetWindowTextW(pathFile);
 	pathFile.Format(L"%s\\Artefacts\\Other\\Отчет.html", pathFile);
-	if (ShellExecute(0, L"Open", pathFile, NULL, NULL, SW_NORMAL) != 0)
-		AfxMessageBox(L"Отчет по остальным ПИВ отсутствует!", MB_ICONWARNING);
+	ShellExecute(0, L"Open", pathFile, NULL, NULL, SW_NORMAL);
 }
 
 // Открыть отчет по проекту
@@ -348,8 +347,7 @@ void CMainDlg::OnProjectReport() {
 	CString pathFile;
 	edit->GetWindowTextW(pathFile);
 	pathFile.Format(L"%s\\Artefacts\\Project\\Отчет.html", pathFile);
-	if (ShellExecute(0, L"Open", pathFile, NULL, NULL, SW_NORMAL) != 0)
-		AfxMessageBox(L"Отчет по проекту отсутствует!", MB_ICONWARNING);
+	ShellExecute(0, L"Open", pathFile, NULL, NULL, SW_NORMAL);
 }
 
 // Открыть папку с отчетом
@@ -367,8 +365,7 @@ void CMainDlg::OnPivTxtOpen() {
 	CString folder;
 	edit->GetWindowTextW(folder);
 	folder.Format(L"%s\\%s\\Text", folder, L"Artefacts");
-	if (ShellExecute(0, L"Explore", folder, NULL, NULL, SW_NORMAL) != 0)
-		AfxMessageBox(L"Txt файлы отсутствуют!", MB_ICONWARNING);
+	ShellExecute(0, L"Explore", folder, NULL, NULL, SW_NORMAL);
 }
 
 // Информация о приложении
