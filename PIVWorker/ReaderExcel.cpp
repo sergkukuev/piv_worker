@@ -153,7 +153,9 @@ void CReaderExcel::getArinc(const CString& field, const long& row, arincData& ar
 		arinc.symbol = field[posEqual - 1];
 		arinc.startRow = row;
 
+		bool flag;
 		int posDel = numeric.ReverseFind(L'Е');
+		
 		if (posDel == -1)
 			posDel = numeric.ReverseFind(L'.');
 
@@ -166,9 +168,10 @@ void CReaderExcel::getArinc(const CString& field, const long& row, arincData& ar
 
 		numeric.Delete(posDel, numeric.GetLength() - posDel);
 		numeric.Trim();	numeric1.Trim();
-
+		
 		arinc.current = getInt(numeric, arinc.flag);
-		arinc.amount = getInt(numeric1, arinc.flag);
+		arinc.amount = getInt(numeric1, flag);
+		flag ? arinc.flag = arinc.flag : arinc.flag = flag;
 	}
 	else {
 		// —брос параметра повторени€
