@@ -104,11 +104,17 @@ void CReaderExcel::getSignals(vector <signalData>& signals, CWorkExcel& work, co
 		}
 
 		// Чтение параметров одного сигнала
-		column = header.adress[header.iNumWord];
-		merge = work.cPrevEmpty(row, column);
 		// Адрес или номер слова, в зависимости от линии передачи
-		!isArinc? signal.numWord = getNumWord(work.cellValue(row, column)) :
-			signal.numWord = getAdress(work.cellValue(row, column), arinc);
+		if (!isArinc) {
+			column = header.adress[header.iNumWord];
+			merge = work.cPrevEmpty(row, column);
+			signal.numWord = getNumWord(work.cellValue(row, column));
+		}
+		else {
+			column = header.adress[header.iAdress];
+			merge = work.cPrevEmpty(row, column);
+			signal.numWord = getAdress(work.cellValue(row, column), arinc.current);
+		}
 		
 		column = header.adress[header.iName];	row = i;
 		merge = work.cNextEmpty(row, column) + work.cPrevEmpty(row, column);
@@ -183,8 +189,105 @@ void CReaderExcel::getArinc(const CString& field, const long& row, arincData& ar
 }
 
 // Получить адрес из строки в число
-intData CReaderExcel::getAdress(const CString& field, const arincData& arinc) {
+intData CReaderExcel::getAdress(const CString& field, const int& num) {
 	intData result;
+	CString numeric = field;
+	vector <int> vec = { -1, -1 };
+	int posDel, current = num;
+	bool flag = false;
+
+	do {
+		posDel = numeric.Find(L',');
+		if (posDel == -1)
+			posDel = numeric.GetLength();
+
+		CString str = numeric.Mid(0, posDel);
+		numeric.Delete(0, posDel + 1);
+		str.Replace(L'\n', L' ');
+		vector<int> temp = stepGetAdress(str, result.flag);	// четные - адрес, нечетные - система счисления
+		
+		if (temp.size() == 4) {
+			current > temp[2] - temp[0] + 1 ? current -= temp[2] - temp[0] + 1 :
+				vec[0] = temp[0] + current - 1;
+			if (vec[0] != -1) {
+				vec[1] = temp[1];
+				flag = true;
+			}
+		}
+		else if (temp.size() == 2 && current == 0) {
+			vec = temp;
+			flag = true;
+		}
+		else {
+			result.flag = false;
+		}
+
+	} while (numeric.GetLength() != 0 && !flag);
+
+	result.value = vec;
+	result.field = field;
+	return result;
+}
+
+// Доп функция для адреса
+vector <int> CReaderExcel::stepGetAdress(const CString& adress, bool& flag) {
+	vector <int> result = {-1, -1};
+	CString num = adress;
+	num.Trim();
+
+	// Поиск индекса разделителей
+	int indxDel = num.Find(L'.');
+	if (indxDel == -1)
+		indxDel = num.Find(L'…');
+
+	if (indxDel == -1) { // Разделителей нет, используется один разряд
+		result[1] = getSubIndex(num);
+		result[0] = getInt(num, flag);
+	}
+	else {
+		result.push_back(-1);
+		result.push_back(-1);
+		int posDot = num.ReverseFind(L'.');
+		if (posDot != -1)
+			num.Delete(indxDel, posDot - indxDel);
+
+		CString num2 = num;
+		num.Delete(indxDel, num.GetLength());	// Первое число
+		num.Trim();
+		result[1] = getSubIndex(num);
+		result[0] = getInt(num, flag);
+
+		num2.Delete(0, indxDel + 1);	// Второе число
+		num2.Trim();
+		result[3] = getSubIndex(num2);
+		result[2] = getInt(num2, flag);
+	}
+
+	return result;
+}
+
+// Получение подстрочного индекса и удаление его из строки
+int CReaderExcel::getSubIndex(CString& numeric) {
+	// Подстрочные сиволы с кодом(8320 - 8329)
+	CString sub;
+	for (int i = 0; i < numeric.GetLength(); i++) {
+		if ((int)numeric[i] > 8319) {
+			sub = numeric.Mid(i, numeric.GetLength() - i);
+			numeric.Delete(i, numeric.GetLength() - i);
+			break;
+		}
+	}
+	int l = sub.GetLength();
+	for (int i = 0; i < l; i++)
+		sub += (wchar_t)((int)sub[i] - 8272); // Смещение подстрочного в обычное число
+	sub.Delete(0, l);
+
+	bool flag = false;
+	int result = getInt(sub, flag);
+
+	if (!flag)
+		result = -1;
+
 	return result;
 }
 
