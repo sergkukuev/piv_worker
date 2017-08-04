@@ -39,6 +39,7 @@ struct Cell {
 #define LINE_FIELD L"Линия"
 #define NP_FIELD L"NP="
 #define PK_FIELD L'№'
+#define ARINC_REMARK L"*Примечание:"
 #define REMARK1 L"Примечания:"
 #define REMARK2 L"Примечание:"
 #define ARINC L"РТМ"

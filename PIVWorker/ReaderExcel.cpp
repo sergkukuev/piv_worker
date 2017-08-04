@@ -65,27 +65,50 @@ void CReaderExcel::getSheets(vector <sheetData>& sheets, CWorkExcel& work) {
 			throw exc;
 		}
 
-		
 		sheets[i - 1].line = work.lineValue();
 		sheets[i - 1].np = work.npValue(header);
 		sheets[i - 1].pk = work.pkValue(header);
 
+		bool arinc;
+		sheets[i - 1].line.Find(ARINC) != -1 ? arinc = true : arinc = false;
 		header.adress[header.iRow]++;
 
-		getSignals(sheets[i - 1].signals, work);
+		getSignals(sheets[i - 1].signals, work, arinc);
 	}
 }
 
 // Чтение параметров на листе
-void CReaderExcel::getSignals(vector <signalData>& signals, CWorkExcel& work) {
+void CReaderExcel::getSignals(vector <signalData>& signals, CWorkExcel& work, const bool& isArinc) {
+	arincData arinc;
 	for (long merge, i = header.adress[header.iRow]; i < work.countRows() + 1; i += merge) {
 		signalData signal;
 		long column, row = i;
+		merge = 1;
+
+		// Надстройка для arinc
+		if (isArinc) {
+			if (isTitle(work, row))	// Пропуск строки заголовка
+				continue;
+			//	Поиск повторений
+			CString remark = work.cellValue(row - 1, 1);
+			if (remark.Find(ARINC_REMARK) != -1 && !arinc.flag && arinc.startRow != row)	// Появилось повторение
+				getArinc(remark, row, arinc);
+			else if ((remark.Find(ARINC_REMARK) != -1 || isTitle(work, row - 1)) && arinc.flag) {
+				if (arinc.current == arinc.amount)
+					getArinc(remark, row, arinc);
+				else {
+					i = row = arinc.startRow;
+					arinc.current++;
+				}
+			}
+		}
 
 		// Чтение параметров одного сигнала
 		column = header.adress[header.iNumWord];
 		merge = work.cPrevEmpty(row, column);
-		signal.numWord = getNumWord(work.cellValue(row, column));
+		// Адрес или номер слова, в зависимости от линии передачи
+		!isArinc? signal.numWord = getNumWord(work.cellValue(row, column)) :
+			signal.numWord = getAdress(work.cellValue(row, column), arinc);
 		
 		column = header.adress[header.iName];	row = i;
 		merge = work.cNextEmpty(row, column) + work.cPrevEmpty(row, column);
@@ -93,24 +116,73 @@ void CReaderExcel::getSignals(vector <signalData>& signals, CWorkExcel& work) {
 
 		column = header.adress[header.iSignal];
 		signal.title[1] = work.cellValue(row, column);
+		// Замена буквы, если повторение и такая присутствует вообще
+		if (arinc.flag) {
+			CString tmp;
+			// Сделать соответствие латинских и кириллицу (хитрецы пишут разными буковками)
+			tmp.Format(L"%d", arinc.current);
+			int pos = signal.title[1].Find(arinc.symbol);
+			signal.title[1].Replace(arinc.symbol, tmp);
+		}
 
 		column = header.adress[header.iDimension];
 		signal.dimension = work.cellValue(row, column);
-
 		getMinMaxCsr(signal, work, row);	
-		
 		column = header.adress[header.iBits];
 		signal.bit = getBits(work.cellValue(row, column));
-
 		signal.comment = getComment(work, row, merge, signal.bitSign);
 
 		bool bEmpty = isEmpty(work, row);		// Проверка на пустую строку
 		bool bRemark = isRemark(work, row);		// Проверка на примечание
 
+		if (work.countRows() == row + merge - 1 && arinc.flag && arinc.amount != arinc.current) // Фича для обхода повторений в случае конца файла
+			i = arinc.startRow - merge;
+
 		// Добавление сигнала
 		if (!bEmpty && !bRemark)
 			signals.push_back(signal);
 	}
+}
+
+// Чтение данных arinc (порядковый номер в кадре)
+void CReaderExcel::getArinc(const CString& field, const long& row, arincData& arinc) {
+	CString numeric = field;
+	int posEqual = numeric.Find(L'=');
+
+	if (posEqual != -1) {
+		arinc.symbol = field[posEqual - 1];
+		arinc.startRow = row;
+
+		int posDel = numeric.ReverseFind(L'…');
+		if (posDel == -1)
+			posDel = numeric.ReverseFind(L'.');
+
+		CString numeric1 = numeric.Mid(posDel + 1, numeric.GetLength() - posEqual);
+		numeric.Delete(0, posEqual + 1);
+
+		posDel = numeric.ReverseFind(L'…');
+		if (posDel == -1)
+			posDel = numeric.Find(L'.');
+
+		numeric.Delete(posDel, numeric.GetLength() - posDel);
+		numeric.Trim();	numeric1.Trim();
+
+		arinc.current = getInt(numeric, arinc.flag);
+		arinc.amount = getInt(numeric1, arinc.flag);
+	}
+	else {
+		// Сброс параметра повторения
+		arinc.flag = false;
+		arinc.symbol = L"";
+		arinc.amount = 0;
+		arinc.current = 0;
+	}
+}
+
+// Получить адрес из строки в число
+intData CReaderExcel::getAdress(const CString& field, const arincData& arinc) {
+	intData result;
+	return result;
 }
 
 // Получить номера слов из ячейки в числа
@@ -242,7 +314,7 @@ double CReaderExcel::getDouble(const CString& field, bool& flag) {
 		char* end;
 		errno = 0;
 		result = strtod(str, &end);
-		(*end != 0 || errno != 0) ? flag = true : flag = flag;
+		(*end != '\0' || errno != 0) ? flag = false : flag = true;
 	}
 	else
 		flag = true;
@@ -264,7 +336,7 @@ int CReaderExcel::getInt(const CString& field, bool& flag) {
 		char* end;
 		errno = 0;
 		result = strtol(str, &end, 10);
-		(*end != 0 || errno != 0) ? flag = true : flag = flag;
+		(*end != '\0' || errno != 0) ? flag = false : flag = true;
 	}
 	else
 		flag = true;
@@ -291,13 +363,22 @@ CString CReaderExcel::getComment(CWorkExcel& work, const long& row, const int& s
 	return result;
 }
 
+// Проверка строки на заголовок
+bool CReaderExcel::isTitle(CWorkExcel& work, const long& row) {
+	bool result = true;
+	CString numeric = work.cellValue(row, 1);
+	numeric.Trim();
+	getInt(numeric, result);
+	return !result;
+}
+
 // Проверка строки на пустоту
 bool CReaderExcel::isEmpty(CWorkExcel& work, const long& row) {
 	bool result = true;
 
 	for (long i = 1; i < header.size; i++) {
 		long column = header.adress[i];
-		if (header.adress[i] != -1) {
+		if (header.adress[i] != -1 && header.adress[i] != 1) {
 			CString tmp = work.cellValue(row, column);
 			if (!tmp.IsEmpty())
 				result = false;

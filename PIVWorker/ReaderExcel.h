@@ -9,6 +9,14 @@
 
 #define SIGN_FIELD L"Зн-4"
 
+struct arincData {
+	CString symbol;
+	int current = 0;
+	int amount = 0;
+	int startRow;
+	bool flag = false;
+};
+
 // Класс для чтения протоколов из excel файлов
 class PIV_DECLARE CReaderExcel	{
 public:
@@ -20,11 +28,13 @@ private:
 	vector <CString> extension;	// Допустимые расширения файлов
 	Header header;				// Информация о заголовках
 
-	void getSheets(vector <sheetData>& book, CWorkExcel& work);			// Чтение листов из книги
-	void getSignals(vector <signalData>& signals, CWorkExcel& work);	// Чтение параметров на листе
+	void getSheets(vector <sheetData>& book, CWorkExcel& work);								// Чтение листов из книги
+	void getSignals(vector <signalData>& signals, CWorkExcel& work, const bool& isArinc);	// Чтение параметров на листе
+	void getArinc(const CString& field, const long& row, arincData& arinc);	// Чтение данных arinc (порядковый номер в кадре)
 
-	intData getNumWord(const CString& field);			// Получить номера слов из строки в числа
-	intData getBits(const CString& bits);				// Получить используемые разряды
+	intData getNumWord(const CString& field);	// Получить номера слов из строки в числа
+	intData getBits(const CString& bits);		// Получить используемые разряды
+	intData getAdress(const CString& field, const arincData& arinc);	// Получить адрес из строки в число
 	vector <int> stepGetBits(const CString& bits, bool& flag);			// Доп функция для разрядов
 	void getMinMaxCsr(signalData& signal, CWorkExcel& work, const long& row);				// Получить значения мин, макс и цср
 	CString getComment(CWorkExcel& work, const long& row, const int& size, bool& flag);		// Чтение примечания
@@ -32,6 +42,7 @@ private:
 	double getDouble(const CString& field, bool& flag);	// Получение значения double (если есть)
 	int getInt(const CString& field, bool& flag);		// Получение значения int (если есть)
 
+	bool isTitle(CWorkExcel& work, const long& row);	// Проверка строки на заголовок
 	bool isEmpty(CWorkExcel& work, const long& row);	// Проверка строки на пустоту
 	bool isRemark(CWorkExcel& work, const long& row);	// Проверка строки на наличие примечания
 	bool checkExtension(const CString& path);			// Проверка расширений файлов
