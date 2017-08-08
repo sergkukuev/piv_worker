@@ -7,14 +7,15 @@
 #include <cstdlib>
 #include <cerrno>
 
-#define SIGN_FIELD L"Зн-4"
+#define SIGN_FIELD L"Зн-4"		// Обозначение отрицательного символа в МКИО
 
+// Информация о повторения в arinc протоколах
 struct arincData {
-	CString symbol;
-	int current = 0;
-	int amount = 0;
-	int startRow;
-	bool flag = false;
+	CString symbol;		// Символ замены в идентификаторе
+	int current = 0;	// Текущее повторение
+	int amount = 0;		// Всего повторений
+	int startRow;		// Начало блока повторения
+	bool flag = true;	// Флаг отсутствия повторения
 };
 
 // Класс для чтения протоколов из excel файлов
@@ -30,16 +31,17 @@ private:
 
 	void getSheets(vector <sheetData>& book, CWorkExcel& work);								// Чтение листов из книги
 	void getSignals(vector <signalData>& signals, CWorkExcel& work, const bool& isArinc);	// Чтение параметров на листе
-	void getArinc(const CString& field, const long& row, arincData& arinc);	// Чтение данных arinc (порядковый номер в кадре)
+	void getArinc(const CString& field, const long& row, arincData& arinc);		// Чтение циклов повторений в arinc протоколе(порядковый номер в кадре)
 
-	intData getNumWord(const CString& field);	// Получить номера слов из строки в числа
-	intData getBits(const CString& bits);		// Получить используемые разряды
+	intData getNumWord(const CString& field);					// Получить номера слов из строки в числа
+	intData getBits(const CString& bits);						// Получить используемые разряды
 	intData getAdress(const CString& field, const int& num);	// Получить адрес из строки в число
-	vector <int> stepGetAdress(const CString& adress, bool& flag);		// Доп функция для адреса
-	vector <int> stepGetBits(const CString& bits, bool& flag);			// Доп функция для разрядов
 	void getMinMaxCsr(signalData& signal, CWorkExcel& work, const long& row);				// Получить значения мин, макс и цср
 	CString getComment(CWorkExcel& work, const long& row, const int& size, bool& flag);		// Чтение примечания
-
+	
+	vector <int> stepGetAdress(const CString& adress, bool& flag);	// Доп функция для адреса
+	vector <int> stepGetBits(const CString& bits, bool& flag);		// Доп функция для разрядов
+	
 	double getDouble(const CString& field, bool& flag);	// Получение значения double (если есть)
 	int getInt(const CString& field, bool& flag);		// Получение значения int (если есть)
 

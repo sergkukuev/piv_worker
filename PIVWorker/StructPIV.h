@@ -15,6 +15,7 @@ using namespace std;
 // Хранение номера слова и битов
 struct intData {
 	vector <int> value;	// Значение
+	int sys = 10;		// Система счисления
 	CString field;		// Ячейка в исходном виде
 	bool flag = false;	// Флаг наличия ошибки при конвертации
 };
@@ -45,7 +46,8 @@ struct sheetData {
 	CString line;		// линия передачи
 	int np = -1;		// номер набора параметров
 	int pk = -1;		// номер подкадра
-	bool error = false;	// наличие ошибки на листе	
+	bool error = false;	// наличие ошибки на листе
+	bool arinc = false;	// Тип линии передачи: Arinc(true), мкио(false)
 };
 
 // Книга
