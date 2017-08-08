@@ -43,12 +43,13 @@ list <errorSet> CTest::Start(list <bookData>& books) {
 
 // Проверка на ошибки
 void CTest::getErrors(sheetData* sheet, vector <errorSignal>& syntax, vector <errorSignal>& simantic) {
-	checkNP(sheet->signals[0], sheet->np, syntax);
+	if (!sheet->arinc)
+		checkNP(sheet->signals[0], sheet->np, syntax);
 	try {
-		bool *numRepit = new bool[MAX_NUMWORD];		// Повторения слов
-		bool *bitRepit = new bool[MAX_NUMWORD*MAX_BITS];	// Повторения битов
-
-		initRepiter(numRepit, bitRepit);	// Инициализация
+		//bool *numRepit = new bool[MAX_NUMWORD];		// Повторения слов
+		//bool *bitRepit = new bool[MAX_NUMWORD*MAX_BITS];	// Повторения битов
+		vector <bitRepiter> bitRepit;
+		initRepiter(bitRepit, sheet);	// Инициализация
 
 		for (size_t i = 0; i < sheet->signals.size(); i++) {
 
@@ -70,13 +71,13 @@ void CTest::getErrors(sheetData* sheet, vector <errorSignal>& syntax, vector <er
 				}
 
 				// Проход по семантическми ошибкам
-				simanticNumWord(sheet->signals[i].numWord, numRepit, tmp.error) ? result = result : result = false;
+				simanticNumWord(sheet->signals[i].numWord/*, numRepit*/, tmp.error) ? result = result : result = false;
 				simanticTitle(sheet, (int)i, sheet->signals[i].title[1], correctTitle, tmp.error) ? result = result : result = false;
 				simanticValue(sheet->signals[i], tmp.error) ? result = result : result = false;
 				
 				CString prevTitle;
 				(i > 0) ? prevTitle = sheet->signals[i - 1].title[0] : prevTitle = L"";
-				simanticBits(sheet->signals[i], prevTitle, bitRepit, tmp.error) ? result = result : result = false;
+				simanticBits(sheet->signals[i], prevTitle, bitRepit, tmp.error, sheet->arinc) ? result = result : result = false;
 
 				if (!tmp.error.empty())
 					simantic.push_back(tmp);
@@ -85,10 +86,6 @@ void CTest::getErrors(sheetData* sheet, vector <errorSignal>& syntax, vector <er
 					sheet->error = true;
 			}
 		}
-
-		// Высвобождение памяти
-		delete[] numRepit;
-		delete[] bitRepit;
 	}
 	catch (UndefinedError& exc) {
 		exc.SetName(sheet->name);
@@ -128,13 +125,32 @@ void CTest::checkNP(signalData& signal, const int& np, vector <errorSignal>& syn
 		syntax.push_back(tmp);
 }
 
-// Инициализация репитеров
-void CTest::initRepiter(bool* num, bool* bits) {
-	for (int i = 0; i < MAX_NUMWORD; i++) {
-		num[i] = true;
-		for (int j = 0; j < MAX_BITS; j++)
-			bits[i + j*MAX_BITS] = true;
+// Инициализация репитера для проверки перекрытия
+void CTest::initRepiter(vector <bitRepiter>& repit, sheetData* sheet) {
+	for (int i = 0; i < sheet->signals.size(); i++) {
+		for (int j = 0; j < sheet->signals[i].numWord.value.size(); j++) {
+			if (!(sheet->signals[i].numWord.value.size() == 2 && sheet->arinc)) {
+				if (!isContain(repit, sheet->signals[i].numWord.value[j])) {
+					bitRepiter tmp;
+					tmp.adr = sheet->signals[i].numWord.value[j];
+					tmp.bits = new bool[MAX_BITS];
+					for (int k = 0; k < MAX_BITS; k++)
+						tmp.bits[k] = true;
+					repit.push_back(tmp);
+				}
+			}
+		}
 	}
+}
+
+// Имеется ли уже такой номер слова (адрес)
+bool CTest::isContain(const vector<bitRepiter>& repit, const int& numeric) {
+	bool result = false;
+	for (int i = 0; i < repit.size(); i++) 
+		if (repit[i].adr == numeric)
+			result = true;
+			
+	return result;
 }
 
 #pragma region Syntax
@@ -236,7 +252,7 @@ bool CTest::syntaxTitle(const vector <CString>& title, vector <CString>& error) 
 #pragma region Simantic
 
 // Проверка номера слова
-bool CTest::simanticNumWord(const intData& num, bool* repiter, vector <CString>& error) {
+bool CTest::simanticNumWord(const intData& num, /*bool* repiter,*/ vector <CString>& error) {
 	bool result = true;
 	if (!num.flag) {
 		vector <CString> tmp;
@@ -249,8 +265,8 @@ bool CTest::simanticNumWord(const intData& num, bool* repiter, vector <CString>&
 				result = false;
 				tmp.push_back(L"Значение номера слова должно быть меньше 32");
 			}
-			else
-				*(repiter + num.value[i] - 1) = false; // Отметка о том, что эти слово имеется на этом листе
+			//else
+				//*(repiter + num.value[i] - 1) = false; // Отметка о том, что эти слово имеется на этом листе
 		}
 		if (tmp.size() > 1)
 			for (size_t i = 0; i < tmp.size(); i++)
@@ -315,12 +331,12 @@ bool CTest::simanticValue(const signalData& signal, vector <CString>& error) {
 }
 
 // Проверка используемых разрядов
-bool CTest::simanticBits(const signalData& signal, const CString& prevTitle, bool* repiter, vector <CString>& error) {
+bool CTest::simanticBits(const signalData& signal, const CString& prevTitle, vector<bitRepiter>& repiter, vector <CString>& error, const bool& arinc) {
 	bool result = true;
 	// Кол-во № слов должно совпадать с кол-вами интервалов исп. разрядов
 	if (!signal.numWord.flag && !signal.bit.flag) {
 		if (signal.numWord.value.size() * 2 == signal.bit.value.size()) {
-			if (!checkCrossBits(signal.bit.value, signal.numWord.value, repiter) && !checkTitle(signal.title[0], prevTitle)) {
+			if (!checkCrossBits(signal.bit.value, signal.numWord.value, repiter, arinc) && !checkTitle(signal.title[0], prevTitle)) {
 				result = false;
 				error.push_back(errRemarks[5]);
 				error.push_back(L"Бит(ы) перекрывает(ют)ся");
@@ -350,23 +366,30 @@ bool CTest::checkTitle(const CString& next, const CString& prev) {
 }
 
 // Проверка на перекрытие битов
-bool CTest::checkCrossBits(const vector <int>& bits, const vector <int>& numWord, bool* repiter) {
+bool CTest::checkCrossBits(const vector <int>& bits, const vector <int>& numWord, vector<bitRepiter>& repiter, const bool& arinc) {
 	bool result = true;
 	for (size_t j = 0; j < 2; j += 2)
 		for (size_t i = 0; i < numWord.size(); i++) {
 			int end, start = bits[j];
 			(bits[j + 1] == -1) ? end = start : end = bits[j + 1];
 			
-			if (numWord[i] != -1) {
+			if (numWord[i] != -1 && !(numWord.size() == 2 && arinc)) {
 				for (; start <= end; start++) {
-					if (repiter[numWord[i] - 1 + (start - 1) * MAX_BITS])	// отметка в матрице о наличии бита
-						repiter[numWord[i] - 1 + (start - 1) * MAX_BITS] = false;
+					int indx = findRepiterIndex(repiter, numWord[i]);
+					if (repiter[indx].bits[start - 1])	// отметка в матрице о наличии бита
+						repiter[indx].bits[start - 1] = false;
 					else
 						result = false;
 				}
 			}
 		}
 	return result;
+}
+
+int CTest::findRepiterIndex(const vector <bitRepiter>& repiter, const int& numeric) {
+	for (int i = 0; i < repiter.size(); i++)
+		if (repiter[i].adr == numeric)
+			return i;
 }
 
 // Поиск повторений идентификатора на листе

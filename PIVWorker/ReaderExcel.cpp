@@ -69,11 +69,10 @@ void CReaderExcel::getSheets(vector <sheetData>& sheets, CWorkExcel& work) {
 		sheets[i - 1].np = work.npValue(header);
 		sheets[i - 1].pk = work.pkValue(header);
 
-		bool arinc;
-		sheets[i - 1].line.Find(ARINC) != -1 ? arinc = true : arinc = false;
+		sheets[i - 1].line.Find(ARINC) != -1 ? sheets[i-1].arinc = true : sheets[i - 1].arinc = false;
 		header.adress[header.iRow]++;
 
-		getSignals(sheets[i - 1].signals, work, arinc);
+		getSignals(sheets[i - 1].signals, work, sheets[i - 1].arinc);
 	}
 }
 
@@ -176,8 +175,9 @@ void CReaderExcel::getArinc(const CString& field, const long& row, arincData& ar
 		numeric.Trim();	numeric1.Trim();
 		
 		arinc.current = getInt(numeric, arinc.flag);
-		arinc.amount = getInt(numeric1, flag);
-		flag ? arinc.flag = arinc.flag : arinc.flag = flag;
+		arinc.amount = getInt(numeric1, arinc.flag);
+		//flag ? arinc.flag = true : arinc.flag = arinc.flag;
+		arinc.flag = true;
 	}
 	else {
 		// Сброс параметра повторения
@@ -420,7 +420,7 @@ double CReaderExcel::getDouble(const CString& field, bool& flag) {
 		char* end;
 		errno = 0;
 		result = strtod(str, &end);
-		(*end != '\0' || errno != 0) ? flag = false : flag = true;
+		(*end != '\0' || errno != 0) ? flag = true : flag = false;
 	}
 	else
 		flag = true;
@@ -442,7 +442,7 @@ int CReaderExcel::getInt(const CString& field, bool& flag) {
 		char* end;
 		errno = 0;
 		result = strtol(str, &end, 10);
-		(*end != '\0' || errno != 0) ? flag = false : flag = true;
+		(*end != '\0' || errno != 0) ? flag = true : flag = false;
 	}
 	else
 		flag = true;
@@ -475,7 +475,7 @@ bool CReaderExcel::isTitle(CWorkExcel& work, const long& row) {
 	CString numeric = work.cellValue(row, 1);
 	numeric.Trim();
 	getInt(numeric, result);
-	return !result;
+	return result;
 }
 
 // Проверка строки на пустоту
