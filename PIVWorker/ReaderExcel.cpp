@@ -281,7 +281,7 @@ intData CReaderExcel::getNumWord(const CString& field) {
 	intData result;
 	vector <int> vec = { -1 };
 	CString numeric = field;
-	int posDot = numeric.Find(_T(','));
+	int posDot = numeric.Find(L',');
 	numeric.Trim();
 
 	if (posDot == -1)	// Один номер
@@ -484,7 +484,7 @@ bool CReaderExcel::isRemark(CWorkExcel& work, const long& row) {
 // Проверка расширения
 bool CReaderExcel::checkExtension(const CString& path) {
 	bool result = false;
-	int dotPos = path.ReverseFind(_T('.'));	// Поиск точечки
+	int dotPos = path.ReverseFind(L'.');	// Поиск точечки
 	CString ext = path.Mid(dotPos + 1);		// Выделение расширения из пути
 
 	for (size_t i = 0; i < extension.size(); i++)
