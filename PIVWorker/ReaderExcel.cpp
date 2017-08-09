@@ -114,12 +114,12 @@ void CReaderExcel::getSignals(vector <signalData>& signals, CWorkExcel& work, co
 			signal.numWord = getAdress(work.cellValue(row, column), arinc.current);
 		}
 		
-		column = header.adress[header.iName];	row = i;
+		column = header.adress[header.iSignal];	row = i;			
 		merge = work.cNextEmpty(row, column) + work.cPrevEmpty(row, column);
-		signal.title[0] = work.cellValue(row, column);
-
-		column = header.adress[header.iSignal];
 		signal.title[1] = work.cellValue(row, column);
+		
+		column = header.adress[header.iName];
+		signal.title[0] = work.cellValue(row, column);
 
 		// «амена буквы, если имеетс€ повторение
 		if (!arinc.flag) {
