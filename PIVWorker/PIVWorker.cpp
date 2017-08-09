@@ -427,9 +427,10 @@ void CPIV::WriteError(const CString& msg) {
 	CString logPath;
 	logPath.Format(L"%s\\Artefacts\\log.txt", path);
 	ofstream log(logPath, ios::out | ios::app);
-	log << CT2A(msg);
+	log << CT2A(str);
 	log.close();
 	
+	WriteLog("Ошибка операции!");
 	AfxMessageBox(msg, MB_ICONERROR);
 }
 #pragma endregion
