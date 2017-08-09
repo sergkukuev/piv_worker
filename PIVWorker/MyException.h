@@ -15,7 +15,7 @@ public:
 	void setName(const CString& name) { this->name = name; }
 	virtual CString GetMsg() {
 		CString result;
-		result.Format(L"Книга \"%s\" в памяти отсутствует!", name);
+		result.Format(L"Ошибка: Книга \"%s\" в памяти отсутствует!", name);
 		return result;
 	};
 private:
@@ -28,7 +28,7 @@ public:
 	void setName(const CString& name) { this->name = name; }
 	virtual CString GetMsg() {
 		CString result;
-		result.Format(L"Неверное расширение файла \"%s\"!", name);
+		result.Format(L"Ошибка: Неверное расширение файла \"%s\"!", name);
 		return result;
 	};
 private:
@@ -37,7 +37,7 @@ private:
 
 class AccessExcelException : public MyException {
 public:
-	virtual CString GetMsg() { return L"Запустить приложение Excel не удалось!"; };
+	virtual CString GetMsg() { return L"Ошибка: Запустить приложение Excel не удалось!"; };
 };
 
 class ReadBookException: public MyException {
@@ -45,7 +45,7 @@ public:
 	void setParam(const CString& nameBook) { this->nameBook = nameBook; };
 	virtual CString GetMsg() {
 		CString result;
-		result.Format(L"Открыть книгу \"%s\" не удалось!", nameBook);
+		result.Format(L"Ошибка: Открыть книгу \"%s\" не удалось!", nameBook);
 		return result;
 	};
 private:
@@ -60,7 +60,7 @@ public:
 	};
 	virtual CString GetMsg() { 
 		CString result;
-		result.Format(L"Не удалось найти все заголовки на листе \"%s\" в файле \"%s\"!", nameSheet, nameBook);
+		result.Format(L"Ошибка: Не удалось найти все заголовки на листе \"%s\" в файле \"%s\"!", nameSheet, nameBook);
 		return result;
 	};
 private:
@@ -74,7 +74,7 @@ public:
 	void SetParam(const CString& param) { this->param = param; }
 	void SetName(const CString& name) { this->name = name; }
 	virtual CString GetMsg() {
-		CString result = L"Параметр сигнала с неизвестной ошибкой!";
+		CString result = L"Ошибка: Параметр сигнала с неизвестной ошибкой!";
 		result.Format(L"%s\n (Имя листа: %s, Параметр: %s)", result, name, param);
 		return result; 
 	};
@@ -88,7 +88,7 @@ public:
 	void SetName(const CString& name) { this->name = name; }
 	virtual CString GetMsg() {
 		CString result;
-		result.Format(L"Книга \"%s\" не была прочитана, ее проверка невозможна.", name);
+		result.Format(L"Ошибка: Книга \"%s\" не была прочитана, ее проверка невозможна.", name);
 		return result;
 	}
 private: 
@@ -98,5 +98,5 @@ private:
 // Исключения для класс Report
 class EmptyPathException : public MyException {
 public:
-	virtual CString GetMsg() { return L"Путь для сохранения отчета не задан!"; };
+	virtual CString GetMsg() { return L"Ошибка: Путь для сохранения отчета не задан!"; };
 };
