@@ -23,6 +23,7 @@ struct Amount	{
 struct sheetInfo {
 	int np;		// Номер набора
 	int pk;		// Номер подкадра
+	bool arinc;	// страница arinc или мкио
 	bool bPK;	// Нужно ли устанавливать номер подкадра
 };
 
@@ -61,7 +62,7 @@ private:
 	bool IsRemark(const CString& field);	// Является ли строка ошибкой или заголовком
 
 	// ГЕНЕРАЦИЯ TXT ФАЙЛОВ
-	void writeTxtParam(ofstream& file, const signalData& signal, const sheetInfo& info);	// Запись сигнала в txt файл
+	void writeTxtParam(ofstream& file, const signalData& signal, const sheetInfo& info, const int& arincNum);	// Запись сигнала в txt файл
 	void Generate(const bookData& book, const bool& bNumPK);								// Генерация txt для книги
 };
 

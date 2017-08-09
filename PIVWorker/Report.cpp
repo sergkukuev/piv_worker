@@ -160,9 +160,9 @@ CString CReport::writeErrors(sheetData* sheet, const vector <errorSignal>& db, c
 			"\t\t\t\t<th rowspan=\"2\">№ Замечания</th>\n"
 			"\t\t\t\t<th colspan=\"9\">Замечания. Книга \""; file << CT2A(bookName); file << "\". Лист \""; file << CT2A(sheet->name); file << "\".</th>\n"
 			"\t\t\t</tr>\n"
-			"\t\t\t<tr>\n"
-			"\t\t\t\t<th>№Слова</th>\n"
-			"\t\t\t\t<th>Наименование сигнала</th>\n"
+			"\t\t\t<tr>\n";
+		sheet->arinc ? file << "\t\t\t\t<th>Адрес</th>\n" : file << "\t\t\t\t<th>№Слова</th>\n";
+		file << "\t\t\t\t<th>Наименование сигнала</th>\n"
 			"\t\t\t\t<th>Условное обозначение параметра / сигнала</th>\n"
 			"\t\t\t\t<th>Единица измерения</th>\n"
 			"\t\t\t\t<th>Минимальное значение</th>\n"
@@ -260,15 +260,15 @@ void CReport::errorTable(ofstream& file) {
 		"\t\t<h3>Статистика.</h3>\n"
 		"\t\t<table border=\"1\"cellspacing=\"0\">\n"
 		"\t\t\t<tr>\n"
-		"\t\t\t\t<th align=\"left\">Наборов параметров всего</th>\n"
+		"\t\t\t\t<th align=\"left\">Количество сигналов всего</th>\n"
 		"\t\t\t\t<td align=\"center\">";	file << amount.all;	file << "</td>\n"
 		"\t\t\t</tr>\n"
 		"\t\t\t<tr>\n"
-		"\t\t\t\t<th align=\"left\">Наборов параметров с ошибками</th>\n"
+		"\t\t\t\t<th align=\"left\">Количество сигналов с ошибками</th>\n"
 		"\t\t\t\t\<td align=\"center\">";	file << amount.withError; file << "</td> \n"
 		"\t\t\t</tr>\n"
 		"\t\t\t<tr>\n"
-		"\t\t\t\t<th align=\"left\">Наборов параметров без ошибок</th>\n"
+		"\t\t\t\t<th align=\"left\">Количество сигналов без ошибок</th>\n"
 		"\t\t\t\t<td align=\"center\">";	file << amount.withoutError; file << "</td>\n"
 		"\t\t\t</tr>\n"
 		"\t\t\t<tr>\n"
@@ -332,7 +332,6 @@ void CReport::setAmountError(list <errorSet>& db) {
 #pragma endregion
 
 #pragma region GenerateTxt
-
 // Начало генерации txt для одного протокола
 void CReport::getTxt(const bookData& book, const CString& pathToSave, const bool& bNumPK) {
 	if (pathToSave.IsEmpty())
@@ -375,13 +374,15 @@ void CReport::Generate(const bookData& book, const bool& bNumPK) {
 	mainFile.open(filePath);
 
 	// Обход по страницам
-	for (size_t i = 0; i < book.sheets.size(); i++) {
+	int cNP = 1, cNumWord = 1;	// Отдельные счетчики для arinc сигналов
+	for (size_t i = 0; i < book.sheets.size(); i++, cNP++, cNumWord) {
 		if (!book.sheets[i].error) { // Если нет на странице ошибок
 			ofstream tmpFile;
 			CString name;
 			sheetInfo info;
 
-			info.np = book.sheets[i].np;
+			info.arinc = book.sheets[i].arinc;
+			info.arinc ? info.np = cNP : info.np = book.sheets[i].np;
 			info.pk = book.sheets[i].pk;
 			info.bPK = bNumPK;
 
@@ -391,9 +392,12 @@ void CReport::Generate(const bookData& book, const bool& bNumPK) {
 			tmpFile.open(filePath);
 			mainFile << "#include \""; mainFile << CT2A(name); mainFile << "\"\n";
 
-			for (size_t j = 0; j < book.sheets[i].signals.size(); j++)
-				writeTxtParam(tmpFile, book.sheets[i].signals[j], info);	// Запись параметра
-
+			for (size_t j = 0; j < book.sheets[i].signals.size(); j++) {
+				if (j != 0 && info.arinc)
+					if (book.sheets[i].signals[j].numWord.value[0] != book.sheets[i].signals[j - 1].numWord.value[0]) 
+						cNumWord++;
+				writeTxtParam(tmpFile, book.sheets[i].signals[j], info, cNumWord);	// Запись параметра
+			}
 			tmpFile.close();
 		}
 		else continue;
@@ -402,7 +406,7 @@ void CReport::Generate(const bookData& book, const bool& bNumPK) {
 }
 
 // Запись сигнала в txt файл
-void CReport::writeTxtParam(ofstream& file, const signalData& signal, const sheetInfo& info) {
+void CReport::writeTxtParam(ofstream& file, const signalData& signal, const sheetInfo& info, const int& arincNum) {
 	CString buffer = signal.title[0];
 
 	if (buffer.Find(RESERVE_SIGNAL) == -1) {
@@ -419,10 +423,7 @@ void CReport::writeTxtParam(ofstream& file, const signalData& signal, const shee
 		}
 
 		// Установка набора
-		if (info.pk != 0 && info.bPK)
-			buffer.Format(L"\tSET=%d:%d\n", info.pk, info.np);
-		else
-			buffer.Format(L"\tSET=%d\n", info.np);
+		info.pk > 0 && info.bPK ? buffer.Format(L"\tSET=%d:%d\n", info.pk, info.np) : buffer.Format(L"\tSET=%d\n", info.np);
 		file << CT2A(buffer);
 
 		int max = (signal.bit.value[1] == -1 ? signal.bit.value[0] : signal.bit.value[1]);
@@ -438,7 +439,8 @@ void CReport::writeTxtParam(ofstream& file, const signalData& signal, const shee
 			file << "\tEND_MERGE\n";
 		}
 		else {
-			buffer.Format(L"\tWDADDR = %d,%d,%d\n", signal.numWord.value[0], signal.bit.value[0], max);
+			info.arinc ? buffer.Format(L"\tWDADDR = %d,%d,%d\n", arincNum, signal.bit.value[0], max) :
+				buffer.Format(L"\tWDADDR = %d,%d,%d\n", signal.numWord.value[0], signal.bit.value[0], max);
 			file << CT2A(buffer);
 		}
 
@@ -464,9 +466,10 @@ void CReport::writeTxtParam(ofstream& file, const signalData& signal, const shee
 			file << "\tCOMMENT\n";
 
 			buffer = signal.comment;
-			buffer.Replace(L"\"", L"\\\"");
+			buffer.Replace(L"\"", L"");
 			buffer.Replace(L"\n", L"\"\n\t\t\"");
-			buffer.Format(L"\t\t\"%s\"\n", buffer);
+			buffer.Insert(0, L"\t\t\"");
+			buffer.Insert(buffer.GetLength(), L"\"\n");
 
 			file << CT2A(buffer);
 			file << "\tEND_COMMENT\n";
@@ -474,5 +477,4 @@ void CReport::writeTxtParam(ofstream& file, const signalData& signal, const shee
 		file << "END_PAR\n\n";
 	}
 }
-
 #pragma endregion
