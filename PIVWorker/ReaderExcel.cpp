@@ -327,7 +327,7 @@ void CReaderExcel::getMinMaxCsr(signalData& signal, CWorkExcel& work, const long
 intData CReaderExcel::getBits(const CString& field) {
 	intData result;
 	CString bits = field;
-	int posDot = bits.Find(_T(','));
+	int posDot = bits.Find(L',');
 	vector <int> vec;
 
 	// Для одного промежутка

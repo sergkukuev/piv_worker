@@ -52,13 +52,13 @@ void CReport::startWrite(ofstream& file, list <errorSet>& Db) {
 	// Создание директорий для отчета
 	CString tPath, folder;
 	isProject ? folder.Format(L"%s%s", path, PROJECT_FOLDER) : folder.Format(L"%s%s", path, OTHER_FOLDER);
-	tPath.Format(_T("%s\\Error"), folder);
+	tPath.Format(L"%s\\Error", folder);
 	CreateDirectory(tPath, NULL);
-	tPath.Format(_T("%s%s"), folder, SYNTAX_FOLDER);
+	tPath.Format(L"%s%s", folder, SYNTAX_FOLDER);
 	CreateDirectory(tPath, NULL);
-	tPath.Format(_T("%s%s"), folder, SIMANTIC_FOLDER);
+	tPath.Format(L"%s%s", folder, SIMANTIC_FOLDER);
 	CreateDirectory(tPath, NULL);
-	tPath.Format(_T("%s%s"), folder, WARNING_FOLDER);
+	tPath.Format(L"%s%s", folder, WARNING_FOLDER);
 	CreateDirectory(tPath, NULL);
 
 	// Генерация шапки

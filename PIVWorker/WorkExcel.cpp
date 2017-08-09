@@ -43,7 +43,7 @@ CString CWorkExcel::bookName() { return book.get_Name(); }
 
 // Получение имени книги из пути
 CString CWorkExcel::bookName(const CString& path) {
-	int posSlash = path.ReverseFind(_T('\\'));
+	int posSlash = path.ReverseFind(L'\\');
 	return path.Mid(posSlash + 1, path.GetLength());
 }
 
@@ -222,7 +222,7 @@ long CWorkExcel::cNextEmpty(const long& row, const long& column) {
 // Количество слитых ячеек
 long CWorkExcel::getMerge(long& row, const long& column) {
 	CString cell;
-	cell.Format(_T("%s%d"), longToChar(column), row);
+	cell.Format(L"%s%d", longToChar(column), row);
 	
 	CRange range = sheet.get_Range(COleVariant(cell), COleVariant(cell));
 	range = range.get_MergeArea();
