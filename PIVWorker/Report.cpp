@@ -142,7 +142,8 @@ CString CReport::writeErrors(sheetData* sheet, const vector <errorSignal>& db, c
 		pathFile.Format(L"%s\\%s.html", pathFile, sheet->name);
 		CString relativePath = pathFile;
 		relativePath.Delete(0, path.GetLength());
-		relativePath.Insert(0, L"..");
+		isProject ? relativePath.Delete(0, 8) : relativePath.Delete(0, 6);	// 8 - длина имени папки проекта, 6 - длина имени папки "остальные"
+		relativePath.Insert(0, L".");
 		result.Format(L"\t\t\t\t\t\t<dt><a href=\"%s\">%d</a></dt>\n", relativePath, count);	// Формирование результирующей строки (ссылки)
 		
 		ofstream file;
