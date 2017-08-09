@@ -448,7 +448,8 @@ int CReaderExcel::getInt(const CString& field, bool& flag) {
 bool CReaderExcel::isTitle(CWorkExcel& work, const long& row) {
 	bool result = false;
 	CString numeric = work.cellValue(row, 1);
-	getInt(numeric, result);
+	if (!numeric.IsEmpty())
+		getInt(numeric, result);
 	return result;
 }
 
