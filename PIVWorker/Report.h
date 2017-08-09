@@ -4,9 +4,11 @@
 #include "StructPIV.h"
 #include "MyException.h"
 
-#define SYNTAX_FOLDER _T("\\Error\\Syntax")
-#define SIMANTIC_FOLDER _T("\\Error\\Simantic")
-#define WARNING_FOLDER _T("\\Warning")
+#define SYNTAX_FOLDER L"\\Error\\Syntax"
+#define SIMANTIC_FOLDER L"\\Error\\Simantic"
+#define WARNING_FOLDER L"\\Warning"
+#define OTHER_FOLDER L"\\Other"
+#define PROJECT_FOLDER L"\\Project"
 
 // Количество наборов данных и их ошибок
 struct Amount	{
@@ -30,11 +32,12 @@ public:
 	CReport();	// Конструктор
 	~CReport();	// Деструктор
 
-	void getReport(pivData& data, const CString& pathToSave);	// Генерация отчета о ошибках
+	void getReport(pivData& data, const CString& pathToSave, const bool& isProj);			// Генерация отчета о ошибках
 	void getTxt(list <bookData>& books, const CString& pathToSave, const bool& bNumPK);		// Генерация txt файлов
 	void getTxt(const bookData& book, const CString& pathToSave, const bool& bNumPK);		// Генерация txt для одного протокола
 
 private:
+	bool isProject;	// Отчет для проекта или "остальных"
 	CString path;	// Путь для сохранения отчета
 	Amount amount;	// Информация о количестве сигналов, с ошибками и без и прочее
 

@@ -10,10 +10,11 @@ CReport::~CReport()	{	}
 #pragma region GenerateReport
 
 // Генерация отчета об ошибках
-void CReport::getReport(pivData& data, const CString& pathToSave) {
+void CReport::getReport(pivData& data, const CString& pathToSave, const bool& isProj) {
 	if (pathToSave.IsEmpty())
 		throw EmptyPathException();
 
+	this->isProject = isProj;
 	path = pathToSave;
 	// Подсчет количества наборов и ошибок
 	setAmount(data.books);
@@ -28,7 +29,9 @@ void CReport::makeReport(list <errorSet>& db) {
 	CString tPath;	// Путь к текущему файлу
 
 	// Создание и открытие файла
-	tPath.Format(_T("%s\\Отчет.html"), path);
+	isProject ? tPath.Format(L"%s%s", path, PROJECT_FOLDER) : tPath.Format(L"%s%s", path, OTHER_FOLDER);
+	CreateDirectory(tPath, NULL);
+	tPath.Format(L"%s\\Отчет.html", tPath);
 	file.open(tPath);
 
 	errorTable(file);
@@ -47,14 +50,15 @@ void CReport::makeReport(list <errorSet>& db) {
 // Начало генерации отчета о замечаниях
 void CReport::startWrite(ofstream& file, list <errorSet>& Db) {
 	// Создание директорий для отчета
-	CString tPath;
-	tPath.Format(_T("%s\\Error"), path);
+	CString tPath, folder;
+	isProject ? folder.Format(L"%s%s", path, PROJECT_FOLDER) : folder.Format(L"%s%s", path, OTHER_FOLDER);
+	tPath.Format(_T("%s\\Error"), folder);
 	CreateDirectory(tPath, NULL);
-	tPath.Format(_T("%s%s"), path, SYNTAX_FOLDER);
+	tPath.Format(_T("%s%s"), folder, SYNTAX_FOLDER);
 	CreateDirectory(tPath, NULL);
-	tPath.Format(_T("%s%s"), path, SIMANTIC_FOLDER);
+	tPath.Format(_T("%s%s"), folder, SIMANTIC_FOLDER);
 	CreateDirectory(tPath, NULL);
-	tPath.Format(_T("%s%s"), path, WARNING_FOLDER);
+	tPath.Format(_T("%s%s"), folder, WARNING_FOLDER);
 	CreateDirectory(tPath, NULL);
 
 	// Генерация шапки
@@ -128,16 +132,18 @@ void CReport::writeSheets(ofstream& file, list <errorSet>::iterator& it) {
 CString CReport::writeErrors(sheetData* sheet, const vector <errorSignal>& db, const CString& folder, const CString& bookName) {
 	CString pathFile;
 	// Создание директории под книгу
-	pathFile.Format(L"%s%s\\%s", path, folder, bookName);
+	isProject ? pathFile.Format(L"%s%s%s\\%s", path, PROJECT_FOLDER, folder, bookName) : pathFile.Format(L"%s%s%s\\%s", path, OTHER_FOLDER, folder, bookName);
 	CreateDirectory(pathFile, NULL);
 	
 	CString result;	// Результирующая строка для записи ссылки в главный файл
 	int count = countError(db);
 
-	if (count > 0)
-	{
+	if (count > 0) {
 		pathFile.Format(L"%s\\%s.html", pathFile, sheet->name);
-		result.Format(L"\t\t\t\t\t\t<dt><a href=\"%s\">%d</a></dt>\n", pathFile, count);	// Формирование результирующей строки
+		CString relativePath = pathFile;
+		relativePath.Delete(0, path.GetLength());
+		relativePath.Insert(0, L"..");
+		result.Format(L"\t\t\t\t\t\t<dt><a href=\"%s\">%d</a></dt>\n", relativePath, count);	// Формирование результирующей строки (ссылки)
 		
 		ofstream file;
 		file.open(pathFile);

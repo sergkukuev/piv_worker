@@ -129,9 +129,7 @@ void CPIV::OpenExcel() {
 		CReport report;
 		CString tPath = path + L"\\Artefacts";
 		CreateDirectory(tPath, NULL);
-		tPath.Format(L"%s\\Project", tPath);
-		CreateDirectory(tPath, NULL);
-		report.getReport(project, tPath);
+		report.getReport(project, tPath, true);	// true -  проект, false - остальные пив
 		report.getTxt(project.books, path, bNumPK);
 		closeThread(primary);
 		
@@ -191,9 +189,7 @@ void CPIV::AddExcel() {
 		}
 		CString tPath = path + L"\\Artefacts";
 		CreateDirectory(tPath, NULL);
-		tPath.Format(L"%s\\Other", tPath);
-		CreateDirectory(tPath, NULL);
-		report.getReport(other, tPath);	// Обновление отчета
+		report.getReport(other, tPath, false);	// true -  проект, false - остальные пив
 		closeThread(primary);
 		
 		WriteLog("Добавление ПИВ завершено");	// Логирование
@@ -263,15 +259,12 @@ void CPIV::RefreshExcel() {
 			report.getTxt(book, path, bNumPK);
 		}
 		CString tPath = path + L"\\Artefacts";
-		if (flagProj) {
-			tPath.Format(L"%s\\Project", tPath);
-			report.getReport(project, tPath);
-		}
+		if (flagProj)
+			report.getReport(project, tPath, true);
 			
-		if (flagOther) {
-			tPath.Format(L"%s\\Other", tPath);
-			report.getReport(other, tPath);
-		}
+		if (flagOther)
+			report.getReport(other, tPath, false);
+	
 		closeThread(primary);
 		
 		WriteLog("Обновление ПИВ завершено");	// Логирование
