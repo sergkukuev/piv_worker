@@ -72,7 +72,7 @@ void CTest::getErrors(vector <errorSignal>& syntax, vector <errorSignal>& simant
 			tmp.error.clear();
 
 			// Проход по семантическим ошибкам
-			simanticValue(sheet->signals[i], tmp.error) ? error = true : error = error;
+			simanticValue(sheet->signals[i], tmp.error, repit) ? error = true : error = error;
 			findRepiteTitleInSheet((int)i, tmp.error) ? error = true : error = error;
 			CString prevTitle;
 			(i > 0) ? prevTitle = sheet->signals[i - 1].title[0] : prevTitle = L"";
@@ -219,18 +219,26 @@ bool CTest::syntaxBits(const intData& bits, vector <CString>& error) {
 
 #pragma region Simantic
 // Проверка всех числовых параметров
-bool CTest::simanticValue(const signalData& signal, vector <CString>& error) {
+bool CTest::simanticValue(const signalData& signal, vector <CString>& error, vector <repiter>& repit) {
 	bool result = false;
 	// Проверка номера слова (адреса)
 	if (!signal.numWord.flag) {
 		vector <CString> tmp;
 		tmp.push_back(errRemarks[0]);
-		for (size_t i = 0; i < signal.numWord.value.size(); i++)
+		for (size_t i = 0; i < signal.numWord.value.size(); i++) {
+			// Повторение на листе номера слова или адреса!
+			/*int indx = isContain(repit, signal.numWord.value[i]);
+			CString str;
+			sheet->arinc ? str = L"адреса" : str = L"номера слова";
+			str.Format(L"Значение %s %d уже содержится на этом листе.", str,signal.numWord.value[i]);
+			repit[indx].bits[0] ? repit[indx].bits[0] = false : tmp.push_back(str);
+			*/
 			if (signal.numWord.value[i] > 32 && !sheet->arinc)	// Слово должно быть не больше 32
 				tmp.push_back(L"Значение номера слова должно быть меньше 32.");
 
-		if (signal.numWord.sys != 8 && sheet->arinc)	// Адрес должын быть в 8-ной системе счисления
-			tmp.push_back(L"Адрес сигнала должен быть записан в 8-ой системе счисления.");
+			if (signal.numWord.sys != 8 && sheet->arinc)	// Адрес должын быть в 8-ной системе счисления
+				tmp.push_back(L"Адрес сигнала должен быть записан в 8-ой системе счисления.");
+		}
 
 		if (tmp.size() > 1) {
 			result = true;
@@ -332,10 +340,14 @@ bool CTest::simanticBits(const signalData& signal, const CString& prevTitle, vec
 				error.push_back(L"Старший бит меньше младшего.");
 			}
 		if (signal.numWord.value.size() * 2 == signal.bit.value.size()) {
-			if (!checkCrossBits(signal.bit.value, signal.numWord.value, repit) && !checkSameTitle(signal.title[0], prevTitle)) {
+			vector<int> bits = checkCrossBits(signal.bit.value, signal.numWord.value, repit);
+			if (bits.size() != 0 && !checkSameTitle(signal.title[0], prevTitle)) {
 				result = true;
+				CString tmp = L"Следующий(ие) бит(ы) перекрывает(ют)ся: ";
+				for (size_t i = 0; i < bits.size(); i++)
+					tmp.Format(L"%s %d", tmp, bits[i]);
 				error.push_back(errRemarks[5]);
-				error.push_back(L"Бит(ы) перекрывает(ют)ся.");
+				error.push_back(tmp);
 			}
 		}
 		else {
@@ -348,8 +360,8 @@ bool CTest::simanticBits(const signalData& signal, const CString& prevTitle, vec
 }
 
 // Проверка на перекрытие битов
-bool CTest::checkCrossBits(const vector <int>& bits, const vector <int>& numWord, vector<repiter>& repit) {
-	bool result = true;
+vector<int> CTest::checkCrossBits(const vector <int>& bits, const vector <int>& numWord, vector<repiter>& repit) {
+	vector<int> result;
 	for (size_t j = 0; j < 2; j += 2)
 		for (size_t i = 0; i < numWord.size(); i++) {
 			int end, start = bits[j];
@@ -357,10 +369,8 @@ bool CTest::checkCrossBits(const vector <int>& bits, const vector <int>& numWord
 
 			for (; start <= end; start++) {
 				int indx = isContain(repit, numWord[i]);
-				if (repit[indx].bits[start - 1])	// отметка в матрице о наличии бита
-					repit[indx].bits[start - 1] = false;
-				else
-					result = false;
+				// отметка в матрице о наличии бита
+				repit[indx].bits[start - 1] ? repit[indx].bits[start] = false :	result.push_back(start);
 			}
 		}
 	return result;
@@ -390,8 +400,8 @@ void CTest::initRepiter(vector <repiter>& repit) {
 			if (isContain(repit, sheet->signals[i].numWord.value[j]) == -1) {
 				repiter tmp;
 				tmp.adr = sheet->signals[i].numWord.value[j];
-				tmp.bits = new bool[MAX_BITS];	// Выделение память под биты
-				for (int k = 0; k < MAX_BITS; k++)	// Инициализация массива перекрытия
+				tmp.bits = new bool[MAX_BITS + 1];	// Выделение память под биты и номер слова
+				for (int k = 0; k < MAX_BITS + 1; k++)	// Инициализация массива перекрытия
 					tmp.bits[k] = true;
 				repit.push_back(tmp);
 			}

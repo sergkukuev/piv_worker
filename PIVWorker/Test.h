@@ -42,10 +42,10 @@ private:
 	bool syntaxBits(const intData& bits, vector <CString>& error);				// Проверка используемых разрядов
 
 	// Семантический анализ
-	bool simanticValue(const signalData& signal, vector <CString>& error);	// Проверка всех числовых параметров
+	bool simanticValue(const signalData& signal, vector <CString>& error, vector <repiter>& repit);	// Проверка всех числовых параметров
 	bool findRepiteTitleInSheet(const int& index, vector <CString>& error);	// Поиск повторений идентификатора на листе
 	void findRepiteTitleInBook(const int& index, vector <CString>& error);	// Поиск повторений идентификатора в книге
 	bool simanticBits(const signalData& signal, const CString& prevTitle, vector<repiter>& repit, vector <CString>& error);	// Проверка используемых разрядов
-	bool checkCrossBits(const vector <int>& bits, const vector <int>& numWord, vector<repiter>& repit); // Проверка перекрытия битов
+	vector<int> checkCrossBits(const vector <int>& bits, const vector <int>& numWord, vector<repiter>& repit); // Проверка перекрытия битов
 	bool checkSameTitle(const CString& next, const CString& prev);		// Проверка двух соседних наименований на совпадение
 };
