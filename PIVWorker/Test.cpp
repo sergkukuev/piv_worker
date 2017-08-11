@@ -325,6 +325,12 @@ bool CTest::simanticBits(const signalData& signal, const CString& prevTitle, vec
 	bool result = false;
 	// Кол-во № слов должно совпадать с кол-вами интервалов исп. разрядов
 	if (!signal.numWord.flag && !signal.bit.flag) {
+		for (size_t i = 0; i < signal.bit.value.size(); i+=2)
+			if (signal.bit.value[i] > signal.bit.value[i + 1] && signal.bit.value[i+1] != -1) {
+				result = true;
+				error.push_back(errRemarks[5]);
+				error.push_back(L"Старший бит меньше младшего.");
+			}
 		if (signal.numWord.value.size() * 2 == signal.bit.value.size()) {
 			if (!checkCrossBits(signal.bit.value, signal.numWord.value, repit) && !checkSameTitle(signal.title[0], prevTitle)) {
 				result = true;
