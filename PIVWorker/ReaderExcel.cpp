@@ -65,9 +65,8 @@ void CReaderExcel::getSheets(vector <sheetData>& sheets, CWorkExcel& work) {
 			throw exc;
 		}
 
-		sheets[i - 1].line = work.lineValue();
+		sheets[i - 1].arinc = work.isArinc();
 		sheets[i - 1].pk = work.pkValue(header);	// Установка подкадра
-		sheets[i - 1].line.Find(ARINC) != -1 ? sheets[i - 1].arinc = true : sheets[i - 1].arinc = false;
 		sheets[i - 1].arinc ? sheets[i - 1].np = -1 : sheets[i - 1].np = work.npValue(header);	// Установка номера набора
 
 		header.adress[header.iRow]++;
@@ -134,7 +133,7 @@ void CReaderExcel::getSignals(vector <signalData>& signals, CWorkExcel& work, co
 		signal.dimension = work.cellValue(row, column);
 		getMinMaxCsr(signal, work, row);	
 		column = header.adress[header.iBits];
-		signal.bit = getBits(work.cellValue(row, column));
+		signal.bit = getBits(work.cellValue(row, column), (int)signal.numWord.value.size());
 		signal.comment = getComment(work, row, merge, signal.bitSign);
 
 		bool bEmpty = isEmpty(work, row);		// Проверка на пустую строку
@@ -324,7 +323,7 @@ void CReaderExcel::getMinMaxCsr(signalData& signal, CWorkExcel& work, const long
 }
 
 // Перевод из используемых разрядов из строки в числа
-intData CReaderExcel::getBits(const CString& field) {
+intData CReaderExcel::getBits(const CString& field, const int& size) {
 	intData result;
 	CString bits = field;
 	int posDot = bits.Find(L',');
@@ -339,12 +338,16 @@ intData CReaderExcel::getBits(const CString& field) {
 		bits.Delete(posDot, bits.GetLength());
 		bits.Trim();	bits2.Trim();
 
-		vec = stepGetBits(bits, result.flag);
-		vec.resize(4);
-
+		vec = stepGetBits(bits, result.flag);		// Первый промежуток
 		vector <int> vec2 = stepGetBits(bits2, result.flag);	// Второй промежуток
-		for (size_t i = 0; i < vec2.size(); i++)
-			vec[i + 2] = vec2[i];
+
+		if (size == 2) {
+			vec.resize(4);
+			for (size_t i = 0; i < vec2.size(); i++)
+				vec[i + 2] = vec2[i];
+		}
+		else
+			vec[1] = vec2[0];
 	}
 	result.field = field;
 	result.value = vec;

@@ -59,12 +59,12 @@ public:
 	long countSheets();					// Количество листов в книги
 	long countRows();					// Количество столбцов на текущем листе
 
-	VARIANT lineValue();				// Получение значения линии передачи
+	bool isArinc();						// Получение значения линии передачи (arinc или мкио)
 	int npValue(const Header& head);	// Получение номера набора
 	int pkValue(const Header& head);	// Получение значения номера подкадра			
 
-	VARIANT cellValue(const long& row, const long& column);		// Получение значения ячейки
-	VARIANT cellValue(const Cell& cell);						// Перегрузка
+	CString cellValue(const long& row, const long& column);		// Получение значения ячейки
+	CString cellValue(const Cell& cell);						// Перегрузка
 	long cPrevEmpty(long& row, const long& column);				// Количество пустых ячеек до
 	long cNextEmpty(const long& row, const long& column);		// Количество пустых ячеек после 
 	long getMerge(long& row, const long& column);				// Кол-во слитых ячеек
@@ -80,7 +80,6 @@ private:
 	COleSafeArray* cells;	// Данные листа
 	Cell first, last;		// Индексы первой и последней ячейки
 
-	bool isArinc();			// Проверка на тип линии передачи (мкио, аринг)
 	bool findCell(const CString& field, Cell& cell);	// Поиск ячейки по содержимому, в противном cell(-1,-1)
 	CString longToChar(const long& column);				// Преобразование long к char
 	void stepLongToChar(const long& column, CString& result);	// Если в обозначении ячейки уже больше одной буквы

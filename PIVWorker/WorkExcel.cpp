@@ -82,14 +82,16 @@ CString CWorkExcel::sheetName()	{ return sheet.get_Name(); }
 long CWorkExcel::countSheets()	{ return sheets.get_Count(); }
 
 // Получение значения линии передачи
-VARIANT CWorkExcel::lineValue() {
-	VARIANT item;
+bool CWorkExcel::isArinc() {
+	CString line;
 	Cell cell;
+	bool result;
 
 	if (findCell(LINE_FIELD, cell))
-		item = cellValue(cell.row, cell.column + 1);
+		line = cellValue(cell.row, cell.column + 1);
 
-	return item;
+	line.Find(ARINC) != -1 ? result = true : result = false;
+	return result;
 }
 
 // Получение номера набора
@@ -117,19 +119,23 @@ int CWorkExcel::pkValue(const Header& head) {
 }
 
 // Получение значения ячейки
-VARIANT CWorkExcel::cellValue(const Cell& cell) {
+CString CWorkExcel::cellValue(const Cell& cell) {
 	VARIANT item;
 	long index[2] = { cell.row, cell.column };
 	cells->GetElement(index, &item);
-	return item;
+	CString result(item);
+	result.Trim();
+	return result;
 }
 
 // Перегрузка
-VARIANT CWorkExcel::cellValue(const long& row, const long& column) {
+CString CWorkExcel::cellValue(const long& row, const long& column) {
 	VARIANT item;
 	long index[2] = { row, column };
 	cells->GetElement(index, &item);
-	return item;
+	CString result(item);
+	result.Trim();
+	return result;
 }
 
 // Получение количества строк в листе
@@ -159,14 +165,6 @@ bool CWorkExcel::findHeader(Header& header) {
 		header.adress[i + 1] = cell.column;
 	}
 	return true;
-}
-
-// Проверка на тип линии передачи (мкио, аринг)
-bool CWorkExcel::isArinc() {
-	CString line = lineValue();
-	bool result;
-	line.Find(ARINC) != -1 ? result = true : result = false;
-	return result;
 }
 
 // Поиск ячейки по содержимому, в противном cell(-1,-1)

@@ -34,7 +34,7 @@ private:
 	void getArinc(const CString& field, const long& row, arincData& arinc);		// Чтение циклов повторений в arinc протоколе(порядковый номер в кадре)
 
 	intData getNumWord(const CString& field);					// Получить номера слов из строки в числа
-	intData getBits(const CString& bits);						// Получить используемые разряды
+	intData getBits(const CString& bits, const int& size);		// Получить используемые разряды
 	intData getAdress(const CString& field, const int& num);	// Получить адрес из строки в число
 	void getMinMaxCsr(signalData& signal, CWorkExcel& work, const long& row);				// Получить значения мин, макс и цср
 	CString getComment(CWorkExcel& work, const long& row, const int& size, bool& flag);		// Чтение примечания
