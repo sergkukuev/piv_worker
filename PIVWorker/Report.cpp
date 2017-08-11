@@ -36,10 +36,7 @@ void CReport::makeReport(list <errorSet>& db) {
 
 	errorTable(file);
 
-	if (amount.error != 0)
-		startWrite(file, db);
-	else
-		file << "\t\t<h2>Ошибок и замечаний нет!</h2>\n";
+	startWrite(file, db);
 	
 	file << "\t</body>\n"
 		"</html>\n";
@@ -260,15 +257,15 @@ void CReport::errorTable(ofstream& file) {
 		"\t\t<h3>Статистика.</h3>\n"
 		"\t\t<table border=\"1\"cellspacing=\"0\">\n"
 		"\t\t\t<tr>\n"
-		"\t\t\t\t<th align=\"left\">Количество сигналов всего</th>\n"
+		"\t\t\t\t<th align=\"left\">Количество листов всего</th>\n"
 		"\t\t\t\t<td align=\"center\">";	file << amount.all;	file << "</td>\n"
 		"\t\t\t</tr>\n"
 		"\t\t\t<tr>\n"
-		"\t\t\t\t<th align=\"left\">Количество сигналов с ошибками</th>\n"
+		"\t\t\t\t<th align=\"left\">Количество листов с ошибками</th>\n"
 		"\t\t\t\t\<td align=\"center\">";	file << amount.withError; file << "</td> \n"
 		"\t\t\t</tr>\n"
 		"\t\t\t<tr>\n"
-		"\t\t\t\t<th align=\"left\">Количество сигналов без ошибок</th>\n"
+		"\t\t\t\t<th align=\"left\">Количество листов без ошибок</th>\n"
 		"\t\t\t\t<td align=\"center\">";	file << amount.withoutError; file << "</td>\n"
 		"\t\t\t</tr>\n"
 		"\t\t\t<tr>\n"
