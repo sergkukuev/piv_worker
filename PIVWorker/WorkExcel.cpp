@@ -121,6 +121,8 @@ int CWorkExcel::pkValue(const Header& head) {
 // Получение значения ячейки
 CString CWorkExcel::cellValue(const Cell& cell) {
 	VARIANT item;
+	if (cell.row > last.row || cell.column > last.column)
+		throw ExcelOverflow();
 	long index[2] = { cell.row, cell.column };
 	cells->GetElement(index, &item);
 	CString result(item);
@@ -131,6 +133,8 @@ CString CWorkExcel::cellValue(const Cell& cell) {
 // Перегрузка
 CString CWorkExcel::cellValue(const long& row, const long& column) {
 	VARIANT item;
+	if (row > last.row || column > last.column)
+		throw ExcelOverflow();
 	long index[2] = { row, column };
 	cells->GetElement(index, &item);
 	CString result(item);

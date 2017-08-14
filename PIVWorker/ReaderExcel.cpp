@@ -53,25 +53,31 @@ bookData CReaderExcel::getBook(const CString& pathToExcel) {
 
 // Чтение листов
 void CReaderExcel::getSheets(vector <sheetData>& sheets, CWorkExcel& work) {
-	sheets.resize(work.countSheets());
-	for (long i = 1; i < work.countSheets() + 1; i++) {
-		work.openSheet((long)i);
-		sheets[i - 1].name = work.sheetName();
+	try {
+		sheets.resize(work.countSheets());
+		for (long i = 1; i < work.countSheets() + 1; i++) {
+			work.openSheet((long)i);
+			sheets[i - 1].name = work.sheetName();
 
-		// Поиск заголовков на листе
-		if (!work.findHeader(header)) {
-			NotAllHeaderException exc;
-			exc.setParam(sheets[i - 1].name, work.bookName());
-			throw exc;
+			// Поиск заголовков на листе
+			if (!work.findHeader(header)) {
+				NotAllHeaderException exc;
+				exc.setParam(sheets[i - 1].name, work.bookName());
+				throw exc;
+			}
+
+			sheets[i - 1].arinc = work.isArinc();
+			sheets[i - 1].pk = work.pkValue(header);	// Установка подкадра
+			sheets[i - 1].arinc ? sheets[i - 1].np = -1 : sheets[i - 1].np = work.npValue(header);	// Установка номера набора
+
+			header.adress[header.iRow]++;
+
+			getSignals(sheets[i - 1].signals, work, sheets[i - 1].arinc);
 		}
-
-		sheets[i - 1].arinc = work.isArinc();
-		sheets[i - 1].pk = work.pkValue(header);	// Установка подкадра
-		sheets[i - 1].arinc ? sheets[i - 1].np = -1 : sheets[i - 1].np = work.npValue(header);	// Установка номера набора
-
-		header.adress[header.iRow]++;
-
-		getSignals(sheets[i - 1].signals, work, sheets[i - 1].arinc);
+	}
+	catch (ExcelOverflow& exc) {
+		exc.setParam(work.bookName(), work.sheetName());
+		throw exc;
 	}
 }
 

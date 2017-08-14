@@ -35,6 +35,18 @@ private:
 	CString name = L"";
 };
 
+class ExcelOverflow : public MyException {
+public:
+	void setParam(const CString& book, const CString& sheet) { bookName = book; sheetName = sheet; }
+	virtual CString GetMsg() {
+		CString result;
+		result.Format(L"Ошибка: В файле \"%s\" на листе \"%s\" не удалось прочесть данные.\n", bookName, sheetName);
+		return result;
+	}
+private:
+	CString bookName = L"";
+	CString sheetName = L"";
+};
 class AccessExcelException : public MyException {
 public:
 	virtual CString GetMsg() { return L"Ошибка: Запустить приложение Excel не удалось!"; };
