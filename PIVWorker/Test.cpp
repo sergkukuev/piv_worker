@@ -370,7 +370,7 @@ vector<int> CTest::checkCrossBits(const vector <int>& bits, const vector <int>& 
 			for (; start <= end; start++) {
 				int indx = isContain(repit, numWord[i]);
 				// отметка в матрице о наличии бита
-				repit[indx].bits[start - 1] ? repit[indx].bits[start] = false :	result.push_back(start);
+				repit[indx].bits[start] ? repit[indx].bits[start] = false :	result.push_back(start);
 			}
 		}
 	return result;
