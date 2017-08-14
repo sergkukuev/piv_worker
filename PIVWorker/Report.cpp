@@ -384,11 +384,12 @@ void CReport::Generate(const bookData& book, const bool& bNumPK) {
 	filePath.Format(L"%s\\_ProtocolMain.txt", tPath);
 
 	// Открытие главного файла для записи
-	CStdioFile mainFile(filePath, CFile::modeCreate | CFile::modeWrite | CFile::typeUnicode);
+	ofstream mainFile;
+	mainFile.open(filePath);
 
 	// Обход по страницам
 	int cNP = 1, cNumWord = 1;	// Отдельные счетчики для arinc сигналов
-	for (size_t i = 0; i < book.sheets.size(); i++, cNP++, cNumWord) {
+	for (size_t i = 0; i < book.sheets.size(); i++, cNP++, cNumWord = 1) {
 		if (!book.sheets[i].error) { // Если нет на странице ошибок
 			CString name;
 			sheetInfo info;
@@ -401,83 +402,88 @@ void CReport::Generate(const bookData& book, const bool& bNumPK) {
 			// Создание txt файла для записи
 			name.Format(L"NP_%d_%s.txt", info.np, book.sheets[i].name);
 			filePath.Format(L"%s\\%s", tPath, name);
-			CStdioFile tmpFile(filePath, CFile::modeCreate | CFile::modeWrite | CFile::typeUnicode);
-			mainFile.WriteString(L"#include \""); 
-			mainFile.WriteString(name); 
-			mainFile.WriteString(L"\"\n");
+			try {
+				ofstream tmpFile(filePath);
+				mainFile << L"#include \"";
+				mainFile << CT2A(name);
+				mainFile << "\"\n";
 
-			for (size_t j = 0; j < book.sheets[i].signals.size(); j++) {
-				if (j != 0 && info.arinc)
-					if (book.sheets[i].signals[j].numWord.value[0] != book.sheets[i].signals[j - 1].numWord.value[0]) 
-						cNumWord++;
-				writeTxtParam(tmpFile, book.sheets[i].signals[j], info, cNumWord);	// Запись параметра
+				for (size_t j = 0; j < book.sheets[i].signals.size(); j++) {
+					if (j != 0 && info.arinc)
+						if (book.sheets[i].signals[j].numWord.value[0] != book.sheets[i].signals[j - 1].numWord.value[0])
+							cNumWord++;
+					writeTxtParam(tmpFile, book.sheets[i].signals[j], info, cNumWord);	// Запись параметра
+				}
+				tmpFile.close();
 			}
-			tmpFile.Close();
+			catch (CFileException& exc) {
+				AfxMessageBox(L"Ololo");
+			}
 		}
 		else continue;
 	}
-	mainFile.Close();
+	mainFile.close();
 }
 
 // Запись сигнала в txt файл
-void CReport::writeTxtParam(CStdioFile& file, const signalData& signal, const sheetInfo& info, const int& arincNum) {
+void CReport::writeTxtParam(ofstream& file, const signalData& signal, const sheetInfo& info, const int& arincNum) {
 	CString buffer = signal.title[0];
 
 	if (buffer.Find(RESERVE_SIGNAL) == -1) {
 		buffer.Format(L"PAR=%s\n", signal.title[1]);	// Запись обозначения сигнала
-		file.WriteString(buffer);
+		file << CT2A(buffer);
 
 		buffer.Replace(L"\"", L"\\\"");
 		buffer.Format(L"\tNAME=\"%s\"\n", signal.title[0]); // Наименования сигнала
-		file.WriteString(buffer);
+		file << CT2A(buffer);
 
 		if (!signal.dimension.IsEmpty()) {
 			buffer.Format(L"\tUNIT=\"%s\"\n", signal.dimension);	// Размерности
-			file.WriteString(buffer);
+			file << CT2A(buffer);
 		}
 
 		// Установка набора
 		info.pk > 0 && info.bPK ? buffer.Format(L"\tSET=%d:%d\n", info.pk, info.np) : buffer.Format(L"\tSET=%d\n", info.np);
-		file.WriteString(buffer);
+		file << CT2A(buffer);
 
 		int max = (signal.bit.value[1] == -1 ? signal.bit.value[0] : signal.bit.value[1]);
 
 		// Запись номера слова и битов
 		if (signal.numWord.value.size() == 2) { 
-			file.WriteString(L"\tMERGE\n");
+			file << "\tMERGE\n";
 			buffer.Format(L"\t\tWDADDR = %d,%d,%d\n", signal.numWord.value[0], signal.bit.value[0], max);
-			file.WriteString(buffer);
+			file << CT2A(buffer);
 			max = (signal.bit.value[3] == -1) ? signal.bit.value[2] : signal.bit.value[3];
 			buffer.Format(L"\t\tWDADDR = %d,%d,%d\n", signal.numWord.value[1], signal.bit.value[2], max);
-			file.WriteString(buffer);
-			file.WriteString(L"\tEND_MERGE\n");
+			file << CT2A(buffer);
+			file << "\tEND_MERGE\n";
 		}
 		else {
 			info.arinc ? buffer.Format(L"\tWDADDR = %d,%d,%d\n", arincNum, signal.bit.value[0], max) :
 				buffer.Format(L"\tWDADDR = %d,%d,%d\n", signal.numWord.value[0], signal.bit.value[0], max);
-			file.WriteString(buffer);
+			file << CT2A(buffer);
 		}
 
 		// Мин, макс, цср
 		if (signal.max.value != DBL_MIN && signal.csr.value != DBL_MIN) { 
-			file.WriteString(L"\tVALDESCR\n");
-			signal.bitSign ? file.WriteString(L"\t\tSIGNED\n") : file.WriteString(L"\t\tUNSIGNED\n");
+			file << "\tVALDESCR\n";
+			signal.bitSign ? file << "\t\tSIGNED\n" : file << "\t\tUNSIGNED\n";
 
 			buffer.Format(L"\t\tMIN = %lf\n", signal.min.value);
-			file.WriteString(buffer);
+			file << CT2A(buffer);
 
 			buffer.Format(L"\t\tMAX = %lf\n", signal.max.value);
-			file.WriteString(buffer);
+			file << CT2A(buffer);
 
 			buffer.Format(L"\t\tMSB = %lf\n", signal.csr.value);
-			file.WriteString(buffer);
+			file << CT2A(buffer);
 
-			file.WriteString(L"\tEND_VALDESCR\n");
+			file << "\tEND_VALDESCR\n";
 		}
 
 		// Запись комментариев
 		if (!signal.comment.IsEmpty()) {	
-			file.WriteString(L"\tCOMMENT\n");
+			file << "\tCOMMENT\n";
 
 			buffer = signal.comment;
 			buffer.Replace(L"\"", L"");
@@ -485,10 +491,10 @@ void CReport::writeTxtParam(CStdioFile& file, const signalData& signal, const sh
 			buffer.Insert(0, L"\t\t\"");
 			buffer.Insert(buffer.GetLength(), L"\"\n");
 
-			file.WriteString(buffer);
-			file.WriteString(L"\tEND_COMMENT\n");
+			file << CT2A(buffer);
+			file << "\tEND_COMMENT\n";
 		}
-		file.WriteString(L"END_PAR\n\n");
+		file << "END_PAR\n\n";
 	}
 }
 #pragma endregion
