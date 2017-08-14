@@ -45,24 +45,25 @@ private:
 	// ГЕНЕРАЦИЯ ОТЧЕТА О ЗАМЕЧАНИЯХ
 	void makeReport(list <errorSet>& Db);	// Генерация отчета
 
-	void startWrite(ofstream& file, list <errorSet>& Db);				// Начало генерации отчета о замечаниях
-	void writeBook(ofstream& file, list <errorSet>::iterator& it);		// Запись всех ошибок из книги
-	void writeSheets(ofstream& file, list <errorSet>::iterator& it);	// Запись всех ошибок с листов 
+	void startWrite(CStdioFile& file, list <errorSet>& Db);				// Начало генерации отчета о замечаниях
+	void writeBook(CStdioFile& file, list <errorSet>::iterator& it);		// Запись всех ошибок из книги
+	void writeSheets(CStdioFile& file, list <errorSet>::iterator& it);	// Запись всех ошибок с листов 
 	CString writeErrors(sheetData* sheet, const vector <errorSignal>& errors, const CString& folder, const CString& bookName);	// Запись ошибок с одного листа
-	void writeSignal(ofstream& file, const errorSignal& set);		// Запись сигнала
+	void writeSignal(CStdioFile& file, const errorSignal& set);		// Запись сигнала
 	CString writeParam(const CString& field, const bool& color);	// Запись параметра сигнала
 
 	// Вспомогательные функции
-	void errorTable(ofstream& file);				// Таблица с общей информацией о количестве ошибок
+	void errorTable(CStdioFile& file);				// Таблица с общей информацией о количестве ошибок
 	int countError(const vector<errorSignal>& set);	// Подсчет количества ошибок на листе
 	void setAmount(list <bookData>& books);			// Установка количества набора данных (всего, с ошибками, без)
 	void setAmountError(list <errorSet>& Db);		// Установка количества ошибок и замечаний
+	CString IntToCString(const int& number);		// Преобразование int в CString
 
 	bool findRemark(const vector <CString>& error, const CString& remark);	// Найти строку заголовка в ошибках
 	bool IsRemark(const CString& field);	// Является ли строка ошибкой или заголовком
 
 	// ГЕНЕРАЦИЯ TXT ФАЙЛОВ
-	void writeTxtParam(ofstream& file, const signalData& signal, const sheetInfo& info, const int& arincNum);	// Запись сигнала в txt файл
+	void writeTxtParam(CStdioFile& file, const signalData& signal, const sheetInfo& info, const int& arincNum);	// Запись сигнала в txt файл
 	void Generate(const bookData& book, const bool& bNumPK);								// Генерация txt для книги
 };
 
