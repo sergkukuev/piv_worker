@@ -9,12 +9,14 @@
 #define MAX_BITS 32
 
 // —труктура дл€ проверки повторений номеров слов(адресов) и битов
-struct repiter {
+struct repiter 
+{
 	int adr;	// Ќомер слова (адрес)
 	bool* bits;	// 0 - присутствие номера слова(адреса), 1...MAX_BITS - присутствие битов
 };
 
-class PIV_DECLARE CTest {
+class PIV_DECLARE CTest 
+{
 public:
 	CTest();	//  онструктор
 	~CTest();	// ƒеструктор

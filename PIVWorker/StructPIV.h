@@ -13,7 +13,8 @@ using namespace std;
 #define REMARKS_SIZE 7
 
 // Хранение номера слова и битов
-struct intData {
+struct intData 
+{
 	vector <int> value;	// Значение
 	int sys = 10;		// Система счисления
 	CString field;		// Ячейка в исходном виде
@@ -21,14 +22,16 @@ struct intData {
 };
 
 // Хранение мин, макс и цср
-struct doubleData {
+struct doubleData 
+{
 	double value = DBL_MIN;	// Значение
 	CString field;			// Ячейка в исходном виде
 	bool flag = false;		// Флаг наличия ошибки при конвертации
 };
 
 //	Данные сигнала
-struct signalData {
+struct signalData 
+{
 	intData numWord;							// Номера слов
 	vector <CString> title = { L"", L""};		// Название параметра и идентификатор
 	CString dimension;							// Размерность
@@ -39,7 +42,8 @@ struct signalData {
 };
 
 // Лист
-struct sheetData {
+struct sheetData 
+{
 	vector <signalData> signals;	// Набор параметров на листе
 
 	CString name;		// название листа в книге
@@ -51,7 +55,8 @@ struct sheetData {
 };
 
 // Книга
-struct bookData {
+struct bookData 
+{
 	vector <sheetData> sheets;	// Набор листов в книге
 	CString name;				// Название книги
 	bool bPK;					// Присутствие номера подкадра
@@ -61,25 +66,29 @@ struct bookData {
 
 #pragma region Error
 
-struct errorSignal {
+struct errorSignal 
+{
 	signalData* signal = nullptr;	// Указатель на данные сигнала с ошибками
 	vector <CString> error;			// Набор ошибок параметра
 };
 
-struct errorSheet {
+struct errorSheet 
+{
 	sheetData* sheet = nullptr;		// Указатель на лист, в котором содержатся данные ошибки
 	vector <errorSignal> syntax;	// Синтаксические ошибки
 	vector <errorSignal> simantic;	// Семантические ошибки
 	vector <errorSignal> warning;	// Предупреждения
 };
 
-struct errorSet {
+struct errorSet 
+{
 	bookData* book;		// Указатель на книгу, в которой содержатся данные ошибки
 	vector <errorSheet> set;	// Наборы ошибок
 };
 
 // Шапки таблицы
-const CString errRemarks[REMARKS_SIZE] = {
+const CString errRemarks[REMARKS_SIZE] = 
+{
 	// Номер параметра
 	L"Замечание. Поле \"№ слова\" заполнено не верно.",
 	// Обозначение параметра
@@ -96,7 +105,8 @@ const CString errRemarks[REMARKS_SIZE] = {
 #pragma endregion
 
 // Структура хранения данных ПИВ
-struct pivData {
+struct pivData 
+{
 	list <bookData> books;	// Данные о прочитанных ПИВ
 	list <errorSet> db;		// База ошибок
 };

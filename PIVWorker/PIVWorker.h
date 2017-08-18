@@ -15,14 +15,16 @@
 // Про реализацию данного класса см. PIVWorker.cpp
 //
 
-struct cmd_set {
+struct cmd_set 
+{
 	const int open = 0;
 	const int add = 1;
 	const int refresh = 2;
 	const int close = 3;
 };
 
-class PIV_DECLARE CPIV {
+class PIV_DECLARE CPIV 
+{
 public:
 	CPIV();		// Конструктор
 	~CPIV();	// Деструктор

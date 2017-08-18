@@ -11,7 +11,8 @@
 #define PROJECT_FOLDER L"\\Project"
 
 // Количество наборов данных и их ошибок
-struct Amount	{
+struct Amount	
+{
 	int all = 0;
 	int withError = 0;
 	int withoutError = 0;
@@ -20,7 +21,8 @@ struct Amount	{
 };
 
 // Информация со страницы протокола
-struct sheetInfo {
+struct sheetInfo 
+{
 	int np;		// Номер набора
 	int pk;		// Номер подкадра
 	bool arinc;	// страница arinc или мкио
@@ -28,7 +30,8 @@ struct sheetInfo {
 };
 
 // Класс генерации отчета
-class PIV_DECLARE CReport {
+class PIV_DECLARE CReport 
+{
 public:
 	CReport();	// Конструктор
 	~CReport();	// Деструктор

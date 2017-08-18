@@ -12,7 +12,8 @@
 #include <vector>
 
 // Структура заголовка
-struct Header {
+struct Header 
+{
 	std::vector <std::vector<CString>> list;	// Список допустимых заголовков 
 	static const int size = 11;		// Количество заголовков
 	long adress[size];				// Массив адресов для заголовков
@@ -31,7 +32,8 @@ struct Header {
 };
 
 // Адрес ячейки
-struct Cell {
+struct Cell 
+{
 	long row;		// Строка
 	long column;	// Столбец
 };
@@ -45,7 +47,8 @@ struct Cell {
 #define ARINC L"РТМ"
 
 // Класс чтения данных из Excel 
-class PIV_DECLARE CWorkExcel {
+class PIV_DECLARE CWorkExcel 
+{
 public:
 	CWorkExcel(void);	// Конструктор
 	~CWorkExcel(void);	// Деструктор

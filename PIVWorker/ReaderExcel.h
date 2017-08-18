@@ -10,7 +10,8 @@
 #define SIGN_FIELD L"Зн-4"		// Обозначение отрицательного символа в МКИО
 
 // Информация о повторения в arinc протоколах
-struct arincData {
+struct arincData 
+{
 	CString symbol;		// Символ замены в идентификаторе
 	int current = 0;	// Текущее повторение
 	int amount = 0;		// Всего повторений
@@ -19,7 +20,8 @@ struct arincData {
 };
 
 // Класс для чтения протоколов из excel файлов
-class PIV_DECLARE CReaderExcel	{
+class PIV_DECLARE CReaderExcel	
+{
 public:
 	CReaderExcel();		// Конструктор
 	~CReaderExcel();	// Деструктор

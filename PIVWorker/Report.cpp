@@ -10,7 +10,8 @@ CReport::~CReport()	{	}
 #pragma region GenerateReport
 
 // Генерация отчета об ошибках
-void CReport::getReport(pivData& data, const CString& pathToSave, const bool& isProj) {
+void CReport::getReport(pivData& data, const CString& pathToSave, const bool& isProj) 
+{
 	if (pathToSave.IsEmpty())
 		throw EmptyPathException();
 
@@ -24,7 +25,8 @@ void CReport::getReport(pivData& data, const CString& pathToSave, const bool& is
 }
 
 // Генерация отчета
-void CReport::makeReport(list <errorSet>& db) {
+void CReport::makeReport(list <errorSet>& db) 
+{
 	CString tPath;	// Путь к текущему файлу
 
 	// Создание и открытие файла
@@ -43,7 +45,8 @@ void CReport::makeReport(list <errorSet>& db) {
 }
 
 // Начало генерации отчета о замечаниях
-void CReport::startWrite(CStdioFile& file, list <errorSet>& Db) {
+void CReport::startWrite(CStdioFile& file, list <errorSet>& Db) 
+{
 	// Создание директорий для отчета
 	CString tPath, folder;
 	isProject ? folder.Format(L"%s%s", path, PROJECT_FOLDER) : folder.Format(L"%s%s", path, OTHER_FOLDER);
@@ -71,7 +74,8 @@ void CReport::startWrite(CStdioFile& file, list <errorSet>& Db) {
 		"\t\t\t</tr>\n");
 
 	// Обход по книгам
-	for (list <errorSet>::iterator it = Db.begin(); it != Db.end(); it++) {
+	for (list <errorSet>::iterator it = Db.begin(); it != Db.end(); it++) 
+	{
 		file.WriteString(L"\t\t\t<tr>\n"
 			"\t\t\t\t<td>"); 
 		file.WriteString(it->book->name); 
@@ -86,9 +90,11 @@ void CReport::startWrite(CStdioFile& file, list <errorSet>& Db) {
 }
 
 // Запись всех ошибок из книги
-void CReport::writeBook(CStdioFile& file, list <errorSet>::iterator& it) {
+void CReport::writeBook(CStdioFile& file, list <errorSet>::iterator& it) 
+{
 	// Формирование шапки таблицы
-	for (size_t i = 0; i < it->set.size(); i++) {
+	for (size_t i = 0; i < it->set.size(); i++)
+	{
 		file.WriteString(L"\t\t\t\t\t\t<dt>");
 		file.WriteString(it->set[i].sheet->name);
 		file.WriteString(L"</dt>\n");
@@ -100,7 +106,8 @@ void CReport::writeBook(CStdioFile& file, list <errorSet>::iterator& it) {
 }
 
 // Запись всех ошибок с листов
-void CReport::writeSheets(CStdioFile& file, list <errorSet>::iterator& it) {
+void CReport::writeSheets(CStdioFile& file, list <errorSet>::iterator& it) 
+{
 	// Запись синтаксических ошибок
 	file.WriteString(L"\t\t\t\t<td align=\"center\">\n"
 		"\t\t\t\t\t<dl>\n");
@@ -128,7 +135,8 @@ void CReport::writeSheets(CStdioFile& file, list <errorSet>::iterator& it) {
 }
 
 // Запись ошибок с одного листа
-CString CReport::writeErrors(sheetData* sheet, const vector <errorSignal>& db, const CString& folder, const CString& bookName) {
+CString CReport::writeErrors(sheetData* sheet, const vector <errorSignal>& db, const CString& folder, const CString& bookName) 
+{
 	CString pathFile;
 	// Создание директории под книгу
 	isProject ? pathFile.Format(L"%s%s%s\\%s", path, PROJECT_FOLDER, folder, bookName) : pathFile.Format(L"%s%s%s\\%s", path, OTHER_FOLDER, folder, bookName);
@@ -137,7 +145,8 @@ CString CReport::writeErrors(sheetData* sheet, const vector <errorSignal>& db, c
 	CString result;	// Результирующая строка для записи ссылки в главный файл
 	int count = countError(db);
 
-	if (count > 0) {
+	if (count > 0) 
+	{
 		pathFile.Format(L"%s\\%s.html", pathFile, sheet->name);
 		CString relativePath = pathFile;
 		relativePath.Delete(0, path.GetLength());
@@ -176,7 +185,8 @@ CString CReport::writeErrors(sheetData* sheet, const vector <errorSignal>& db, c
 			"\t\t\t\t<th>Примечание</th>\n"
 			"\t\t\t</tr>\n");
 
-		for (size_t i = 0; i < db.size(); i++) {
+		for (size_t i = 0; i < db.size(); i++)
+		{
 			file.WriteString(L"\t\t\t<tr>\n"
 				"\t\t\t\t<th rowspan=\"2\"> &nbsp "); 
 			file.WriteString(IntToCString((int)i + 1));
@@ -195,7 +205,8 @@ CString CReport::writeErrors(sheetData* sheet, const vector <errorSignal>& db, c
 }
 
 // Запись сигнала
-void CReport::writeSignal(CStdioFile& file, const errorSignal& set) {
+void CReport::writeSignal(CStdioFile& file, const errorSignal& set) 
+{
 	CString buffer;
 	file.WriteString(writeParam(set.signal->numWord.field, findRemark(set.error, errRemarks[0])));
 
@@ -218,20 +229,25 @@ void CReport::writeSignal(CStdioFile& file, const errorSignal& set) {
 		"\t\t\t<tr>\n");
 
 	// Запись всех ошибок
-	for (size_t j = 0; j < set.error.size(); j++) {
-		if (IsRemark(set.error[j])) {
-			if (j != 0) {
+	for (size_t j = 0; j < set.error.size(); j++) 
+	{
+		if (IsRemark(set.error[j])) 
+		{
+			if (j != 0) 
+			{
 				file.WriteString(L"\t\t\t\t\t</ul>\n");
 				buffer.Format(L"\t\t\t\t&nbsp %s\n", set.error[j]);
 				file.WriteString(buffer);
 			}
-			else {
+			else 
+			{
 				buffer.Format(L"\t\t\t\t<td colspan=\"9\" bgcolor = \"#FDFCD0\"> &nbsp %s\n", set.error[j]);
 				file.WriteString(buffer);
 			}
 			file.WriteString(L"\t\t\t\t\t<ul>\n");
 		}
-		else {
+		else 
+		{
 			buffer.Format(L"\t\t\t\t\t<li>%s</li>\n", set.error[j]);
 			file.WriteString(buffer);
 		}
@@ -246,7 +262,8 @@ void CReport::writeSignal(CStdioFile& file, const errorSignal& set) {
 }
 
 // Запись параметра сигнала
-CString CReport::writeParam(const CString& field, const bool& color) {
+CString CReport::writeParam(const CString& field, const bool& color) 
+{
 	CString result;
 	color ? result = L"bgcolor = \"#FDFCD0\"" : result = L"";
 	result.Format(L"\t\t\t\t<td align=\"center\" %s> &nbsp %s</td>\n", result, field);
@@ -254,7 +271,8 @@ CString CReport::writeParam(const CString& field, const bool& color) {
 }
 
 // Таблица с общей информацией о количестве ошибок
-void CReport::errorTable(CStdioFile& file) {
+void CReport::errorTable(CStdioFile& file)
+{
 	file.WriteString(L"<html>\n"
 		"\t<head>\n"
 		"\t\t<meta http-equiv=\"Content-Type\" content=\"text/html; charset=win-1251\" />\n"
@@ -298,7 +316,8 @@ void CReport::errorTable(CStdioFile& file) {
 }
 
 // Найти строку заголовка в ошибках
-bool CReport::findRemark(const vector <CString>& error, const CString& remark) {
+bool CReport::findRemark(const vector <CString>& error, const CString& remark) 
+{
 	bool result = false;
 	for (size_t i = 0; i < error.size(); i++)
 		error[i].CompareNoCase(remark) == 0 ? result = true : result = result;
@@ -306,7 +325,8 @@ bool CReport::findRemark(const vector <CString>& error, const CString& remark) {
 }
 
 // Является ли строка ошибкой или заголовком
-bool CReport::IsRemark(const CString& field) {
+bool CReport::IsRemark(const CString& field)
+{
 	bool result = false;
 	for (size_t i = 0; i < REMARKS_SIZE; i++)
 		errRemarks[i].CompareNoCase(field) == 0 ? result = true : result = result;
@@ -314,7 +334,8 @@ bool CReport::IsRemark(const CString& field) {
 }
 
 // Подсчет количества ошибок на листе
-int CReport::countError(const vector<errorSignal>& set) {
+int CReport::countError(const vector<errorSignal>& set)
+{
 	int result = 0;
 	for (size_t i = 0; i < set.size(); i++)
 		for (size_t j = 0; j < set[i].error.size(); j++)
@@ -324,8 +345,10 @@ int CReport::countError(const vector<errorSignal>& set) {
 }
 
 // Установка количества набора данных (всего, с ошибками, без)
-void CReport::setAmount(list <bookData>& books) {
-	for (list <bookData>::iterator it = books.begin(); it != books.end(); it++) {
+void CReport::setAmount(list <bookData>& books)
+{
+	for (list <bookData>::iterator it = books.begin(); it != books.end(); it++) 
+	{
 		amount.all += (int)it->sheets.size();
 		for (size_t j = 0; j < it->sheets.size(); j++)
 			if (it->sheets[j].error)
@@ -335,9 +358,11 @@ void CReport::setAmount(list <bookData>& books) {
 }
 
 // Установка количества ошибок и замечаний
-void CReport::setAmountError(list <errorSet>& db) {
+void CReport::setAmountError(list <errorSet>& db) 
+{
 	for (list<errorSet>::iterator it = db.begin(); it != db.end(); it++)
-		for (size_t i = 0; i < it->set.size(); i++) {
+		for (size_t i = 0; i < it->set.size(); i++) 
+		{
 			amount.error += countError(it->set[i].syntax) + countError(it->set[i].simantic);
 			amount.warning += countError(it->set[i].warning);
 		}
@@ -347,7 +372,8 @@ void CReport::setAmountError(list <errorSet>& db) {
 
 #pragma region GenerateTxt
 // Начало генерации txt для одного протокола
-void CReport::getTxt(const bookData& book, const CString& pathToSave, const bool& bNumPK) {
+void CReport::getTxt(const bookData& book, const CString& pathToSave, const bool& bNumPK)
+{
 	if (pathToSave.IsEmpty())
 		throw EmptyPathException();
 	// Создание директории
@@ -360,7 +386,8 @@ void CReport::getTxt(const bookData& book, const CString& pathToSave, const bool
 }
 
 // Начало генерации txt файлов
-void CReport::getTxt(list <bookData>& books, const CString& pathToSave, const bool& bNumPK) {
+void CReport::getTxt(list <bookData>& books, const CString& pathToSave, const bool& bNumPK) 
+{
 	if (pathToSave.IsEmpty())
 		throw EmptyPathException();
 	// Создание директории
@@ -375,7 +402,8 @@ void CReport::getTxt(list <bookData>& books, const CString& pathToSave, const bo
 }
 
 // Генерация txt для книги
-void CReport::Generate(const bookData& book, const bool& bNumPK) {
+void CReport::Generate(const bookData& book, const bool& bNumPK) 
+{
 	CString tPath = path;
 	tPath.Format(L"%s\\%s", path, book.name);
 	CreateDirectory(tPath, NULL);
@@ -389,8 +417,11 @@ void CReport::Generate(const bookData& book, const bool& bNumPK) {
 
 	// Обход по страницам
 	int cNP = 1, cNumWord = 1;	// Отдельные счетчики для arinc сигналов
-	for (size_t i = 0; i < book.sheets.size(); i++, cNP++, cNumWord = 1) {
-		if (!book.sheets[i].error) { // Если нет на странице ошибок
+	for (size_t i = 0; i < book.sheets.size(); i++, cNP++, cNumWord = 1) 
+	{
+		// Если нет на странице ошибок
+		if (!book.sheets[i].error) 
+		{ 
 			CString name;
 			sheetInfo info;
 
@@ -402,23 +433,20 @@ void CReport::Generate(const bookData& book, const bool& bNumPK) {
 			// Создание txt файла для записи
 			name.Format(L"NP_%d_%s.txt", info.np, book.sheets[i].name);
 			filePath.Format(L"%s\\%s", tPath, name);
-			try {
-				ofstream tmpFile(filePath);
-				mainFile << L"#include \"";
-				mainFile << CT2A(name);
-				mainFile << "\"\n";
+			
+			ofstream tmpFile(filePath);
+			mainFile << L"#include \"";
+			mainFile << CT2A(name);
+			mainFile << "\"\n";
 
-				for (size_t j = 0; j < book.sheets[i].signals.size(); j++) {
-					if (j != 0 && info.arinc)
-						if (book.sheets[i].signals[j].numWord.value[0] != book.sheets[i].signals[j - 1].numWord.value[0])
-							cNumWord++;
-					writeTxtParam(tmpFile, book.sheets[i].signals[j], info, cNumWord);	// Запись параметра
-				}
-				tmpFile.close();
+			for (size_t j = 0; j < book.sheets[i].signals.size(); j++) 
+			{
+				if (j != 0 && info.arinc)
+					if (book.sheets[i].signals[j].numWord.value[0] != book.sheets[i].signals[j - 1].numWord.value[0])
+						cNumWord++;
+				writeTxtParam(tmpFile, book.sheets[i].signals[j], info, cNumWord);	// Запись параметра
 			}
-			catch (CFileException& exc) {
-				AfxMessageBox(L"Ololo");
-			}
+			tmpFile.close();
 		}
 		else continue;
 	}
@@ -426,10 +454,12 @@ void CReport::Generate(const bookData& book, const bool& bNumPK) {
 }
 
 // Запись сигнала в txt файл
-void CReport::writeTxtParam(ofstream& file, const signalData& signal, const sheetInfo& info, const int& arincNum) {
+void CReport::writeTxtParam(ofstream& file, const signalData& signal, const sheetInfo& info, const int& arincNum) 
+{
 	CString buffer = signal.title[0];
 
-	if (buffer.Find(RESERVE_SIGNAL) == -1) {
+	if (buffer.Find(RESERVE_SIGNAL) == -1) 
+	{
 		buffer.Format(L"PAR=%s\n", signal.title[1]);	// Запись обозначения сигнала
 		file << CT2A(buffer);
 
@@ -437,7 +467,8 @@ void CReport::writeTxtParam(ofstream& file, const signalData& signal, const shee
 		buffer.Format(L"\tNAME=\"%s\"\n", signal.title[0]); // Наименования сигнала
 		file << CT2A(buffer);
 
-		if (!signal.dimension.IsEmpty()) {
+		if (!signal.dimension.IsEmpty()) 
+		{
 			buffer.Format(L"\tUNIT=\"%s\"\n", signal.dimension);	// Размерности
 			file << CT2A(buffer);
 		}
@@ -449,7 +480,8 @@ void CReport::writeTxtParam(ofstream& file, const signalData& signal, const shee
 		int max = (signal.bit.value[1] == -1 ? signal.bit.value[0] : signal.bit.value[1]);
 
 		// Запись номера слова и битов
-		if (signal.numWord.value.size() == 2) { 
+		if (signal.numWord.value.size() == 2)
+		{ 
 			file << "\tMERGE\n";
 			buffer.Format(L"\t\tWDADDR = %d,%d,%d\n", signal.numWord.value[0], signal.bit.value[0], max);
 			file << CT2A(buffer);
@@ -458,14 +490,16 @@ void CReport::writeTxtParam(ofstream& file, const signalData& signal, const shee
 			file << CT2A(buffer);
 			file << "\tEND_MERGE\n";
 		}
-		else {
+		else
+		{
 			info.arinc ? buffer.Format(L"\tWDADDR = %d,%d,%d\n", arincNum, signal.bit.value[0], max) :
 				buffer.Format(L"\tWDADDR = %d,%d,%d\n", signal.numWord.value[0], signal.bit.value[0], max);
 			file << CT2A(buffer);
 		}
 
 		// Мин, макс, цср
-		if (signal.max.value != DBL_MIN && signal.csr.value != DBL_MIN) { 
+		if (signal.max.value != DBL_MIN && signal.csr.value != DBL_MIN) 
+		{ 
 			file << "\tVALDESCR\n";
 			signal.bitSign ? file << "\t\tSIGNED\n" : file << "\t\tUNSIGNED\n";
 
@@ -482,7 +516,8 @@ void CReport::writeTxtParam(ofstream& file, const signalData& signal, const shee
 		}
 
 		// Запись комментариев
-		if (!signal.comment.IsEmpty()) {	
+		if (!signal.comment.IsEmpty()) 
+		{	
 			file << "\tCOMMENT\n";
 
 			buffer = signal.comment;
@@ -500,7 +535,8 @@ void CReport::writeTxtParam(ofstream& file, const signalData& signal, const shee
 #pragma endregion
 
 // Преобразование int to CString
-CString CReport::IntToCString(const int& number) {
+CString CReport::IntToCString(const int& number) 
+{
 	CString result;
 	result.Format(L"%d", number);
 	return result;
