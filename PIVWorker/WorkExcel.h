@@ -68,7 +68,7 @@ public:
 
 	CString cellValue(const long& row, const long& column);		// Получение значения ячейки
 	CString cellValue(const Cell& cell);						// Перегрузка
-	long cPrevEmpty(long& row, const long& column);				// Количество пустых ячеек до
+	long cPrevEmpty(const long& row, const long& column);				// Количество пустых ячеек до
 	long cNextEmpty(const long& row, const long& column);		// Количество пустых ячеек после 
 	long getMerge(long& row, const long& column);				// Кол-во слитых ячеек
 	bool findHeader(Header& header);							// Поиск заголовков на текущем листе

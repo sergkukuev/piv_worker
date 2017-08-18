@@ -8,7 +8,6 @@ CWorkExcel::CWorkExcel(void)
 		throw AccessExcelException();
 	app.put_Visible(FALSE);
 	app.put_UserControl(FALSE);
-
 	books.AttachDispatch(app.get_Workbooks());
 	cells = NULL;
 }
@@ -55,7 +54,6 @@ CString CWorkExcel::bookName(const CString& path)
 bool CWorkExcel::openSheet(const long& index) 
 {
 	LPDISPATCH Lp = sheets.get_Item(COleVariant(index));
-
 	if (Lp == NULL)	
 		return false;
 	
@@ -65,13 +63,11 @@ bool CWorkExcel::openSheet(const long& index)
 	range.AttachDispatch(Lp);
 
 	VARIANT items = range.get_Value2();
-
 	if (cells != NULL)
 		delete cells;
 
-	cells = new COleSafeArray(items);
-	
 	// Получение границ листа
+	cells = new COleSafeArray(items);
 	cells->GetLBound(1, &first.row);
 	cells->GetLBound(2, &first.column);
 	cells->GetUBound(1, &last.row);
@@ -172,7 +168,6 @@ bool CWorkExcel::findHeader(Header& header)
 				break;
 			if ((it == header.list[i].end()) && !bFind)
 				return false;
-
 			bFind = findCell(*it, cell);
 		}
 		if (!isArinc() && i + 1 == header.iAdress) 
@@ -191,14 +186,11 @@ bool CWorkExcel::findHeader(Header& header)
 bool CWorkExcel::findCell(const CString& field, Cell& cell)
 {
 	for (long i = first.row; i <= last.row; i++) 
-	{
 		for (long j = first.column; j <= last.column; j++) 
 		{
 			Cell tmp;
 			tmp.row = i; tmp.column = j;
-
 			CString item = cellValue(tmp);
-			item.Trim();
 
 			if (item.CompareNoCase(field) == 0)
 			{
@@ -206,42 +198,41 @@ bool CWorkExcel::findCell(const CString& field, Cell& cell)
 				return true;
 			}
 		}
-	}
 	return false;
 }
 
 // Кол-во пустых ячеек после 
-long CWorkExcel::cPrevEmpty(long& row, const long& column) 
+long CWorkExcel::cPrevEmpty(const long& row, const long& column) 
 {
 	CString field = cellValue(row, column);
-	long result = 0;
+	long tmpRow = row;
 
 	// Ищем первое непустое значение в таблице, выше ячейки
-	while (field.IsEmpty() && row > first.row)
+	while (field.IsEmpty() && tmpRow > first.row)
 	{
-		row--; result++;
-		field = cellValue(row, column);
+		tmpRow--;
+		field = cellValue(tmpRow, column);
 	}
 
-	return result;
+	return row - tmpRow;
 }
 
 // Кол-во пустых ячеек после 
 long CWorkExcel::cNextEmpty(const long& row, const long& column) 
 {
 	CString field = cellValue(row, column);
-	long result = 0, tmpRow = row;
+	long tmpRow = row;
 
 	// Идем вниз до первого непустого значения в таблице 
 	do 
 	{
-		tmpRow++; result++;
+		tmpRow++;
 		if (tmpRow <= last.row) 
 			field = cellValue(tmpRow, column);
 	} 
 	while (field.IsEmpty() && tmpRow <= last.row);
 
-	return result;
+	return tmpRow - row;
 }
 
 // Количество слитых ячеек
@@ -272,6 +263,7 @@ void CWorkExcel::stepLongToChar(const long& column, CString& result)
 	long iA = column / 26;
 	long iB = column % 26;
 
-	if (iB == 0)	iB = 26;
+	if (iB == 0)	
+		iB = 26;
 	result.Format(L"%s%s%s", result, longToChar(iA), static_cast<char>(iB + 64));
 }
