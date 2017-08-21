@@ -62,9 +62,6 @@ private:
 	void setAmountError(list <errorSet>& Db);		// Установка количества ошибок и замечаний
 	CString IntToCString(const int& number);		// Преобразование int в CString
 
-	bool findRemark(const vector <CString>& error, const CString& remark);	// Найти строку заголовка в ошибках
-	bool IsRemark(const CString& field);	// Является ли строка ошибкой или заголовком
-
 	// ГЕНЕРАЦИЯ TXT ФАЙЛОВ
 	void writeTxtParam(ofstream& file, const signalData& signal, const sheetInfo& info, const int& arincNum);	// Запись сигнала в txt файл
 	void Generate(const bookData& book, const bool& bNumPK);								// Генерация txt для книги

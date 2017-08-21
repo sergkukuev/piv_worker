@@ -208,53 +208,35 @@ CString CReport::writeErrors(sheetData* sheet, const vector <errorSignal>& db, c
 void CReport::writeSignal(CStdioFile& file, const errorSignal& set) 
 {
 	CString buffer;
-	file.WriteString(writeParam(set.signal->numWord.field, findRemark(set.error, errRemarks[0])));
+	file.WriteString(writeParam(set.signal->numWord.field, set.check[NUMWORD_CHECK]));
 
 	buffer.Format(L"\t\t\t\t<td align=\"center\"> &nbsp %s</td>\n", set.signal->title[0]);
 	file.WriteString(buffer);
 
-	file.WriteString(writeParam(set.signal->title[1], findRemark(set.error, errRemarks[1])));
+	file.WriteString(writeParam(set.signal->title[1], set.check[TITLE_CHECK]));
 	
 	buffer.Format(L"\t\t\t\t<td align=\"center\"> &nbsp %s</td>\n", set.signal->dimension);
 	file.WriteString(buffer);
 
-	file.WriteString(writeParam(set.signal->min.field, findRemark(set.error, errRemarks[2])));
-	file.WriteString(writeParam(set.signal->max.field, findRemark(set.error, errRemarks[3])));
-	file.WriteString(writeParam(set.signal->csr.field, findRemark(set.error, errRemarks[4])));
+	file.WriteString(writeParam(set.signal->min.field, set.check[MIN_CHECK]));
+	file.WriteString(writeParam(set.signal->max.field, set.check[MAX_CHECK]));
+	file.WriteString(writeParam(set.signal->csr.field, set.check[CSR_CHECK]));
 
-	file.WriteString(writeParam(set.signal->bit.field, findRemark(set.error, errRemarks[5])));
-	file.WriteString(writeParam(set.signal->comment, findRemark(set.error, errRemarks[6])));
+	file.WriteString(writeParam(set.signal->bit.field, set.check[BITS_CHECK]));
+	file.WriteString(writeParam(set.signal->comment, set.check[COMMENT_CHECK]));
 
 	file.WriteString(L"\t\t\t</tr>\n"
 		"\t\t\t<tr>\n");
 
 	// Запись всех ошибок
+	file.WriteString(L"\t\t\t\t<td style=\"padding-left: 20; padding-top: 0; padding-bottom: 15\" colspan=\"10\" bgcolor = \"#FDFCD0\">\n");
 	for (size_t j = 0; j < set.error.size(); j++) 
 	{
-		if (IsRemark(set.error[j])) 
-		{
-			if (j != 0) 
-			{
-				file.WriteString(L"\t\t\t\t\t</ul>\n");
-				buffer.Format(L"\t\t\t\t&nbsp %s\n", set.error[j]);
-				file.WriteString(buffer);
-			}
-			else 
-			{
-				buffer.Format(L"\t\t\t\t<td colspan=\"9\" bgcolor = \"#FDFCD0\"> &nbsp %s\n", set.error[j]);
-				file.WriteString(buffer);
-			}
-			file.WriteString(L"\t\t\t\t\t<ul>\n");
-		}
-		else 
-		{
-			buffer.Format(L"\t\t\t\t\t<li>%s</li>\n", set.error[j]);
-			file.WriteString(buffer);
-		}
+		buffer.Format(L"<br/>\t\t\t\t\t\t – %s\n", set.error[j]);
+		file.WriteString(buffer);
 	}
 
-	file.WriteString(L"\t\t\t\t\t</ul>\n"
-	"\t\t\t\t</td>\n"
+	file.WriteString(L"\t\t\t\t</td>\n"
 		"\t\t\t</tr>\n"
 		"\t\t\t<tr>\n"
 		"\t\t\t\t<td colspan=\"10\"> &nbsp </td>\n"
@@ -315,32 +297,12 @@ void CReport::errorTable(CStdioFile& file)
 		"\t\t<br/>\n");
 }
 
-// Найти строку заголовка в ошибках
-bool CReport::findRemark(const vector <CString>& error, const CString& remark) 
-{
-	bool result = false;
-	for (size_t i = 0; i < error.size(); i++)
-		error[i].CompareNoCase(remark) == 0 ? result = true : result = result;
-	return result;
-}
-
-// Является ли строка ошибкой или заголовком
-bool CReport::IsRemark(const CString& field)
-{
-	bool result = false;
-	for (size_t i = 0; i < REMARKS_SIZE; i++)
-		errRemarks[i].CompareNoCase(field) == 0 ? result = true : result = result;
-	return result;
-}
-
 // Подсчет количества ошибок на листе
 int CReport::countError(const vector<errorSignal>& set)
 {
 	int result = 0;
 	for (size_t i = 0; i < set.size(); i++)
-		for (size_t j = 0; j < set[i].error.size(); j++)
-			if (!IsRemark(set[i].error[j]))
-				result++;
+		result+=set[i].error.size();
 	return result;
 }
 

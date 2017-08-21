@@ -12,6 +12,14 @@ using namespace std;
 #define RESERVE_SIGNAL L"Резерв"
 #define REMARKS_SIZE 7
 
+#define NUMWORD_CHECK 0
+#define TITLE_CHECK 1
+#define MIN_CHECK 2
+#define MAX_CHECK 3
+#define CSR_CHECK 4
+#define BITS_CHECK 5
+#define COMMENT_CHECK 6
+
 // Хранение номера слова и битов
 struct intData 
 {
@@ -70,6 +78,7 @@ struct errorSignal
 {
 	signalData* signal = nullptr;	// Указатель на данные сигнала с ошибками
 	vector <CString> error;			// Набор ошибок параметра
+	vector <bool> check = { false, false, false, false, false, false, false };	// Отметки наличия ошибки в параметре
 };
 
 struct errorSheet 
