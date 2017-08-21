@@ -51,35 +51,33 @@ bookData CReaderExcel::getBook(const CString& pathToExcel)
 // Чтение листов
 void CReaderExcel::getSheets(vector <sheetData>& sheets, CWorkExcel& work) 
 {
-		sheets.resize(work.countSheets());
-		for (long i = 1; i < work.countSheets() + 1; i++) 
-		{
-			work.openSheet((long)i);
-			sheets[i - 1].name = work.sheetName();
+	sheets.resize(work.countSheets());
+	for (long i = 1; i < work.countSheets() + 1; i++) 
+	{
+		work.openSheet((long)i);
+		sheets[i - 1].name = work.sheetName();
 
-			// Поиск заголовков на листе
-			if (!work.findHeader(header)) 
-				throw NotAllHeaderException(work.bookName(), sheets[i - 1].name);
+		// Поиск заголовков на листе
+		if (!work.findHeader(header)) 
+			throw NotAllHeaderException(work.bookName(), sheets[i - 1].name);
 
-			sheets[i - 1].arinc = work.isArinc();
-			sheets[i - 1].pk = work.pkValue(header);	// Установка подкадра
-			sheets[i - 1].arinc ? sheets[i - 1].np = -1 : sheets[i - 1].np = work.npValue(header);	// Установка номера набора
+		sheets[i - 1].arinc = work.isArinc();
+		sheets[i - 1].pk = work.pkValue(header);	// Установка подкадра
+		sheets[i - 1].arinc ? sheets[i - 1].np = -1 : sheets[i - 1].np = work.npValue(header);	// Установка номера набора
 
-			header.adress[header.iRow]++;
+		header.adress[header.iRow]++;
 
-			getSignals(sheets[i - 1].signals, work, sheets[i - 1].arinc);
-		}
+		getSignals(sheets[i - 1].signals, work, sheets[i - 1].arinc);
+	}
 }
 
 // Чтение параметров на листе
 void CReaderExcel::getSignals(vector <signalData>& signals, CWorkExcel& work, const bool& isArinc) 
 {
 	arincData arinc;
-	for (long merge = 1, i = header.adress[header.iRow]; i < work.countRows() + 1; i += merge, merge = 1) 
+	for (long merge = 1, row = header.adress[header.iRow], column; row < work.countRows() + 1; row += merge, merge = 1) 
 	{
 		signalData signal;
-		long column, row = i;
-
 		// Надстройка для arinc
 		if (isArinc) 
 		{
@@ -95,7 +93,7 @@ void CReaderExcel::getSignals(vector <signalData>& signals, CWorkExcel& work, co
 					getArinc(remark, row, arinc);
 				else
 				{
-					i = row = arinc.startRow;
+					row = arinc.startRow;
 					arinc.current++;
 				}
 			}
@@ -106,33 +104,28 @@ void CReaderExcel::getSignals(vector <signalData>& signals, CWorkExcel& work, co
 		if (!isArinc) 
 		{
 			column = header.adress[header.iNumWord];
-			merge = work.cPrevEmpty(row, column);
-			signal.numWord = getNumWord(work.cellValue(row, column));
+			int range = work.cPrevEmpty(row, column);
+			signal.numWord = getNumWord(work.cellValue(row - range, column));
 		}
 		else 
 		{
 			column = header.adress[header.iAdress];
-			merge = work.cPrevEmpty(row, column);
-			signal.numWord = getAdress(work.cellValue(row, column), arinc.current);
+			int range = work.cPrevEmpty(row, column);
+			signal.numWord = getAdress(work.cellValue(row - range, column), arinc.current);
 		}
-		
-		column = header.adress[header.iName]; row = i;
-		merge = work.cNextEmpty(row, column) + work.cPrevEmpty(row, column);
-		signal.title[0] = work.cellValue(row, column);
+
+		column = header.adress[header.iName];
+		int range = work.cPrevEmpty(row, column);
+		signal.title[0] = work.cellValue(row - range, column);
+		range = work.cNextEmpty(row, column);
 		
 		column = header.adress[header.iSignal];
-		// Если ячейка наименования параметра больше одного и не "Резерв"
-		if (merge > 1 && signal.title[0].Find(RESERVE_SIGNAL) == -1) 
-		{
-			int range = row + merge;
-			row = i;
-			merge = work.cNextEmpty(row, column) + work.cPrevEmpty(row, column);
-			if (range < merge + row)
-				merge -= merge + row - range;
-		}			
+		merge = work.cNextEmpty(row, column);
 		signal.title[1] = work.cellValue(row, column);
-		
 
+		if (range < merge) 
+			merge = range;
+		
 		// Замена буквы, если имеется повторение
 		if (!arinc.flag) 
 		{
@@ -154,7 +147,7 @@ void CReaderExcel::getSignals(vector <signalData>& signals, CWorkExcel& work, co
 		bool bRemark = isRemark(work, row);		// Проверка на примечание
 
 		if (work.countRows() == row + merge - 1 && !arinc.flag && arinc.amount != arinc.current) // Фича для обхода повторений в случае конца файла
-			i = arinc.startRow - merge;
+			row = arinc.startRow - merge;
 
 		// Добавление сигнала
 		if (!bEmpty && !bRemark)
@@ -210,7 +203,6 @@ intData CReaderExcel::getAdress(const CString& field, const int& num)
 	do 
 	{
 		posDel = numeric.Find(L',') == -1 ? numeric.GetLength() : numeric.Find(L',');
-
 		CString str = numeric.Mid(0, posDel);
 		numeric.Delete(0, posDel + 1);
 		str.Replace(L'\n', L' ');
