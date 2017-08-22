@@ -53,7 +53,7 @@ private:
 	void writeSheets(CStdioFile& file, list <errorSet>::iterator& it);	// Запись всех ошибок с листов 
 	CString writeErrors(sheetData* sheet, const vector <errorSignal>& errors, const CString& folder, const CString& bookName);	// Запись ошибок с одного листа
 	void writeSignal(CStdioFile& file, const errorSignal& set);		// Запись сигнала
-	CString writeParam(const CString& field, const bool& color);	// Запись параметра сигнала
+	CString writeParam(const CString& field, const bool& color, const int& width);	// Запись параметра сигнала
 
 	// Вспомогательные функции
 	void errorTable(CStdioFile& file);				// Таблица с общей информацией о количестве ошибок
