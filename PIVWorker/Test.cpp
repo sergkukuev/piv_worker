@@ -8,6 +8,38 @@ CTest::CTest()
 	// Для ARINC
 	exception.insert(L"ID_BPV1");	// Идентификатор блока 1
 	exception.insert(L"ID_BPV2");	// Идентификатор блока 2
+
+	// Создание базы для проверки на ошибки с помощью регулярных выражений
+	base.resize(FIELD_SIZE - 1);
+	base[NUMWORD_CHECK].correct = "^[0-9]+(, ?[0-9]+)?$";
+	base[NUMWORD_CHECK].incorrect = {
+		{ "", L"" },
+	};
+
+	base[TITLE_CHECK].correct = "^[A-Za-z][A-Za-z0-9_]*$";
+	base[TITLE_CHECK].incorrect = {
+		{ "", L"" },
+	};
+
+	base[MIN_CHECK].correct = "^-?[0-9]+(,[0-9]+)?$";
+	base[MIN_CHECK].incorrect = {
+		{ "", L"" },
+	};
+
+	base[MAX_CHECK].correct = "^-?[0-9]+(,[0-9]+)?$";
+	base[MAX_CHECK].incorrect = {
+		{ "", L"" },
+	};
+
+	base[CSR_CHECK].correct = "^-?[0-9]+(,[0-9]+)?$";
+	base[CSR_CHECK].incorrect = {
+		{ "", L"" },
+	};
+
+	base[BITS_CHECK].correct = "^[0-9]+((…|.{3})[0-9]+)?(, ?[0-9]+((…|.{3})[0-9]+)?)?$";
+	base[BITS_CHECK].incorrect = {
+		{ "", L"" },
+	};
 }
 
 // Деструктор
@@ -159,6 +191,32 @@ bool CTest::syntaxValue(errorSignal& set)
 		writeError(set, L"Поле пустое или содержит недопустимые символы.", CSR_CHECK);
 
 	(set.signal->numWord.flag || set.signal->min.flag || set.signal->max.flag || set.signal->csr.flag) ? result = true : result = false;
+	return result;
+}
+
+// Синтаксическая проверка шаблонным методом
+bool CTest::syntaxTemplate(const CString& field, const int& check, const regexBase& test, errorSignal& set) 
+{
+	regex correct(test.correct);
+	string str = CT2A(field);
+	bool result = regex_match(str, correct);
+
+	if (!result)
+	{
+		bool bFind = false;	// Найдена ли ошибка из набора регулярных выражений
+		// Поиск ошибки (обход по набору регулярок)
+		for (size_t i = 0; i < test.incorrect.size(); i++)
+		{
+			regex reg(test.incorrect[i].reg);
+			if (regex_search(str, reg))
+			{
+				result = writeError(set, test.incorrect[i].desc, check);
+				bFind = true;
+			}
+		}
+		if (!bFind)	// Неопознанная ошибка
+			throw UndefinedError(book->name, sheet->name, set.signal->numWord.field + L"\n\t" + set.signal->title[1]);
+	}
 	return result;
 }
 

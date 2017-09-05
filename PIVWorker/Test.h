@@ -15,9 +15,18 @@ struct repiter
 	bool* bits;	// 0 - присутствие номера слова(адреса), 1...MAX_BITS - присутствие битов
 };
 
-// Структура для фильтра ошибок, которые необходимо выводить
-struct errorFilter {
+// Структура для базы ошибок
+struct regexBase 
+{
+	string correct;		// Корректная регулярка
+	vector <regular> incorrect;	// Некорректные регулярки
+};
 
+// Структура некорректных регулярок с дескриптором
+struct regular
+{
+	string reg;		// Регулярка
+	CString desc;	// Дескриптор
 };
 
 class PIV_DECLARE CTest 
@@ -33,7 +42,7 @@ private:
 	bookData* book = nullptr;	// Указатель на текущую книгу
 	sheetData* sheet = nullptr;	// Указательна текущий лист
 
-
+	vector <regexBase> base;	// База ошибок параметров
 	set<CString> exception;	// Множество исключений задается в конструкторе
 
 	void getErrors(vector <errorSignal>& syntax, vector <errorSignal>& simantic);	// Проверка на синтаксические и семантические ошибки
@@ -47,6 +56,7 @@ private:
 	bool syntaxValue(errorSignal& set);	// Проверка всех числовых параметров
 	bool syntaxTitle(errorSignal& set);	// Проверка синтаксиса идентификатора
 	bool syntaxBits(errorSignal& set);	// Проверка используемых разрядов
+	bool syntaxTemplate(const CString& field, const int& check, const regexBase& test, errorSignal& set); // Синтаксическая проверка шаблонным методом\
 
 	// Семантический анализ
 	bool simanticValue(errorSignal& set, vector <repiter>& repit);		// Проверка всех числовых параметров

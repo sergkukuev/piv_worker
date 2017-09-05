@@ -10,7 +10,7 @@ using namespace std;
 #pragma region Data
 
 #define RESERVE_SIGNAL L"Резерв"
-#define REMARKS_SIZE 7
+#define FIELD_SIZE 7
 
 #define NUMWORD_CHECK 0
 #define TITLE_CHECK 1
@@ -96,7 +96,7 @@ struct errorSet
 };
 
 // Шапки таблицы
-const CString errRemarks[REMARKS_SIZE] = 
+const CString errRemarks[FIELD_SIZE] = 
 {
 	// Номер параметра
 	L"Замечание. Поле \"№ слова\" заполнено не верно.",
