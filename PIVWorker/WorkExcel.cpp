@@ -99,6 +99,9 @@ bool CWorkExcel::isArinc()
 // Получение номера набора
 int CWorkExcel::npValue(const Header& head) 
 {
+	if (head.adress[head.iRow] + 1 > last.row || head.adress[head.iComment] > last.column)
+		return -1;
+
 	CString item = cellValue(head.adress[head.iRow] + 1, head.adress[head.iComment]);
 	if (!item.IsEmpty()) 
 	{
@@ -113,6 +116,9 @@ int CWorkExcel::npValue(const Header& head)
 // Получение значения номера подкадра
 int CWorkExcel::pkValue(const Header& head) 
 {
+	if (head.adress[head.iRow] - 1 < first.row || head.adress[head.iComment] > last.column)
+		return -1;
+
 	CString item = cellValue(head.adress[head.iRow] - 1, head.adress[head.iComment]);
 	if (!item.IsEmpty())
 	{
