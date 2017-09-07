@@ -8,18 +8,18 @@
 
 #define MAX_BITS 32
 
+#define SIZE_BASE 4 // Пока 4, потом 5 будет, как появится проверка ячейки адреса для arinc
+#define NUMWORD_BASE 0
+#define TITLE_BASE 1
+#define VALUE_BASE 2	// min, max, csr в одном флаконе
+#define BITS_BASE 3
+#define ADR_BASE 4
+
 // Структура для проверки повторений номеров слов(адресов) и битов
 struct repiter 
 {
 	int adr;	// Номер слова (адрес)
 	bool* bits;	// 0 - присутствие номера слова(адреса), 1...MAX_BITS - присутствие битов
-};
-
-// Структура для базы ошибок
-struct regexBase 
-{
-	string correct;		// Корректная регулярка
-	vector <regular> incorrect;	// Некорректные регулярки
 };
 
 // Структура некорректных регулярок с дескриптором
@@ -29,6 +29,12 @@ struct regular
 	CString desc;	// Дескриптор
 };
 
+// Структура для базы ошибок
+struct regexBase 
+{
+	string correct;		// Корректная регулярка
+	vector <regular> incorrect;	// Некорректные регулярки
+};
 class PIV_DECLARE CTest 
 {
 public:
@@ -54,8 +60,6 @@ private:
 	// Синтаксический анализ
 	bool checkNP(vector <errorSignal>& error);	// Проверка номера набора параметров
 	bool syntaxValue(errorSignal& set);	// Проверка всех числовых параметров
-	bool syntaxTitle(errorSignal& set);	// Проверка синтаксиса идентификатора
-	bool syntaxBits(errorSignal& set);	// Проверка используемых разрядов
 	bool syntaxTemplate(const CString& field, const int& check, const regexBase& test, errorSignal& set); // Синтаксическая проверка шаблонным методом\
 
 	// Семантический анализ

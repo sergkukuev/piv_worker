@@ -10,35 +10,47 @@ CTest::CTest()
 	exception.insert(L"ID_BPV2");	// Идентификатор блока 2
 
 	// Создание базы для проверки на ошибки с помощью регулярных выражений
-	base.resize(FIELD_SIZE - 1);
-	base[NUMWORD_CHECK].correct = "^[0-9]+(, ?[0-9]+)?$";
-	base[NUMWORD_CHECK].incorrect = {
-		{ "", L"" },
+	base.resize(SIZE_BASE);
+	base[NUMWORD_BASE].correct = "^[0-9]+(, ?[0-9]+)?$";
+	base[NUMWORD_BASE].incorrect = {
+		{ "^[ \t\n]*$", L"Значение № слова отсутствует." },
+		{ "[^0-9 \t\n,]", L"Значение № слова содержит недопустимые символы." },
+		{ "[^ \t\n,]+[ \t\n]", L"Значение № слова содержит лишние пробелы. (Допускается только после запятой)" },
+		{ ",[^,]*,+", L"Значение № слова содержит больше одной запятой." },
+		{ "^[ \t\n]*,", L"Значение № слова до запятой отсутствует." },
+		{ ",[ \t\n]*$", L"Значение № слова после запятой отсутствует." }
 	};
 
-	base[TITLE_CHECK].correct = "^[A-Za-z][A-Za-z0-9_]*$";
-	base[TITLE_CHECK].incorrect = {
-		{ "", L"" },
+	base[TITLE_BASE].correct = "^[A-Za-z][A-Za-z0-9_]*$";
+	base[TITLE_BASE].incorrect = {
+		{ "^$", L"Условное обозначение сигнала отсутствует. (Возможно сигнал зарезервирован, но \"Резерв\" не написано)" },
+		{ "[ \t\n]", L"Условное обозначение сигнала содержит пробел." },
+		{ "^[^A-Za-z]", L"Условное обозначение сигнала начинается не с латинской буквы." },
+		{ "[А-Яа-я]", L"Условное обозначение сигнала содержит кириллицу." },
+		{ "_$", L"Условное обозначение сигнала заканчивается на недопустимый символ '_'." }
 	};
 
-	base[MIN_CHECK].correct = "^-?[0-9]+(,[0-9]+)?$";
-	base[MIN_CHECK].incorrect = {
-		{ "", L"" },
+	base[VALUE_BASE].correct = "^-?[0-9]+(,[0-9]+)?$";
+	base[VALUE_BASE].incorrect = {
+		{ "^[ \t\n]$", L"Минимальное значение отсутствует." },
+		{ "[^0-9,.- \t\n]", L"Минимальное значение содержит недопустимые символы." },
+		{ "[ \t\n]", L"Минимальное значение содержит пробелы." },
+		{ ",|.[^,.]*(.|,)+", L"Минимальное значение содержит более одного разделителя." },
+		{ "-[^-]*-+", L"Минимальное значение содержит больше одного знака '-'." },
+		{ "^[^- \t\n]+-", L"Минимальное значение содержит знак '-' в недопустимом месте. (Допускается только перед значением)" },
+		{ "^[ \t\n]*.|,", L"Минимальное значение не содержит значения до разделителя" },
+		{ ".|,[ \t\n]$", L"Минимальное значение не содержит значения после разделителя" }
 	};
 
-	base[MAX_CHECK].correct = "^-?[0-9]+(,[0-9]+)?$";
-	base[MAX_CHECK].incorrect = {
-		{ "", L"" },
-	};
-
-	base[CSR_CHECK].correct = "^-?[0-9]+(,[0-9]+)?$";
-	base[CSR_CHECK].incorrect = {
-		{ "", L"" },
-	};
-
-	base[BITS_CHECK].correct = "^[0-9]+((…|.{3})[0-9]+)?(, ?[0-9]+((…|.{3})[0-9]+)?)?$";
-	base[BITS_CHECK].incorrect = {
-		{ "", L"" },
+	base[BITS_BASE].correct = "^[0-9]+((…|[.]{3})[0-9]+)?(, ?[0-9]+((…|[.]{3})[0-9]+)?)?$";
+	base[BITS_BASE].incorrect = {
+		{ "^[ \t\n]$", L"Значение используемых разрядов отсутствует." },
+		{ "[^0-9,.… \t\n]", L"Значение используемых разрядов содержит недопустимые символы." },
+		{ "[^ \t\n,]+[ \t\n]", L"Значение используемых разрядов содержит лишние пробелы. (Допускается только после запятой)" },
+		{ "^[^….]*..?[^….,]*,", L"Значение используемых разрядов содержит неверное обозначение промежутка." },
+		{ "(…|.{1,3})[^….]*(…|.{1,3})[^….]*(…|.{1,3})", L"Значение используемых разрядов содержит более двух промежутков." },
+		//{ "^|,[ \t\n]*(…|[.]+)", L"Значение используемых разрядов не содержит значения в начале одного из промежутков." },
+		//{ "(…|[.]+)[ \t\n]*,|$", L"Значение используемых разрядов не содержит значения в конце одного из промежутков." }
 	};
 }
 
@@ -104,9 +116,16 @@ void CTest::getErrors(vector <errorSignal>& syntax, vector <errorSignal>& simant
 				tmpSyntax.signal = &sheet->signals[i];
 
 				// Проход по синтаксическим ошибкам
-				syntaxValue(tmpSyntax) ? error = true : error = error;
-				syntaxTitle(tmpSyntax) ? error = true : error = error;
-				syntaxBits(tmpSyntax) ? error = true : error = error;
+				!sheet->arinc ? syntaxTemplate(sheet->signals[i].numWord.field, NUMWORD_CHECK, base[NUMWORD_BASE], tmpSyntax) ? error = true : error = error :
+					syntaxValue(tmpSyntax) ? error = true : error = error;
+				syntaxTemplate(sheet->signals[i].title[1], TITLE_CHECK, base[TITLE_BASE], tmpSyntax) ? error = true : error = error;
+				 if (sheet->signals[i].min.flag) 
+					syntaxTemplate(sheet->signals[i].min.field, MIN_CHECK, base[VALUE_BASE], tmpSyntax) ? error = true : error = error;
+				if (sheet->signals[i].max.flag)
+					syntaxTemplate(sheet->signals[i].max.field, MAX_CHECK, base[VALUE_BASE], tmpSyntax) ? error = true : error = error;
+				if (sheet->signals[i].csr.flag)
+					syntaxTemplate(sheet->signals[i].csr.field, CSR_CHECK, base[VALUE_BASE], tmpSyntax) ? error = true : error = error;
+				syntaxTemplate(sheet->signals[i].bit.field, BITS_CHECK, base[BITS_BASE], tmpSyntax) ? error = true : error = error;
 
 				if (!tmpSyntax.error.empty())
 					syntax.push_back(tmpSyntax);
@@ -183,13 +202,13 @@ bool CTest::syntaxValue(errorSignal& set)
 	
 	if (set.signal->numWord.flag)
 		writeError(set, L"Поле пустое или содержит недопустимые символы.", NUMWORD_CHECK);
-	if (set.signal->min.flag)
+	/*if (set.signal->min.flag)
 		writeError(set, L"Поле пустое или содержит недопустимые символы.", MIN_CHECK);
 	if (set.signal->max.flag)
 		writeError(set, L"Поле пустое или содержит недопустимые символы.", MAX_CHECK);
 	if (set.signal->csr.flag)
 		writeError(set, L"Поле пустое или содержит недопустимые символы.", CSR_CHECK);
-
+		*/
 	(set.signal->numWord.flag || set.signal->min.flag || set.signal->max.flag || set.signal->csr.flag) ? result = true : result = false;
 	return result;
 }
@@ -216,75 +235,6 @@ bool CTest::syntaxTemplate(const CString& field, const int& check, const regexBa
 		}
 		if (!bFind)	// Неопознанная ошибка
 			throw UndefinedError(book->name, sheet->name, set.signal->numWord.field + L"\n\t" + set.signal->title[1]);
-	}
-	return result;
-}
-
-// Проверка синтаксиса идентификатора
-bool CTest::syntaxTitle(errorSignal& set) 
-{
-	regex correct("^[A-Za-z][A-Za-z0-9_]*$");
-	string str = CT2A(set.signal->title[1]);
-	bool result = regex_match(str, correct);
-
-	if (!result) 
-	{
-		bool bFind = false;	// Найдена ли ошибка из набора регулярных выражений
-		vector <string> incorrect = { "^[ \t\n]*$", "[ \t\n]+", "^[^A-Za-z][A-Za-z0-9_]*$", "([A-Za-z0-9_]*[А-Яа-я]+[A-Za-z0-9_]*)+", "_$" };
-		vector <CString> description = { L"Значение в поле отсутствует. (Возможно сигнал зарезервирован, но \"Резерв\" не написано)",
-			L"Значение в поле содержит пробел.",
-			L"Значение в поле начинается не с латинской буквы.",
-			L"Значение в поле содержит кириллицу.",
-			L"Значение в поле заканчивается на '_'." };
-		// Поиск ошибки (обход по набору регулярок)
-		for (size_t i = 0; i < incorrect.size(); i++)
-		{
-			regex reg(incorrect[i]);
-			if (regex_search(str, reg)) 
-			{
-				result = writeError(set, description[i], TITLE_CHECK);
-				bFind = true;
-			}
-		}
-		if (!bFind)	// Неопознанная ошибка
-			throw UndefinedError(book->name, sheet->name, set.signal->title[0] + L"\n\t" + set.signal->title[1]);
-	}
-	return result;
-}
-
-// Проверка используемых разрядов
-bool CTest::syntaxBits(errorSignal& set) 
-{
-	regex correct("^[0-9]+((…|[.]{3})[0-9]+)?(,[ \t]?[0-9]+((…|[.]{3})[0-9]+)?)?$");
-	string str = CT2A(set.signal->bit.field);
-	bool result = regex_match(str, correct);
-
-	if (!result)
-	{
-		bool bFind = false;	// Найдена ли ошибка из набора регулярных выражений
-		vector <string> incorrect = { "^[ \t\n]*$", "[^0-9., \t…]+", "[0-9.…]*[ \t]+[0-9.…]*", "[0-9]*[.]{1,2}[0-9]*",
-			"^(…|[.]{3})[0-9]+" , "[0-9]+(…|[.]{3})$", "(,[ \t]?)+[0-9.…]*(,[ \t]?)+", "^[0-9]*[.]{1,2}[0-9]*,[ \t]?",
-			"^(…|[.]{3})[0-9]+,[ \t]?", "^[0-9]+(…|[.]{3}),[ \t]?",  ",[ \t]?([0-9]*[.]{1,2}[0-9]*)$"",[ \t]?([0-9]*[.]{1,2}[0-9]*)$",
-			",[ \t]?(…|[.]{3})[0-9]+$", ",[ \t]?[0-9]+(…|[.]{3})$", "[0-9]*[.]{1,2}[0-9]*,[ \t]?[0-9]*[.]{1,2}[0-9]*" };
-		vector <CString> description = { L"Значение в поле отсутствует.", L"Поле содержит недопустимые символы.", L"Поле содержит лишние пробелы. Допускается только после запятой.",
-			L"Неверное обозначение промежутка.", L"Отсутствует значение в начале промежутка.", L"Отсутствует значение в конце промежутка.",
-			L"Значение в поле содержит более одной запятой.", L"Неверное обозначение промежутка до запятой.", L"Отсутствует значение в начале промежутка до запятой.",
-			L"Отсутствует значение в конце промежутка до запятой.", L"Неверное обозначение промежутка после запятой.",  L"Отсутствует значение в начале промежутка после запятой.",
-			L"Отсутствует значение в конце промежутка после запятой.", L"Неверное обозначение обоих промежутков." };
-		// Поиск ошибки (обход по набору регулярок)
-		for (size_t i = 0; i < incorrect.size(); i++) 
-		{
-			regex reg(incorrect[i]);
-			if (regex_search(str, reg)) 
-			{
-				result = writeError(set, description[i], BITS_CHECK);
-				if (i == 3 || i == 7 || i == 10 || i == 13)	// Ошибки, связанные с промежутками (чтобы можно было генерировать в таком случае скрипты)
-					result = false;
-				bFind = true;
-			}
-		}
-		if (!bFind)	// Неопознанная ошибка
-			throw UndefinedError(book->name, sheet->name, set.signal->bit.field);
 	}
 	return result;
 }
