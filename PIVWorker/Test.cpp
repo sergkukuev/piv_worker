@@ -119,12 +119,10 @@ void CTest::getErrors(vector <errorSignal>& syntax, vector <errorSignal>& simant
 				!sheet->arinc ? syntaxTemplate(sheet->signals[i].numWord.field, NUMWORD_CHECK, base[NUMWORD_BASE], tmpSyntax) ? error = true : error = error :
 					syntaxValue(tmpSyntax) ? error = true : error = error;
 				syntaxTemplate(sheet->signals[i].title[1], TITLE_CHECK, base[TITLE_BASE], tmpSyntax) ? error = true : error = error;
-				 if (sheet->signals[i].min.flag) 
-					syntaxTemplate(sheet->signals[i].min.field, MIN_CHECK, base[VALUE_BASE], tmpSyntax) ? error = true : error = error;
-				if (sheet->signals[i].max.flag)
-					syntaxTemplate(sheet->signals[i].max.field, MAX_CHECK, base[VALUE_BASE], tmpSyntax) ? error = true : error = error;
-				if (sheet->signals[i].csr.flag)
-					syntaxTemplate(sheet->signals[i].csr.field, CSR_CHECK, base[VALUE_BASE], tmpSyntax) ? error = true : error = error;
+			
+				syntaxTemplate(sheet->signals[i].min.field, MIN_CHECK, base[VALUE_BASE], tmpSyntax) ? error = true : error = error;
+				syntaxTemplate(sheet->signals[i].max.field, MAX_CHECK, base[VALUE_BASE], tmpSyntax) ? error = true : error = error;
+				syntaxTemplate(sheet->signals[i].csr.field, CSR_CHECK, base[VALUE_BASE], tmpSyntax) ? error = true : error = error;
 				syntaxTemplate(sheet->signals[i].bit.field, BITS_CHECK, base[BITS_BASE], tmpSyntax) ? error = true : error = error;
 
 				if (!tmpSyntax.error.empty())

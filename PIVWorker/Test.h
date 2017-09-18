@@ -8,7 +8,7 @@
 
 #define MAX_BITS 32
 
-#define SIZE_BASE 4 // Пока 4, потом 5 будет, как появится проверка ячейки адреса для arinc
+#define SIZE_BASE 4		// Пока 4, потом 5 будет, как появится проверка ячейки адреса для arinc
 #define NUMWORD_BASE 0
 #define TITLE_BASE 1
 #define VALUE_BASE 2	// min, max, csr в одном флаконе
@@ -35,6 +35,7 @@ struct regexBase
 	string correct;		// Корректная регулярка
 	vector <regular> incorrect;	// Некорректные регулярки
 };
+
 class PIV_DECLARE CTest 
 {
 public:
@@ -49,7 +50,7 @@ private:
 	sheetData* sheet = nullptr;	// Указательна текущий лист
 
 	vector <regexBase> base;	// База ошибок параметров
-	set<CString> exception;	// Множество исключений задается в конструкторе
+	set<CString> exception;		// Множество исключений задается в конструкторе
 
 	void getErrors(vector <errorSignal>& syntax, vector <errorSignal>& simantic);	// Проверка на синтаксические и семантические ошибки
 	void getWarnings(vector <errorSignal>& warning);	// Проверка на незначительные ошибки (замечания) 
