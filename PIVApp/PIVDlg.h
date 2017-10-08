@@ -23,6 +23,7 @@ public:
 
 // Реализация
 protected:
+	CMenu m_contextMenu;	// Контекстное меню
 	HICON m_hIcon;
 
 	// Созданные функции схемы сообщений
@@ -30,5 +31,6 @@ protected:
 	afx_msg void OnSysCommand(UINT nID, LPARAM lParam);
 	afx_msg void OnPaint();
 	afx_msg HCURSOR OnQueryDragIcon();
+	afx_msg void OnContextMenu(CWnd* pWnd, CPoint point);
 	DECLARE_MESSAGE_MAP()
 };

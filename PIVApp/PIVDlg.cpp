@@ -64,6 +64,7 @@ BEGIN_MESSAGE_MAP(CPIVDlg, CDialogEx)
 	ON_WM_SYSCOMMAND()
 	ON_WM_PAINT()
 	ON_WM_QUERYDRAGICON()
+	ON_WM_CONTEXTMENU()
 END_MESSAGE_MAP()
 
 
@@ -99,6 +100,7 @@ BOOL CPIVDlg::OnInitDialog()
 	SetIcon(m_hIcon, FALSE);		// Мелкий значок
 
 	// TODO: добавьте дополнительную инициализацию
+	m_contextMenu.LoadMenuW(IDR_CONTEXT_MENU);
 
 	return TRUE;  // возврат значения TRUE, если фокус не передан элементу управления
 }
@@ -150,4 +152,16 @@ void CPIVDlg::OnPaint()
 HCURSOR CPIVDlg::OnQueryDragIcon()
 {
 	return static_cast<HCURSOR>(m_hIcon);
+}
+
+// Обработка контекстного меню
+void CPIVDlg::OnContextMenu(CWnd* pWnd, CPoint point)
+{
+	CMenu* menu;	// Указатель на подменю
+	CRect rect;		// Объект текущего диалогового окна
+	this->GetWindowRect(&rect);
+
+	/* ? menu = m_contextMenu.GetSubMenu(0) : */menu = m_contextMenu.GetSubMenu(1); // Выбор подменю
+
+		menu->TrackPopupMenu(TPM_LEFTALIGN | TPM_TOPALIGN, point.x, point.y, this);
 }
