@@ -47,8 +47,6 @@ END_MESSAGE_MAP()
 
 // диалоговое окно CPIVDlg
 
-
-
 CPIVDlg::CPIVDlg(CWnd* pParent /*=NULL*/)
 	: CDialogEx(IDD_PIVAPP_DIALOG, pParent)
 {
@@ -58,6 +56,7 @@ CPIVDlg::CPIVDlg(CWnd* pParent /*=NULL*/)
 void CPIVDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CDialogEx::DoDataExchange(pDX);
+	DDX_Control(pDX, IDC_BTN_HOME, m_BtnHome);
 }
 
 BEGIN_MESSAGE_MAP(CPIVDlg, CDialogEx)
@@ -99,8 +98,16 @@ BOOL CPIVDlg::OnInitDialog()
 	SetIcon(m_hIcon, TRUE);			// Крупный значок
 	SetIcon(m_hIcon, FALSE);		// Мелкий значок
 
-	// TODO: добавьте дополнительную инициализацию
+	// Добавление меню и комбо-бокса
 	m_contextMenu.LoadMenuW(IDR_CONTEXT_MENU);
+	CComboBox* m_Cmb = (CComboBox*)GetDlgItem(IDC_COMBO);
+	m_Cmb->AddString(L"Проект");
+	m_Cmb->AddString(L"Отдельные ПИВ");
+	m_Cmb->SetCurSel(1);
+
+	// Скрыть окошечко показа отчета
+	CWnd* pWnd = this->GetWindow(IDR_MAINFRAME);
+	this->SetWindowPos(pWnd, 0, 0, 280, 527, SWP_NOMOVE | SWP_NOZORDER);
 
 	return TRUE;  // возврат значения TRUE, если фокус не передан элементу управления
 }
@@ -160,8 +167,22 @@ void CPIVDlg::OnContextMenu(CWnd* pWnd, CPoint point)
 	CMenu* menu;	// Указатель на подменю
 	CRect rect;		// Объект текущего диалогового окна
 	this->GetWindowRect(&rect);
+	CComboBox* m_Cmb = (CComboBox*)GetDlgItem(IDC_COMBO);
+	
+	m_Cmb->GetCurSel() == PROJECT ? menu = m_contextMenu.GetSubMenu(PROJECT) : menu = m_contextMenu.GetSubMenu(OTHER);	// Выбор подменю
+	menu->TrackPopupMenu(TPM_LEFTALIGN | TPM_TOPALIGN, point.x, point.y, this);
+}
 
-	/* ? menu = m_contextMenu.GetSubMenu(0) : */menu = m_contextMenu.GetSubMenu(1); // Выбор подменю
+BEGIN_EVENTSINK_MAP(CPIVDlg, CDialogEx)
+	ON_EVENT(CPIVDlg, IDC_TBTN_REPORT, 2, CPIVDlg::OnChangeTbtnReport, VTS_NONE)
+END_EVENTSINK_MAP()
 
-		menu->TrackPopupMenu(TPM_LEFTALIGN | TPM_TOPALIGN, point.x, point.y, this);
+// Событие изменение нажатия кнопки отображения отчета
+void CPIVDlg::OnChangeTbtnReport()
+{
+	CWnd* pWnd = this->GetWindow(IDR_MAINFRAME);
+	SHOW_REPORT ? this->SetWindowPos(pWnd, 0, 0, 1059, 527, SWP_NOMOVE | SWP_NOZORDER) :
+		this->SetWindowPos(pWnd, 0, 0, 280, 527, SWP_NOMOVE | SWP_NOZORDER);			// ВЫЯВИТЬ РАЗМЕРЫ ОКНА ПРОГРАММНО, А НЕ ПОДГОНЯТЬ
+	// Изменить статус показа
+	SHOW_REPORT ? SHOW_REPORT = false : SHOW_REPORT = true;
 }

@@ -3,7 +3,11 @@
 //
 
 #pragma once
+#include "afxwin.h"
 
+// Значения комбо-бокса для определения вывода контекстного меню
+#define PROJECT 0
+#define OTHER 1
 
 // диалоговое окно CPIVDlg
 class CPIVDlg : public CDialogEx
@@ -23,6 +27,7 @@ public:
 
 // Реализация
 protected:
+	bool SHOW_REPORT = true;	// Отображение отчета
 	CMenu m_contextMenu;	// Контекстное меню
 	HICON m_hIcon;
 
@@ -33,4 +38,8 @@ protected:
 	afx_msg HCURSOR OnQueryDragIcon();
 	afx_msg void OnContextMenu(CWnd* pWnd, CPoint point);
 	DECLARE_MESSAGE_MAP()
+public:
+	DECLARE_EVENTSINK_MAP()
+	void OnChangeTbtnReport();	// Обработчик на нажатия тогл кнопочки
+	CButton m_BtnHome;
 };

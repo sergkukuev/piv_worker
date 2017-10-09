@@ -209,9 +209,19 @@
     <None Include="res\PIVApp.rc2" />
   </ItemGroup>
   <ItemGroup>
+    <Image Include="images\home_page.png" />
+    <Image Include="images\next_page.png" />
+    <Image Include="images\prev_page.png" />
+    <Image Include="images\refresh_page.png" />
+    <Image Include="images\report_go.png" />
     <Image Include="res\PIVApp.ico" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
+  <ProjectExtensions>
+    <VisualStudio>
+      <UserProperties _x007B_8BD21D60-EC42-11CE-9E0D-00AA006002F3_x007D_="CTbtn_report" />
+    </VisualStudio>
+  </ProjectExtensions>
 </Project>
