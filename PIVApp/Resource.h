@@ -32,14 +32,18 @@
 #define ID_CLOSE_PIV                    1025
 #define ID_CLOSE_ALL                    1026
 #define IDC_COMBO                       1036
+#define IDC_BTN_ADD                     1038
+#define ID_PROJ_CLEAR                   32771
+#define ID_CLEAR_PROJ                   32772
+#define ID_CLOSE_PROJ                   32773
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        147
-#define _APS_NEXT_COMMAND_VALUE         32771
-#define _APS_NEXT_CONTROL_VALUE         1037
+#define _APS_NEXT_COMMAND_VALUE         32774
+#define _APS_NEXT_CONTROL_VALUE         1039
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

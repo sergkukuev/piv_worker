@@ -56,7 +56,6 @@ CPIVDlg::CPIVDlg(CWnd* pParent /*=NULL*/)
 void CPIVDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CDialogEx::DoDataExchange(pDX);
-	DDX_Control(pDX, IDC_BTN_HOME, m_BtnHome);
 }
 
 BEGIN_MESSAGE_MAP(CPIVDlg, CDialogEx)
@@ -64,6 +63,20 @@ BEGIN_MESSAGE_MAP(CPIVDlg, CDialogEx)
 	ON_WM_PAINT()
 	ON_WM_QUERYDRAGICON()
 	ON_WM_CONTEXTMENU()
+	ON_COMMAND(ID_OPEN_PROJ, &CPIVDlg::OnOpenProj)
+	ON_COMMAND(ID_REFRESH_PIV, &CPIVDlg::OnRefreshPiv)
+	ON_COMMAND(ID_CHANGE_FOLDER, &CPIVDlg::OnChangeFolder)
+	ON_COMMAND(ID_OPEN_REPORT, &CPIVDlg::OnOpenReport)
+	ON_COMMAND(ID_FOLDER_TXT, &CPIVDlg::OnFolderTxt)
+	ON_COMMAND(ID_OPEN_PIV, &CPIVDlg::OnOpenPiv)
+	ON_COMMAND(ID_CLOSE_PIV, &CPIVDlg::OnClosePiv)
+	ON_COMMAND(ID_CLOSE_ALL, &CPIVDlg::OnCloseAll)
+	ON_COMMAND(ID_CLOSE_PROJ, &CPIVDlg::OnCloseProj)
+	ON_CBN_SELCHANGE(IDC_COMBO, &CPIVDlg::OnCbnSelchangeCombo)
+	ON_BN_CLICKED(IDC_BTN_HOME, &CPIVDlg::OnBnClickedBtnHome)
+	ON_BN_CLICKED(IDC_BTN_PREV, &CPIVDlg::OnBnClickedBtnPrev)
+	ON_BN_CLICKED(IDC_BTN_NEXT, &CPIVDlg::OnBnClickedBtnNext)
+	ON_BN_CLICKED(IDC_BTN_REFRESH, &CPIVDlg::OnBnClickedBtnRefresh)
 END_MESSAGE_MAP()
 
 
@@ -104,6 +117,20 @@ BOOL CPIVDlg::OnInitDialog()
 	m_Cmb->AddString(L"Проект");
 	m_Cmb->AddString(L"Отдельные ПИВ");
 	m_Cmb->SetCurSel(1);
+
+	// Добавить путь отчетов
+	CString reports;
+	GetModuleFileName(NULL, reports.GetBuffer(_MAX_PATH), _MAX_PATH);
+	reports.ReleaseBuffer();
+	reports.Delete(reports.ReverseFind(L'\\'), reports.GetLength());
+	
+	CEdit* m_Edt = (CEdit*)GetDlgItem(IDC_EDIT_PATH);
+	m_Edt->SetWindowTextW(reports);
+	CreateDirectory(reports, NULL);
+
+	// Инициализация листа и меню
+	m_ListBox = (CListBox*)GetDlgItem(IDC_LISTBOX);
+	menuLogic();
 
 	// Скрыть окошечко показа отчета
 	CWnd* pWnd = this->GetWindow(IDR_MAINFRAME);
@@ -166,12 +193,13 @@ void CPIVDlg::OnContextMenu(CWnd* pWnd, CPoint point)
 {
 	CMenu* menu;	// Указатель на подменю
 	CRect rect;		// Объект текущего диалогового окна
-	this->GetWindowRect(&rect);
 	CComboBox* m_Cmb = (CComboBox*)GetDlgItem(IDC_COMBO);
 	
 	m_Cmb->GetCurSel() == PROJECT ? menu = m_contextMenu.GetSubMenu(PROJECT) : menu = m_contextMenu.GetSubMenu(OTHER);	// Выбор подменю
 	menu->TrackPopupMenu(TPM_LEFTALIGN | TPM_TOPALIGN, point.x, point.y, this);
 }
+
+#pragma region Handlers
 
 BEGIN_EVENTSINK_MAP(CPIVDlg, CDialogEx)
 	ON_EVENT(CPIVDlg, IDC_TBTN_REPORT, 2, CPIVDlg::OnChangeTbtnReport, VTS_NONE)
@@ -185,4 +213,152 @@ void CPIVDlg::OnChangeTbtnReport()
 		this->SetWindowPos(pWnd, 0, 0, 280, 527, SWP_NOMOVE | SWP_NOZORDER);			// ВЫЯВИТЬ РАЗМЕРЫ ОКНА ПРОГРАММНО, А НЕ ПОДГОНЯТЬ
 	// Изменить статус показа
 	SHOW_REPORT ? SHOW_REPORT = false : SHOW_REPORT = true;
+}
+
+void CPIVDlg::OnOpenProj()
+{
+	// TODO: добавьте свой код обработчика команд
+}
+
+
+void CPIVDlg::OnRefreshPiv()
+{
+	// TODO: добавьте свой код обработчика команд
+}
+
+
+void CPIVDlg::OnChangeFolder()
+{
+	CEdit* m_Edit = (CEdit*)GetDlgItem(IDC_EDIT_PATH);
+	CString folder = getFolder();
+	//piv.setPathToSave(folder);
+	m_Edit->SetWindowTextW(folder);
+}
+
+
+void CPIVDlg::OnOpenReport()
+{
+	// TODO: добавьте свой код обработчика команд
+}
+
+
+void CPIVDlg::OnFolderTxt()
+{
+	// TODO: добавьте свой код обработчика команд
+}
+
+
+void CPIVDlg::OnOpenPiv()
+{
+	// TODO: добавьте свой код обработчика команд
+}
+
+
+void CPIVDlg::OnClosePiv()
+{
+	// TODO: добавьте свой код обработчика команд
+}
+
+
+void CPIVDlg::OnCloseAll()
+{
+	// TODO: добавьте свой код обработчика команд
+}
+
+
+void CPIVDlg::OnCloseProj()
+{
+	// TODO: добавьте свой код обработчика команд
+}
+
+#pragma endregion
+
+void CPIVDlg::menuLogic()
+{
+	CMenu* menu = m_contextMenu.GetSubMenu(0);
+	if (m_ListBox->GetCount() > 0) 
+	{
+		menu->EnableMenuItem(ID_REFRESH_PIV, MFS_ENABLED);
+		menu->EnableMenuItem(ID_FOLDER_TXT, MFS_ENABLED);
+		menu->EnableMenuItem(ID_OPEN_REPORT, MFS_ENABLED);
+		menu->EnableMenuItem(ID_CLOSE_PROJ, MFS_ENABLED);
+	}
+	else 
+	{
+		menu->EnableMenuItem(ID_REFRESH_PIV, MFS_GRAYED);
+		menu->EnableMenuItem(ID_FOLDER_TXT, MFS_GRAYED);
+		menu->EnableMenuItem(ID_OPEN_REPORT, MFS_GRAYED);
+		menu->EnableMenuItem(ID_CLOSE_PROJ, MFS_GRAYED);
+	}		
+	
+	menu = m_contextMenu.GetSubMenu(1);
+	if (m_ListBox->GetCount() > 0) 
+	{
+		menu->EnableMenuItem(ID_CLOSE_PIV, MFS_ENABLED);
+		menu->EnableMenuItem(ID_CLOSE_ALL, MFS_ENABLED);
+		menu->EnableMenuItem(ID_REFRESH_PIV, MFS_ENABLED);
+		menu->EnableMenuItem(ID_OPEN_REPORT, MFS_ENABLED);
+		menu->EnableMenuItem(ID_FOLDER_TXT, MFS_ENABLED);
+	}
+	else 
+	{
+		menu->EnableMenuItem(ID_CLOSE_PIV, MFS_GRAYED);
+		menu->EnableMenuItem(ID_CLOSE_ALL, MFS_GRAYED);
+		menu->EnableMenuItem(ID_REFRESH_PIV, MFS_GRAYED);
+		menu->EnableMenuItem(ID_OPEN_REPORT, MFS_GRAYED);
+		menu->EnableMenuItem(ID_FOLDER_TXT, MFS_GRAYED);
+	}
+}
+
+// Выбор папки
+CString CPIVDlg::getFolder()
+{
+	BROWSEINFO	bi;
+	TCHAR	szDisplayName[MAX_PATH];
+	LPITEMIDLIST	pidl;
+	CString folder = L"";
+	ZeroMemory(&bi, sizeof(bi));
+	bi.hwndOwner = NULL;
+	bi.pszDisplayName = szDisplayName;
+	bi.lpszTitle = TEXT("Выберите папку для сохранения отчетов");
+	bi.ulFlags = BIF_NEWDIALOGSTYLE; //or BIF_VALIDATE//BIF_RETURNONLYFSDIRS;		
+	pidl = SHBrowseForFolder(&bi);
+
+	if (pidl) 
+	{
+		SHGetPathFromIDList(pidl, szDisplayName);
+		CEdit* m_Edit = (CEdit*)(this->GetDlgItem(IDC_EDIT_PATH));
+		m_Edit->SetWindowTextW(szDisplayName);
+		folder = szDisplayName;	
+	}
+	return folder;
+}
+
+void CPIVDlg::OnCbnSelchangeCombo()
+{
+	// TODO: добавьте свой код обработчика уведомлений
+}
+
+
+void CPIVDlg::OnBnClickedBtnHome()
+{
+	// TODO: добавьте свой код обработчика уведомлений
+}
+
+
+void CPIVDlg::OnBnClickedBtnPrev()
+{
+	// TODO: добавьте свой код обработчика уведомлений
+}
+
+
+void CPIVDlg::OnBnClickedBtnNext()
+{
+	// TODO: добавьте свой код обработчика уведомлений
+}
+
+
+void CPIVDlg::OnBnClickedBtnRefresh()
+{
+	// TODO: добавьте свой код обработчика уведомлений
 }
