@@ -59,19 +59,19 @@
     <Image Include="res\PIVApp.ico">
       <Filter>Файлы ресурсов</Filter>
     </Image>
-    <Image Include="images\home_page.png">
+    <Image Include="res\report_go.png">
       <Filter>Файлы ресурсов</Filter>
     </Image>
-    <Image Include="images\next_page.png">
+    <Image Include="res\Home.ico">
       <Filter>Файлы ресурсов</Filter>
     </Image>
-    <Image Include="images\prev_page.png">
+    <Image Include="res\Redo.ico">
       <Filter>Файлы ресурсов</Filter>
     </Image>
-    <Image Include="images\refresh_page.png">
+    <Image Include="res\Refresh.ico">
       <Filter>Файлы ресурсов</Filter>
     </Image>
-    <Image Include="images\report_go.png">
+    <Image Include="res\Undo.ico">
       <Filter>Файлы ресурсов</Filter>
     </Image>
   </ItemGroup>

@@ -210,12 +210,12 @@
     <None Include="res\PIVApp.rc2" />
   </ItemGroup>
   <ItemGroup>
-    <Image Include="images\home_page.png" />
-    <Image Include="images\next_page.png" />
-    <Image Include="images\prev_page.png" />
-    <Image Include="images\refresh_page.png" />
-    <Image Include="images\report_go.png" />
+    <Image Include="res\Home.ico" />
     <Image Include="res\PIVApp.ico" />
+    <Image Include="res\Redo.ico" />
+    <Image Include="res\Refresh.ico" />
+    <Image Include="res\report_go.png" />
+    <Image Include="res\Undo.ico" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\PIVWorker\PIVWorker.vcxproj">

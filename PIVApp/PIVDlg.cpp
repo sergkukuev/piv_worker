@@ -127,6 +127,27 @@ BOOL CPIVDlg::OnInitDialog()
 	CEdit* m_Edt = (CEdit*)GetDlgItem(IDC_EDIT_PATH);
 	m_Edt->SetWindowTextW(reports);
 	CreateDirectory(reports, NULL);
+	
+	// Установка иконок на кнопочки
+	CButton* m_Btn = (CButton*)GetDlgItem(IDC_BTN_HOME);
+	//m_Btn->ModifyStyle(0, BS_ICON);
+	HICON hBmp  = LoadIcon(AfxGetInstanceHandle(), MAKEINTRESOURCE(IDI_ICO_HOME));
+	m_Btn->SetIcon(hBmp);
+
+	m_Btn = (CButton*)GetDlgItem(IDC_BTN_NEXT);
+	//m_Btn->ModifyStyle(0, BS_ICON);
+	hBmp = LoadIcon(AfxGetInstanceHandle(), MAKEINTRESOURCE(IDI_ICO_REDO));
+	m_Btn->SetIcon(hBmp);
+
+	m_Btn = (CButton*)GetDlgItem(IDC_BTN_PREV);
+	//m_Btn->ModifyStyle(0, BS_ICON);
+	hBmp = LoadIcon(AfxGetInstanceHandle(), MAKEINTRESOURCE(IDI_ICO_UNDO));
+	m_Btn->SetIcon(hBmp);
+
+	m_Btn = (CButton*)GetDlgItem(IDC_BTN_REFRESH);
+	//m_Btn->ModifyStyle(0, BS_ICON);
+	hBmp = LoadIcon(AfxGetInstanceHandle(), MAKEINTRESOURCE(IDI_ICO_REFRESH));
+	m_Btn->SetIcon(hBmp);
 
 	// Инициализация листа и меню
 	m_ListBox = (CListBox*)GetDlgItem(IDC_LISTBOX);

@@ -9,11 +9,11 @@
 #define IDP_SOCKETS_INIT_FAILED         103
 #define IDR_MAINFRAME                   128
 #define IDR_CONTEXT_MENU                129
-#define IDB_PNG_HOME                    134
-#define IDB_PNG_NEXT                    135
-#define IDB_PNG_PREV                    136
-#define IDB_PNG_REFRESH                 137
 #define IDB_PNG_REPORT                  146
+#define IDI_ICO_HOME                    154
+#define IDI_ICO_REDO                    155
+#define IDI_ICO_REFRESH                 156
+#define IDI_ICO_UNDO                    157
 #define IDC_NAME_LIST                   1002
 #define IDC_LISTBOX                     1005
 #define IDC_EXPLORER1                   1010
@@ -41,7 +41,7 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        147
+#define _APS_NEXT_RESOURCE_VALUE        158
 #define _APS_NEXT_COMMAND_VALUE         32774
 #define _APS_NEXT_CONTROL_VALUE         1039
 #define _APS_NEXT_SYMED_VALUE           101
