@@ -28,8 +28,6 @@ public:
 
 
 // Реализация
-
-
 protected:
 	bool SHOW_REPORT = true;	// Отображение отчета
 	CMenu m_contextMenu;	// Контекстное меню

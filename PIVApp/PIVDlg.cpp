@@ -231,7 +231,7 @@ void CPIVDlg::OnChangeFolder()
 {
 	CEdit* m_Edit = (CEdit*)GetDlgItem(IDC_EDIT_PATH);
 	CString folder = getFolder();
-	//piv.setPathToSave(folder);
+	piv.setPathToSave(folder);
 	m_Edit->SetWindowTextW(folder);
 }
 
@@ -269,6 +269,33 @@ void CPIVDlg::OnCloseAll()
 void CPIVDlg::OnCloseProj()
 {
 	// TODO: добавьте свой код обработчика команд
+}
+
+#pragma endregion
+
+#pragma region Browser
+
+void CPIVDlg::OnBnClickedBtnHome()
+{
+	// TODO: добавьте свой код обработчика уведомлений
+}
+
+
+void CPIVDlg::OnBnClickedBtnPrev()
+{
+	// TODO: добавьте свой код обработчика уведомлений
+}
+
+
+void CPIVDlg::OnBnClickedBtnNext()
+{
+	// TODO: добавьте свой код обработчика уведомлений
+}
+
+
+void CPIVDlg::OnBnClickedBtnRefresh()
+{
+	// TODO: добавьте свой код обработчика уведомлений
 }
 
 #pragma endregion
@@ -335,30 +362,6 @@ CString CPIVDlg::getFolder()
 }
 
 void CPIVDlg::OnCbnSelchangeCombo()
-{
-	// TODO: добавьте свой код обработчика уведомлений
-}
-
-
-void CPIVDlg::OnBnClickedBtnHome()
-{
-	// TODO: добавьте свой код обработчика уведомлений
-}
-
-
-void CPIVDlg::OnBnClickedBtnPrev()
-{
-	// TODO: добавьте свой код обработчика уведомлений
-}
-
-
-void CPIVDlg::OnBnClickedBtnNext()
-{
-	// TODO: добавьте свой код обработчика уведомлений
-}
-
-
-void CPIVDlg::OnBnClickedBtnRefresh()
 {
 	// TODO: добавьте свой код обработчика уведомлений
 }

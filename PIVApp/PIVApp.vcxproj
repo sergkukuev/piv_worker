@@ -217,6 +217,11 @@
     <Image Include="images\report_go.png" />
     <Image Include="res\PIVApp.ico" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\PIVWorker\PIVWorker.vcxproj">
+      <Project>{3078582e-9a39-4e99-ab9d-c9118824b74b}</Project>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
