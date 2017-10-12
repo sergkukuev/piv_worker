@@ -9,7 +9,6 @@
 #define IDP_SOCKETS_INIT_FAILED         103
 #define IDR_MAINFRAME                   128
 #define IDR_CONTEXT_MENU                129
-#define IDB_PNG_REPORT                  146
 #define IDI_ICO_HOME                    154
 #define IDI_ICO_REDO                    155
 #define IDI_ICO_REFRESH                 156
@@ -33,9 +32,7 @@
 #define ID_CLOSE_ALL                    1026
 #define IDC_COMBO                       1036
 #define IDC_BTN_ADD                     1038
-#define ID_PROJ_CLEAR                   32771
-#define ID_CLEAR_PROJ                   32772
-#define ID_CLOSE_PROJ                   32773
+#define IDC_NUM_PIV                     1039
 
 // Next default values for new objects
 // 
@@ -43,7 +40,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        158
 #define _APS_NEXT_COMMAND_VALUE         32774
-#define _APS_NEXT_CONTROL_VALUE         1039
+#define _APS_NEXT_CONTROL_VALUE         1040
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

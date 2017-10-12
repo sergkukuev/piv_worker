@@ -51,6 +51,11 @@ private:
 	CPIV piv;
 
 	CString getFolder();	// Выбор папки
+	void OpenFile(CString& folder, vector <CString>& path);			// Открытие файлов
+	void readPath(const CFileDialog& dlg, vector <CString>& path);	// Считывание путей файлов
+	CString nameFromPath(const CString& path); // Извлечение имени из пути файла
+	void refreshList();	// Обновление листа
+	void setNumPiv();
 public:
 	DECLARE_EVENTSINK_MAP()
 	void OnChangeTbtnReport();		// Обработчик на нажатия тогл кнопочки
@@ -62,7 +67,7 @@ public:
 	afx_msg void OnOpenPiv();		// Открыть отдельно пив
 	afx_msg void OnClosePiv();		// Закрыть выбранные пив
 	afx_msg void OnCloseAll();		// Закрыть все
-	afx_msg void OnCloseProj();		// Очистить проект	std::vector <CString> pathOther;
+	afx_msg void OnCloseProj();		// Очистить проект
 	afx_msg void OnCbnSelchangeCombo();
 	afx_msg void OnBnClickedBtnHome();
 	afx_msg void OnBnClickedBtnPrev();

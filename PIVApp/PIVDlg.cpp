@@ -71,7 +71,6 @@ BEGIN_MESSAGE_MAP(CPIVDlg, CDialogEx)
 	ON_COMMAND(ID_OPEN_PIV, &CPIVDlg::OnOpenPiv)
 	ON_COMMAND(ID_CLOSE_PIV, &CPIVDlg::OnClosePiv)
 	ON_COMMAND(ID_CLOSE_ALL, &CPIVDlg::OnCloseAll)
-	ON_COMMAND(ID_CLOSE_PROJ, &CPIVDlg::OnCloseProj)
 	ON_CBN_SELCHANGE(IDC_COMBO, &CPIVDlg::OnCbnSelchangeCombo)
 	ON_BN_CLICKED(IDC_BTN_HOME, &CPIVDlg::OnBnClickedBtnHome)
 	ON_BN_CLICKED(IDC_BTN_PREV, &CPIVDlg::OnBnClickedBtnPrev)
@@ -126,6 +125,8 @@ BOOL CPIVDlg::OnInitDialog()
 	
 	CEdit* m_Edt = (CEdit*)GetDlgItem(IDC_EDIT_PATH);
 	m_Edt->SetWindowTextW(reports);
+	piv.setPathToSave(reports);
+	reports.Format(L"%s\\%s", reports, BASE_FOLDER);
 	CreateDirectory(reports, NULL);
 	
 	// Установка иконок на кнопочки
@@ -236,18 +237,24 @@ void CPIVDlg::OnChangeTbtnReport()
 	SHOW_REPORT ? SHOW_REPORT = false : SHOW_REPORT = true;
 }
 
-void CPIVDlg::OnOpenProj()
-{
-	// TODO: добавьте свой код обработчика команд
-}
-
-
+// Обновление отчетов
 void CPIVDlg::OnRefreshPiv()
 {
-	// TODO: добавьте свой код обработчика команд
+	int nCount = m_ListBox->GetSelCount();			
+	CArray<int> sel;
+	
+	vector <CString> forRef;
+	sel.SetSize(nCount);
+	m_ListBox->GetSelItems(nCount, sel.GetData());
+
+	CComboBox* m_Cmb = (CComboBox*)GetDlgItem(IDC_COMBO);
+	for (int i = 0; i < sel.GetSize(); i++)
+		m_Cmb->GetCurSel() == PROJECT ? forRef.push_back(pathProj[i]) : forRef.push_back(pathOther[i]);
+
+	piv.Refresh(forRef);
 }
 
-
+// Смена рабочей директории
 void CPIVDlg::OnChangeFolder()
 {
 	CEdit* m_Edit = (CEdit*)GetDlgItem(IDC_EDIT_PATH);
@@ -256,40 +263,54 @@ void CPIVDlg::OnChangeFolder()
 	m_Edit->SetWindowTextW(folder);
 }
 
-
+// Открыть отчет в браузере
 void CPIVDlg::OnOpenReport()
 {
-	// TODO: добавьте свой код обработчика команд
+	CEdit* m_Edit = (CEdit*)GetDlgItem(IDC_EDIT_PATH);
+	CString folder;
+	m_Edit->GetWindowTextW(folder);
+
+	CComboBox* m_Cmb = (CComboBox*)GetDlgItem(IDC_COMBO);
+	m_Cmb->GetCurSel() == PROJECT ? folder.Format(L"%s\\%s\\%s\\%s", folder, BASE_FOLDER, PROJECT_FOLDER, REPORT_NAME) : 
+		folder.Format(L"%s\\%s\\%s\\%s", folder, BASE_FOLDER, OTHER_FOLDER, REPORT_NAME);
+	ShellExecute(0, L"Open", folder, NULL, NULL, SW_NORMAL);
 }
 
-
+// Открытие папки с текстовыми документами
 void CPIVDlg::OnFolderTxt()
 {
-	// TODO: добавьте свой код обработчика команд
+	CEdit* m_Edit = (CEdit*)GetDlgItem(IDC_EDIT_PATH);
+	CString folder;
+	m_Edit->GetWindowTextW(folder);
+	folder.Format(L"%s\\%s\\%s", folder, BASE_FOLDER, TEXT_FOLDER);
+	ShellExecute(0, L"Explore", folder, NULL, NULL, SW_NORMAL);
 }
 
+// Открытие проекта
+void CPIVDlg::OnOpenProj()
+{
 
+}
+
+// Открытие остальных 
 void CPIVDlg::OnOpenPiv()
 {
-	// TODO: добавьте свой код обработчика команд
+	// TODO: добавьте свой код обработчика команд 
 }
 
-
+// Закрытие одного или нескольких выбранных протоколов
 void CPIVDlg::OnClosePiv()
 {
 	// TODO: добавьте свой код обработчика команд
 }
 
-
+// Закрытие всех отдельных протоколов
 void CPIVDlg::OnCloseAll()
 {
-	// TODO: добавьте свой код обработчика команд
-}
-
-
-void CPIVDlg::OnCloseProj()
-{
-	// TODO: добавьте свой код обработчика команд
+	m_ListBox->ResetContent();
+	pathOther.clear();
+	pathOther.shrink_to_fit();
+	piv.Close();
 }
 
 #pragma endregion
@@ -329,14 +350,12 @@ void CPIVDlg::menuLogic()
 		menu->EnableMenuItem(ID_REFRESH_PIV, MFS_ENABLED);
 		menu->EnableMenuItem(ID_FOLDER_TXT, MFS_ENABLED);
 		menu->EnableMenuItem(ID_OPEN_REPORT, MFS_ENABLED);
-		menu->EnableMenuItem(ID_CLOSE_PROJ, MFS_ENABLED);
 	}
 	else 
 	{
 		menu->EnableMenuItem(ID_REFRESH_PIV, MFS_GRAYED);
 		menu->EnableMenuItem(ID_FOLDER_TXT, MFS_GRAYED);
 		menu->EnableMenuItem(ID_OPEN_REPORT, MFS_GRAYED);
-		menu->EnableMenuItem(ID_CLOSE_PROJ, MFS_GRAYED);
 	}		
 	
 	menu = m_contextMenu.GetSubMenu(1);
@@ -382,7 +401,98 @@ CString CPIVDlg::getFolder()
 	return folder;
 }
 
+// Открытие файлов
+void CPIVDlg::OpenFile(CString& folder, vector <CString>& path)
+{
+	CWnd* TheWindow = GetActiveWindow();
+	CFileDialog openDialog(true, NULL, NULL, OFN_ALLOWMULTISELECT + OFN_HIDEREADONLY, NULL, TheWindow);
+	openDialog.m_ofn.lpstrFilter = _T("Excel files(*.xls;*.xlsx)\0*.xls;*.xlsx\0All files(*.*)\0*.*\0\0");
+	openDialog.m_ofn.lpstrTitle = TEXT("Выберите протоколы для обработки");
+	
+	CEdit* m_Edit = (CEdit *)(this->GetDlgItem(IDC_EDIT_PATH));
+	m_Edit->GetWindowTextW(folder);
+	
+	if (folder.IsEmpty()) 
+	{
+		folder = getFolder();
+		m_Edit->SetWindowTextW(folder);
+		
+	}
+	
+	//Добавить возможность установки номера подкадра в настройках
+	//CButton *pCheck = (CButton*)GetDlgItem(IDC_CHECK_NUMPK);
+	//(pCheck == BST_UNCHECKED) ? piv.setStatusNumPK(false) : piv.setStatusNumPK(true);
+	
+	if (openDialog.DoModal() == IDOK)
+		readPath(openDialog, path);
+}
+
+// Извлечение имени файла из его пути
+CString CPIVDlg::nameFromPath(const CString& path)
+{
+	int startPos = path.ReverseFind(L'\\') + 1;
+	return path.Mid(startPos, path.GetLength());
+}
+
+// Считывание путей файлов
+void CPIVDlg::readPath(const CFileDialog& dlg, vector <CString>& path)
+{
+	POSITION pos = dlg.GetStartPosition();
+	
+	while (pos)
+	{
+		CString fullPath = dlg.GetNextPathName(pos);
+		CString name = dlg.GetFileName();
+
+		if (name == L"")
+		{
+			CString _path = dlg.GetPathName();
+			CString tmp = fullPath;
+			tmp.Delete(0, _path.GetLength() + 1);
+			name = tmp;
+		}
+
+		for (size_t i = 0; i < path.size(); i++)
+			if (fullPath.Compare(path[i]) == 0)
+				path.push_back(fullPath);
+	}
+}
+
+// Изменение области работы (работа с проектом, работа с отдельными файлами)
 void CPIVDlg::OnCbnSelchangeCombo()
 {
-	// TODO: добавьте свой код обработчика уведомлений
+	refreshList();
+	setNumPiv();
+	// Привязать смену отчета
+}
+
+
+// Установка количество считанных ПИВ
+void CPIVDlg::setNumPiv()
+{
+	CString res;
+	CComboBox* m_Combo = (CComboBox*)GetDlgItem(IDC_COMBO);
+
+	if (m_Combo->GetCurSel() == PROJECT)
+		res.Format(L"%d", pathProj.size());
+	if (m_Combo->GetCurSel() == OTHER)
+		res.Format(L"%d", pathOther.size());
+	
+	CStatic* m_Numeric = (CStatic*)GetDlgItem(IDC_NUM_PIV);
+	m_Numeric->SetWindowTextW(res);
+}
+
+
+// Обновление списка
+void CPIVDlg::refreshList()
+{
+	m_ListBox->ResetContent();
+
+	CComboBox* m_Combo = (CComboBox*)GetDlgItem(IDC_COMBO);
+	if (m_Combo->GetCurSel() == PROJECT)
+		for (size_t i = 0; i < pathProj.size(); i++)
+			m_ListBox->AddString(pathProj[i]);
+	if (m_Combo->GetCurSel() == OTHER)
+		for (size_t i = 0; i < pathOther.size(); i++)
+			m_ListBox->AddString(pathOther[i]);
 }
