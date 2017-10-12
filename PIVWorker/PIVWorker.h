@@ -10,6 +10,11 @@
 #include "StructPIV.h"		// структуры протоколов
 #include "resource.h"		// основные символы
 
+#define BASE_FOLDER L"Artefacts"
+#define TEXT_FOLDER L"Text"
+#define PROJECT_FOLDER L"Project"
+#define OTHER_FOLDER L"Other"
+#define REPORT_NAME L"Отчет.html"
 #define THREAD_BUSY L"Поток занят! Подождите окончания процесса!"
 // CPIVWorkerApp
 // Про реализацию данного класса см. PIVWorker.cpp

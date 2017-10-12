@@ -76,6 +76,7 @@ void CPIV::setPathToSave(const CString& pathToReport)
 	// Установка функций для переноса папки артефактов
 	fos.wFunc = FO_MOVE;
 	path.Format(L"%s\\Artefacts", path);
+
 	path.AppendChar(0);
 	path.AppendChar(0);
 	CString to = pathToReport;
