@@ -30,8 +30,9 @@ public:
 // Реализация
 protected:
 	bool SHOW_REPORT = true;	// Отображение отчета
-	CMenu m_contextMenu;	// Контекстное меню
-	CListBox* m_ListBox;	// Список открытых протоколов
+	CMenu m_contextMenu;		// Контекстное меню
+	CListBox* m_ListBox;		// Список открытых протоколов
+	HANDLE hWait;
 	HICON m_hIcon;
 
 	// Созданные функции схемы сообщений
@@ -41,6 +42,9 @@ protected:
 	afx_msg HCURSOR OnQueryDragIcon();
 	afx_msg void OnContextMenu(CWnd* pWnd, CPoint point);
 
+	friend void Waiting(CPIVDlg& app);
+	void receiveMsg();
+	void refreshList();	// Обновление листа
 	void menuLogic();
 	DECLARE_MESSAGE_MAP()
 
@@ -54,7 +58,6 @@ private:
 	void OpenFile(CString& folder, vector <CString>& path);			// Открытие файлов
 	void readPath(const CFileDialog& dlg, vector <CString>& path);	// Считывание путей файлов
 	CString nameFromPath(const CString& path); // Извлечение имени из пути файла
-	void refreshList();	// Обновление листа
 	void setNumPiv();
 public:
 	DECLARE_EVENTSINK_MAP()
@@ -67,7 +70,6 @@ public:
 	afx_msg void OnOpenPiv();		// Открыть отдельно пив
 	afx_msg void OnClosePiv();		// Закрыть выбранные пив
 	afx_msg void OnCloseAll();		// Закрыть все
-	afx_msg void OnCloseProj();		// Очистить проект
 	afx_msg void OnCbnSelchangeCombo();
 	afx_msg void OnBnClickedBtnHome();
 	afx_msg void OnBnClickedBtnPrev();

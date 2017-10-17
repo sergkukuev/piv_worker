@@ -47,6 +47,40 @@ END_MESSAGE_MAP()
 
 // диалоговое окно CPIVDlg
 
+struct MyData
+{
+	CPIVDlg* dialog;
+};
+
+MyData mD;
+
+// Поток обмена между приложением и DLL
+#pragma region PIPE
+
+DWORD WINAPI WaitThread(LPVOID lpParam) {
+	CoInitialize(NULL);
+	SetThreadPriorityBoost(GetCurrentThread(), TRUE);
+	MyData* myD = static_cast<MyData*>(lpParam);
+	
+	Waiting(*(myD->dialog));
+
+	CoUninitialize();
+	return 0;
+}
+
+void Waiting(CPIVDlg& app)
+{
+	app.receiveMsg();
+}
+
+// Прием сообщений от DLL
+void CPIVDlg::receiveMsg()
+{
+
+}
+
+#pragma endregion
+
 CPIVDlg::CPIVDlg(CWnd* pParent /*=NULL*/)
 	: CDialogEx(IDD_PIVAPP_DIALOG, pParent)
 {
@@ -109,6 +143,10 @@ BOOL CPIVDlg::OnInitDialog()
 	//  если главное окно приложения не является диалоговым
 	SetIcon(m_hIcon, TRUE);			// Крупный значок
 	SetIcon(m_hIcon, FALSE);		// Мелкий значок
+
+	// Инициализация потока обмена сообщений между DLL и приложением
+	mD.dialog = this;
+	hWait = CreateThread(NULL, 0, WaitThread, &mD, 0, 0);
 
 	// Добавление меню и комбо-бокса
 	m_contextMenu.LoadMenuW(IDR_CONTEXT_MENU);
@@ -289,19 +327,45 @@ void CPIVDlg::OnFolderTxt()
 // Открытие проекта
 void CPIVDlg::OnOpenProj()
 {
+	CString folder;
+	pathProj.clear();
+	OpenFile(folder, pathProj);
 
+	piv.Open(pathProj, folder);
+	
+	refreshList();
 }
 
 // Открытие остальных 
 void CPIVDlg::OnOpenPiv()
 {
-	// TODO: добавьте свой код обработчика команд 
+	CString folder;
+	OpenFile(folder, pathOther);
+	
+	piv.setPathToSave(folder);
+	piv.Open(pathOther);
+
+	refreshList();
 }
 
 // Закрытие одного или нескольких выбранных протоколов
 void CPIVDlg::OnClosePiv()
 {
-	// TODO: добавьте свой код обработчика команд
+	vector <CString> forDelete;
+	int nCount = m_ListBox->GetSelCount();
+	CArray<int> sel;
+	
+	sel.SetSize(nCount);
+	m_ListBox->GetSelItems(nCount, sel.GetData());
+
+	for (size_t i = 0; i < sel.GetSize(); i++)
+	{
+		forDelete.push_back(pathOther[sel[i]]);
+		pathOther.erase(pathOther.begin() + sel[i]);
+		m_ListBox->DeleteString(sel[i]);
+	}
+
+	piv.Close(forDelete);
 }
 
 // Закрытие всех отдельных протоколов
@@ -441,6 +505,7 @@ void CPIVDlg::readPath(const CFileDialog& dlg, vector <CString>& path)
 	
 	while (pos)
 	{
+		bool exist = false;
 		CString fullPath = dlg.GetNextPathName(pos);
 		CString name = dlg.GetFileName();
 
@@ -454,7 +519,10 @@ void CPIVDlg::readPath(const CFileDialog& dlg, vector <CString>& path)
 
 		for (size_t i = 0; i < path.size(); i++)
 			if (fullPath.Compare(path[i]) == 0)
-				path.push_back(fullPath);
+				exist = true;
+
+		if (!exist)
+			path.push_back(fullPath);
 	}
 }
 
@@ -487,12 +555,13 @@ void CPIVDlg::setNumPiv()
 void CPIVDlg::refreshList()
 {
 	m_ListBox->ResetContent();
-
+	setNumPiv();
 	CComboBox* m_Combo = (CComboBox*)GetDlgItem(IDC_COMBO);
+
 	if (m_Combo->GetCurSel() == PROJECT)
 		for (size_t i = 0; i < pathProj.size(); i++)
-			m_ListBox->AddString(pathProj[i]);
+			m_ListBox->AddString(nameFromPath(pathProj[i]));
 	if (m_Combo->GetCurSel() == OTHER)
 		for (size_t i = 0; i < pathOther.size(); i++)
-			m_ListBox->AddString(pathOther[i]);
+			m_ListBox->AddString(nameFromPath(pathOther[i]));
 }
