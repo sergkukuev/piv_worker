@@ -3,14 +3,26 @@
 #include <cstring>
 #include <list>
 #include <vector>
-#include "DLL.h"			// Макрос определения импорта и экспорта DLL
+
+#include "DLL.h"	// Макрос определения импорта и экспорта DLL
 
 using namespace std;
 
-#pragma region Data
+#pragma region Define
 
+// Папки
+#define BASE_FOLDER L"Artefacts"
+#define TEXT_FOLDER L"Text"
+#define PROJECT_FOLDER L"Project"
+#define OTHER_FOLDER L"Other"
+
+// Файлы
+#define REPORT_NAME L"Отчет.html"
+#define LOG_FILE_NAME L"log.txt"
+
+// Идентификаторы значений таблицы
 #define RESERVE_SIGNAL L"Резерв"
-#define FIELD_SIZE 7
+#define FIELD_SIZE 7	
 
 #define NUMWORD_CHECK 0
 #define TITLE_CHECK 1
@@ -19,6 +31,10 @@ using namespace std;
 #define CSR_CHECK 4
 #define BITS_CHECK 5
 #define COMMENT_CHECK 6
+
+#pragma endregion
+
+#pragma region Data
 
 // Хранение номера слова и битов
 struct intData 
@@ -113,7 +129,7 @@ const CString errRemarks[FIELD_SIZE] =
 
 #pragma endregion
 
-// Структура хранения данных ПИВ
+// Хранение данных ПИВ
 struct pivData 
 {
 	list <bookData> books;	// Данные о прочитанных ПИВ
