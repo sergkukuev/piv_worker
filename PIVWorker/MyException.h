@@ -1,6 +1,6 @@
 #pragma once
 
-#include "DLL.h"			// Макрос определения импорта и экспорта DLL
+#include "StructPIV.h"
 
 // Базовый класс исключений
 class PIV_DECLARE MyException	
@@ -10,7 +10,7 @@ public:
 	virtual ~MyException() {};
 	virtual CString GetMsg() { return L"Неизвестная ошибка!"; };
 protected:
-	CString book = L"";		// Имя файла
+	CString book = L"";		// Имя протокола
 	CString sheet = L"";	// Имя листа в файле
 };
 
@@ -34,10 +34,11 @@ public:
 	virtual CString GetMsg() 
 	{
 		CString result;
-		result.Format(L"Ошибка: В файле \"%s\" на листе \"%s\" не удалось прочесть данные.\n", book, sheet);
+		result.Format(L"Ошибка: В протоколе \"%s\" на листе \"%s\" не удалось прочесть данные.\n", book, sheet);
 		return result;
 	}
 };
+
 class AccessExcelException : public MyException 
 {
 public:
@@ -51,7 +52,7 @@ public:
 	virtual CString GetMsg() 
 	{
 		CString result;
-		result.Format(L"Ошибка: Открыть файл \"%s\" для чтения не удалось!", book);
+		result.Format(L"Ошибка: Открыть протокол \"%s\" для чтения не удалось!", book);
 		return result;
 	};
 };
@@ -59,20 +60,16 @@ public:
 class NotAllHeaderException : public MyException 
 {
 public:
-	NotAllHeaderException(const CString& book, const CString& sheet) 
-	{ 
-		this->sheet = sheet;
-		this->book = book;
-	};
+	NotAllHeaderException(const CString& book, const CString& sheet) {	this->sheet = sheet;	this->book = book;	};
 	virtual CString GetMsg() 
 	{ 
 		CString result;
-		result.Format(L"Ошибка: Не удалось найти все заголовки на листе \"%s\" в файле \"%s\"!", sheet, book);
+		result.Format(L"Ошибка: Не удалось найти все заголовки на листе \"%s\" в протоколе \"%s\"!", sheet, book);
 		return result;
 	};
 };
 
-// Исключения для класса Test
+// Исключения для класса CTest
 class UndefinedError : public MyException 
 {
 public:
@@ -82,14 +79,15 @@ public:
 		this->sheet = sheet;
 		this->param = param;
 	}
+
 	virtual CString GetMsg() 
 	{
 		CString result = L"Ошибка: Параметр сигнала с неизвестной ошибкой!\n";
-		result.Format(L"%s\n Файл: %s;\nИмя листа: %s;\n Параметр: %s.", result, book, sheet, param);
+		result.Format(L"%s\n Протокол: %s;\nИмя листа: %s;\n Параметр: %s.", result, book, sheet, param);
 		return result; 
 	};
 private:
-	CString param = L"";	// Параметр, который обрабатывался
+	CString param = L"";	// Параметр с ошибкой
 };
 
 class BookNotFound : public MyException 
@@ -99,14 +97,14 @@ public:
 	virtual CString GetMsg() 
 	{
 		CString result;
-		result.Format(L"Ошибка: Файл \"%s\" в памяти отсутствует!", book);
+		result.Format(L"Ошибка: Протокол \"%s\" в памяти отсутствует!", book);
 		return result;
 	};
 };
 
-// Исключения для класс Report
+// Исключения для класса CReport
 class EmptyPathException : public MyException 
 {
 public:
-	virtual CString GetMsg() { return L"Ошибка: Путь для сохранения отчета не задан!"; };
+	virtual CString GetMsg() { return L"Ошибка: Путь для хранения отчета и txt не задан!"; };
 };
