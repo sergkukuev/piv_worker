@@ -199,7 +199,6 @@
     <ClCompile Include="WorkExcel.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="DLL.h" />
     <ClInclude Include="excel\CApplication.h" />
     <ClInclude Include="excel\CRange.h" />
     <ClInclude Include="excel\CWorkbook.h" />

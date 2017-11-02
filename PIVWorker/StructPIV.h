@@ -4,7 +4,13 @@
 #include <list>
 #include <vector>
 
-#include "DLL.h"	// Макрос определения импорта и экспорта DLL
+// Определение импорта или экспорта DLL
+
+#ifdef PIV_WORKER_EXPORTS
+#define PIV_DECLARE __declspec(dllimport)
+#else
+#define PIV_DECLARE __declspec(dllexport)
+#endif
 
 using namespace std;
 
