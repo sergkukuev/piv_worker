@@ -12,7 +12,8 @@
 #endif
 
 //
-//TODO: если эта библиотека DLL динамически связана с библиотеками DLL MFC,
+//TODO: Важно! Перейдите по ссылке, чтобы увидеть подробности.
+//		Если эта библиотека DLL динамически связана с библиотеками DLL MFC,
 //		все функции, экспортированные из данной DLL-библиотеки, которые выполняют вызовы к
 //		MFC, должны содержать макрос AFX_MANAGE_STATE в
 //		самое начало функции.
@@ -128,7 +129,7 @@ void CPIV::OpenExcel()
 	{
 		CReaderExcel reader; 
 		for (size_t i = 0; i < buffer.size(); i++)
-			project.books.push_back(reader.getBook(buffer[i]));
+			project.books.push_back(reader.GetBook(buffer[i]));
 
 		CTest tester;
 		project.db = tester.Start(project.books);
@@ -186,7 +187,7 @@ void CPIV::AddExcel()
 		{
 			bool contain = IsContain(other, buffer[i]);
 			CReaderExcel reader;
-			bookData book = reader.getBook(buffer[i]);
+			bookData book = reader.GetBook(buffer[i]);
 			contain ? Refresh(other, book) : other.books.push_back(book);
 			
 			CTest tester;
@@ -245,7 +246,7 @@ void CPIV::RefreshExcel()
 		for (size_t i = 0; i < buffer.size(); i++)
 		{
 			CReaderExcel reader;
-			bookData book = reader.getBook(buffer[i]);
+			bookData book = reader.GetBook(buffer[i]);
 
 			CTest tester;
 			if (IsContain(project, buffer[i])) 

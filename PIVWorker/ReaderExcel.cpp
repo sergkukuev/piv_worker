@@ -14,9 +14,9 @@ CReaderExcel::CReaderExcel()
 	header.list.push_back(vector<CString>{ L"Цена старшего разряда" });												// Для цср
 	header.list.push_back(vector<CString>{ L"Используемые разряды", L"Используе-мые разряды" });					// Для используемых разрядов
 	header.list.push_back(vector<CString>{ L"Примечание" });														// Комментарии (пояснения)
-	header.list.push_back(vector<CString>{ L"Адрес"});																// Адрес (arinc)
+	header.list.push_back(vector<CString>{ L"Адрес"});																// Адрес (для ARINC)
 
-	// Добавление всех видов расширений excel файлов
+	// Поддерживаемые расширения Excel файлов
 	extension.push_back(L"xlsx");	// Текущий основной формат
 	extension.push_back(L"xls");	// Основной формат до 2003 года
 }
@@ -30,26 +30,26 @@ CReaderExcel::~CReaderExcel()
 	extension.shrink_to_fit();
 }
 
-// Чтение одной книги
-bookData CReaderExcel::getBook(const CString& pathToExcel) 
+// Чтение протокола
+bookData CReaderExcel::GetBook(const CString& pathToExcel) 
 {
 	bookData book;
 	CWorkExcel work;
 
-	if (!checkExtension(pathToExcel))
+	if (!CheckExtension(pathToExcel))
 		throw BadTypeException(work.BookName(pathToExcel));
 
 	if (!work.OpenBook(pathToExcel))
 		throw ReadBookException(work.BookName(pathToExcel));
 
 	book.name = work.BookName();
-	getSheets(book.sheets, work);
+	GetSheets(book.sheets, work);
 	
 	return book;
 }
 
-// Чтение листов
-void CReaderExcel::getSheets(vector <sheetData>& sheets, CWorkExcel& work) 
+// Чтение таблиц протоколов
+void CReaderExcel::GetSheets(vector <sheetData>& sheets, CWorkExcel& work) 
 {
 	sheets.resize(work.CountSheets());
 	for (long i = 1; i < work.CountSheets() + 1; i++) 
@@ -57,22 +57,21 @@ void CReaderExcel::getSheets(vector <sheetData>& sheets, CWorkExcel& work)
 		work.OpenSheet((long)i);
 		sheets[i - 1].name = work.SheetName();
 
-		// Поиск заголовков на листе
-		if (!work.FindHeader(header)) 
+		if (!work.FindHeader(header)) // Поиск заголовков таблицы
 			throw NotAllHeaderException(work.BookName(), sheets[i - 1].name);
 
 		sheets[i - 1].arinc = work.IsArinc();
-		sheets[i - 1].pk = work.PkValue(header);	// Установка подкадра
-		sheets[i - 1].arinc ? sheets[i - 1].np = -1 : sheets[i - 1].np = work.NpValue(header);	// Установка номера набора
+		sheets[i - 1].pk = work.PkValue(header);
+		sheets[i - 1].arinc ? sheets[i - 1].np = -1 : sheets[i - 1].np = work.NpValue(header);
 
 		header.adress[header.iRow]++;
 
-		getSignals(sheets[i - 1].signals, work, sheets[i - 1].arinc);
+		GetSignals(sheets[i - 1].signals, work, sheets[i - 1].arinc);
 	}
 }
 
 // Чтение параметров на листе
-void CReaderExcel::getSignals(vector <signalData>& signals, CWorkExcel& work, const bool& isArinc) 
+void CReaderExcel::GetSignals(vector <signalData>& signals, CWorkExcel& work, const bool& isArinc) 
 {
 	arincData arinc;
 	for (long merge = 1, row = header.adress[header.iRow], column; row < work.CountRows() + 1; row += merge, merge = 1) 
@@ -81,16 +80,16 @@ void CReaderExcel::getSignals(vector <signalData>& signals, CWorkExcel& work, co
 		// Надстройка для arinc
 		if (isArinc) 
 		{
-			if (isTitle(work, row))	// Пропуск строки заголовка
+			if (IsTitle(work, row))
 				continue;
 			//	Поиск повторений
 			CString remark = work.CellValue(row - 1, 1);
-			if (remark.Find(ARINC_REMARK) != -1 && arinc.flag && arinc.startRow != row)	// Появилось повторение
-				getArinc(remark, row, arinc);
-			else if ((remark.Find(ARINC_REMARK) != -1 || isTitle(work, row - 1)) && !arinc.flag) 
+			if (remark.Find(ARINC_REMARK) != -1 && arinc.flag && arinc.startRow != row)	// Опачки, появилось
+				GetArinc(remark, row, arinc);
+			else if ((remark.Find(ARINC_REMARK) != -1 || IsTitle(work, row - 1)) && !arinc.flag) 
 			{
 				if (arinc.current == arinc.amount)
-					getArinc(remark, row, arinc);
+					GetArinc(remark, row, arinc);
 				else
 				{
 					row = arinc.startRow;
@@ -100,18 +99,18 @@ void CReaderExcel::getSignals(vector <signalData>& signals, CWorkExcel& work, co
 		}
 
 		// Чтение параметров одного сигнала
-		// Адрес или номер слова, в зависимости от линии передачи
+		// Адрес (ARINC) записывается вместо номера слова
 		if (!isArinc) 
 		{
 			column = header.adress[header.iNumWord];
 			int range = work.CPrevEmpty(row, column);
-			signal.numWord = getNumWord(work.CellValue(row - range, column));
+			signal.numWord = GetNumWord(work.CellValue(row - range, column));
 		}
 		else 
 		{
 			column = header.adress[header.iAdress];
 			int range = work.CPrevEmpty(row, column);
-			signal.numWord = getAdress(work.CellValue(row - range, column), arinc.current);
+			signal.numWord = GetAdress(work.CellValue(row - range, column), arinc.current);
 		}
 
 		column = header.adress[header.iName];
@@ -138,25 +137,25 @@ void CReaderExcel::getSignals(vector <signalData>& signals, CWorkExcel& work, co
 
 		column = header.adress[header.iDimension];
 		signal.dimension = work.CellValue(row, column);
-		getMinMaxCsr(signal, work, row);	
+		GetMinMaxCsr(signal, work, row);	
 		column = header.adress[header.iBits];
-		signal.bit = getBits(work.CellValue(row, column), (int)signal.numWord.value.size());
-		signal.comment = getComment(work, row, merge, signal.bitSign);
+		signal.bit = GetBits(work.CellValue(row, column), (int)signal.numWord.value.size());
+		signal.comment = GetComment(work, row, merge, signal.bitSign);
 
-		bool bEmpty = isEmpty(work, row);		// Проверка на пустую строку
-		bool bRemark = isRemark(work, row);		// Проверка на примечание
-
-		if (work.CountRows() == row + merge - 1 && !arinc.flag && arinc.amount != arinc.current) // Фича для обхода повторений в случае конца файла
-			row = arinc.startRow - merge;
-
-		// Добавление сигнала
+		bool bEmpty = IsEmpty(work, row);	
+		bool bRemark = IsRemark(work, row);
+		
 		if (!bEmpty && !bRemark)
 			signals.push_back(signal);
+		
+		// TODO: Исправление костыля (обход повторений в случае конца таблицы)
+		if (work.CountRows() == row + merge - 1 && !arinc.flag && arinc.amount != arinc.current)
+			row = arinc.startRow - merge;
 	}
 }
 
-// Чтение циклов повторений в arinc протоколе(порядковый номер в кадре)
-void CReaderExcel::getArinc(const CString& field, const long& row, arincData& arinc) 
+// Чтение циклов повторений в ARINC протоколе (порядковый номер в кадре)
+void CReaderExcel::GetArinc(const CString& field, const long& row, arincData& arinc) 
 {
 	CString numeric = field;
 	int posEqual = numeric.Find(L'=');
@@ -177,8 +176,8 @@ void CReaderExcel::getArinc(const CString& field, const long& row, arincData& ar
 		numeric.Delete(posDel, numeric.GetLength() - posDel);
 		numeric.Trim();	numeric1.Trim();
 		
-		arinc.current = getInt(numeric, arinc.flag);
-		arinc.amount = getInt(numeric1, arinc.flag);
+		arinc.current = GetInt(numeric, arinc.flag);
+		arinc.amount = GetInt(numeric1, arinc.flag);
 	}
 	else
 	{
@@ -190,9 +189,10 @@ void CReaderExcel::getArinc(const CString& field, const long& row, arincData& ar
 	}
 }
 
+// Отдельное чтение требуемых параметров таблицы
 #pragma region Parameters
-// Получить адрес из строки в число
-intData CReaderExcel::getAdress(const CString& field, const int& num) 
+// Адреса (ARINC)
+intData CReaderExcel::GetAdress(const CString& field, const int& num) 
 {
 	intData result;
 	CString numeric = field;
@@ -206,7 +206,7 @@ intData CReaderExcel::getAdress(const CString& field, const int& num)
 		CString str = numeric.Mid(0, posDel);
 		numeric.Delete(0, posDel + 1);
 		str.Replace(L'\n', L' ');
-		vector<int> temp = stepGetAdress(str, result.flag);	// четные - адрес, нечетные - система счисления
+		vector<int> temp = StepAdress(str, result.flag);	// четные - адрес, нечетные - система счисления
 		
 		if (temp.size() == 4) 
 		{
@@ -236,7 +236,7 @@ intData CReaderExcel::getAdress(const CString& field, const int& num)
 }
 
 // Доп функция для адреса
-vector <int> CReaderExcel::stepGetAdress(const CString& adress, bool& flag) 
+vector <int> CReaderExcel::StepAdress(const CString& adress, bool& flag) 
 {
 	vector <int> result = {-1, -1};
 	CString num = adress;
@@ -245,8 +245,8 @@ vector <int> CReaderExcel::stepGetAdress(const CString& adress, bool& flag)
 	// Разделителей нет, используется один разряд
 	if (indxDel == -1) 
 	{ 
-		result[1] = getSubIndex(num);
-		result[0] = getInt(num, flag);
+		result[1] = GetSubIndex(num);
+		result[0] = GetInt(num, flag);
 	}
 	else 
 	{
@@ -261,19 +261,20 @@ vector <int> CReaderExcel::stepGetAdress(const CString& adress, bool& flag)
 		num2.Delete(0, indxDel + 1);			// Второе число
 		num.Trim();	num2.Trim();
 		
-		result[1] = getSubIndex(num);
-		result[3] = getSubIndex(num2);
-		result[0] = getInt(num, flag);
-		result[2] = getInt(num2, flag);
+		result[1] = GetSubIndex(num);
+		result[3] = GetSubIndex(num2);
+		result[0] = GetInt(num, flag);
+		result[2] = GetInt(num2, flag);
 	}
 	return result;
 }
 
 // Получение подстрочного индекса и удаление его из строки
-int CReaderExcel::getSubIndex(CString& numeric) 
+// Подстрочные сиволы с кодом(8320 - 8329)
+// TODO: Исправление костыля (в случае смены системы счисления, отличной от 8-ой, может перестать работать) 
+int CReaderExcel::GetSubIndex(CString& numeric) 
 {
-	// Подстрочные сиволы с кодом(8320 - 8329)
-	CString sub;
+	CString sub;	
 	// Поиск индекса подстрочного символа
 	for (int i = 0; i < numeric.GetLength(); i++) 
 	{
@@ -290,15 +291,14 @@ int CReaderExcel::getSubIndex(CString& numeric)
 		sub += (wchar_t)((int)sub[i] - 8272); // Смещение подстрочного в обычное число
 	sub.Delete(0, l);
 
-	// Перевод в число int
 	bool flag = false;
-	int result = getInt(sub, flag);
+	int result = GetInt(sub, flag);
 	flag ? result = -1 : result = result;
 	return result;
 }
 
-// Получить номера слов из ячейки в числа
-intData CReaderExcel::getNumWord(const CString& field) 
+// Номер слова
+intData CReaderExcel::GetNumWord(const CString& field) 
 {
 	intData result;
 	vector <int> vec = { -1 };
@@ -307,7 +307,7 @@ intData CReaderExcel::getNumWord(const CString& field)
 	numeric.Trim();
 
 	if (posDot == -1)	// Один номер
-		vec[0] = getInt(numeric, result.flag);
+		vec[0] = GetInt(numeric, result.flag);
 	else 
 	{
 		vec.push_back(-1);
@@ -316,28 +316,28 @@ intData CReaderExcel::getNumWord(const CString& field)
 		numeric2.Delete(0, posDot + 1);					// Второе число
 		numeric.Trim();	numeric2.Trim();
 
-		vec[0] = getInt(numeric, result.flag);
-		vec[1] = getInt(numeric2, result.flag);
+		vec[0] = GetInt(numeric, result.flag);
+		vec[1] = GetInt(numeric2, result.flag);
 	}
 	result.value = vec;
 	result.field = field;
 	return result;
 }
 
-// Получить значения мин, макс и цср
-void CReaderExcel::getMinMaxCsr(signalData& signal, CWorkExcel& work, const long& row) 
+// Минимальное, максимальное и цср
+void CReaderExcel::GetMinMaxCsr(signalData& signal, CWorkExcel& work, const long& row) 
 {
 	long column = header.adress[header.iMin];
 	signal.min.field = work.CellValue(row, column);
-	signal.min.value = getDouble(signal.min.field, signal.min.flag);
+	signal.min.value = GetDouble(signal.min.field, signal.min.flag);
 
 	column = header.adress[header.iMax];
 	signal.max.field = work.CellValue(row, column);
-	signal.max.value = getDouble(signal.max.field, signal.max.flag);
+	signal.max.value = GetDouble(signal.max.field, signal.max.flag);
 
 	column = header.adress[header.iCSR];
 	signal.csr.field = work.CellValue(row, column);
-	signal.csr.value = getDouble(signal.csr.field, signal.csr.flag);
+	signal.csr.value = GetDouble(signal.csr.field, signal.csr.flag);
 
 	// Сброс флагов, если одновременно все параметры пусты
 	if (signal.min.value == DBL_MIN && signal.max.value == DBL_MIN && signal.csr.value == DBL_MIN) 
@@ -348,8 +348,8 @@ void CReaderExcel::getMinMaxCsr(signalData& signal, CWorkExcel& work, const long
 	}
 }
 
-// Перевод из используемых разрядов из строки в числа
-intData CReaderExcel::getBits(const CString& field, const int& size)
+// Используемые разряды
+intData CReaderExcel::GetBits(const CString& field, const int& size)
 {
 	intData result;
 	CString bits = field;
@@ -358,7 +358,7 @@ intData CReaderExcel::getBits(const CString& field, const int& size)
 
 	// Для одного промежутка
 	if (posDot == -1)
-		vec = stepGetBits(bits, result.flag);
+		vec = StepBits(bits, result.flag);
 	else // Для двух промежутков
 	{ 
 		CString bits2 = bits;
@@ -366,8 +366,8 @@ intData CReaderExcel::getBits(const CString& field, const int& size)
 		bits.Delete(posDot, bits.GetLength());
 		bits.Trim();	bits2.Trim();
 
-		vec = stepGetBits(bits, result.flag);		// Первый промежуток
-		vector <int> vec2 = stepGetBits(bits2, result.flag);	// Второй промежуток
+		vec = StepBits(bits, result.flag);		// Первый промежуток
+		vector <int> vec2 = StepBits(bits2, result.flag);	// Второй промежуток
 
 		if (size == 2) 
 		{
@@ -384,7 +384,7 @@ intData CReaderExcel::getBits(const CString& field, const int& size)
 }
 
 // Дополнительная функция для перевода разрядов
-vector <int> CReaderExcel::stepGetBits(const CString& bits, bool& flag) 
+vector <int> CReaderExcel::StepBits(const CString& bits, bool& flag) 
 {
 	vector <int> result = { -1, -1 };
 	CString num = bits;
@@ -393,7 +393,7 @@ vector <int> CReaderExcel::stepGetBits(const CString& bits, bool& flag)
 	int indxDel = num.Find(L'.') == -1 ? num.Find(L'…') : num.Find(L'.');	// Поиск индекса разделителей
 
 	if (indxDel == -1)	// Разделителей нет, используется один разряд
-		result[0] = getInt(num, flag);
+		result[0] = GetInt(num, flag);
 	else
 	{
 		int posDot = num.ReverseFind(L'.');
@@ -405,15 +405,14 @@ vector <int> CReaderExcel::stepGetBits(const CString& bits, bool& flag)
 		num2.Delete(0, indxDel + 1);	// Второе число
 		num2.Trim();	num.Trim();
 
-		result[0] = getInt(num, flag);
-		result[1] = getInt(num2, flag);
+		result[0] = GetInt(num, flag);
+		result[1] = GetInt(num2, flag);
 	}
-
 	return result;
 }
 
 // Чтение примечания
-CString CReaderExcel::getComment(CWorkExcel& work, const long& row, const int& size, bool& flag) 
+CString CReaderExcel::GetComment(CWorkExcel& work, const long& row, const int& size, bool& flag) 
 {
 	long column = header.adress[header.iComment];
 	long tmpRow = row;
@@ -434,9 +433,9 @@ CString CReaderExcel::getComment(CWorkExcel& work, const long& row, const int& s
 }
 #pragma endregion
 
-#pragma region Convert String
+#pragma region Converters
 // Конвертер double значения
-double CReaderExcel::getDouble(const CString& field, bool& flag) 
+double CReaderExcel::GetDouble(const CString& field, bool& flag) 
 {
 	double result = DBL_MIN;
 	CString temp = field;
@@ -461,7 +460,7 @@ double CReaderExcel::getDouble(const CString& field, bool& flag)
 }
 
 // Конвертер int значения
-int CReaderExcel::getInt(const CString& field, bool& flag) 
+int CReaderExcel::GetInt(const CString& field, bool& flag) 
 {
 	int result = -1;
 	CString temp = field;
@@ -484,19 +483,20 @@ int CReaderExcel::getInt(const CString& field, bool& flag)
 }
 #pragma endregion
 
-#pragma region subFunc
-// Является ли строка заголовком
-bool CReaderExcel::isTitle(CWorkExcel& work, const long& row)
+// Различные методы проверок
+#pragma region SUB_FUNCTION
+// Проверка заголовка
+bool CReaderExcel::IsTitle(CWorkExcel& work, const long& row)
 {
 	bool result = false;
 	CString numeric = work.CellValue(row, 1);
 	if (!numeric.IsEmpty())
-		getInt(numeric, result);
+		GetInt(numeric, result);
 	return result;
 }
 
-// Является ли строка пустой
-bool CReaderExcel::isEmpty(CWorkExcel& work, const long& row) 
+// Проверка пустоты
+bool CReaderExcel::IsEmpty(CWorkExcel& work, const long& row) 
 {
 	bool result = true;
 	for (long i = 1; i < header.size; i++)
@@ -512,8 +512,8 @@ bool CReaderExcel::isEmpty(CWorkExcel& work, const long& row)
 	return result;
 }
 
-// Является ли строка примечанием
-bool CReaderExcel::isRemark(CWorkExcel& work, const long& row)
+// Проверка примечания
+bool CReaderExcel::IsRemark(CWorkExcel& work, const long& row)
 {
 	bool result = false;
 	for (long i = 1; i < header.size; i++) 
@@ -530,7 +530,7 @@ bool CReaderExcel::isRemark(CWorkExcel& work, const long& row)
 }
 
 // Проверка расширения
-bool CReaderExcel::checkExtension(const CString& path)
+bool CReaderExcel::CheckExtension(const CString& path)
 {
 	bool result = false;
 	int dotPos = path.ReverseFind(L'.');	// Поиск точечки
