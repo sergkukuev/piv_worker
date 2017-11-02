@@ -25,7 +25,7 @@ CWorkExcel::~CWorkExcel(void)
 }
 
 // Открытие книги
-bool CWorkExcel::openBook(const CString& path) 
+bool CWorkExcel::OpenBook(const CString& path) 
 {
 	COleVariant covOptional((long)DISP_E_PARAMNOTFOUND, VT_ERROR);
 	LPDISPATCH Lp = books.Open(path, covOptional, covOptional, covOptional, covOptional, covOptional,
@@ -40,18 +40,18 @@ bool CWorkExcel::openBook(const CString& path)
 	return true;
 }
 
-// Получение имени книги из файла
-CString CWorkExcel::bookName() { return book.get_Name(); }
+// Получение имени книги
+CString CWorkExcel::BookName() { return book.get_Name(); }
 
 // Получение имени книги из пути
-CString CWorkExcel::bookName(const CString& path) 
+CString CWorkExcel::BookName(const CString& path) 
 {
 	int posSlash = path.ReverseFind(L'\\');
 	return path.Mid(posSlash + 1, path.GetLength());
 }
 
 // Открытие листа
-bool CWorkExcel::openSheet(const long& index) 
+bool CWorkExcel::OpenSheet(const long& index) 
 {
 	LPDISPATCH Lp = sheets.get_Item(COleVariant(index));
 	if (Lp == NULL)	
@@ -77,32 +77,32 @@ bool CWorkExcel::openSheet(const long& index)
 }
 
 // Получение имени текущего листа
-CString CWorkExcel::sheetName()	{ return sheet.get_Name(); }
+CString CWorkExcel::SheetName()	{ return sheet.get_Name(); }
 
-// Получение количества листов в книги
-long CWorkExcel::countSheets()	{ return sheets.get_Count(); }
+// Получение количества листов в книге
+long CWorkExcel::CountSheets()	{ return sheets.get_Count(); }
 
 // Получение значения линии передачи
-bool CWorkExcel::isArinc() 
+bool CWorkExcel::IsArinc() 
 {
 	CString line;
 	Cell cell;
 	bool result;
 
-	if (findCell(LINE_FIELD, cell))
-		line = cellValue(cell.row, cell.column + 1);
+	if (FindCell(LINE_FIELD, cell))
+		line = CellValue(cell.row, cell.column + 1);
 
 	line.Find(ARINC) != -1 ? result = true : result = false;
 	return result;
 }
 
 // Получение номера набора
-int CWorkExcel::npValue(const Header& head) 
+int CWorkExcel::NpValue(const Header& head) 
 {
 	if (head.adress[head.iRow] + 1 > last.row || head.adress[head.iComment] > last.column)
 		return -1;
 
-	CString item = cellValue(head.adress[head.iRow] + 1, head.adress[head.iComment]);
+	CString item = CellValue(head.adress[head.iRow] + 1, head.adress[head.iComment]);
 	if (!item.IsEmpty()) 
 	{
 		int pos = item.Find(NP_FIELD);
@@ -114,12 +114,12 @@ int CWorkExcel::npValue(const Header& head)
 }
 
 // Получение значения номера подкадра
-int CWorkExcel::pkValue(const Header& head) 
+int CWorkExcel::PkValue(const Header& head) 
 {
 	if (head.adress[head.iRow] - 1 < first.row || head.adress[head.iComment] > last.column)
 		return -1;
 
-	CString item = cellValue(head.adress[head.iRow] - 1, head.adress[head.iComment]);
+	CString item = CellValue(head.adress[head.iRow] - 1, head.adress[head.iComment]);
 	if (!item.IsEmpty())
 	{
 		int pos = item.ReverseFind(PK_FIELD);
@@ -131,11 +131,11 @@ int CWorkExcel::pkValue(const Header& head)
 }
 
 // Получение значения ячейки
-CString CWorkExcel::cellValue(const Cell& cell) 
+CString CWorkExcel::CellValue(const Cell& cell) 
 {
 	VARIANT item;
 	if (cell.row > last.row || cell.column > last.column)
-		throw ExcelOverflow(bookName(), sheetName());
+		throw ExcelOverflow(BookName(), SheetName());
 	long index[2] = { cell.row, cell.column };
 	cells->GetElement(index, &item);
 	CString result(item);
@@ -143,12 +143,11 @@ CString CWorkExcel::cellValue(const Cell& cell)
 	return result;
 }
 
-// Перегрузка
-CString CWorkExcel::cellValue(const long& row, const long& column) 
+CString CWorkExcel::CellValue(const long& row, const long& column) 
 {
 	VARIANT item;
 	if (row > last.row || column > last.column)
-		throw ExcelOverflow(bookName(), sheetName());
+		throw ExcelOverflow(BookName(), SheetName());
 	long index[2] = { row, column };
 	cells->GetElement(index, &item);
 	CString result(item);
@@ -157,10 +156,10 @@ CString CWorkExcel::cellValue(const long& row, const long& column)
 }
 
 // Получение количества строк в листе
-long CWorkExcel::countRows() { return last.row; }
+long CWorkExcel::CountRows() { return last.row; }
 
 // Поиск заголовков на текущем листе
-bool CWorkExcel::findHeader(Header& header) 
+bool CWorkExcel::FindHeader(Header& header) 
 {
 	for (size_t i = 0; i < header.list.size(); i++) 
 	{
@@ -170,13 +169,13 @@ bool CWorkExcel::findHeader(Header& header)
 		
 		for (it; !bFind; it++) 
 		{
-			if (!isArinc() && i + 1 == header.iAdress)
+			if (!IsArinc() && i + 1 == header.iAdress)
 				break;
 			if ((it == header.list[i].end()) && !bFind)
 				return false;
-			bFind = findCell(*it, cell);
+			bFind = FindCell(*it, cell);
 		}
-		if (!isArinc() && i + 1 == header.iAdress) 
+		if (!IsArinc() && i + 1 == header.iAdress) 
 		{
 			header.adress[i + 1] = -1;
 			continue;
@@ -189,14 +188,14 @@ bool CWorkExcel::findHeader(Header& header)
 }
 
 // Поиск ячейки по содержимому, в противном cell(-1,-1)
-bool CWorkExcel::findCell(const CString& field, Cell& cell)
+bool CWorkExcel::FindCell(const CString& field, Cell& cell)
 {
 	for (long i = first.row; i <= last.row; i++) 
 		for (long j = first.column; j <= last.column; j++) 
 		{
 			Cell tmp;
 			tmp.row = i; tmp.column = j;
-			CString item = cellValue(tmp);
+			CString item = CellValue(tmp);
 
 			if (item.CompareNoCase(field) == 0)
 			{
@@ -208,33 +207,32 @@ bool CWorkExcel::findCell(const CString& field, Cell& cell)
 }
 
 // Кол-во пустых ячеек после 
-long CWorkExcel::cPrevEmpty(const long& row, const long& column) 
+long CWorkExcel::CPrevEmpty(const long& row, const long& column) 
 {
-	CString field = cellValue(row, column);
+	CString field = CellValue(row, column);
 	long tmpRow = row;
 
-	// Ищем первое непустое значение в таблице, выше ячейки
+	// Вверх до первого непустого значения
 	while (field.IsEmpty() && tmpRow > first.row)
 	{
 		tmpRow--;
-		field = cellValue(tmpRow, column);
+		field = CellValue(tmpRow, column);
 	}
 
 	return row - tmpRow;
 }
 
 // Кол-во пустых ячеек после 
-long CWorkExcel::cNextEmpty(const long& row, const long& column) 
+long CWorkExcel::CNextEmpty(const long& row, const long& column) 
 {
-	CString field = cellValue(row, column);
+	CString field = CellValue(row, column);
 	long tmpRow = row;
 
-	// Идем вниз до первого непустого значения в таблице 
-	do 
+	do // Вниз до первого непустого значения
 	{
 		tmpRow++;
 		if (tmpRow <= last.row) 
-			field = cellValue(tmpRow, column);
+			field = CellValue(tmpRow, column);
 	} 
 	while (field.IsEmpty() && tmpRow <= last.row);
 
@@ -242,10 +240,10 @@ long CWorkExcel::cNextEmpty(const long& row, const long& column)
 }
 
 // Количество слитых ячеек
-long CWorkExcel::getMerge(long& row, const long& column) 
+long CWorkExcel::GetMerge(long& row, const long& column) 
 {
 	CString cell;
-	cell.Format(L"%s%d", longToChar(column), row);
+	cell.Format(L"%s%d", LongToChar(column), row);
 	
 	CRange range = sheet.get_Range(COleVariant(cell), COleVariant(cell));
 	range = range.get_MergeArea();
@@ -256,20 +254,20 @@ long CWorkExcel::getMerge(long& row, const long& column)
 }
 
 // Преобразование long к char
-CString CWorkExcel::longToChar(const long& column) 
+CString CWorkExcel::LongToChar(const long& column) 
 {
 	CString result;
-	(column <= 26) ? result.Format(L"%c", static_cast<char>(column + 64)) : stepLongToChar(column, result);
+	(column <= 26) ? result.Format(L"%c", static_cast<char>(column + 64)) : StepLongToChar(column, result);
 	return result;
 }
 
 // Если в обозначении ячейки уже больше одной буквы
-void CWorkExcel::stepLongToChar(const long& column, CString& result) 
+void CWorkExcel::StepLongToChar(const long& column, CString& result) 
 {
 	long iA = column / 26;
 	long iB = column % 26;
 
 	if (iB == 0)	
 		iB = 26;
-	result.Format(L"%s%s%s", result, longToChar(iA), static_cast<char>(iB + 64));
+	result.Format(L"%s%s%s", result, LongToChar(iA), static_cast<char>(iB + 64));
 }

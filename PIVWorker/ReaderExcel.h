@@ -1,15 +1,13 @@
 #pragma once
 
+#include <cstdlib>
+#include <cerrno>
+
 #include "StructPIV.h"
 #include "WorkExcel.h"
 #include "MyException.h"
 
-#include <cstdlib>
-#include <cerrno>
-
-#define SIGN_FIELD L"Зн-4"		// Обозначение отрицательного символа в МКИО
-
-// Информация о повторения в arinc протоколах
+// Информация о повторения в ARINC протоколах
 struct arincData 
 {
 	CString symbol;		// Символ замены в идентификаторе
@@ -19,7 +17,7 @@ struct arincData
 	bool flag = true;	// Флаг отсутствия повторения
 };
 
-// Класс для чтения протоколов из excel файлов
+// Класс для чтения протоколов из Excel
 class PIV_DECLARE CReaderExcel	
 {
 public:

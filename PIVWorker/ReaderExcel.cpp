@@ -37,12 +37,12 @@ bookData CReaderExcel::getBook(const CString& pathToExcel)
 	CWorkExcel work;
 
 	if (!checkExtension(pathToExcel))
-		throw BadTypeException(work.bookName(pathToExcel));
+		throw BadTypeException(work.BookName(pathToExcel));
 
-	if (!work.openBook(pathToExcel))
-		throw ReadBookException(work.bookName(pathToExcel));
+	if (!work.OpenBook(pathToExcel))
+		throw ReadBookException(work.BookName(pathToExcel));
 
-	book.name = work.bookName();
+	book.name = work.BookName();
 	getSheets(book.sheets, work);
 	
 	return book;
@@ -51,19 +51,19 @@ bookData CReaderExcel::getBook(const CString& pathToExcel)
 // Чтение листов
 void CReaderExcel::getSheets(vector <sheetData>& sheets, CWorkExcel& work) 
 {
-	sheets.resize(work.countSheets());
-	for (long i = 1; i < work.countSheets() + 1; i++) 
+	sheets.resize(work.CountSheets());
+	for (long i = 1; i < work.CountSheets() + 1; i++) 
 	{
-		work.openSheet((long)i);
-		sheets[i - 1].name = work.sheetName();
+		work.OpenSheet((long)i);
+		sheets[i - 1].name = work.SheetName();
 
 		// Поиск заголовков на листе
-		if (!work.findHeader(header)) 
-			throw NotAllHeaderException(work.bookName(), sheets[i - 1].name);
+		if (!work.FindHeader(header)) 
+			throw NotAllHeaderException(work.BookName(), sheets[i - 1].name);
 
-		sheets[i - 1].arinc = work.isArinc();
-		sheets[i - 1].pk = work.pkValue(header);	// Установка подкадра
-		sheets[i - 1].arinc ? sheets[i - 1].np = -1 : sheets[i - 1].np = work.npValue(header);	// Установка номера набора
+		sheets[i - 1].arinc = work.IsArinc();
+		sheets[i - 1].pk = work.PkValue(header);	// Установка подкадра
+		sheets[i - 1].arinc ? sheets[i - 1].np = -1 : sheets[i - 1].np = work.NpValue(header);	// Установка номера набора
 
 		header.adress[header.iRow]++;
 
@@ -75,7 +75,7 @@ void CReaderExcel::getSheets(vector <sheetData>& sheets, CWorkExcel& work)
 void CReaderExcel::getSignals(vector <signalData>& signals, CWorkExcel& work, const bool& isArinc) 
 {
 	arincData arinc;
-	for (long merge = 1, row = header.adress[header.iRow], column; row < work.countRows() + 1; row += merge, merge = 1) 
+	for (long merge = 1, row = header.adress[header.iRow], column; row < work.CountRows() + 1; row += merge, merge = 1) 
 	{
 		signalData signal;
 		// Надстройка для arinc
@@ -84,7 +84,7 @@ void CReaderExcel::getSignals(vector <signalData>& signals, CWorkExcel& work, co
 			if (isTitle(work, row))	// Пропуск строки заголовка
 				continue;
 			//	Поиск повторений
-			CString remark = work.cellValue(row - 1, 1);
+			CString remark = work.CellValue(row - 1, 1);
 			if (remark.Find(ARINC_REMARK) != -1 && arinc.flag && arinc.startRow != row)	// Появилось повторение
 				getArinc(remark, row, arinc);
 			else if ((remark.Find(ARINC_REMARK) != -1 || isTitle(work, row - 1)) && !arinc.flag) 
@@ -104,24 +104,24 @@ void CReaderExcel::getSignals(vector <signalData>& signals, CWorkExcel& work, co
 		if (!isArinc) 
 		{
 			column = header.adress[header.iNumWord];
-			int range = work.cPrevEmpty(row, column);
-			signal.numWord = getNumWord(work.cellValue(row - range, column));
+			int range = work.CPrevEmpty(row, column);
+			signal.numWord = getNumWord(work.CellValue(row - range, column));
 		}
 		else 
 		{
 			column = header.adress[header.iAdress];
-			int range = work.cPrevEmpty(row, column);
-			signal.numWord = getAdress(work.cellValue(row - range, column), arinc.current);
+			int range = work.CPrevEmpty(row, column);
+			signal.numWord = getAdress(work.CellValue(row - range, column), arinc.current);
 		}
 
 		column = header.adress[header.iName];
-		int range = work.cPrevEmpty(row, column);
-		signal.title[0] = work.cellValue(row - range, column);
-		range = work.cNextEmpty(row, column);
+		int range = work.CPrevEmpty(row, column);
+		signal.title[0] = work.CellValue(row - range, column);
+		range = work.CNextEmpty(row, column);
 		
 		column = header.adress[header.iSignal];
-		merge = work.cNextEmpty(row, column);
-		signal.title[1] = work.cellValue(row, column);
+		merge = work.CNextEmpty(row, column);
+		signal.title[1] = work.CellValue(row, column);
 
 		if (range < merge) 
 			merge = range;
@@ -137,16 +137,16 @@ void CReaderExcel::getSignals(vector <signalData>& signals, CWorkExcel& work, co
 		}
 
 		column = header.adress[header.iDimension];
-		signal.dimension = work.cellValue(row, column);
+		signal.dimension = work.CellValue(row, column);
 		getMinMaxCsr(signal, work, row);	
 		column = header.adress[header.iBits];
-		signal.bit = getBits(work.cellValue(row, column), (int)signal.numWord.value.size());
+		signal.bit = getBits(work.CellValue(row, column), (int)signal.numWord.value.size());
 		signal.comment = getComment(work, row, merge, signal.bitSign);
 
 		bool bEmpty = isEmpty(work, row);		// Проверка на пустую строку
 		bool bRemark = isRemark(work, row);		// Проверка на примечание
 
-		if (work.countRows() == row + merge - 1 && !arinc.flag && arinc.amount != arinc.current) // Фича для обхода повторений в случае конца файла
+		if (work.CountRows() == row + merge - 1 && !arinc.flag && arinc.amount != arinc.current) // Фича для обхода повторений в случае конца файла
 			row = arinc.startRow - merge;
 
 		// Добавление сигнала
@@ -328,15 +328,15 @@ intData CReaderExcel::getNumWord(const CString& field)
 void CReaderExcel::getMinMaxCsr(signalData& signal, CWorkExcel& work, const long& row) 
 {
 	long column = header.adress[header.iMin];
-	signal.min.field = work.cellValue(row, column);
+	signal.min.field = work.CellValue(row, column);
 	signal.min.value = getDouble(signal.min.field, signal.min.flag);
 
 	column = header.adress[header.iMax];
-	signal.max.field = work.cellValue(row, column);
+	signal.max.field = work.CellValue(row, column);
 	signal.max.value = getDouble(signal.max.field, signal.max.flag);
 
 	column = header.adress[header.iCSR];
-	signal.csr.field = work.cellValue(row, column);
+	signal.csr.field = work.CellValue(row, column);
 	signal.csr.value = getDouble(signal.csr.field, signal.csr.flag);
 
 	// Сброс флагов, если одновременно все параметры пусты
@@ -417,13 +417,13 @@ CString CReaderExcel::getComment(CWorkExcel& work, const long& row, const int& s
 {
 	long column = header.adress[header.iComment];
 	long tmpRow = row;
-	int merge = work.getMerge(tmpRow, column);
+	int merge = work.GetMerge(tmpRow, column);
 	CString result;
 
 	size > merge ? merge = size : merge = merge;
 	for (int i = 0; i < merge; i++) 
 	{
-		CString tmp = work.cellValue(tmpRow + i, column);
+		CString tmp = work.CellValue(tmpRow + i, column);
 		if (!tmp.IsEmpty()) 
 		{
 			(tmp.Find(SIGN_FIELD) != -1) ? flag = true : flag = flag;
@@ -489,7 +489,7 @@ int CReaderExcel::getInt(const CString& field, bool& flag)
 bool CReaderExcel::isTitle(CWorkExcel& work, const long& row)
 {
 	bool result = false;
-	CString numeric = work.cellValue(row, 1);
+	CString numeric = work.CellValue(row, 1);
 	if (!numeric.IsEmpty())
 		getInt(numeric, result);
 	return result;
@@ -504,7 +504,7 @@ bool CReaderExcel::isEmpty(CWorkExcel& work, const long& row)
 		long column = header.adress[i];
 		if (header.adress[i] != -1) 
 		{
-			CString tmp = work.cellValue(row, column);
+			CString tmp = work.CellValue(row, column);
 			if (!tmp.IsEmpty())
 				result = false;
 		}
@@ -521,7 +521,7 @@ bool CReaderExcel::isRemark(CWorkExcel& work, const long& row)
 		long column = header.adress[i];
 		if (header.adress[i] != -1)
 		{
-			CString tmp = work.cellValue(row, column);
+			CString tmp = work.CellValue(row, column);
 			result = (tmp.Find(REMARK1) > -1 ||
 				tmp.Find(REMARK2) > -1) ? true : result;
 		}
