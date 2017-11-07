@@ -74,7 +74,7 @@ void CPIV::SetPathToSave(const CString& pathToReport)
 
 	// Установка функций для переноса папки артефактов
 	fos.wFunc = FO_MOVE;
-	path.Format(L"%s\\%s", path, BASE_FOLDER);	// В одном CString содержится набор путей для переноса, поэтому должно быть два закрывающих символа
+	path.Format(L"%s%s", path, BASE_FOLDER);	// В одном CString содержится набор путей для переноса, поэтому должно быть два закрывающих символа
 	path.AppendChar(0);		// '\0' чтобы закрыть строку
 	path.AppendChar(0);		// '\0' чтобы закрыть набор
 	
@@ -136,10 +136,10 @@ void CPIV::OpenExcel()
 
 		// Генерация артефактов
 		CReport report;
-		CString tPath = path + L"\\" + BASE_FOLDER;
+		CString tPath = path + BASE_FOLDER;
 		CreateDirectory(tPath, NULL);
-		report.getReport(project, tPath, true);		// true -  проект, false - отдельные протоколы
-		report.getTxt(project.books, path, bNumPK);
+		report.GetReport(project, tPath, true);		// true -  проект, false - отдельные протоколы
+		report.GetTxt(project.books, path, bNumPK);
 		CloseThread(primary);
 		SendLog(L"Открытие проекта завершено");	// Логирование
 	}
@@ -195,11 +195,11 @@ void CPIV::AddExcel()
 			errorSet error = tester.Start(pBook);
 			contain ? Refresh(other, error) : other.db.push_back(error);
 
-			report.getTxt(book, path, bNumPK);
+			report.GetTxt(book, path, bNumPK);
 		}
-		CString tPath = path + L"\\" + BASE_FOLDER;
+		CString tPath = path + BASE_FOLDER;
 		CreateDirectory(tPath, NULL);
-		report.getReport(other, tPath, false);	// true -  проект, false - отдельные протоколы
+		report.GetReport(other, tPath, false);	// true -  проект, false - отдельные протоколы
 		CloseThread(primary);
 		
 		SendLog(L"Добавление ПИВ завершено");	// Логирование
@@ -268,13 +268,13 @@ void CPIV::RefreshExcel()
 			else
 				throw BookNotFound(NameFromPath(buffer[i]));
 
-			report.getTxt(book, path, bNumPK);
+			report.GetTxt(book, path, bNumPK);
 		}
-		CString tPath = path + L"\\" + BASE_FOLDER;
+		CString tPath = path + BASE_FOLDER;
 		if (flagProj)
-			report.getReport(project, tPath, true);		// true - проект, false - отдельные протоколы
+			report.GetReport(project, tPath, true);		// true - проект, false - отдельные протоколы
 		else if (flagOther)
-			report.getReport(other, tPath, false);
+			report.GetReport(other, tPath, false);
 	
 		CloseThread(primary);
 		
@@ -419,7 +419,7 @@ void CPIV::SendLog(const CString& msg, const bool& error)
 		str.Format(L"%02d:%02d:%02d %02d/%02d/%d:\t%s\n", st.wHour, st.wMinute, st.wSecond, st.wDay, st.wMonth, st.wYear, msg) :
 		str = msg;
 	CString logPath;
-	logPath.Format(L"%s\\%s\\%s", path, BASE_FOLDER, LOG_FILE_NAME);
+	logPath.Format(L"%s%s\\%s", path, BASE_FOLDER, LOG_FILE_NAME);
 	ofstream logStream(logPath, ios::out | ios::app);
 	logStream << CT2A(str);
 	logStream.close();

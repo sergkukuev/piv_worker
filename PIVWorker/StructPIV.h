@@ -17,10 +17,17 @@ using namespace std;
 #pragma region Define
 
 // Папки
-#define BASE_FOLDER L"Artefacts"
-#define TEXT_FOLDER L"Text"
-#define PROJECT_FOLDER L"Project"
-#define OTHER_FOLDER L"Other"
+#define BASE_FOLDER L"\\Artefacts"
+#define TEXT_FOLDER L"\\Text"
+#define PROJECT_FOLDER L"\\Project"
+#define OTHER_FOLDER L"\\Other"
+#define SYNTAX_FOLDER L"\\Error\\Syntax"
+#define SIMANTIC_FOLDER L"\\Error\\Simantic"
+#define WARNING_FOLDER L"\\Warning"
+
+// Длины названия основных папок
+#define PROJECT_SIZE 8
+#define OTHER_SIZE 6
 
 // Файлы
 #define REPORT_NAME L"Отчет.html"

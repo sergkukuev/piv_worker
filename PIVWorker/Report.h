@@ -1,17 +1,12 @@
 #pragma once
 
 #include <fstream>
+
 #include "StructPIV.h"
 #include "MyException.h"
 
-#define SYNTAX_FOLDER L"\\Error\\Syntax"
-#define SIMANTIC_FOLDER L"\\Error\\Simantic"
-#define WARNING_FOLDER L"\\Warning"
-#define OTHER_FOLDER L"\\Other"
-#define PROJECT_FOLDER L"\\Project"
-
-// Количество наборов данных и их ошибок
-struct Amount	
+// Информация о количестве наборов данных
+struct amountInfo	
 {
 	int all = 0;
 	int withError = 0;
@@ -20,50 +15,53 @@ struct Amount
 	int warning = 0;
 };
 
-// Информация со страницы протокола
+// Информация текущей страницы протокола
 struct sheetInfo 
 {
-	int np;		// Номер набора
-	int pk;		// Номер подкадра
-	bool arinc;	// страница arinc или мкио
-	bool bPK;	// Нужно ли устанавливать номер подкадра
+	int np;		
+	int pk;		
+	bool arinc;	// ARINC || MKIO
+	bool bPK;
 };
 
-// Класс генерации отчета
+// Класс генерации тестовых артефактов
+// Выполняет следующие функции:
+//		- Генерация отчета об ошибках протокола
+//		- Создание TXT файлов
 class PIV_DECLARE CReport 
 {
 public:
 	CReport();	// Конструктор
 	~CReport();	// Деструктор
 
-	void getReport(pivData& data, const CString& pathToSave, const bool& isProj);			// Генерация отчета о ошибках
-	void getTxt(list <bookData>& books, const CString& pathToSave, const bool& bNumPK);		// Генерация txt файлов
-	void getTxt(const bookData& book, const CString& pathToSave, const bool& bNumPK);		// Генерация txt для одного протокола
+	void GetReport(pivData& data, const CString& pathToSave, const bool& isProj);			// Генерация отчета об ошибках
+	// Генерация txt файлов
+	void GetTxt(list <bookData>& books, const CString& pathToSave, const bool& bNumPK);		// несколько файлов
+	void GetTxt(const bookData& book, const CString& pathToSave, const bool& bNumPK);		// один файл
 
 private:
-	bool isProject;	// Отчет для проекта или "остальных"
-	CString path;	// Путь для сохранения отчета
-	Amount amount;	// Информация о количестве сигналов, с ошибками и без и прочее
+	bool isProject;		// Метка о создании отчета проекта или отдельных ПИВ (true - проект, false - отдельные протоколы)
+	CString path;		// Путь сохранения отчета
+	amountInfo amount;	// Информация о количестве наборов данных
 
-	// ГЕНЕРАЦИЯ ОТЧЕТА О ЗАМЕЧАНИЯХ
-	void makeReport(list <errorSet>& Db);	// Генерация отчета
+////////////////////////////////////	ГЕНЕРАЦИЯ ОТЧЕТА О ЗАМЕЧАНИЯХ	////////////////////////////////////
+	void StartWrite(CStdioFile& file, list <errorSet>& Db);				// Начало записи замечаний
+	void WriteBook(CStdioFile& file, list <errorSet>::iterator& it);	// Запись листов текущего протокола
+	CString WriteSheets(sheetData* sheet, const vector <errorSignal>& errors, const CString& folder, const CString& bookName);	// Запись таблицы текущего листа
+	void WriteSignal(CStdioFile& file, const errorSignal& set);			// Запись одного набора параметров таблицы
+	CString WriteParam(const CString& field, const bool& color, const int& width);	// Запись одного параметра из набора
 
-	void startWrite(CStdioFile& file, list <errorSet>& Db);				// Начало генерации отчета о замечаниях
-	void writeBook(CStdioFile& file, list <errorSet>::iterator& it);		// Запись всех ошибок из книги
-	void writeSheets(CStdioFile& file, list <errorSet>::iterator& it);	// Запись всех ошибок с листов 
-	CString writeErrors(sheetData* sheet, const vector <errorSignal>& errors, const CString& folder, const CString& bookName);	// Запись ошибок с одного листа
-	void writeSignal(CStdioFile& file, const errorSignal& set);		// Запись сигнала
-	CString writeParam(const CString& field, const bool& color, const int& width);	// Запись параметра сигнала
-
-	// Вспомогательные функции
-	void errorTable(CStdioFile& file);				// Таблица с общей информацией о количестве ошибок
-	int countError(const vector<errorSignal>& set);	// Подсчет количества ошибок на листе
-	void setAmount(list <bookData>& books);			// Установка количества набора данных (всего, с ошибками, без)
-	void setAmountError(list <errorSet>& Db);		// Установка количества ошибок и замечаний
 	CString IntToCString(const int& number);		// Преобразование int в CString
+	
+	void ErrorTable(CStdioFile& file);				// Таблица общей информации о наборах данных (вывод amountInfo)
+	// Подсчет информации о наборах данных
+	int CountError(const vector<errorSignal>& set);	// Количество ошибок в текущей таблице
+	void SetAmount(list <bookData>& books);			// Подсчет количества наборов данных (всего, с ошибками, без ошибок)
+	void SetAmountError(list <errorSet>& Db);		// Подсчет ошибок и предупреждений
 
-	// ГЕНЕРАЦИЯ TXT ФАЙЛОВ
-	void writeTxtParam(ofstream& file, const signalData& signal, const sheetInfo& info, const int& arincNum);	// Запись сигнала в txt файл
-	void Generate(const bookData& book, const bool& bNumPK);								// Генерация txt для книги
+////////////////////////////////////	ГЕНЕРАЦИЯ TXT ФАЙЛОВ	////////////////////////////////////
+	void Generate(const bookData& book, const bool& bNumPK);	// Генерация txt протокола
+	void WriteTxtParam(ofstream& file, const signalData& signal, const sheetInfo& info, const int& arincNum);	// Запись одного набора данных из таблицы в txt файл
+	
 };
 
