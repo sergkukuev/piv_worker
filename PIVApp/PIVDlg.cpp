@@ -76,7 +76,10 @@ void Waiting(CPIVDlg& app)
 // Прием сообщений от DLL
 void CPIVDlg::receiveMsg()
 {
-
+	while (1)
+	{
+		CString msg = piv.logger.GetStatus();
+	}
 }
 
 #pragma endregion
@@ -163,7 +166,7 @@ BOOL CPIVDlg::OnInitDialog()
 	
 	CEdit* m_Edt = (CEdit*)GetDlgItem(IDC_EDIT_PATH);
 	m_Edt->SetWindowTextW(reports);
-	piv.setPathToSave(reports);
+	piv.SetPathToSave(reports);
 	reports.Format(L"%s\\%s", reports, BASE_FOLDER);
 	CreateDirectory(reports, NULL);
 	
@@ -297,7 +300,7 @@ void CPIVDlg::OnChangeFolder()
 {
 	CEdit* m_Edit = (CEdit*)GetDlgItem(IDC_EDIT_PATH);
 	CString folder = getFolder();
-	piv.setPathToSave(folder);
+	piv.SetPathToSave(folder);
 	m_Edit->SetWindowTextW(folder);
 }
 
@@ -342,7 +345,7 @@ void CPIVDlg::OnOpenPiv()
 	CString folder;
 	OpenFile(folder, pathOther);
 	
-	piv.setPathToSave(folder);
+	piv.SetPathToSave(folder);
 	piv.Open(pathOther);
 
 	refreshList();
@@ -358,7 +361,7 @@ void CPIVDlg::OnClosePiv()
 	sel.SetSize(nCount);
 	m_ListBox->GetSelItems(nCount, sel.GetData());
 
-	for (size_t i = 0; i < sel.GetSize(); i++)
+	for (int i = 0; i < sel.GetSize(); i++)
 	{
 		forDelete.push_back(pathOther[sel[i]]);
 		pathOther.erase(pathOther.begin() + sel[i]);
