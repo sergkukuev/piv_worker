@@ -186,6 +186,7 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Logger.cpp" />
     <ClCompile Include="PIVWorker.cpp" />
     <ClCompile Include="ReaderExcel.cpp" />
     <ClCompile Include="Report.cpp" />
@@ -199,12 +200,14 @@
     <ClCompile Include="WorkExcel.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Defines.h" />
     <ClInclude Include="excel\CApplication.h" />
     <ClInclude Include="excel\CRange.h" />
     <ClInclude Include="excel\CWorkbook.h" />
     <ClInclude Include="excel\CWorkbooks.h" />
     <ClInclude Include="excel\CWorksheet.h" />
     <ClInclude Include="excel\CWorksheets.h" />
+    <ClInclude Include="Logger.h" />
     <ClInclude Include="MyException.h" />
     <ClInclude Include="PIVWorker.h" />
     <ClInclude Include="ReaderExcel.h" />

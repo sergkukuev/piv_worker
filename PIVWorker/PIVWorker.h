@@ -7,22 +7,12 @@
 #error "включить stdafx.h до включения этого файла в PCH"
 #endif
 
-#include <mutex>
-
 #include "resource.h"
 #include "StructPIV.h"		// Основные структуры и макросы		
-
-#define THREAD_BUSY L"Поток занят! Подождите окончания процесса!"
-#define LOG_SLASH L"================================================================"
-
-
-// Обмен сообщений между DLL и диалоговым окном
-struct exchange_msg
-{
-	CString msg;
-	bool status = false; // Статус прочтения сообщения: прочитан - true, нет - false
-	mutex st_mutex;			
-};
+#include "Logger.h"			// логирование
+#include "ReaderExcel.h"	// чтение протоколов
+#include "Test.h"			// проверка на ошибки протоколов
+#include "Report.h"			// создание отчетов об ошибках
  
 //	Основной класс DLL для работы с протоколами информационного взаимодействия (ПИВ)
 //	Содержит следующий перечень функций:
@@ -38,7 +28,7 @@ public:
 	CPIV();		// Конструктор
 	~CPIV();	// Деструктор
 
-	exchange_msg logs;	// Обмен сообщений между DLL и диалоговым окном
+	CLogger logger;
 
 	void Open(const vector<CString>& pathToExcel, const CString& pathToReport);	// Открытие проекта (набора ПИВ) с установкой пути хранения артефактов
 	void Open(const vector<CString>& pathToExcel);								// использовать старый путь хранения
@@ -97,6 +87,4 @@ private:
 	// Работа с потоком
 	bool GetStatusThread(const HANDLE& h);	// Проверка доступности потока
 	void CloseThread(HANDLE& h);			// Закрытие потока
-	
-	void SendLog(const CString& msg, const bool& error = false);	// Передача сообщения о завершении операции и логирование (error = false - обычное сообщение, true - ошибка операции)
 };

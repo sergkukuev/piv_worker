@@ -3,9 +3,7 @@
 
 #include "stdafx.h"
 #include "PIVWorker.h"
-#include "ReaderExcel.h"	// чтение протоколов
-#include "Test.h"			// проверка на ошибки протоколов
-#include "Report.h"			// создание отчетов об ошибках
+
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -52,17 +50,14 @@ DWORD WINAPI PrimaryThread(LPVOID lpParam)
 }
 
 // Конструктор
-CPIV::CPIV() 
-{
-	SendLog(L"Запуск DLL библиотеки");
-}
+CPIV::CPIV() {	}
 
 // Деструктор
 CPIV::~CPIV() 
 {
 	Close();
 	CloseProject();
-	SendLog(LOG_SLASH);
+	logger.Write(LOG_SLASH);
 }
 
 #pragma region SET_PARAMETERS
@@ -88,10 +83,12 @@ void CPIV::SetPathToSave(const CString& pathToReport)
 
 	SHFileOperation(&fos);
 	path = pathToReport;	// Установка пути хранения артефактов
+	logger.SetPath(pathToReport);
+	//logger.Write(LOG_FOLDER);
 }
 
 // Установка флага bNumPK (значение подкадра)
-void CPIV::SetStatusNumPK(const bool& status) { bNumPK = status; }
+void CPIV::SetStatusNumPK(const bool& status) {	bNumPK = status; }
 #pragma endregion
 
 #pragma region OPEN_PROJECT
@@ -120,7 +117,7 @@ void CPIV::StartOpen()
 		primary = CreateThread(NULL, 0, PrimaryThread, this, 0, 0);
 	}
 	else
-		SendLog(THREAD_BUSY, true);
+		logger.WriteError(LOG_THREAD_BUSY);
 }
 
 void CPIV::OpenExcel() 
@@ -141,11 +138,11 @@ void CPIV::OpenExcel()
 		report.GetReport(project, tPath, true);		// true -  проект, false - отдельные протоколы
 		report.GetTxt(project.books, path, bNumPK);
 		CloseThread(primary);
-		SendLog(L"Открытие проекта завершено");	// Логирование
+		logger.Write(L"Открытие проекта завершено");	// Логирование
 	}
 	catch (MyException& exc)
 	{
-		SendLog(exc.GetMsg(), true);
+		logger.WriteError(exc.GetMsg());
 	}
 }
 #pragma endregion
@@ -175,7 +172,7 @@ void CPIV::StartAdd()
 		primary = CreateThread(NULL, 0, PrimaryThread, this, 0, 0);
 	}
 	else
-		SendLog(THREAD_BUSY, true);
+		logger.WriteError(LOG_THREAD_BUSY);
 }
 
 void CPIV::AddExcel() 
@@ -202,11 +199,11 @@ void CPIV::AddExcel()
 		report.GetReport(other, tPath, false);	// true -  проект, false - отдельные протоколы
 		CloseThread(primary);
 		
-		SendLog(L"Добавление ПИВ завершено");	// Логирование
+		logger.Write(L"Добавление ПИВ завершено");	// Логирование
 	}
 	catch (MyException& exc) 
 	{
-		SendLog(exc.GetMsg(), true);
+		logger.WriteError(exc.GetMsg());
 	}
 }
 #pragma endregion
@@ -234,7 +231,7 @@ void CPIV::StartRefresh()
 		primary = CreateThread(NULL, 0, PrimaryThread, this, 0, 0);
 	}
 	else
-		SendLog(THREAD_BUSY, true);
+		logger.WriteError(LOG_THREAD_BUSY);
 }
 
 void CPIV::RefreshExcel() 
@@ -278,11 +275,11 @@ void CPIV::RefreshExcel()
 	
 		CloseThread(primary);
 		
-		SendLog(L"Обновление ПИВ завершено");	// Логирование
+		logger.Write(L"Обновление ПИВ завершено");	// Логирование
 	}
 	catch (MyException& exc) 
 	{
-		SendLog(exc.GetMsg(), true);
+		logger.WriteError(exc.GetMsg());
 	}
 }
 #pragma endregion
@@ -295,7 +292,7 @@ void CPIV::Close()
 		other.books.clear();
 	if (!other.db.empty())
 		other.db.clear();
-	SendLog(L"Закрытие ПИВ завершено");	// Логирование
+	logger.Write(L"Закрытие ПИВ завершено");	// Логирование
 }
 
 // одного
@@ -321,7 +318,7 @@ void CPIV::StartClose()
 		primary = CreateThread(NULL, 0, PrimaryThread, this, 0, 0);
 	}
 	else
-		SendLog(THREAD_BUSY, true);
+		logger.WriteError(LOG_THREAD_BUSY);
 }
 
 // Закрытие проекта
@@ -343,7 +340,7 @@ void CPIV::CloseExcel()
 			it->name.Compare(NameFromPath(buffer[i])) == 0 ? other.books.erase(it++) : it++;
 	}
 	CloseThread(primary);
-	SendLog(L"Закрытие ПИВ завершено");	// Логирование
+	logger.Write(L"Закрытие ПИВ завершено");	// Логирование
 }
 #pragma endregion
 
@@ -401,34 +398,6 @@ bool CPIV::IsContain(pivData& data, const CString& path)
 		NameFromPath(path).Compare(it->name) == 0 ? result = true : result = result;
 	return result;
 }
-
-// Передача сообщения о завершении операции и его логирование
-void CPIV::SendLog(const CString& msg, const bool& error) 
-{
-	while (!logs.st_mutex.try_lock() && logs.status)	// Ожидание разблокировки мьютекса и прочтения сообщения 
-		Sleep(10);
-	
-	//logs.st_mutex.lock();
-	error ? logs.msg = L"При операции произошла ошибка (подробное описание см. в логах)" : logs.msg = msg;
-	
-	// Логирование в файл
-	SYSTEMTIME st;
-	CString str;
-	GetLocalTime(&st);
-	msg.CompareNoCase(LOG_SLASH) != 0 ?
-		str.Format(L"%02d:%02d:%02d %02d/%02d/%d:\t%s\n", st.wHour, st.wMinute, st.wSecond, st.wDay, st.wMonth, st.wYear, msg) :
-		str = msg;
-	CString logPath;
-	logPath.Format(L"%s%s\\%s", path, BASE_FOLDER, LOG_FILE_NAME);
-	ofstream logStream(logPath, ios::out | ios::app);
-	logStream << CT2A(str);
-	logStream.close();
-
-	logs.st_mutex.unlock();
-
-	if (error)
-		AfxMessageBox(msg, MB_ICONERROR);
-}
 #pragma endregion
 
 #pragma region THREAD_FUNC
@@ -450,7 +419,7 @@ void Thread(CPIV& piv)
 		piv.CloseExcel();
 		break;
 	default:
-		piv.SendLog(L"Ошибка: неопознанная команда!", true);
+		piv.logger.WriteError(L"Ошибка: неопознанная команда!");
 		break;
 	}
 }
@@ -480,6 +449,6 @@ void CPIV::CloseThread(HANDLE& h)
 		h = NULL;
 	}
 	else
-		SendLog(L"Ошибка: Не удалось закрыть поток!", true);
+		logger.WriteError(L"Ошибка: Не удалось закрыть поток!");
 }
 #pragma endregion
