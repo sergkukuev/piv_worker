@@ -5,14 +5,6 @@
 
 #include "Defines.h"
 
-using namespace std;
-
-typedef struct
-{
-	CString message;
-	bool error;
-} ThreadParams;
-
 class PIV_DECLARE CLogger
 {
 public:
@@ -22,18 +14,13 @@ public:
 	void Write(const CString& messge);
 	void WriteError(const CString& message);
 
-	void SetPath(const CString& path);
+	void SetPath(CString* path);
 	CString GetStatus();
-protected:
-	friend void Thread(CLogger& logger);
 private:
-	HANDLE hLog;
 	CRITICAL_SECTION cs;
-
-	ThreadParams params;
-	CString path;
+	CString* path;
 	CString status;
 
-	void Write();
+	void Write(const CString& message, const bool& flag);	// flag (true - запись ошибки, false - запись операций DLL)
 };
 

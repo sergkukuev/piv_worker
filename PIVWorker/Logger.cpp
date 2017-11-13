@@ -1,76 +1,57 @@
 #include "stdafx.h"
 #include "Logger.h"
 
-DWORD WINAPI LoggerThread(LPVOID lpParam)
+CLogger::CLogger()
 {
-	CoInitialize(NULL);
-	SetThreadPriorityBoost(GetCurrentThread(), TRUE);
-	CLogger** object = static_cast<CLogger**>(lpParam);
-	Thread(**object);
-	CoUninitialize();
-	return 0;
-}
-
-CLogger::CLogger()	
-{
-	//InitializeCriticalSection(&cs);
+	InitializeCriticalSection(&cs);
 }
 
 CLogger::~CLogger()	
 {
-	//DeleteCriticalSection(&cs);
+	DeleteCriticalSection(&cs);
 }
 
-void CLogger::SetPath(const CString& path) 
+void CLogger::SetPath(CString* path) 
 { 
-	WaitForSingleObject(hLog, INFINITE);
+	EnterCriticalSection(&cs);
 	this->path = path; 
+	LeaveCriticalSection(&cs);
 }
 
 CString CLogger::GetStatus()
 {
-	WaitForSingleObject(hLog, INFINITE);
-	return status;
+	EnterCriticalSection(&cs);
+	CString result = status;
+	LeaveCriticalSection(&cs);
+	return result;
 }
 
 void CLogger::Write(const CString& message)
 {
-	WaitForSingleObject(hLog, INFINITE);
-	params.message = message;
-	params.error = false;
-	hLog = CreateThread(NULL, 0, LoggerThread, this, 0, 0);
+	Write(message, false);
 }
 
 void CLogger::WriteError(const CString& message)
 {
-	WaitForSingleObject(hLog, INFINITE);
-	params.message = message;
-	params.error = true;
-	hLog = CreateThread(NULL, 0, LoggerThread, this, 0, 0);
+	Write(message, true);
 }
 
-void Thread(CLogger& logger) { logger.Write(); }
-
-void CLogger::Write()
+void CLogger::Write(const CString& message, const bool& flag)
 {
-	//EnterCriticalSection(&cs);
-	params.error ? status = L"При операции произошла ошибка (подробное описание см. в логах)" : status = params.message;
+	EnterCriticalSection(&cs);
+	flag ? status = L"При операции произошла ошибка (подробное описание см. в логах)" : status = message;
 
 	SYSTEMTIME st;
 	CString str;
 	GetLocalTime(&st);
-	params.message.CompareNoCase(LOG_SLASH) != 0 ?
-		str.Format(L"%02d:%02d:%02d %02d/%02d/%d:\t%s\n", st.wHour, st.wMinute, st.wSecond, st.wDay, st.wMonth, st.wYear, params.message) :
-		str = params.message;
-	//LeaveCriticalSection(&cs);
+	message.CompareNoCase(LOG_SLASH) != 0 ?
+		str.Format(L"%02d:%02d:%02d %02d/%02d/%d:\t%s\n", st.wHour, st.wMinute, st.wSecond, st.wDay, st.wMonth, st.wYear, message) :
+		str = message;
+	LeaveCriticalSection(&cs);
 
 	CString logPath;
-	logPath.Format(L"%s%s\\%s", path, BASE_FOLDER, LOG_FILE_NAME);
-	ofstream logStream(logPath, ios::out | ios::app);
+	logPath.Format(L"%s\\%s", path, LOG_FILE_NAME);
+	std::ofstream logStream(logPath, std::ios::out | std::ios::app);
 	logStream << CT2A(str);
 	logStream.close();
-	
-	// Закрытие потока
-	CloseHandle(hLog);
-	hLog = NULL;
 }

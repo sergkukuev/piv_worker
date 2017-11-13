@@ -365,7 +365,7 @@ void CReport::GetTxt(const bookData& book, const CString& pathToSave, const bool
 	if (pathToSave.IsEmpty())
 		throw EmptyPathException();
 	
-	path = pathToSave + BASE_FOLDER;
+	path = pathToSave;
 	CreateDirectory(path, NULL);
 	path.Format(L"%s%s", path, TEXT_FOLDER);
 	CreateDirectory(path, NULL);
@@ -379,7 +379,7 @@ void CReport::GetTxt(list <bookData>& books, const CString& pathToSave, const bo
 	if (pathToSave.IsEmpty())
 		throw EmptyPathException();
 
-	path = pathToSave + BASE_FOLDER;
+	path = pathToSave;
 	CreateDirectory(path, NULL);
 	path.Format(L"%s%s", path, TEXT_FOLDER);
 	CreateDirectory(path, NULL);

@@ -35,22 +35,31 @@
 //		подробные сведения.
 //
 
+typedef struct
+{
+	CPIV* object;
+} ThreadData;
+
 // Единственный объект CPIVWorkerApp
 CWinApp theApp;
+ThreadData mData;
 
 // Основной поток
 DWORD WINAPI PrimaryThread(LPVOID lpParam) 
 {
 	CoInitialize(NULL);
 	SetThreadPriorityBoost(GetCurrentThread(), TRUE);
-	CPIV** object = static_cast<CPIV**>(lpParam);
-	Thread(**object);
+	ThreadData* data = static_cast<ThreadData*>(lpParam);
+	Thread(*data->object);
 	CoUninitialize();
 	return 0;
 }
 
 // Конструктор
-CPIV::CPIV() {	}
+CPIV::CPIV() 
+{
+	logger.SetPath(&path);
+}
 
 // Деструктор
 CPIV::~CPIV() 
@@ -64,27 +73,30 @@ CPIV::~CPIV()
 // Установка пути хранения артефактов
 void CPIV::SetPathToSave(const CString& pathToReport)
 {
-	SHFILEOPSTRUCT fos;
-	ZeroMemory(&fos, sizeof(fos));
+	if (!path.IsEmpty())
+	{
+		SHFILEOPSTRUCT fos;
+		ZeroMemory(&fos, sizeof(fos));
 
-	// Установка функций для переноса папки артефактов
-	fos.wFunc = FO_MOVE;
-	path.Format(L"%s%s", path, BASE_FOLDER);	// В одном CString содержится набор путей для переноса, поэтому должно быть два закрывающих символа
-	path.AppendChar(0);		// '\0' чтобы закрыть строку
-	path.AppendChar(0);		// '\0' чтобы закрыть набор
+		// Установка функций для переноса папки артефактов
+		fos.wFunc = FO_MOVE;
+		path.AppendChar(0);		// '\0' чтобы закрыть строку
+		path.AppendChar(0);		// '\0' чтобы закрыть набор
+
+		CString to = pathToReport;	// Формируется аналогично path
+		to.AppendChar(0);	// для строки
+		to.AppendChar(0);	// для всего набора
+
+		fos.pFrom = path;
+		fos.pTo = to;
+		fos.fFlags = FOF_NOCONFIRMATION | FOF_NOCONFIRMMKDIR | FOF_NOERRORUI | FOF_SILENT;
+
+		SHFileOperation(&fos);
+	}
 	
-	CString to = pathToReport;	// Формируется аналогично path
-	to.AppendChar(0);	// для строки
-	to.AppendChar(0);	// для всего набора
-
-	fos.pFrom = path;
-	fos.pTo = to;
-	fos.fFlags = FOF_NOCONFIRMATION | FOF_NOCONFIRMMKDIR | FOF_NOERRORUI | FOF_SILENT;
-
-	SHFileOperation(&fos);
-	path = pathToReport;	// Установка пути хранения артефактов
-	logger.SetPath(pathToReport);
-	//logger.Write(LOG_FOLDER);
+	path.Format(L"%s%s", pathToReport, BASE_FOLDER);	// Установка пути хранения артефактов
+	CreateDirectory(path, NULL);
+	logger.Write(LOG_FOLDER);
 }
 
 // Установка флага bNumPK (значение подкадра)
@@ -114,7 +126,8 @@ void CPIV::StartOpen()
 	{
 		CloseProject();	// Очистка старых данных проекта
 		hCmd = open;
-		primary = CreateThread(NULL, 0, PrimaryThread, this, 0, 0);
+		mData.object = this;
+		primary = CreateThread(NULL, 0, PrimaryThread, &mData, 0, 0);
 	}
 	else
 		logger.WriteError(LOG_THREAD_BUSY);
@@ -133,9 +146,7 @@ void CPIV::OpenExcel()
 
 		// Генерация артефактов
 		CReport report;
-		CString tPath = path + BASE_FOLDER;
-		CreateDirectory(tPath, NULL);
-		report.GetReport(project, tPath, true);		// true -  проект, false - отдельные протоколы
+		report.GetReport(project, path, true);		// true -  проект, false - отдельные протоколы
 		report.GetTxt(project.books, path, bNumPK);
 		CloseThread(primary);
 		logger.Write(L"Открытие проекта завершено");	// Логирование
@@ -194,9 +205,8 @@ void CPIV::AddExcel()
 
 			report.GetTxt(book, path, bNumPK);
 		}
-		CString tPath = path + BASE_FOLDER;
-		CreateDirectory(tPath, NULL);
-		report.GetReport(other, tPath, false);	// true -  проект, false - отдельные протоколы
+		
+		report.GetReport(other, path, false);	// true -  проект, false - отдельные протоколы
 		CloseThread(primary);
 		
 		logger.Write(L"Добавление ПИВ завершено");	// Логирование
@@ -267,11 +277,11 @@ void CPIV::RefreshExcel()
 
 			report.GetTxt(book, path, bNumPK);
 		}
-		CString tPath = path + BASE_FOLDER;
+		
 		if (flagProj)
-			report.GetReport(project, tPath, true);		// true - проект, false - отдельные протоколы
+			report.GetReport(project, path, true);		// true - проект, false - отдельные протоколы
 		else if (flagOther)
-			report.GetReport(other, tPath, false);
+			report.GetReport(other, path, false);
 	
 		CloseThread(primary);
 		
