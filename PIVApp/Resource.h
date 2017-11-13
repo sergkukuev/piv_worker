@@ -13,6 +13,8 @@
 #define IDI_ICO_REDO                    155
 #define IDI_ICO_REFRESH                 156
 #define IDI_ICO_UNDO                    157
+#define IDI_ICON1                       158
+#define IDI_ICO_SETTING                 158
 #define IDC_NAME_LIST                   1002
 #define IDC_LISTBOX                     1005
 #define IDC_EXPLORER1                   1010
@@ -33,14 +35,18 @@
 #define IDC_COMBO                       1036
 #define IDC_BTN_ADD                     1038
 #define IDC_NUM_PIV                     1039
+#define IDC_BUTTON1                     1040
+#define IDC_BTN_SETTING                 1040
+#define IDC_CHECK1                      1041
+#define IDC_SHOW_REP                    1041
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        158
+#define _APS_NEXT_RESOURCE_VALUE        159
 #define _APS_NEXT_COMMAND_VALUE         32774
-#define _APS_NEXT_CONTROL_VALUE         1040
+#define _APS_NEXT_CONTROL_VALUE         1045
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

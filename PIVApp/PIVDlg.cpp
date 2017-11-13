@@ -78,7 +78,7 @@ void CPIVDlg::receiveMsg()
 {
 	while (1)
 	{
-		CString msg = piv.logger.GetStatus();
+		//CString msg = piv.logger.GetStatus();
 	}
 }
 
@@ -113,6 +113,8 @@ BEGIN_MESSAGE_MAP(CPIVDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_BTN_PREV, &CPIVDlg::OnBnClickedBtnPrev)
 	ON_BN_CLICKED(IDC_BTN_NEXT, &CPIVDlg::OnBnClickedBtnNext)
 	ON_BN_CLICKED(IDC_BTN_REFRESH, &CPIVDlg::OnBnClickedBtnRefresh)
+	ON_BN_CLICKED(IDC_BTN_SETTING, &CPIVDlg::OnBnClickedSetting)
+	ON_BN_CLICKED(IDC_SHOW_REP, &CPIVDlg::OnBnClickedShowRep)
 END_MESSAGE_MAP()
 
 
@@ -172,23 +174,23 @@ BOOL CPIVDlg::OnInitDialog()
 	
 	// Установка иконок на кнопочки
 	CButton* m_Btn = (CButton*)GetDlgItem(IDC_BTN_HOME);
-	//m_Btn->ModifyStyle(0, BS_ICON);
 	HICON hBmp  = LoadIcon(AfxGetInstanceHandle(), MAKEINTRESOURCE(IDI_ICO_HOME));
 	m_Btn->SetIcon(hBmp);
 
 	m_Btn = (CButton*)GetDlgItem(IDC_BTN_NEXT);
-	//m_Btn->ModifyStyle(0, BS_ICON);
 	hBmp = LoadIcon(AfxGetInstanceHandle(), MAKEINTRESOURCE(IDI_ICO_REDO));
 	m_Btn->SetIcon(hBmp);
 
 	m_Btn = (CButton*)GetDlgItem(IDC_BTN_PREV);
-	//m_Btn->ModifyStyle(0, BS_ICON);
 	hBmp = LoadIcon(AfxGetInstanceHandle(), MAKEINTRESOURCE(IDI_ICO_UNDO));
 	m_Btn->SetIcon(hBmp);
 
 	m_Btn = (CButton*)GetDlgItem(IDC_BTN_REFRESH);
-	//m_Btn->ModifyStyle(0, BS_ICON);
 	hBmp = LoadIcon(AfxGetInstanceHandle(), MAKEINTRESOURCE(IDI_ICO_REFRESH));
+	m_Btn->SetIcon(hBmp);
+
+	m_Btn = (CButton*)GetDlgItem(IDC_BTN_SETTING);
+	hBmp = LoadIcon(AfxGetInstanceHandle(), MAKEINTRESOURCE(IDI_ICO_SETTING));
 	m_Btn->SetIcon(hBmp);
 
 	// Инициализация листа и меню
@@ -263,20 +265,6 @@ void CPIVDlg::OnContextMenu(CWnd* pWnd, CPoint point)
 }
 
 #pragma region Handlers
-
-BEGIN_EVENTSINK_MAP(CPIVDlg, CDialogEx)
-	ON_EVENT(CPIVDlg, IDC_TBTN_REPORT, 2, CPIVDlg::OnChangeTbtnReport, VTS_NONE)
-END_EVENTSINK_MAP()
-
-// Событие изменение нажатия кнопки отображения отчета
-void CPIVDlg::OnChangeTbtnReport()
-{
-	CWnd* pWnd = this->GetWindow(IDR_MAINFRAME);
-	SHOW_REPORT ? this->SetWindowPos(pWnd, 0, 0, 1059, 527, SWP_NOMOVE | SWP_NOZORDER) :
-		this->SetWindowPos(pWnd, 0, 0, 280, 527, SWP_NOMOVE | SWP_NOZORDER);			// ВЫЯВИТЬ РАЗМЕРЫ ОКНА ПРОГРАММНО, А НЕ ПОДГОНЯТЬ
-	// Изменить статус показа
-	SHOW_REPORT ? SHOW_REPORT = false : SHOW_REPORT = true;
-}
 
 // Обновление отчетов
 void CPIVDlg::OnRefreshPiv()
@@ -567,4 +555,22 @@ void CPIVDlg::refreshList()
 	if (m_Combo->GetCurSel() == OTHER)
 		for (size_t i = 0; i < pathOther.size(); i++)
 			m_ListBox->AddString(nameFromPath(pathOther[i]));
+}
+
+void CPIVDlg::OnBnClickedSetting()
+{
+	// Открыть модальное окно настроек
+	// TODO: добавьте свой код обработчика уведомлений
+	// Сохранить настройки в объекте
+}
+
+
+void CPIVDlg::OnBnClickedShowRep()
+{
+	// TODO: добавьте свой код обработчика уведомлений
+	CWnd* pWnd = this->GetWindow(IDR_MAINFRAME);
+	CButton* chk = (CButton*)GetDlgItem(IDC_SHOW_REP);
+	int chkw = chk->GetCheck();
+	chkw == BST_CHECKED ? this->SetWindowPos(pWnd, 0, 0, 1059, 527, SWP_NOMOVE | SWP_NOZORDER) :
+		this->SetWindowPos(pWnd, 0, 0, 280, 527, SWP_NOMOVE | SWP_NOZORDER);			// ВЫЯВИТЬ РАЗМЕРЫ ОКНА ПРОГРАММНО, А НЕ ПОДГОНЯТЬ
 }

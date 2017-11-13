@@ -215,6 +215,7 @@
     <Image Include="res\Redo.ico" />
     <Image Include="res\Refresh.ico" />
     <Image Include="res\report_go.png" />
+    <Image Include="res\Setting.ico" />
     <Image Include="res\Undo.ico" />
   </ItemGroup>
   <ItemGroup>

@@ -60,8 +60,6 @@ private:
 	CString nameFromPath(const CString& path); // Извлечение имени из пути файла
 	void setNumPiv();
 public:
-	DECLARE_EVENTSINK_MAP()
-	void OnChangeTbtnReport();		// Обработчик на нажатия тогл кнопочки
 	afx_msg void OnOpenProj();		// Открытие проекта
 	afx_msg void OnRefreshPiv();	// Обновление выбранных файлов
 	afx_msg void OnChangeFolder();	// Смена директории
@@ -75,4 +73,6 @@ public:
 	afx_msg void OnBnClickedBtnPrev();
 	afx_msg void OnBnClickedBtnNext();
 	afx_msg void OnBnClickedBtnRefresh();
+	afx_msg void OnBnClickedSetting();
+	afx_msg void OnBnClickedShowRep();
 };

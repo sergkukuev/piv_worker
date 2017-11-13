@@ -74,5 +74,8 @@
     <Image Include="res\Undo.ico">
       <Filter>Файлы ресурсов</Filter>
     </Image>
+    <Image Include="res\Setting.ico">
+      <Filter>Файлы ресурсов</Filter>
+    </Image>
   </ItemGroup>
 </Project>
