@@ -41,18 +41,18 @@ protected:
 	afx_msg void OnContextMenu(CWnd* pWnd, CPoint point);
 
 	// Логирование
-	friend void Waiting(CPIVDlg& app);
-	void ReceiveMessage();
+	friend void Waiting(CPIVDlg& dlg, HWND);
+	void ReceiveMessage(HWND);
 
 	DECLARE_MESSAGE_MAP()
 private:
 	CPIV piv;	// Класс для работы с DLL по обработке протоколов
 	std::vector <CString> pathProj;		// Пути файлов проекта
 	std::vector <CString> pathOther;	// Пути отдельных файлов
-
-	CString getFolder();	// Выбор папки
-	void OpenFile(CString& folder, vector <CString>& path);			// Открытие файлов
-	void readPath(const CFileDialog& dlg, vector <CString>& path);	// Считывание путей файлов
+	
+	void OpenFile(vector <CString>& path);	// Открытие файлов
+	CString GetFolder();	// Выбор папки
+	void ReadPath(const CFileDialog& dlg, vector <CString>& path);	// Считывание путей файлов
 	CString NameFromPath(const CString& path); // Имя файла из его пути
 
 	// Взаимодействие с диалоговым окном
@@ -65,13 +65,16 @@ public:
 	afx_msg void OnRefreshPiv();		// Обновление выбранных файлов
 	afx_msg void OnChangeFolder();		// Смена директории
 	afx_msg void OnOpenReport();		// Открыть отчет в окне
-	afx_msg void OnFolderTxt();			// Открыть папку с тхт файлами
-	afx_msg void OnOpenPiv();			// Открыть отдельно пив
-	afx_msg void OnClosePiv();			// Закрыть выбранные пив
+	afx_msg void OnOpenFolder();		// Открыть папку с артефактами
+	afx_msg void OnOpenPiv();			// Открыть отдельно протоколы
+	afx_msg void OnClosePiv();			// Закрыть выбранные протоколы
 	afx_msg void OnCloseAll();			// Закрыть все
-	afx_msg void OnCbnSelchangeCombo();	// Смена режима работы (проект, отдельные ПИВ)
+	afx_msg void OnCbnSelchangeCombo();	// Смена режима работы (проект, отдельные протоколы)
 	afx_msg void OnBnClickedSetting();	// Открыть окно настройки
 	afx_msg void OnBnClickedShowRep();	// Отображение отчета
+	afx_msg void OnMouseMove(UINT nFlags, CPoint point);
+
+	afx_msg LRESULT OnReceiveMessage(WPARAM, LPARAM lParam);	// Отображение статуса DLL
 
 	//	Работа с браузером
 	afx_msg void OnBnClickedBtnHome();
