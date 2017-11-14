@@ -25,8 +25,10 @@ public:
 	virtual BOOL InitInstance();
 
 // Реализация
+	HACCEL m_hAccel;	// хоткеи
 
 	DECLARE_MESSAGE_MAP()
+	virtual BOOL ProcessMessageFilter(int, LPMSG);	// Передача акселераторов
 };
 
 extern CPIVApp theApp;

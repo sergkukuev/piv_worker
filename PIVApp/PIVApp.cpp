@@ -110,3 +110,12 @@ BOOL CPIVApp::InitInstance()
 	return FALSE;
 }
 
+BOOL CPIVApp::ProcessMessageFilter(int code, LPMSG lpMsg)
+{
+	if (code >= 0 && m_pMainWnd && m_hAccel)
+	{
+		if (::TranslateAccelerator(m_pMainWnd->m_hWnd, m_hAccel, lpMsg))
+			return TRUE;
+	}
+	return CWinApp::ProcessMessageFilter(code, lpMsg);
+}
