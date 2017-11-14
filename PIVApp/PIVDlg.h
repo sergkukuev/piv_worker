@@ -29,7 +29,7 @@ protected:
 	// Реализация
 	CMenu m_contextMenu;		// Контекстное меню
 	CListBox* m_ListBox;		// Список открытых протоколов
-	CStatusBarCtrl* m_StatusBar;
+	CStatusBar m_StatusBar;
 	HICON m_hIcon;
 	HANDLE hWait;
 

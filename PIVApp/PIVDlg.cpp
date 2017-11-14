@@ -41,9 +41,17 @@ END_MESSAGE_MAP()
 #pragma endregion
 
 // Диалоговое окно CPIVDlg
+#define RECT_MOVE 779
+
 struct ThreadData
 {
 	CPIVDlg* dialog;
+};
+
+static UINT BASED_CODE indicators[] =
+{
+	ID_INDICATOR_STDLL,
+	ID_INDICATOR_TIME
 };
 
 ThreadData mData;
@@ -68,7 +76,7 @@ void CPIVDlg::ReceiveMessage()
 {
 	while (1)
 	{
-		m_StatusBar->SetWindowTextW(piv.logger.GetStatus());
+		//m_StatusBar.SetPaneText(0, piv.logger.GetStatus());
 	}
 }
 #pragma endregion
@@ -174,14 +182,25 @@ BOOL CPIVDlg::OnInitDialog()
 	hBmp = LoadIcon(AfxGetInstanceHandle(), MAKEINTRESOURCE(IDI_ICO_SETTING));
 	m_Btn->SetIcon(hBmp);
 
-	// Инициализация основных элементов окна
 	m_ListBox = (CListBox*)GetDlgItem(IDC_LISTBOX);	
-	m_StatusBar = new CStatusBarCtrl();
-	m_StatusBar->Create(WS_CHILD | WS_VISIBLE | LBS_MULTIPLESEL | CBRS_BOTTOM, CRect(2, 0, 280, 527), this, AFX_IDW_STATUS_BAR);
 
 	// Скрыть окошечко показа отчета
+	CRect rect;
+	this->GetWindowRect(&rect);
 	CWnd* pWnd = this->GetWindow(IDR_MAINFRAME);
-	this->SetWindowPos(pWnd, 0, 0, 280, 527, SWP_NOMOVE | SWP_NOZORDER);	// TODO: Выявить значение окна программно
+	this->SetWindowPos(pWnd, 0, 0, rect.Width() - RECT_MOVE, rect.Height(), SWP_NOMOVE | SWP_NOZORDER);
+
+	// Инициализация индикатора
+	GetClientRect(&rect);
+	m_StatusBar.Create(this);
+	m_StatusBar.SetIndicators(indicators, 2);
+	GetClientRect(&rect);
+	m_StatusBar.SetPaneInfo(0, ID_INDICATOR_STDLL,
+		SBPS_NORMAL, rect.Width() - 100);
+	m_StatusBar.SetPaneInfo(1, ID_INDICATOR_TIME, SBPS_STRETCH, 0);
+	m_StatusBar.GetStatusBarCtrl().SetBkColor(RGB(180, 180, 180));
+	RepositionBars(AFX_IDW_CONTROLBAR_FIRST, AFX_IDW_CONTROLBAR_LAST, ID_INDICATOR_TIME);	// Отображение индикатора
+
 
 	// Инициализация потока обмена сообщений между DLL и приложением
 	mData.dialog = this;
@@ -369,12 +388,15 @@ void CPIVDlg::OnBnClickedSetting()
 
 void CPIVDlg::OnBnClickedShowRep()
 {
-	// TODO: добавьте свой код обработчика уведомлений
 	CWnd* pWnd = this->GetWindow(IDR_MAINFRAME);
 	CButton* chk = (CButton*)GetDlgItem(IDC_SHOW_REP);
-	int chkw = chk->GetCheck();
-	chkw == BST_CHECKED ? this->SetWindowPos(pWnd, 0, 0, 1059, 527, SWP_NOMOVE | SWP_NOZORDER) :
-		this->SetWindowPos(pWnd, 0, 0, 280, 527, SWP_NOMOVE | SWP_NOZORDER);			// TODO: Выявить значение окна программно
+	CRect rect;
+
+	this->GetWindowRect(&rect);
+	chk->GetCheck() == BST_CHECKED ? this->SetWindowPos(pWnd, 0, 0, rect.Width() + RECT_MOVE, rect.Height(), SWP_NOMOVE | SWP_NOZORDER) :
+		this->SetWindowPos(pWnd, 0, 0, rect.Width() - RECT_MOVE, rect.Height(), SWP_NOMOVE | SWP_NOZORDER);
+	GetClientRect(&rect);
+	RepositionBars(AFX_IDW_CONTROLBAR_FIRST, AFX_IDW_CONTROLBAR_LAST, ID_INDICATOR_STDLL);
 }
 #pragma endregion
 

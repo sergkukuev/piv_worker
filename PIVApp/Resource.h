@@ -6,7 +6,9 @@
 #define IDD_ABOUTBOX                    100
 #define IDS_ABOUTBOX                    101
 #define IDD_PIVAPP_DIALOG               102
+#define ID_INDICATOR_STDLL              102
 #define IDP_SOCKETS_INIT_FAILED         103
+#define ID_INDICATOR_TIME               104
 #define IDR_MAINFRAME                   128
 #define IDR_CONTEXT_MENU                129
 #define IDI_ICO_HOME                    154
