@@ -69,6 +69,22 @@ CPIV::~CPIV()
 	logger.Write(LOG_SLASH);
 }
 
+// Получение путей параметров
+CString CPIV::GetPath()	{	return path;	}
+
+CString CPIV::GetOtherPath()
+{
+	CString result;
+	result.Format(L"%s%s", path, OTHER_FOLDER);
+	return result;
+}
+
+CString CPIV::GetProjectPath()
+{
+	CString result;
+	result.Format(L"%s%s", path, PROJECT_FOLDER);
+	return result;
+}
 #pragma region SET_PARAMETERS
 // Установка пути хранения артефактов
 void CPIV::SetPathToSave(const CString& pathToReport)

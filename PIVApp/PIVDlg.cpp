@@ -51,7 +51,7 @@ struct ThreadData
 static UINT BASED_CODE indicators[] =
 {
 	ID_INDICATOR_DLL,
-	ID_INDICATOR_MOUSE
+	//ID_INDICATOR_MOUSE
 };
 
 ThreadData mData;
@@ -214,7 +214,6 @@ BOOL CPIVDlg::OnInitDialog()
 	GetClientRect(&rect);
 	m_StatusBar.SetPaneInfo(0, ID_INDICATOR_DLL, SBPS_NORMAL, rect.Width());
 	//m_StatusBar.SetPaneInfo(1, ID_INDICATOR_MOUSE, SBPS_NORMAL, 0);
-	m_StatusBar.SetPaneText(0, L"Приложение запущено");
 	m_StatusBar.GetStatusBarCtrl().SetBkColor(RGB(180, 180, 180));
 	RepositionBars(AFX_IDW_CONTROLBAR_FIRST, AFX_IDW_CONTROLBAR_LAST, ID_INDICATOR_DLL);
 
@@ -286,6 +285,7 @@ void CPIVDlg::OnContextMenu(CWnd* pWnd, CPoint point)
 	menu->TrackPopupMenu(TPM_LEFTALIGN | TPM_TOPALIGN, point.x, point.y, this);
 }
 
+// Обработка движения мыши
 /*void CPIVDlg::OnMouseMove(UINT nFlags, CPoint point)
 {
 	CString move;
@@ -365,18 +365,19 @@ void CPIVDlg::OnOpenReport()
 	GetDlgItem(IDC_EDIT_PATH)->GetWindowTextW(folder);
 
 	CComboBox* m_Cmb = (CComboBox*)GetDlgItem(IDC_CMB_MODE);
-	m_Cmb->GetCurSel() == PROJECT ? folder.Format(L"%s%s%s\\%s", folder, BASE_FOLDER, PROJECT_FOLDER, REPORT_NAME) : 
-		folder.Format(L"%s%s%s\\%s", folder, BASE_FOLDER, OTHER_FOLDER, REPORT_NAME);
-	ShellExecute(0, L"Open", folder, NULL, NULL, SW_NORMAL);
+	CString path;
+	if (m_Cmb->GetCurSel() == PROJECT)
+		path = piv.GetProjectPath();
+	if (m_Cmb->GetCurSel() == OTHER)
+		path = piv.GetOtherPath();
+	ShellExecute(0, L"Open", path, NULL, NULL, SW_NORMAL);
 }
 
 // Открытие папки с артефактами
 void CPIVDlg::OnOpenFolder()
 {
-	CString folder;
-	GetDlgItem(IDC_EDIT_PATH)->GetWindowTextW(folder);
-	folder.Format(L"%s%s%s", folder, BASE_FOLDER);
-	ShellExecute(0, L"Explore", folder, NULL, NULL, SW_NORMAL);
+	CString path = piv.GetPath();
+	ShellExecute(0, L"Explore", piv.GetPath(), NULL, NULL, SW_NORMAL);
 }
 
 // Закрытие одного или нескольких выбранных протоколов

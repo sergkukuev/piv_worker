@@ -43,6 +43,11 @@ public:
 	void Close(const vector<CString>& pathToExcel);		// выбранных
 	void Close(const CString& pathToExcel);				// одного
 
+	// Получение путей артефактов
+	CString GetProjectPath();
+	CString GetOtherPath();
+	CString GetPath();
+
 	void SetPathToSave(const CString& pathToReport);	// Установка пути хранения артефактов
 	void SetStatusNumPK(const bool& status);			// Установка флага bNumPK (значение подкадра)
 
