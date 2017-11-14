@@ -1,4 +1,3 @@
-
 // PIVDlg.cpp : файл реализации
 //
 
@@ -11,9 +10,8 @@
 #define new DEBUG_NEW
 #endif
 
-
+#pragma region ABOUT_MODAL
 // Диалоговое окно CAboutDlg используется для описания сведений о приложении
-
 class CAboutDlg : public CDialogEx
 {
 public:
@@ -24,17 +22,14 @@ public:
 	enum { IDD = IDD_ABOUTBOX };
 #endif
 
-	protected:
+protected:
 	virtual void DoDataExchange(CDataExchange* pDX);    // поддержка DDX/DDV
 
-// Реализация
-protected:
+	// Реализация
 	DECLARE_MESSAGE_MAP()
 };
 
-CAboutDlg::CAboutDlg() : CDialogEx(IDD_ABOUTBOX)
-{
-}
+CAboutDlg::CAboutDlg() : CDialogEx(IDD_ABOUTBOX)	{	}
 
 void CAboutDlg::DoDataExchange(CDataExchange* pDX)
 {
@@ -43,49 +38,42 @@ void CAboutDlg::DoDataExchange(CDataExchange* pDX)
 
 BEGIN_MESSAGE_MAP(CAboutDlg, CDialogEx)
 END_MESSAGE_MAP()
+#pragma endregion
 
-
-// диалоговое окно CPIVDlg
-
-struct MyData
+// Диалоговое окно CPIVDlg
+struct ThreadData
 {
 	CPIVDlg* dialog;
 };
 
-MyData mD;
+ThreadData mData;
 
-// Поток обмена между приложением и DLL
-#pragma region PIPE
-
+#pragma region EXCHANGE
+// Логирование
 DWORD WINAPI WaitThread(LPVOID lpParam) {
 	CoInitialize(NULL);
 	SetThreadPriorityBoost(GetCurrentThread(), TRUE);
-	MyData* myD = static_cast<MyData*>(lpParam);
-	
-	Waiting(*(myD->dialog));
-
+	ThreadData* data = static_cast<ThreadData*>(lpParam);
+	Waiting(*(data->dialog));
 	CoUninitialize();
 	return 0;
 }
 
 void Waiting(CPIVDlg& app)
 {
-	app.receiveMsg();
+	app.ReceiveMessage();
 }
 
-// Прием сообщений от DLL
-void CPIVDlg::receiveMsg()
+void CPIVDlg::ReceiveMessage()
 {
 	while (1)
 	{
-		//CString msg = piv.logger.GetStatus();
+		m_StatusBar->SetWindowTextW(piv.logger.GetStatus());
 	}
 }
-
 #pragma endregion
 
-CPIVDlg::CPIVDlg(CWnd* pParent /*=NULL*/)
-	: CDialogEx(IDD_PIVAPP_DIALOG, pParent)
+CPIVDlg::CPIVDlg(CWnd* pParent /*=NULL*/) : CDialogEx(IDD_PIVAPP_DIALOG, pParent)
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 }
@@ -118,7 +106,7 @@ BEGIN_MESSAGE_MAP(CPIVDlg, CDialogEx)
 END_MESSAGE_MAP()
 
 
-// обработчики сообщений CPIVDlg
+// Обработчики сообщений CPIVDlg
 
 BOOL CPIVDlg::OnInitDialog()
 {
@@ -149,10 +137,6 @@ BOOL CPIVDlg::OnInitDialog()
 	SetIcon(m_hIcon, TRUE);			// Крупный значок
 	SetIcon(m_hIcon, FALSE);		// Мелкий значок
 
-	// Инициализация потока обмена сообщений между DLL и приложением
-	mD.dialog = this;
-	hWait = CreateThread(NULL, 0, WaitThread, &mD, 0, 0);
-
 	// Добавление меню и комбо-бокса
 	m_contextMenu.LoadMenuW(IDR_CONTEXT_MENU);
 	CComboBox* m_Cmb = (CComboBox*)GetDlgItem(IDC_COMBO);
@@ -165,12 +149,9 @@ BOOL CPIVDlg::OnInitDialog()
 	GetModuleFileName(NULL, reports.GetBuffer(_MAX_PATH), _MAX_PATH);
 	reports.ReleaseBuffer();
 	reports.Delete(reports.ReverseFind(L'\\'), reports.GetLength());
-	
 	CEdit* m_Edt = (CEdit*)GetDlgItem(IDC_EDIT_PATH);
-	m_Edt->SetWindowTextW(reports);
 	piv.SetPathToSave(reports);
-	reports.Format(L"%s\\%s", reports, BASE_FOLDER);
-	CreateDirectory(reports, NULL);
+	m_Edt->SetWindowTextW(reports);
 	
 	// Установка иконок на кнопочки
 	CButton* m_Btn = (CButton*)GetDlgItem(IDC_BTN_HOME);
@@ -193,13 +174,18 @@ BOOL CPIVDlg::OnInitDialog()
 	hBmp = LoadIcon(AfxGetInstanceHandle(), MAKEINTRESOURCE(IDI_ICO_SETTING));
 	m_Btn->SetIcon(hBmp);
 
-	// Инициализация листа и меню
-	m_ListBox = (CListBox*)GetDlgItem(IDC_LISTBOX);
-	menuLogic();
+	// Инициализация основных элементов окна
+	m_ListBox = (CListBox*)GetDlgItem(IDC_LISTBOX);	
+	m_StatusBar = new CStatusBarCtrl();
+	m_StatusBar->Create(WS_CHILD | WS_VISIBLE | LBS_MULTIPLESEL | CBRS_BOTTOM, CRect(2, 0, 280, 527), this, AFX_IDW_STATUS_BAR);
 
 	// Скрыть окошечко показа отчета
 	CWnd* pWnd = this->GetWindow(IDR_MAINFRAME);
-	this->SetWindowPos(pWnd, 0, 0, 280, 527, SWP_NOMOVE | SWP_NOZORDER);
+	this->SetWindowPos(pWnd, 0, 0, 280, 527, SWP_NOMOVE | SWP_NOZORDER);	// TODO: Выявить значение окна программно
+
+	// Инициализация потока обмена сообщений между DLL и приложением
+	mData.dialog = this;
+	hWait = CreateThread(NULL, 0, WaitThread, &mData, 0, 0);
 
 	return TRUE;  // возврат значения TRUE, если фокус не передан элементу управления
 }
@@ -265,7 +251,6 @@ void CPIVDlg::OnContextMenu(CWnd* pWnd, CPoint point)
 }
 
 #pragma region Handlers
-
 // Обновление отчетов
 void CPIVDlg::OnRefreshPiv()
 {
@@ -280,7 +265,8 @@ void CPIVDlg::OnRefreshPiv()
 	for (int i = 0; i < sel.GetSize(); i++)
 		m_Cmb->GetCurSel() == PROJECT ? forRef.push_back(pathProj[i]) : forRef.push_back(pathOther[i]);
 
-	piv.Refresh(forRef);
+	if (forRef.size() != 0)
+		piv.Refresh(forRef);
 }
 
 // Смена рабочей директории
@@ -324,7 +310,7 @@ void CPIVDlg::OnOpenProj()
 
 	piv.Open(pathProj, folder);
 	
-	refreshList();
+	RefreshList();
 }
 
 // Открытие остальных 
@@ -336,7 +322,7 @@ void CPIVDlg::OnOpenPiv()
 	piv.SetPathToSave(folder);
 	piv.Open(pathOther);
 
-	refreshList();
+	RefreshList();
 }
 
 // Закрытие одного или нескольких выбранных протоколов
@@ -368,69 +354,29 @@ void CPIVDlg::OnCloseAll()
 	piv.Close();
 }
 
+// Изменение области работы (работа с проектом, работа с отдельными файлами)
+void CPIVDlg::OnCbnSelchangeCombo()
+{
+	RefreshList();
+	SetNumericPIV();
+	// Привязать смену отчета
+}
+
+void CPIVDlg::OnBnClickedSetting()
+{
+	// TODO: Запилить диалоговое окно настроек
+}
+
+void CPIVDlg::OnBnClickedShowRep()
+{
+	// TODO: добавьте свой код обработчика уведомлений
+	CWnd* pWnd = this->GetWindow(IDR_MAINFRAME);
+	CButton* chk = (CButton*)GetDlgItem(IDC_SHOW_REP);
+	int chkw = chk->GetCheck();
+	chkw == BST_CHECKED ? this->SetWindowPos(pWnd, 0, 0, 1059, 527, SWP_NOMOVE | SWP_NOZORDER) :
+		this->SetWindowPos(pWnd, 0, 0, 280, 527, SWP_NOMOVE | SWP_NOZORDER);			// TODO: Выявить значение окна программно
+}
 #pragma endregion
-
-#pragma region Browser
-
-void CPIVDlg::OnBnClickedBtnHome()
-{
-	// TODO: добавьте свой код обработчика уведомлений
-}
-
-
-void CPIVDlg::OnBnClickedBtnPrev()
-{
-	// TODO: добавьте свой код обработчика уведомлений
-}
-
-
-void CPIVDlg::OnBnClickedBtnNext()
-{
-	// TODO: добавьте свой код обработчика уведомлений
-}
-
-
-void CPIVDlg::OnBnClickedBtnRefresh()
-{
-	// TODO: добавьте свой код обработчика уведомлений
-}
-
-#pragma endregion
-
-void CPIVDlg::menuLogic()
-{
-	CMenu* menu = m_contextMenu.GetSubMenu(0);
-	if (m_ListBox->GetCount() > 0) 
-	{
-		menu->EnableMenuItem(ID_REFRESH_PIV, MFS_ENABLED);
-		menu->EnableMenuItem(ID_FOLDER_TXT, MFS_ENABLED);
-		menu->EnableMenuItem(ID_OPEN_REPORT, MFS_ENABLED);
-	}
-	else 
-	{
-		menu->EnableMenuItem(ID_REFRESH_PIV, MFS_GRAYED);
-		menu->EnableMenuItem(ID_FOLDER_TXT, MFS_GRAYED);
-		menu->EnableMenuItem(ID_OPEN_REPORT, MFS_GRAYED);
-	}		
-	
-	menu = m_contextMenu.GetSubMenu(1);
-	if (m_ListBox->GetCount() > 0) 
-	{
-		menu->EnableMenuItem(ID_CLOSE_PIV, MFS_ENABLED);
-		menu->EnableMenuItem(ID_CLOSE_ALL, MFS_ENABLED);
-		menu->EnableMenuItem(ID_REFRESH_PIV, MFS_ENABLED);
-		menu->EnableMenuItem(ID_OPEN_REPORT, MFS_ENABLED);
-		menu->EnableMenuItem(ID_FOLDER_TXT, MFS_ENABLED);
-	}
-	else 
-	{
-		menu->EnableMenuItem(ID_CLOSE_PIV, MFS_GRAYED);
-		menu->EnableMenuItem(ID_CLOSE_ALL, MFS_GRAYED);
-		menu->EnableMenuItem(ID_REFRESH_PIV, MFS_GRAYED);
-		menu->EnableMenuItem(ID_OPEN_REPORT, MFS_GRAYED);
-		menu->EnableMenuItem(ID_FOLDER_TXT, MFS_GRAYED);
-	}
-}
 
 // Выбор папки
 CString CPIVDlg::getFolder()
@@ -446,12 +392,12 @@ CString CPIVDlg::getFolder()
 	bi.ulFlags = BIF_NEWDIALOGSTYLE; //or BIF_VALIDATE//BIF_RETURNONLYFSDIRS;		
 	pidl = SHBrowseForFolder(&bi);
 
-	if (pidl) 
+	if (pidl)
 	{
 		SHGetPathFromIDList(pidl, szDisplayName);
 		CEdit* m_Edit = (CEdit*)(this->GetDlgItem(IDC_EDIT_PATH));
 		m_Edit->SetWindowTextW(szDisplayName);
-		folder = szDisplayName;	
+		folder = szDisplayName;
 	}
 	return folder;
 }
@@ -463,27 +409,23 @@ void CPIVDlg::OpenFile(CString& folder, vector <CString>& path)
 	CFileDialog openDialog(true, NULL, NULL, OFN_ALLOWMULTISELECT + OFN_HIDEREADONLY, NULL, TheWindow);
 	openDialog.m_ofn.lpstrFilter = _T("Excel files(*.xls;*.xlsx)\0*.xls;*.xlsx\0All files(*.*)\0*.*\0\0");
 	openDialog.m_ofn.lpstrTitle = TEXT("Выберите протоколы для обработки");
-	
+
 	CEdit* m_Edit = (CEdit *)(this->GetDlgItem(IDC_EDIT_PATH));
 	m_Edit->GetWindowTextW(folder);
-	
-	if (folder.IsEmpty()) 
+
+	if (folder.IsEmpty())
 	{
 		folder = getFolder();
 		m_Edit->SetWindowTextW(folder);
-		
+
 	}
-	
-	//Добавить возможность установки номера подкадра в настройках
-	//CButton *pCheck = (CButton*)GetDlgItem(IDC_CHECK_NUMPK);
-	//(pCheck == BST_UNCHECKED) ? piv.setStatusNumPK(false) : piv.setStatusNumPK(true);
-	
+
 	if (openDialog.DoModal() == IDOK)
 		readPath(openDialog, path);
 }
 
 // Извлечение имени файла из его пути
-CString CPIVDlg::nameFromPath(const CString& path)
+CString CPIVDlg::NameFromPath(const CString& path)
 {
 	int startPos = path.ReverseFind(L'\\') + 1;
 	return path.Mid(startPos, path.GetLength());
@@ -493,7 +435,7 @@ CString CPIVDlg::nameFromPath(const CString& path)
 void CPIVDlg::readPath(const CFileDialog& dlg, vector <CString>& path)
 {
 	POSITION pos = dlg.GetStartPosition();
-	
+
 	while (pos)
 	{
 		bool exist = false;
@@ -517,17 +459,46 @@ void CPIVDlg::readPath(const CFileDialog& dlg, vector <CString>& path)
 	}
 }
 
-// Изменение области работы (работа с проектом, работа с отдельными файлами)
-void CPIVDlg::OnCbnSelchangeCombo()
+
+#pragma region Browser
+// TODO: Запилить браузерное окно
+void CPIVDlg::OnBnClickedBtnHome()
 {
-	refreshList();
-	setNumPiv();
-	// Привязать смену отчета
 }
 
 
+void CPIVDlg::OnBnClickedBtnPrev()
+{
+}
+
+
+void CPIVDlg::OnBnClickedBtnNext()
+{
+}
+
+
+void CPIVDlg::OnBnClickedBtnRefresh()
+{
+}
+#pragma endregion
+
+// Обновление листа
+void CPIVDlg::RefreshList()
+{
+	m_ListBox->ResetContent();
+	SetNumericPIV();
+	CComboBox* m_Combo = (CComboBox*)GetDlgItem(IDC_COMBO);
+
+	if (m_Combo->GetCurSel() == PROJECT)
+		for (size_t i = 0; i < pathProj.size(); i++)
+			m_ListBox->AddString(NameFromPath(pathProj[i]));
+	if (m_Combo->GetCurSel() == OTHER)
+		for (size_t i = 0; i < pathOther.size(); i++)
+			m_ListBox->AddString(NameFromPath(pathOther[i]));
+}
+
 // Установка количество считанных ПИВ
-void CPIVDlg::setNumPiv()
+void CPIVDlg::SetNumericPIV()
 {
 	CString res;
 	CComboBox* m_Combo = (CComboBox*)GetDlgItem(IDC_COMBO);
@@ -536,41 +507,50 @@ void CPIVDlg::setNumPiv()
 		res.Format(L"%d", pathProj.size());
 	if (m_Combo->GetCurSel() == OTHER)
 		res.Format(L"%d", pathOther.size());
-	
+
 	CStatic* m_Numeric = (CStatic*)GetDlgItem(IDC_NUM_PIV);
 	m_Numeric->SetWindowTextW(res);
 }
 
-
-// Обновление списка
-void CPIVDlg::refreshList()
+// Обновление меню
+void CPIVDlg::UpdateMenu()
 {
-	m_ListBox->ResetContent();
-	setNumPiv();
 	CComboBox* m_Combo = (CComboBox*)GetDlgItem(IDC_COMBO);
-
 	if (m_Combo->GetCurSel() == PROJECT)
-		for (size_t i = 0; i < pathProj.size(); i++)
-			m_ListBox->AddString(nameFromPath(pathProj[i]));
+	{
+		CMenu* menu = m_contextMenu.GetSubMenu(0);
+		if (m_ListBox->GetCount() > 0)
+		{
+			menu->EnableMenuItem(ID_REFRESH_PIV, MFS_ENABLED);
+			menu->EnableMenuItem(ID_FOLDER_TXT, MFS_ENABLED);
+			menu->EnableMenuItem(ID_OPEN_REPORT, MFS_ENABLED);
+		}
+		else
+		{
+			menu->EnableMenuItem(ID_REFRESH_PIV, MFS_GRAYED);
+			menu->EnableMenuItem(ID_FOLDER_TXT, MFS_GRAYED);
+			menu->EnableMenuItem(ID_OPEN_REPORT, MFS_GRAYED);
+		}
+	}
+
 	if (m_Combo->GetCurSel() == OTHER)
-		for (size_t i = 0; i < pathOther.size(); i++)
-			m_ListBox->AddString(nameFromPath(pathOther[i]));
-}
-
-void CPIVDlg::OnBnClickedSetting()
-{
-	// Открыть модальное окно настроек
-	// TODO: добавьте свой код обработчика уведомлений
-	// Сохранить настройки в объекте
-}
-
-
-void CPIVDlg::OnBnClickedShowRep()
-{
-	// TODO: добавьте свой код обработчика уведомлений
-	CWnd* pWnd = this->GetWindow(IDR_MAINFRAME);
-	CButton* chk = (CButton*)GetDlgItem(IDC_SHOW_REP);
-	int chkw = chk->GetCheck();
-	chkw == BST_CHECKED ? this->SetWindowPos(pWnd, 0, 0, 1059, 527, SWP_NOMOVE | SWP_NOZORDER) :
-		this->SetWindowPos(pWnd, 0, 0, 280, 527, SWP_NOMOVE | SWP_NOZORDER);			// ВЫЯВИТЬ РАЗМЕРЫ ОКНА ПРОГРАММНО, А НЕ ПОДГОНЯТЬ
+	{
+		CMenu* menu = m_contextMenu.GetSubMenu(1);
+		if (m_ListBox->GetCount() > 0)
+		{
+			menu->EnableMenuItem(ID_CLOSE_PIV, MFS_ENABLED);
+			menu->EnableMenuItem(ID_CLOSE_ALL, MFS_ENABLED);
+			menu->EnableMenuItem(ID_REFRESH_PIV, MFS_ENABLED);
+			menu->EnableMenuItem(ID_OPEN_REPORT, MFS_ENABLED);
+			menu->EnableMenuItem(ID_FOLDER_TXT, MFS_ENABLED);
+		}
+		else
+		{
+			menu->EnableMenuItem(ID_CLOSE_PIV, MFS_GRAYED);
+			menu->EnableMenuItem(ID_CLOSE_ALL, MFS_GRAYED);
+			menu->EnableMenuItem(ID_REFRESH_PIV, MFS_GRAYED);
+			menu->EnableMenuItem(ID_OPEN_REPORT, MFS_GRAYED);
+			menu->EnableMenuItem(ID_FOLDER_TXT, MFS_GRAYED);
+		}
+	}
 }
