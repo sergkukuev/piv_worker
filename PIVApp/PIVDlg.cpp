@@ -213,7 +213,8 @@ BOOL CPIVDlg::OnInitDialog()
 	m_StatusBar.SetIndicators(indicators, 1);
 	GetClientRect(&rect);
 	m_StatusBar.SetPaneInfo(0, ID_INDICATOR_DLL, SBPS_NORMAL, rect.Width());
-	//m_StatusBar.SetPaneInfo(1, ID_INDICATOR_MOUSE, SBPS_NORMAL, 0);
+	//TODO: Решить проблему медленного обновления курсора мышки в статус баре
+	//m_StatusBar.SetPaneInfo(1, ID_INDICATOR_MOUSE, SBPS_NORMAL, 0);	
 	m_StatusBar.GetStatusBarCtrl().SetBkColor(RGB(180, 180, 180));
 	RepositionBars(AFX_IDW_CONTROLBAR_FIRST, AFX_IDW_CONTROLBAR_LAST, ID_INDICATOR_DLL);
 
