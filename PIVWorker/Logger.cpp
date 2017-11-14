@@ -50,7 +50,7 @@ void CLogger::Write(const CString& message, const bool& flag)
 	LeaveCriticalSection(&cs);
 
 	CString logPath;
-	logPath.Format(L"%s\\%s", path, LOG_FILE_NAME);
+	logPath.Format(L"%s\\%s", *path, LOG_FILE_NAME);
 	std::ofstream logStream(logPath, std::ios::out | std::ios::app);
 	logStream << CT2A(str);
 	logStream.close();
