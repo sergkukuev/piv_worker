@@ -362,15 +362,12 @@ void CPIVDlg::OnChangeFolder()
 // Открыть отчет в браузере
 void CPIVDlg::OnOpenReport()
 {
-	CString folder;
-	GetDlgItem(IDC_EDIT_PATH)->GetWindowTextW(folder);
-
 	CComboBox* m_Cmb = (CComboBox*)GetDlgItem(IDC_CMB_MODE);
 	CString path;
 	if (m_Cmb->GetCurSel() == PROJECT)
 		path = piv.GetProjectPath();
 	if (m_Cmb->GetCurSel() == OTHER)
-		path = piv.GetOtherPath();
+		path = piv.GetOtherPath() + L"\\" + REPORT_NAME;
 	ShellExecute(0, L"Open", path, NULL, NULL, SW_NORMAL);
 }
 
