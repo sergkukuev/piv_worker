@@ -35,10 +35,10 @@
 //		подробные сведения.
 //
 
-typedef struct
+struct ThreadData
 {
 	CPIV* object;
-} ThreadData;
+};
 
 // Единственный объект CPIVWorkerApp
 CWinApp theApp;
@@ -87,7 +87,7 @@ CString CPIV::GetProjectPath()
 }
 #pragma region SET_PARAMETERS
 // Установка пути хранения артефактов
-void CPIV::SetPathToSave(const CString& pathToReport)
+void CPIV::SetPathToSave(const CString pathToReport)
 {
 	if (!path.IsEmpty())
 	{
@@ -116,12 +116,12 @@ void CPIV::SetPathToSave(const CString& pathToReport)
 }
 
 // Установка флага bNumPK (значение подкадра)
-void CPIV::SetStatusNumPK(const bool& status) {	bNumPK = status; }
+void CPIV::SetStatusNumPK(const bool status) {	bNumPK = status; }
 #pragma endregion
 
 #pragma region OPEN_PROJECT
 // Открытие проекта (набора ПИВ) с установкой пути хранения артефактов
-void CPIV::Open(const vector<CString>& pathToExcel, const CString& pathToReport) 
+void CPIV::Open(const vector<CString> pathToExcel, const CString pathToReport) 
 {
 	buffer = pathToExcel;
 	path = pathToReport;
@@ -129,7 +129,7 @@ void CPIV::Open(const vector<CString>& pathToExcel, const CString& pathToReport)
 }
 
 // использовать старый путь хранения
-void CPIV::Open(const vector<CString>& pathToExcel)
+void CPIV::Open(const vector<CString> pathToExcel)
 {
 	buffer = pathToExcel;
 	StartOpen();
@@ -177,14 +177,14 @@ void CPIV::OpenExcel()
 #pragma region OPEN_PIV
 // Открыть отдельные протоколы:
 // один
-void CPIV::Add(const CString& pathToExcel) 
+void CPIV::Add(const CString pathToExcel) 
 {
 	buffer.push_back(pathToExcel);
 	StartAdd();
 }
 
 // несколько
-void CPIV::Add(const vector<CString>& pathToExcel) 
+void CPIV::Add(const vector<CString> pathToExcel) 
 {
 	buffer = pathToExcel;
 	StartAdd();
@@ -196,7 +196,8 @@ void CPIV::StartAdd()
 	if (GetStatusThread(primary))
 	{
 		hCmd = add;
-		primary = CreateThread(NULL, 0, PrimaryThread, this, 0, 0);
+		mData.object = this;
+		primary = CreateThread(NULL, 0, PrimaryThread, &mData, 0, 0);
 	}
 	else
 		logger.WriteError(LOG_THREAD_BUSY);
@@ -215,8 +216,8 @@ void CPIV::AddExcel()
 			contain ? Refresh(other, book) : other.books.push_back(book);
 			
 			CTest tester;
-			bookData& pBook = GetBook(other, buffer[i]);
-			errorSet error = tester.Start(pBook);
+			list <bookData>::iterator pBook = GetBook(other, buffer[i]);
+			errorSet error = tester.Start(*pBook);
 			contain ? Refresh(other, error) : other.db.push_back(error);
 
 			report.GetTxt(book, path, bNumPK);
@@ -236,13 +237,13 @@ void CPIV::AddExcel()
 
 #pragma region REFRESH_PIV
 // Обновление протоколов
-void CPIV::Refresh(const vector<CString>& pathToExcel)
+void CPIV::Refresh(const vector<CString> pathToExcel)
 {
 	buffer = pathToExcel;
 	StartRefresh();
 }
 
-void CPIV::Refresh(const CString& pathToExcel) 
+void CPIV::Refresh(const CString pathToExcel) 
 {
 	buffer.push_back(pathToExcel);
 	StartRefresh();
@@ -254,7 +255,8 @@ void CPIV::StartRefresh()
 	if (GetStatusThread(primary)) 
 	{
 		hCmd = refresh;
-		primary = CreateThread(NULL, 0, PrimaryThread, this, 0, 0);
+		mData.object = this;
+		primary = CreateThread(NULL, 0, PrimaryThread, &mData, 0, 0);
 	}
 	else
 		logger.WriteError(LOG_THREAD_BUSY);
@@ -265,7 +267,7 @@ void CPIV::RefreshExcel()
 	try 
 	{
 		CReport report;
-		bool flagProj = false, flagOther = false;
+		bool flag = true;
 		for (size_t i = 0; i < buffer.size(); i++)
 		{
 			CReaderExcel reader;
@@ -274,18 +276,18 @@ void CPIV::RefreshExcel()
 			CTest tester;
 			if (IsContain(project, buffer[i])) 
 			{
-				flagProj = true;
+				flag = true;
 				Refresh(project, book);
-				bookData& pBook = GetBook(project, buffer[i]);
-				errorSet error = tester.Start(pBook);
+				list <bookData>::iterator pBook = GetBook(project, buffer[i]);
+				errorSet error = tester.Start(*pBook);
 				Refresh(project, error);
 			}
 			else if (IsContain(other, buffer[i])) 
 			{
-				flagOther = true;
+				flag = false;
 				Refresh(other, book);
-				bookData& pBook = GetBook(other, buffer[i]);
-				errorSet error = tester.Start(pBook);
+				list <bookData>::iterator pBook = GetBook(other, buffer[i]);
+				errorSet error = tester.Start(*pBook);
 				Refresh(other, error);
 			}
 			else
@@ -294,10 +296,7 @@ void CPIV::RefreshExcel()
 			report.GetTxt(book, path, bNumPK);
 		}
 		
-		if (flagProj)
-			report.GetReport(project, path, true);		// true - проект, false - отдельные протоколы
-		else if (flagOther)
-			report.GetReport(other, path, false);
+		flag ?	report.GetReport(project, path, true) : report.GetReport(other, path, false);
 	
 		CloseThread(primary);
 		
@@ -322,14 +321,14 @@ void CPIV::Close()
 }
 
 // одного
-void CPIV::Close(const CString& path)
+void CPIV::Close(const CString path)
 {
 	buffer.push_back(path);
 	StartClose();
 }
 
 // нескольких
-void CPIV::Close(const vector<CString>& path) 
+void CPIV::Close(const vector<CString> path) 
 {
 	buffer = path;
 	StartClose();
@@ -341,7 +340,8 @@ void CPIV::StartClose()
 	if (GetStatusThread(primary)) 
 	{
 		hCmd = close;
-		primary = CreateThread(NULL, 0, PrimaryThread, this, 0, 0);
+		mData.object = this;
+		primary = CreateThread(NULL, 0, PrimaryThread, &mData, 0, 0);
 	}
 	else
 		logger.WriteError(LOG_THREAD_BUSY);
@@ -400,13 +400,12 @@ void CPIV::Refresh(pivData& data, const errorSet& error)
 }
 
 // Получение ссылки на данные требуемого протокола
-bookData& CPIV::GetBook(pivData& data, const CString& path)
+list<bookData>::iterator CPIV::GetBook(pivData& data, const CString& path)
 {
-	bookData& result = *data.books.end();
 	for (list <bookData>::iterator it = data.books.begin(); it != data.books.end(); it++)
 		if (NameFromPath(path).Compare(it->name) == 0)
-			result = *it;
-	return result;
+			return it;
+	return data.books.end();
 }
 
 // Выделение имени протокола из его пути

@@ -30,26 +30,26 @@ public:
 
 	CLogger logger;
 
-	void Open(const vector<CString>& pathToExcel, const CString& pathToReport);	// Открытие проекта (набора ПИВ) с установкой пути хранения артефактов
-	void Open(const vector<CString>& pathToExcel);								// использовать старый путь хранения
+	void Open(const vector<CString> pathToExcel, const CString pathToReport);	// Открытие проекта (набора ПИВ) с установкой пути хранения артефактов
+	void Open(const vector<CString> pathToExcel);								// использовать старый путь хранения
 
-	void Add(const vector<CString>& pathToExcel);		// Открытие отдельных протоколов
-	void Add(const CString& pathToExcel);
+	void Add(const vector<CString> pathToExcel);		// Открытие отдельных протоколов
+	void Add(const CString pathToExcel);
 
-	void Refresh(const vector<CString>& pathToExcel);	// Обновление протоколов
-	void Refresh(const CString& pathToExcel);
+	void Refresh(const vector<CString> pathToExcel);	// Обновление протоколов
+	void Refresh(const CString pathToExcel);
 
 	void Close();										// Закрытие всех протоколов
-	void Close(const vector<CString>& pathToExcel);		// выбранных
-	void Close(const CString& pathToExcel);				// одного
+	void Close(const vector<CString> pathToExcel);		// выбранных
+	void Close(const CString pathToExcel);				// одного
 
 	// Получение путей артефактов
 	CString GetProjectPath();
 	CString GetOtherPath();
 	CString GetPath();
 
-	void SetPathToSave(const CString& pathToReport);	// Установка пути хранения артефактов
-	void SetStatusNumPK(const bool& status);			// Установка флага bNumPK (значение подкадра)
+	void SetPathToSave(const CString pathToReport);	// Установка пути хранения артефактов
+	void SetStatusNumPK(const bool status);			// Установка флага bNumPK (значение подкадра)
 
 protected:
 	friend void Thread(CPIV& piv);	// Запуск операций DLL в потоке
@@ -85,7 +85,7 @@ private:
 	void Refresh(pivData& data, const bookData& book);							// Обновление только данных
 	void Refresh(pivData& data, const errorSet& error);							// Обновление только базы ошибок
 	
-	bookData& GetBook(pivData& data, const CString& pathToExcel);		// Получение ссылки на данные требуемого протокола
+	list<bookData>::iterator GetBook(pivData& data, const CString& pathToExcel);		// Получение указателя на данные требуемого протокола
 	CString NameFromPath(const CString& pathToExcel);					// Выделение имени протокола из его пути
 	bool IsContain(pivData& data, const CString& pathToExcel);			// Проверка наличия данных требуемого протокола
 
