@@ -165,7 +165,7 @@ void CPIV::OpenExcel()
 		report.GetReport(project, path, true);		// true -  проект, false - отдельные протоколы
 		report.GetTxt(project.books, path, bNumPK);
 		CloseThread(primary);
-		logger.Write(L"Открытие проекта завершено");	// Логирование
+		logger.Write(LOG_OPEN);	// Логирование
 	}
 	catch (MyException& exc)
 	{
@@ -220,13 +220,13 @@ void CPIV::AddExcel()
 			errorSet error = tester.Start(*pBook);
 			contain ? Refresh(other, error) : other.db.push_back(error);
 
-			report.GetTxt(book, path, bNumPK);
+			report.GetTxt(*pBook, path, bNumPK);
 		}
 		
 		report.GetReport(other, path, false);	// true -  проект, false - отдельные протоколы
 		CloseThread(primary);
 		
-		logger.Write(L"Добавление ПИВ завершено");	// Логирование
+		logger.Write(LOG_ADD);	// Логирование
 	}
 	catch (MyException& exc) 
 	{
@@ -272,13 +272,14 @@ void CPIV::RefreshExcel()
 		{
 			CReaderExcel reader;
 			bookData book = reader.GetBook(buffer[i]);
+			list <bookData>::iterator pBook;
 
 			CTest tester;
 			if (IsContain(project, buffer[i])) 
 			{
 				flag = true;
 				Refresh(project, book);
-				list <bookData>::iterator pBook = GetBook(project, buffer[i]);
+				pBook = GetBook(project, buffer[i]);
 				errorSet error = tester.Start(*pBook);
 				Refresh(project, error);
 			}
@@ -286,21 +287,21 @@ void CPIV::RefreshExcel()
 			{
 				flag = false;
 				Refresh(other, book);
-				list <bookData>::iterator pBook = GetBook(other, buffer[i]);
+				pBook = GetBook(other, buffer[i]);
 				errorSet error = tester.Start(*pBook);
 				Refresh(other, error);
 			}
 			else
 				throw BookNotFound(NameFromPath(buffer[i]));
 
-			report.GetTxt(book, path, bNumPK);
+			report.GetTxt(*pBook, path, bNumPK);
 		}
 		
 		flag ?	report.GetReport(project, path, true) : report.GetReport(other, path, false);
 	
 		CloseThread(primary);
 		
-		logger.Write(L"Обновление ПИВ завершено");	// Логирование
+		logger.Write(LOG_REFRESH);	// Логирование
 	}
 	catch (MyException& exc) 
 	{
@@ -317,7 +318,7 @@ void CPIV::Close()
 		other.books.clear();
 	if (!other.db.empty())
 		other.db.clear();
-	logger.Write(L"Закрытие ПИВ завершено");	// Логирование
+	logger.Write(LOG_CLOSE);	// Логирование
 }
 
 // одного
@@ -366,7 +367,7 @@ void CPIV::CloseExcel()
 			it->name.Compare(NameFromPath(buffer[i])) == 0 ? other.books.erase(it++) : it++;
 	}
 	CloseThread(primary);
-	logger.Write(L"Закрытие ПИВ завершено");	// Логирование
+	logger.Write(LOG_CLOSE);	// Логирование
 }
 #pragma endregion
 
