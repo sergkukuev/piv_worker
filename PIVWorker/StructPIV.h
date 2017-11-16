@@ -10,6 +10,8 @@ using namespace std;
 
 #pragma region Data
 
+const enum check {numword, title, min, max, csr, bits, comment, size}; // Индексы ячеек в таблице
+
 // Хранение номера слова и битов
 struct intData 
 {
@@ -86,7 +88,7 @@ struct errorSet
 };
 
 // Шапки таблицы
-const CString errRemarks[FIELD_SIZE] = 
+const CString errRemarks[check::size] = 
 {
 	// Номер параметра
 	L"Замечание. Поле \"№ слова\" заполнено не верно.",

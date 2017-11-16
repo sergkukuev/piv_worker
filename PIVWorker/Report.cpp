@@ -220,22 +220,22 @@ CString CReport::WriteSheets(sheetData* sheet, const vector <errorSignal>& db, c
 void CReport::WriteSignal(CStdioFile& file, const errorSignal& set) 
 {
 	CString buffer;
-	file.WriteString(WriteParam(set.signal->numWord.field, set.check[NUMWORD_CHECK], 5));
+	file.WriteString(WriteParam(set.signal->numWord.field, set.check[check::numword], 5));
 
 	buffer.Format(L"\t\t\t\t<td align=\"center\" style=\"width: 15%%\"> &nbsp %s</td>\n", set.signal->title[0]);
 	file.WriteString(buffer);
 
-	file.WriteString(WriteParam(set.signal->title[1], set.check[TITLE_CHECK], 10));
+	file.WriteString(WriteParam(set.signal->title[1], set.check[check::title], 10));
 	
 	buffer.Format(L"\t\t\t\t<td align=\"center\" style=\"width: 5%%\"> &nbsp %s</td>\n", set.signal->dimension);
 	file.WriteString(buffer);
 
-	file.WriteString(WriteParam(set.signal->min.field, set.check[MIN_CHECK], 5));
-	file.WriteString(WriteParam(set.signal->max.field, set.check[MAX_CHECK], 5));
-	file.WriteString(WriteParam(set.signal->csr.field, set.check[CSR_CHECK], 5));
+	file.WriteString(WriteParam(set.signal->min.field, set.check[check::min], 5));
+	file.WriteString(WriteParam(set.signal->max.field, set.check[check::max], 5));
+	file.WriteString(WriteParam(set.signal->csr.field, set.check[check::csr], 5));
 
-	file.WriteString(WriteParam(set.signal->bit.field, set.check[BITS_CHECK], 10));
-	file.WriteString(WriteParam(set.signal->comment, set.check[COMMENT_CHECK], 30));
+	file.WriteString(WriteParam(set.signal->bit.field, set.check[check::bits], 10));
+	file.WriteString(WriteParam(set.signal->comment, set.check[check::comment], 30));
 
 	file.WriteString(L"\t\t\t</tr>\n"
 		"\t\t\t<tr>\n");

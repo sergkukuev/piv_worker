@@ -27,15 +27,6 @@
 
 // Идентификаторы значений таблицы
 #define RESERVE_SIGNAL L"Резерв"
-#define FIELD_SIZE 7	
-
-#define NUMWORD_CHECK 0
-#define TITLE_CHECK 1
-#define MIN_CHECK 2
-#define MAX_CHECK 3
-#define CSR_CHECK 4
-#define BITS_CHECK 5
-#define COMMENT_CHECK 6
 
 // Статусы DLL и логирование
 #define LOG_THREAD_BUSY L"Поток занят! Подождите окончания процесса!"
