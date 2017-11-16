@@ -129,9 +129,13 @@ void CTest::GetErrors(vector <errorSignal>& syntax, vector <errorSignal>& simant
 				//SimpleTest(tmp) ? sheet->error = true : sheet->error = sheet->error;
 
 				TemplateTest(sheet->signals[i].title[1], check::title, base[title], tmp) ? sheet->error = true : sheet->error = sheet->error;
-				TemplateTest(sheet->signals[i].min.field, check::min, base[value], tmp) ? sheet->error = true : sheet->error = sheet->error;
-				TemplateTest(sheet->signals[i].max.field, check::max, base[value], tmp) ? sheet->error = true : sheet->error = sheet->error;
-				TemplateTest(sheet->signals[i].csr.field, check::csr, base[value], tmp) ? sheet->error = true : sheet->error = sheet->error;
+				// TODO: Три пустые ячейки не считаются ошибкой (исправить костыль)
+				if (sheet->signals[i].min.flag || sheet->signals[i].max.flag || sheet->signals[i].csr.flag)
+				{
+					TemplateTest(sheet->signals[i].min.field, check::min, base[value], tmp) ? sheet->error = true : sheet->error = sheet->error;
+					TemplateTest(sheet->signals[i].max.field, check::max, base[value], tmp) ? sheet->error = true : sheet->error = sheet->error;
+					TemplateTest(sheet->signals[i].csr.field, check::csr, base[value], tmp) ? sheet->error = true : sheet->error = sheet->error;
+				}
 				TemplateTest(sheet->signals[i].bit.field, check::bits, base[bits], tmp) ? sheet->error = true : sheet->error = sheet->error;
 				
 				if (!tmp.error.empty())
