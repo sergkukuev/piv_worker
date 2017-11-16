@@ -7,33 +7,27 @@
 #include <set>
 
 #define MAX_BITS 32
+#define SIZE_BASE 4
 
-#define SIZE_BASE 4		// Пока 4, потом 5 будет, как появится проверка ячейки адреса для arinc
-#define NUMWORD_BASE 0
-#define TITLE_BASE 1
-#define VALUE_BASE 2	// min, max, csr в одном флаконе
-#define BITS_BASE 3
-#define ADR_BASE 4
-
-// Структура для проверки повторений номеров слов(адресов) и битов
+// Повторения номеров слов(адресов) и битов
 struct repiter 
 {
 	int adr;	// Номер слова (адрес)
 	bool* bits;	// 0 - присутствие номера слова(адреса), 1...MAX_BITS - присутствие битов
 };
 
-// Структура некорректных регулярок с дескриптором
+// Некорректные регулярные выражения
 struct regular
 {
-	string reg;		// Регулярка
-	CString desc;	// Дескриптор
+	string reg;		// Шаблон выражения
+	CString desc;	// Замечание (дескриптор)
 };
 
-// Структура для базы ошибок
-struct regexBase 
+// База регулярных выражений
+struct regBase
 {
-	string correct;		// Корректная регулярка
-	vector <regular> incorrect;	// Некорректные регулярки
+	string correct;
+	vector <regular> incorrect;
 };
 
 class PIV_DECLARE CTest 
@@ -42,34 +36,37 @@ public:
 	CTest();	// Конструктор
 	~CTest();	// Деструктор
 
-	errorSet Start(bookData& book);					// Проверка на ошибки одного протокола
-	list <errorSet> Start(list <bookData>& books);	// Проверка на все ошибки
+	// Начало проверки
+	errorSet Start(bookData& book);
+	list <errorSet> Start(list <bookData>& books);	
 
 private:
 	bookData* book = nullptr;	// Указатель на текущую книгу
-	sheetData* sheet = nullptr;	// Указательна текущий лист
+	sheetData* sheet = nullptr;	// Указатель на текущий лист
 
-	vector <regexBase> base;	// База ошибок параметров
-	set<CString> exception;		// Множество исключений задается в конструкторе
+	vector <regBase> base;	// База регулярных выражений
+	set<CString> exception;	// Множество исключений задается в конструкторе
 
-	void getErrors(vector <errorSignal>& syntax, vector <errorSignal>& simantic);	// Проверка на синтаксические и семантические ошибки
-	void getWarnings(vector <errorSignal>& warning);	// Проверка на незначительные ошибки (замечания) 
+	const enum index {numword, title, value, bits, adress};	// Индексы параметров в базе регулярных выражений (min, max, csr в одном флаконе)
 
-	void initRepiter(vector<repiter>& repit);	// Инициализация репитера для проверки перекрытия
-	int isContain(const vector<repiter>& repit, const int& numeric);	// Имеется ли уже такой номер слова (адрес) (в случае неудачи возвр. индекс, иначе -1)
+	void GetErrors(vector <errorSignal>& syntax, vector <errorSignal>& simantic);	// Проверка на синтаксические и семантические ошибки
+	void GetWarnings(vector <errorSignal>& warning);	// Проверка на незначительные ошибки (замечания) 
+
+	void InitRepiter(vector<repiter>& repit);	// Инициализация репитера для проверки перекрытия
+	int IsContain(const vector<repiter>& repit, const int& numeric);	// Имеется ли уже такой номер слова (адрес) (в случае неудачи возвр. индекс, иначе -1)
 
 	// Синтаксический анализ
-	bool checkNP(vector <errorSignal>& error);	// Проверка номера набора параметров
-	bool syntaxValue(errorSignal& set);	// Проверка всех числовых параметров
-	bool syntaxTemplate(const CString& field, const int& check, const regexBase& test, errorSignal& set); // Синтаксическая проверка шаблонным методом\
+	bool CheckNP(vector <errorSignal>& error);	// Проверка номера набора параметров
+	bool SyntaxValue(errorSignal& set);	// Проверка всех числовых параметров
+	bool SyntaxTemplate(const CString& field, const int& check, const regBase& test, errorSignal& set); // Синтаксическая проверка шаблонным методом\
 
 	// Семантический анализ
-	bool simanticValue(errorSignal& set, vector <repiter>& repit);		// Проверка всех числовых параметров
-	bool findRepiteTitleInSheet(errorSignal& set, const int& index);	// Поиск повторений идентификатора на листе
-	void findRepiteTitleInBook(errorSignal& set, const int& index);		// Поиск повторений идентификатора в книге
-	bool simanticBits(errorSignal& set, const CString& prevTitle, vector<repiter>& repit);	// Проверка используемых разрядов
-	vector<int> checkCrossBits(const vector <int>& bits, const vector <int>& numWord, vector<repiter>& repit); // Проверка перекрытия битов
-	bool checkSameTitle(const CString& next, const CString& prev);		// Проверка двух соседних наименований на совпадение
+	bool SimanticValue(errorSignal& set, vector <repiter>& repit);		// Проверка всех числовых параметров
+	bool FindRepiteTitleInSheet(errorSignal& set, const int& index);	// Поиск повторений идентификатора на листе
+	void FindRepiteTitleInBook(errorSignal& set, const int& index);		// Поиск повторений идентификатора в книге
+	bool SimanticBits(errorSignal& set, const CString& prevTitle, vector<repiter>& repit);	// Проверка используемых разрядов
+	vector<int> CheckCrossBits(const vector <int>& bits, const vector <int>& numWord, vector<repiter>& repit); // Проверка перекрытия битов
+	bool CheckSameTitle(const CString& next, const CString& prev);		// Проверка двух соседних наименований на совпадение
 
-	bool writeError(errorSignal& result, const CString& msg, const int& index);	// Запись ошибки 
+	bool WriteError(errorSignal& result, const CString& msg, const int& index);	// Запись ошибки 
 };
