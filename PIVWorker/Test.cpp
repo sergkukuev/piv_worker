@@ -10,7 +10,7 @@ CTest::CTest()
 	exception.insert(L"ID_BPV2");	// Идентификатор блока 2
 
 	// Создание базы для проверки на ошибки с помощью регулярных выражений
-	base.resize(BASE_SIZE);
+	base.resize(index::size);
 	base[numword].correct = "^[0-9]+(, ?[0-9]+)?$";
 	base[numword].incorrect = 
 	{
