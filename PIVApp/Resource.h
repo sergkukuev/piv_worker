@@ -16,6 +16,7 @@
 #define IDI_REFRESH                     156
 #define IDI_UNDO                        157
 #define IDI_SETTING                     158
+#define IDD_SETTINGBOX                  159
 #define IDC_LISTBOX                     1005
 #define IDC_EXPLORER                    1010
 #define IDC_EDIT_PATH                   1012
@@ -35,14 +36,21 @@
 #define IDC_NUM_PIV                     1039
 #define IDC_BTN_SETTING                 1040
 #define IDC_SHOW_REP                    1041
+#define IDC_SAVESETTINGS                1045
+#define IDC_CHECK_NUMPK                 1047
+#define IDC_CHECK_TXT100                1048
+#define IDC_930M                        1049
+#define IDC_KPRNO35                     1050
+#define IDC_FAST						1051
+#define IDC_TEMPLATE                    1052
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        159
+#define _APS_NEXT_RESOURCE_VALUE        164
 #define _APS_NEXT_COMMAND_VALUE         32775
-#define _APS_NEXT_CONTROL_VALUE         1045
+#define _APS_NEXT_CONTROL_VALUE         1053
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

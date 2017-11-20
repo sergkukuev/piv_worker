@@ -76,12 +76,16 @@ void Waiting(CPIVDlg& dlg, HWND hWnd)
 
 void CPIVDlg::ReceiveMessage(HWND hWnd)
 {
-	while (&piv.logger != NULL)
+	while (&piv != NULL)
 	{
-		CString temp = piv.logger.GetStatus();
+		CString temp = piv.GetStatus();
 		::SendMessage(hWnd, WM_EXCHANGE_DLL, 0, reinterpret_cast<LPARAM>(&temp));
-		UpdateMenu();
-		RefreshList();
+		
+		if (!piv.IsUpdate())
+		{
+			RefreshList();
+			UpdateMenu();
+		}
 		Sleep(200);
 	}
 }
@@ -312,7 +316,7 @@ void CPIVDlg::OnOpenProj()
 		piv.Open(pathProj);
 	}
 	else
-		piv.logger.Write(L"Протоколы для открытия не выбраны");
+		piv.WriteLog(L"Протоколы для открытия не выбраны");
 }
 
 // Открытие остальных 
@@ -328,7 +332,7 @@ void CPIVDlg::OnOpenPiv()
 		piv.Add(path);
 	}
 	else
-		piv.logger.Write(L"Протоколы для открытия не выбраны");
+		piv.WriteLog(L"Протоколы для открытия не выбраны");
 }
 
 // Обновление протоколов
@@ -344,7 +348,7 @@ void CPIVDlg::OnRefreshPiv()
 	for (int i = 0; i < sel.GetSize(); i++)
 		m_Cmb->GetCurSel() == PROJECT ? forRef.push_back(pathProj[i]) : forRef.push_back(pathOther[i]);
 
-	!forRef.empty() ? piv.Refresh(forRef) : piv.logger.Write(L"Протоколы для обновления не выбраны");
+	!forRef.empty() ? piv.Refresh(forRef) : piv.WriteLog(L"Протоколы для обновления не выбраны");
 }
 
 // Смена рабочей директории
@@ -359,7 +363,7 @@ void CPIVDlg::OnChangeFolder()
 		m_Edit->SetWindowTextW(folder);
 	}
 	else
-		piv.logger.Write(L"Папка для сохранения артефактов не изменена");
+		piv.WriteLog(L"Папка для сохранения артефактов не изменена");
 }
 
 // Открыть отчет в браузере
@@ -396,7 +400,7 @@ void CPIVDlg::OnClosePiv()
 		pathOther.erase(pathOther.begin() + sel[i]);
 	}
 
-	!forDel.empty() ? piv.Close(forDel) : piv.logger.Write(L"Протоколы для закрытия не выбраны");
+	!forDel.empty() ? piv.Close(forDel) : piv.WriteLog(L"Протоколы для закрытия не выбраны");
 }
 
 // Закрытие всех протоколов
@@ -418,7 +422,7 @@ void CPIVDlg::OnCbnSelchangeCombo()
 // Открыть окно настроек
 void CPIVDlg::OnBnClickedSetting()
 {
-	// TODO: Запилить диалоговое окно настроек
+	// TODO: Прикрутить окно настроек
 }
 
 // Показывать отчет рядом со списком открытых протоколов или нет
@@ -554,6 +558,10 @@ void CPIVDlg::BrowserNavigate()
 }
 #pragma endregion
 
+#pragma region Settings
+
+#pragma endregion
+
 // Обновление листа
 void CPIVDlg::RefreshList()
 {
@@ -593,6 +601,7 @@ void CPIVDlg::UpdateMenu()
 		CMenu* menu = m_contextMenu.GetSubMenu(0);
 		if (m_ListBox->GetCount() > 0)
 		{
+			//OnBnClickedBtnRefresh();
 			menu->EnableMenuItem(ID_REFRESH_PIV, MFS_ENABLED);
 			menu->EnableMenuItem(ID_OPEN_REPORT, MFS_ENABLED);
 		}
@@ -608,6 +617,7 @@ void CPIVDlg::UpdateMenu()
 		CMenu* menu = m_contextMenu.GetSubMenu(1);
 		if (m_ListBox->GetCount() > 0)
 		{
+			//OnBnClickedBtnRefresh();
 			menu->EnableMenuItem(ID_CLOSE_PIV, MFS_ENABLED);
 			menu->EnableMenuItem(ID_CLOSE_ALL, MFS_ENABLED);
 			menu->EnableMenuItem(ID_REFRESH_PIV, MFS_ENABLED);
