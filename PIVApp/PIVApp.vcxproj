@@ -187,6 +187,7 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="WebBrowser.h" />
     <ClInclude Include="PIVApp.h" />
     <ClInclude Include="PIVDlg.h" />
     <ClInclude Include="Resource.h" />
@@ -194,6 +195,7 @@
     <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="WebBrowser.cpp" />
     <ClCompile Include="PIVApp.cpp" />
     <ClCompile Include="PIVDlg.cpp" />
     <ClCompile Include="stdafx.cpp">
@@ -228,7 +230,7 @@
   </ImportGroup>
   <ProjectExtensions>
     <VisualStudio>
-      <UserProperties _x007B_8BD21D60-EC42-11CE-9E0D-00AA006002F3_x007D_="CTbtn_report" />
+      <UserProperties _x007B_8856F961-340A-11D0-A96B-00C04FD705A2_x007D_="CWebBrowser" _x007B_8BD21D60-EC42-11CE-9E0D-00AA006002F3_x007D_="CTbtn_report" />
     </VisualStudio>
   </ProjectExtensions>
 </Project>

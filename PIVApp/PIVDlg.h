@@ -5,6 +5,8 @@
 #pragma once
 #include "afxwin.h"
 #include <vector>
+
+#include "WebBrowser.h"
 #include "PIVWorker.h"
 
 // Значения комбо-бокса для определения вывода контекстного меню
@@ -30,6 +32,7 @@ protected:
 	CMenu m_contextMenu;		// Контекстное меню
 	CListBox* m_ListBox;		// Список открытых протоколов
 	CStatusBar m_StatusBar;
+	WebBrowser browser;
 	HICON m_hIcon;
 	HANDLE hWait;
 
@@ -59,6 +62,7 @@ private:
 	void RefreshList();		// Обновление ListBox
 	void SetNumericPIV();	// Установка количество считанных ПИВ
 	void UpdateMenu();		// Обновление меню
+	void BrowserNavigate();	// Установка пути отчета для встроенного браузера
 public:
 	// Обработчики событий
 	afx_msg void OnOpenProj();			// Открытие проекта

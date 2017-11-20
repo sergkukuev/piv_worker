@@ -5,6 +5,7 @@
 #include "stdafx.h"
 #include "PIVApp.h"
 #include "PIVDlg.h"
+#include "WebBrowser.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW

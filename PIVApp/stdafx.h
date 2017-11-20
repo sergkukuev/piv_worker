@@ -35,6 +35,7 @@
 
 
 #include <afxsock.h>            // расширения сокетов MFC
+#include <afxdisp.h>
 
 
 

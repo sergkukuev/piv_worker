@@ -104,6 +104,7 @@ CPIVDlg::CPIVDlg(CWnd* pParent /*=NULL*/) : CDialogEx(IDD_PIVAPP_DIALOG, pParent
 void CPIVDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CDialogEx::DoDataExchange(pDX);
+	DDX_Control(pDX, IDC_EXPLORER, browser);
 }
 
 BEGIN_MESSAGE_MAP(CPIVDlg, CDialogEx)
@@ -217,6 +218,8 @@ BOOL CPIVDlg::OnInitDialog()
 	//m_StatusBar.SetPaneInfo(1, ID_INDICATOR_MOUSE, SBPS_NORMAL, 0);	
 	m_StatusBar.GetStatusBarCtrl().SetBkColor(RGB(180, 180, 180));
 	RepositionBars(AFX_IDW_CONTROLBAR_FIRST, AFX_IDW_CONTROLBAR_LAST, ID_INDICATOR_DLL);
+
+	BrowserNavigate();
 
 	// Инициализация потока обмена сообщений между DLL и приложением
 	mData.dlg = this;
@@ -409,7 +412,7 @@ void CPIVDlg::OnCbnSelchangeCombo()
 {
 	RefreshList();
 	SetNumericPIV();
-	// TODO: Привязать смену отчета
+	BrowserNavigate();
 }
 
 // Открыть окно настроек
@@ -515,24 +518,39 @@ CString CPIVDlg::NameFromPath(const CString& path)
 }
 
 #pragma region Browser
-// TODO: Запилить браузерное окно
 void CPIVDlg::OnBnClickedBtnHome()
 {
+	BrowserNavigate();
 }
 
 
 void CPIVDlg::OnBnClickedBtnPrev()
 {
+	browser.GoBack();
 }
 
 
 void CPIVDlg::OnBnClickedBtnNext()
 {
+	browser.GoForward();
 }
 
 
 void CPIVDlg::OnBnClickedBtnRefresh()
 {
+	browser.Refresh();
+}
+
+void CPIVDlg::BrowserNavigate()
+{
+	CComboBox* m_Cmb = (CComboBox*)GetDlgItem(IDC_CMB_MODE);
+	CString path;
+	if (m_Cmb->GetCurSel() == PROJECT)
+		path.Format(L"%s\\%s", piv.GetProjectPath(), REPORT_NAME);
+	if (m_Cmb->GetCurSel() == OTHER)
+		path.Format(L"%s\\%s", piv.GetOtherPath(), REPORT_NAME);
+
+	browser.Navigate(path, NULL, NULL, NULL, NULL);
 }
 #pragma endregion
 
