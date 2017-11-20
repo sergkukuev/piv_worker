@@ -18,28 +18,30 @@ void CLogger::SetPath(CString* path)
 	LeaveCriticalSection(&cs);
 }
 
-CString CLogger::GetStatus()
+CString CLogger::GetStatus() { return status; }
+
+bool CLogger::IsRead() 
 {
+	bool temp = state;
 	EnterCriticalSection(&cs);
-	CString result = status;
+	state = true;
 	LeaveCriticalSection(&cs);
-	return result;
+	return temp; 
 }
 
-void CLogger::Write(const CString& message)
+void CLogger::Write(const CString& message, const bool& iter)
 {
-	Write(message, false);
+	Write(message, false, iter);
 }
 
 void CLogger::WriteError(const CString& message)
 {
-	Write(message, true);
+	Write(message, true, false);
 }
 
-void CLogger::Write(const CString& message, const bool& flag)
+void CLogger::Write(const CString& message, const bool& error, const bool& iter)
 {
-	EnterCriticalSection(&cs);
-	flag ? status = L"При операции произошла ошибка (подробное описание см. в логах)" : status = message;
+	error ? status = L"Что-то пошло не так (см. в log.txt)" : status = message;
 
 	SYSTEMTIME st;
 	CString str;
@@ -47,11 +49,15 @@ void CLogger::Write(const CString& message, const bool& flag)
 	message.CompareNoCase(LOG_SLASH) != 0 ?
 		str.Format(L"%02d:%02d:%02d %02d/%02d/%d:\t%s\n", st.wHour, st.wMinute, st.wSecond, st.wDay, st.wMonth, st.wYear, message) :
 		str = message;
-	LeaveCriticalSection(&cs);
 
 	CString logPath;
 	logPath.Format(L"%s\\%s", *path, LOG_FILE_NAME);
 	std::ofstream logStream(logPath, std::ios::out | std::ios::app);
 	logStream << CT2A(str);
 	logStream.close();
+
+	EnterCriticalSection(&cs);
+	if (!iter)
+		state = false;
+	LeaveCriticalSection(&cs);
 }

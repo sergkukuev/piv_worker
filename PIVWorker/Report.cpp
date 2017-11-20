@@ -8,7 +8,7 @@ CReport::CReport()	{	}
 CReport::~CReport()	{	}
 
 #pragma region GENERATE_REPORT
-
+// TODO: Исправить баги отчета во встроенной версии браузера
 // Генерация отчета об ошибках
 void CReport::GetReport(pivData& data, const CString& pathToSave, const bool& isProj) 
 {

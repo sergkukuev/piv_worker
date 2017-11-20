@@ -69,8 +69,14 @@ CPIV::~CPIV()
 	logger.Write(LOG_SLASH);
 }
 
+bool CPIV::IsUpdate() { return logger.IsRead(); }
+
+CString CPIV::GetStatus() { return logger.GetStatus(); }
+
+void CPIV::WriteLog(const CString& msg) { logger.Write(msg); }
+
 // Получение путей параметров
-CString CPIV::GetPath()	{	return path;	}
+CString CPIV::GetPath() { return path; }
 
 CString CPIV::GetOtherPath()
 {
@@ -112,7 +118,7 @@ void CPIV::SetPathToSave(const CString pathToReport)
 	
 	path.Format(L"%s%s", pathToReport, BASE_FOLDER);	// Установка пути хранения артефактов
 	CreateDirectory(path, NULL);
-	logger.Write(LOG_FOLDER);
+	logger.Write(L"Изменено расположение папки отчетов");
 }
 
 // Установка флага bNumPK (значение подкадра)
@@ -146,13 +152,14 @@ void CPIV::StartOpen()
 		primary = CreateThread(NULL, 0, PrimaryThread, &mData, 0, 0);
 	}
 	else
-		logger.WriteError(LOG_THREAD_BUSY);
+		AfxMessageBox(LOG_THREAD_BUSY, MB_ICONINFORMATION);
 }
 
 void CPIV::OpenExcel() 
 {
 	try 
 	{
+		logger.Write(L"Идет открытие пив...", true);
 		CReaderExcel reader; 
 		for (size_t i = 0; i < buffer.size(); i++)
 			project.books.push_back(reader.GetBook(buffer[i]));
@@ -165,7 +172,7 @@ void CPIV::OpenExcel()
 		report.GetReport(project, path, true);		// true -  проект, false - отдельные протоколы
 		report.GetTxt(project.books, path, bNumPK);
 		CloseThread(primary);
-		logger.Write(LOG_OPEN);	// Логирование
+		logger.Write(L"Открытие пив завершено");	// Логирование
 	}
 	catch (MyException& exc)
 	{
@@ -200,13 +207,14 @@ void CPIV::StartAdd()
 		primary = CreateThread(NULL, 0, PrimaryThread, &mData, 0, 0);
 	}
 	else
-		logger.WriteError(LOG_THREAD_BUSY);
+		AfxMessageBox(LOG_THREAD_BUSY, MB_ICONINFORMATION);
 }
 
 void CPIV::AddExcel() 
 {
 	try 
 	{
+		logger.Write(L"Идет добавление пив...", true);
 		CReport report;
 		for (size_t i = 0; i < buffer.size(); i++) 
 		{
@@ -226,7 +234,7 @@ void CPIV::AddExcel()
 		report.GetReport(other, path, false);	// true -  проект, false - отдельные протоколы
 		CloseThread(primary);
 		
-		logger.Write(LOG_ADD);	// Логирование
+		logger.Write(L"Добавление пив завершено");	// Логирование
 	}
 	catch (MyException& exc) 
 	{
@@ -252,20 +260,21 @@ void CPIV::Refresh(const CString pathToExcel)
 // Запуск операции обновления протоколов
 void CPIV::StartRefresh() 
 {
-	if (GetStatusThread(primary)) 
+	if (GetStatusThread(primary))
 	{
 		hCmd = refresh;
 		mData.object = this;
 		primary = CreateThread(NULL, 0, PrimaryThread, &mData, 0, 0);
 	}
 	else
-		logger.WriteError(LOG_THREAD_BUSY);
+		AfxMessageBox(LOG_THREAD_BUSY, MB_ICONINFORMATION);
 }
 
 void CPIV::RefreshExcel() 
 {
 	try 
 	{
+		logger.Write(L"Идет обновление выбранных пив...", true);
 		CReport report;
 		bool flag = true;
 		for (size_t i = 0; i < buffer.size(); i++)
@@ -301,7 +310,7 @@ void CPIV::RefreshExcel()
 	
 		CloseThread(primary);
 		
-		logger.Write(LOG_REFRESH);	// Логирование
+		logger.Write(L"Обновление пив завершено");	// Логирование
 	}
 	catch (MyException& exc) 
 	{
@@ -314,11 +323,13 @@ void CPIV::RefreshExcel()
 // Закрытие всех протоколов
 void CPIV::Close() 
 {
-	if (!other.books.empty())
+	if (!other.books.empty() || !other.db.empty())
+	{
+		logger.Write(L"Идет закрытие всех пив...", true);
 		other.books.clear();
-	if (!other.db.empty())
 		other.db.clear();
-	logger.Write(LOG_CLOSE);	// Логирование
+		logger.Write(L"Закрытие пив завершено");	// Логирование
+	}
 }
 
 // одного
@@ -338,27 +349,31 @@ void CPIV::Close(const vector<CString> path)
 // Запуск операции закрытия
 void CPIV::StartClose() 
 {
-	if (GetStatusThread(primary)) 
+	if (GetStatusThread(primary))
 	{
 		hCmd = close;
 		mData.object = this;
 		primary = CreateThread(NULL, 0, PrimaryThread, &mData, 0, 0);
 	}
 	else
-		logger.WriteError(LOG_THREAD_BUSY);
+		AfxMessageBox(LOG_THREAD_BUSY, MB_ICONINFORMATION);
 }
 
 // Закрытие проекта
 void CPIV::CloseProject() 
 {
-	if (!project.books.empty())
+	if (!project.books.empty() || !project.db.empty())
+	{
+		logger.Write(L"Идет закрытие проекта...", true);
 		project.books.clear();
-	if (!project.db.empty())
 		project.db.clear();
+		logger.Write(L"Закрытие проекта завершено");	// Логирование
+	}
 }
 
 void CPIV::CloseExcel() 
 {
+	logger.Write(L"Идет закрытие выбранных пив...", true);
 	for (size_t i = 0; i < buffer.size(); i++) 
 	{
 		for (list <errorSet>::iterator it = other.db.begin(); it != other.db.end();)
@@ -367,7 +382,7 @@ void CPIV::CloseExcel()
 			it->name.Compare(NameFromPath(buffer[i])) == 0 ? other.books.erase(it++) : it++;
 	}
 	CloseThread(primary);
-	logger.Write(LOG_CLOSE);	// Логирование
+	logger.Write(L"Закрытие пив завершено");	// Логирование
 }
 #pragma endregion
 
@@ -445,7 +460,7 @@ void Thread(CPIV& piv)
 		piv.CloseExcel();
 		break;
 	default:
-		piv.logger.WriteError(L"Ошибка: неопознанная команда!");
+		piv.logger.WriteError(L"Ошибка: неопознанная команда");
 		break;
 	}
 }
@@ -475,6 +490,6 @@ void CPIV::CloseThread(HANDLE& h)
 		h = NULL;
 	}
 	else
-		logger.WriteError(L"Ошибка: Не удалось закрыть поток!");
+		logger.WriteError(L"Ошибка: Не удалось закрыть поток");
 }
 #pragma endregion

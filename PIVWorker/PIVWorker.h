@@ -13,7 +13,8 @@
 #include "ReaderExcel.h"	// чтение протоколов
 #include "Test.h"			// проверка на ошибки протоколов
 #include "Report.h"			// создание отчетов об ошибках
- 
+
+ // TODO: Изменить описание в связи расширением функций
 //	Основной класс DLL для работы с протоколами информационного взаимодействия (ПИВ)
 //	Содержит следующий перечень функций:
 //		- открытие проекта (набор ПИВ): чтение, проверка, создание артефактов (отчет + txt наборы);
@@ -28,7 +29,9 @@ public:
 	CPIV();		// Конструктор
 	~CPIV();	// Деструктор
 
-	CLogger logger;
+	bool IsUpdate();		// Проверка статуса работы DLL
+	CString GetStatus();	// Получение статуса DLL
+	void WriteLog(const CString& msg);	// Запись в лог
 
 	void Open(const vector<CString> pathToExcel, const CString pathToReport);	// Открытие проекта (набора ПИВ) с установкой пути хранения артефактов
 	void Open(const vector<CString> pathToExcel);								// использовать старый путь хранения
@@ -56,6 +59,7 @@ protected:
 
 private:
 	HANDLE primary;		// Основной поток
+	CLogger logger;		// Логирование
 
 	pivData project;	// Данные проекта
 	pivData other;		// Данные остальных протоколов
