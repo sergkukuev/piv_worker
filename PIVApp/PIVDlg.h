@@ -6,6 +6,7 @@
 #include "afxwin.h"
 #include <vector>
 
+#include "SettingDlg.h"
 #include "WebBrowser.h"
 #include "PIVWorker.h"
 

@@ -422,7 +422,8 @@ void CPIVDlg::OnCbnSelchangeCombo()
 // Открыть окно настроек
 void CPIVDlg::OnBnClickedSetting()
 {
-	// TODO: Прикрутить окно настроек
+	CSettingDlg dlg;
+	dlg.DoModal();
 }
 
 // Показывать отчет рядом со списком открытых протоколов или нет

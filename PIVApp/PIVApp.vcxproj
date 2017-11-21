@@ -187,6 +187,7 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="SettingDlg.h" />
     <ClInclude Include="WebBrowser.h" />
     <ClInclude Include="PIVApp.h" />
     <ClInclude Include="PIVDlg.h" />
@@ -195,6 +196,7 @@
     <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="SettingDlg.cpp" />
     <ClCompile Include="WebBrowser.cpp" />
     <ClCompile Include="PIVApp.cpp" />
     <ClCompile Include="PIVDlg.cpp" />
