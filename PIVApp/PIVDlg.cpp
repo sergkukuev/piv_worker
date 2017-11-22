@@ -10,36 +10,6 @@
 #define new DEBUG_NEW
 #endif
 
-#pragma region ABOUT_MODAL
-// Диалоговое окно CAboutDlg используется для описания сведений о приложении
-class CAboutDlg : public CDialogEx
-{
-public:
-	CAboutDlg();
-
-// Данные диалогового окна
-#ifdef AFX_DESIGN_TIME
-	enum { IDD = IDD_ABOUTBOX };
-#endif
-
-protected:
-	virtual void DoDataExchange(CDataExchange* pDX);    // поддержка DDX/DDV
-
-	// Реализация
-	DECLARE_MESSAGE_MAP()
-};
-
-CAboutDlg::CAboutDlg() : CDialogEx(IDD_ABOUTBOX)	{	}
-
-void CAboutDlg::DoDataExchange(CDataExchange* pDX)
-{
-	CDialogEx::DoDataExchange(pDX);
-}
-
-BEGIN_MESSAGE_MAP(CAboutDlg, CDialogEx)
-END_MESSAGE_MAP()
-#pragma endregion
-
 // Диалоговое окно CPIVDlg
 #define RECT_MOVE 779
 
@@ -237,8 +207,7 @@ void CPIVDlg::OnSysCommand(UINT nID, LPARAM lParam)
 {
 	if ((nID & 0xFFF0) == IDM_ABOUTBOX)
 	{
-		CAboutDlg dlgAbout;
-		dlgAbout.DoModal();
+		// TODO: Тут было окошко информации 
 	}
 	else
 	{

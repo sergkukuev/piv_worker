@@ -3,7 +3,6 @@
 // Используется PIVApp.rc
 //
 #define IDM_ABOUTBOX                    0x0010
-#define IDD_ABOUTBOX                    100
 #define IDS_ABOUTBOX                    101
 #define IDD_PIVAPP_DIALOG               102
 #define ID_INDICATOR_DLL                102
@@ -41,7 +40,7 @@
 #define IDC_CHECK_TXT100                1048
 #define IDC_930M                        1049
 #define IDC_KPRNO35                     1050
-#define IDC_FAST						1051
+#define IDC_FAST                        1051
 #define IDC_TEMPLATE                    1052
 
 // Next default values for new objects
@@ -50,7 +49,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        164
 #define _APS_NEXT_COMMAND_VALUE         32775
-#define _APS_NEXT_CONTROL_VALUE         1053
+#define _APS_NEXT_CONTROL_VALUE         1055
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif
