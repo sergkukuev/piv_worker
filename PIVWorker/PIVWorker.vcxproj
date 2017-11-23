@@ -22,7 +22,7 @@
     <VCProjectVersion>15.0</VCProjectVersion>
     <ProjectGuid>{3078582E-9A39-4E99-AB9D-C9118824B74B}</ProjectGuid>
     <RootNamespace>PIVWorker</RootNamespace>
-    <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.15063.0</WindowsTargetPlatformVersion>
     <Keyword>MFCDLLProj</Keyword>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -44,7 +44,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v140</PlatformToolset>
+    <PlatformToolset>v141</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
     <UseOfMfc>Dynamic</UseOfMfc>
   </PropertyGroup>
@@ -186,6 +186,7 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Logger.cpp" />
     <ClCompile Include="PIVWorker.cpp" />
     <ClCompile Include="ReaderExcel.cpp" />
     <ClCompile Include="Report.cpp" />
@@ -199,12 +200,14 @@
     <ClCompile Include="WorkExcel.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Defines.h" />
     <ClInclude Include="excel\CApplication.h" />
     <ClInclude Include="excel\CRange.h" />
     <ClInclude Include="excel\CWorkbook.h" />
     <ClInclude Include="excel\CWorkbooks.h" />
     <ClInclude Include="excel\CWorksheet.h" />
     <ClInclude Include="excel\CWorksheets.h" />
+    <ClInclude Include="Logger.h" />
     <ClInclude Include="MyException.h" />
     <ClInclude Include="PIVWorker.h" />
     <ClInclude Include="ReaderExcel.h" />

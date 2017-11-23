@@ -20,6 +20,7 @@
 #include <afxext.h>         // расширения MFC
 
 
+#include <afxdisp.h>        // классы автоматизации MFC
 
 
 
@@ -33,6 +34,8 @@
 #include <afxcontrolbars.h>     // поддержка MFC для лент и панелей управления
 
 
+#include <afxsock.h>            // расширения сокетов MFC
+#include <afxdisp.h>
 
 
 

@@ -7,81 +7,94 @@
 #error "включить stdafx.h до включения этого файла в PCH"
 #endif
 
-#include "StructPIV.h"		// структуры протоколов
-#include "resource.h"		// основные символы
+#include "resource.h"
+#include "StructPIV.h"		// Основные структуры и макросы		
+#include "Logger.h"			// логирование
+#include "ReaderExcel.h"	// чтение протоколов
+#include "Test.h"			// проверка на ошибки протоколов
+#include "Report.h"			// создание отчетов об ошибках
 
-#define THREAD_BUSY L"Поток занят! Подождите окончания процесса!"
-// CPIVWorkerApp
-// Про реализацию данного класса см. PIVWorker.cpp
-//
-
-struct cmd_set {
-	const int open = 0;
-	const int add = 1;
-	const int refresh = 2;
-	const int close = 3;
-};
-
-class PIV_DECLARE CPIV {
+ // TODO: Изменить описание в связи расширением функций
+//	Основной класс DLL для работы с протоколами информационного взаимодействия (ПИВ)
+//	Содержит следующий перечень функций:
+//		- открытие проекта (набор ПИВ): чтение, проверка, создание артефактов (отчет + txt наборы);
+//		- открытие отдельных ПИВ: чтение, проверка, создание артефактов (отчет + txt наборы);
+//		- обновление выбранных ПИВ;
+//		- закрытие выбранных ПИВ;
+//		- установка пути для хранения артефактов
+//		- установка необходимых флагов для генерации артефактов (наличие подкадров и т.д.)
+class PIV_DECLARE CPIV 
+{
 public:
 	CPIV();		// Конструктор
 	~CPIV();	// Деструктор
 
-	LPWSTR pipeName = L"\\\\.\\pipe\\log"; // Имя канала
+	bool IsUpdate();		// Проверка статуса работы DLL
+	CString GetStatus();	// Получение статуса DLL
+	void WriteLog(const CString& msg);	// Запись в лог
 
-	void Open(const vector<CString>& pathToExcel, const CString& pathToReport);	// Открыть ПИВ и задать путь для артефактов (чтение, проверка, выдача артефактов)
-	void Open(const vector<CString>& pathToExcel);								// Открыть ПИВ и использовать старый путь для артефактов
+	void Open(const vector<CString> pathToExcel, const CString pathToReport);	// Открытие проекта (набора ПИВ) с установкой пути хранения артефактов
+	void Open(const vector<CString> pathToExcel);								// использовать старый путь хранения
 
-	void Add(const CString& pathToExcel);			// Добавить ПИВ
-	void Add(const vector<CString>& pathToExcel);	// Добавить несколько ПИВ
+	void Add(const vector<CString> pathToExcel);		// Открытие отдельных протоколов
+	void Add(const CString pathToExcel);
 
-	void Refresh(const CString& pathToExcel);			// Обновить ПИВ
-	void Refresh(const vector<CString>& pathToExcel);	// Обновить несколько ПИВ
+	void Refresh(const vector<CString> pathToExcel);	// Обновление протоколов
+	void Refresh(const CString pathToExcel);
 
-	void Close();									// Закрыть остальные ПИВ
-	void Close(const CString& pathToExcel);			// Закрыть один ПИВ и его отчет в базе ошибок
-	void Close(const vector<CString>& pathToExcel);	// Закрыть несколько ПИВ и их отчеты в базе ошибок
+	void Close();										// Закрытие всех протоколов
+	void Close(const vector<CString> pathToExcel);		// выбранных
+	void Close(const CString pathToExcel);				// одного
 
-	void setPathToSave(const CString& pathToReport);// Установить путь для хранения артефактов
-	void setStatusNumPK(const bool& status);		// Установить флаг bNumPK
+	// Получение путей артефактов
+	CString GetProjectPath();
+	CString GetOtherPath();
+	CString GetPath();
+
+	void SetPathToSave(const CString pathToReport);		// Установка пути хранения артефактов
+	pivParam GetSettings();	// Получение текущих настроек
+	void SetSettings(const pivParam& parameters);	// Установка настроек DLL
+
 protected:
-	friend void Thread(CPIV& piv);	// Дружественная функция для запуска операции в потоке
+	friend void Thread(CPIV& piv);	// Запуск операций DLL в потоке
+
 private:
 	HANDLE primary;		// Основной поток
+	CLogger logger;		// Логирование
 
 	pivData project;	// Данные проекта
 	pivData other;		// Данные остальных протоколов
+	pivParam param;		// Настройка
 
-	const cmd_set command;		// Набор команд
-	int hCmd;					// Команда для потока
+	const enum command {open, add, refresh, close};	// Набор потоковых команд
+	int hCmd;					// Текущая потоковая команда
 
-	vector <CString> buffer;	// Вектор временного хранения путей файлов
+	vector <CString> buffer;	// Временное хранение путей протоколов
 	CString path;				// Путь сохранения отчетов
-	bool bNumPK = false;		// Нужно ли устанавливать в txt подкадры
 
-	void StartOpen();		// Начало открытия ПИВ
-	void StartAdd();		// Начало добавления ПИВ
-	void StartRefresh();	// Начало обновления ПИВ
-	void StartClose();		// Начало закрытия ПИВ
+	// Методы запуска потока для старта операций:
+	void StartOpen();		// открытие проекта
+	void StartAdd();		// открытие отдельного(ых) протокола(ов)
+	void StartRefresh();	// обновление
+	void StartClose();		// закрытие
 
-	void CloseProject();			// Закрытие ПИВ проекта
+	// Основные операции:
+	void OpenExcel();		// открытие проекта
+	void AddExcel();		// открытие отдельного(ых) протокола(ов)
+	void RefreshExcel();	// обновление
+	void CloseExcel();		// закрытие
+	void CloseProject();	// закрытие проекта
 
-									// Работа с файлами, пути которых расположены в буфере
-	void OpenExcel();		// Открытие ПИВ
-	void AddExcel();		// Добавление ПИВ
-	void RefreshExcel();	// Обновление ПИВ
-	void CloseExcel();		// Закрытие ПИВ
+	// Дополнительные методы
+	void Refresh(pivData& data, const bookData& book, const errorSet& error);	// Общее обновление протоколов (данные + база ошибок)
+	void Refresh(pivData& data, const bookData& book);							// Обновление только данных
+	void Refresh(pivData& data, const errorSet& error);							// Обновление только базы ошибок
+	
+	list<bookData>::iterator GetBook(pivData& data, const CString& pathToExcel);		// Получение указателя на данные требуемого протокола
+	CString NameFromPath(const CString& pathToExcel);					// Выделение имени протокола из его пути
+	bool IsContain(pivData& data, const CString& pathToExcel);			// Проверка наличия данных требуемого протокола
 
-	void WriteLog(char szBuf[256]);			// Логирование
-	void WriteError(const CString& msg);	// Запись ошибки в файл
-
-	void Refresh(pivData& data, const bookData& book, const errorSet& error);	// Обновление ПИВ и ошибок
-	void Refresh(pivData& data, const bookData& book);			// Обновление ПИВ
-	void Refresh(pivData& data, const errorSet& error);			// Обновление ошибок
-	bookData& getBook(pivData& data, const CString& pathToExcel);		// Получить ссылку на книгу
-	CString nameFromPath(const CString& pathToExcel);					// Извлечение имени файла из его пути
-	bool IsContain(pivData& data, const CString& pathToExcel);			// Проверка наличия файла в памяти
-
-	bool getStatusThread(const HANDLE& h);	// Проверка доступности потока
-	void closeThread(HANDLE& h);			// Закрытие потока
+	// Работа с потоком
+	bool GetStatusThread(const HANDLE& h);	// Проверка доступности потока
+	void CloseThread(HANDLE& h);			// Закрытие потока
 };

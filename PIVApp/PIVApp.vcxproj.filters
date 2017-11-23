@@ -18,10 +18,10 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="PIVWorkerApp.h">
+    <ClInclude Include="PIVApp.h">
       <Filter>Заголовочные файлы</Filter>
     </ClInclude>
-    <ClInclude Include="PIVWorkerDlg.h">
+    <ClInclude Include="PIVDlg.h">
       <Filter>Заголовочные файлы</Filter>
     </ClInclude>
     <ClInclude Include="stdafx.h">
@@ -33,30 +33,60 @@
     <ClInclude Include="Resource.h">
       <Filter>Заголовочные файлы</Filter>
     </ClInclude>
+    <ClInclude Include="WebBrowser.h">
+      <Filter>Заголовочные файлы</Filter>
+    </ClInclude>
+    <ClInclude Include="SettingDlg.h">
+      <Filter>Заголовочные файлы</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="PIVWorkerApp.cpp">
+    <ClCompile Include="PIVApp.cpp">
       <Filter>Файлы исходного кода</Filter>
     </ClCompile>
-    <ClCompile Include="PIVWorkerDlg.cpp">
+    <ClCompile Include="PIVDlg.cpp">
       <Filter>Файлы исходного кода</Filter>
     </ClCompile>
     <ClCompile Include="stdafx.cpp">
       <Filter>Файлы исходного кода</Filter>
     </ClCompile>
+    <ClCompile Include="WebBrowser.cpp">
+      <Filter>Файлы исходного кода</Filter>
+    </ClCompile>
+    <ClCompile Include="SettingDlg.cpp">
+      <Filter>Файлы исходного кода</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="PIVWorkerApp.rc">
+    <ResourceCompile Include="PIVApp.rc">
       <Filter>Файлы ресурсов</Filter>
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="res\PIVWorkerApp.rc2">
+    <None Include="res\PIVApp.rc2">
       <Filter>Файлы ресурсов</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>
-    <Image Include="res\PIVWorkerApp.ico">
+    <Image Include="res\PIVApp.ico">
+      <Filter>Файлы ресурсов</Filter>
+    </Image>
+    <Image Include="res\report_go.png">
+      <Filter>Файлы ресурсов</Filter>
+    </Image>
+    <Image Include="res\Home.ico">
+      <Filter>Файлы ресурсов</Filter>
+    </Image>
+    <Image Include="res\Redo.ico">
+      <Filter>Файлы ресурсов</Filter>
+    </Image>
+    <Image Include="res\Refresh.ico">
+      <Filter>Файлы ресурсов</Filter>
+    </Image>
+    <Image Include="res\Undo.ico">
+      <Filter>Файлы ресурсов</Filter>
+    </Image>
+    <Image Include="res\Setting.ico">
       <Filter>Файлы ресурсов</Filter>
     </Image>
   </ItemGroup>

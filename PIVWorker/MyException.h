@@ -1,102 +1,110 @@
 #pragma once
 
-#include "DLL.h"			// Макрос определения импорта и экспорта DLL
+#include "StructPIV.h"
 
 // Базовый класс исключений
-class PIV_DECLARE MyException	{
+class PIV_DECLARE MyException	
+{
 public:
 	MyException() {};
 	virtual ~MyException() {};
 	virtual CString GetMsg() { return L"Неизвестная ошибка!"; };
-};
-
-class BookNotFound : public MyException {
-public:
-	void setName(const CString& name) { this->name = name; }
-	virtual CString GetMsg() {
-		CString result;
-		result.Format(L"Книга \"%s\" в памяти отсутствует!", name);
-		return result;
-	};
-private:
-	CString name = L"";
+protected:
+	CString book = L"";		// Имя протокола
+	CString sheet = L"";	// Имя листа в файле
 };
 
 // Исключения класса CReaderExcel
-class BadTypeException: public MyException	{
+class BadTypeException: public MyException	
+{
 public:
-	void setName(const CString& name) { this->name = name; }
-	virtual CString GetMsg() {
+	BadTypeException(const CString& book) { this->book = book; }
+	virtual CString GetMsg() 
+	{
 		CString result;
-		result.Format(L"Неверное расширение файла \"%s\"!", name);
+		result.Format(L"Ошибка: Неверное расширение файла \"%s\"!", book);
 		return result;
 	};
-private:
-	CString name = L"";
 };
 
-class AccessExcelException : public MyException {
+class ExcelOverflow : public MyException 
+{
 public:
-	virtual CString GetMsg() { return L"Запустить приложение Excel не удалось!"; };
-};
-
-class ReadBookException: public MyException {
-public:
-	void setParam(const CString& nameBook) { this->nameBook = nameBook; };
-	virtual CString GetMsg() {
+	ExcelOverflow(const CString& book, const CString& sheet) { this->book = book; this->sheet = sheet; }
+	virtual CString GetMsg() 
+	{
 		CString result;
-		result.Format(L"Открыть книгу \"%s\" не удалось!", nameBook);
+		result.Format(L"Ошибка: В протоколе \"%s\" на листе \"%s\" не удалось прочесть данные.\n", book, sheet);
+		return result;
+	}
+};
+
+class AccessExcelException : public MyException 
+{
+public:
+	virtual CString GetMsg() { return L"Ошибка: Запустить приложение Excel не удалось!"; };
+};
+
+class ReadBookException: public MyException 
+{
+public:
+	ReadBookException(const CString& book) { this->book = book; };
+	virtual CString GetMsg() 
+	{
+		CString result;
+		result.Format(L"Ошибка: Открыть протокол \"%s\" для чтения не удалось!", book);
 		return result;
 	};
-private:
-	CString nameBook = L"";
 };
 
-class NotAllHeaderException : public MyException {
+class NotAllHeaderException : public MyException 
+{
 public:
-	void setParam(const CString& nameSheet, const CString& nameBook) { 
-		this->nameSheet = nameSheet;
-		this->nameBook = nameBook;
-	};
-	virtual CString GetMsg() { 
+	NotAllHeaderException(const CString& book, const CString& sheet) {	this->sheet = sheet;	this->book = book;	};
+	virtual CString GetMsg() 
+	{ 
 		CString result;
-		result.Format(L"Не удалось найти все заголовки на листе \"%s\" в файле \"%s\"!", nameSheet, nameBook);
+		result.Format(L"Ошибка: Не удалось найти все заголовки на листе \"%s\" в протоколе \"%s\"!", sheet, book);
 		return result;
 	};
-private:
-	CString nameBook = L"";
-	CString nameSheet = L"";
 };
 
-// Исключения для класса Test
-class UndefinedError : public MyException {
+// Исключения для класса CTest
+class UndefinedError : public MyException 
+{
 public:
-	void SetParam(const CString& param) { this->param = param; }
-	void SetName(const CString& name) { this->name = name; }
-	virtual CString GetMsg() {
-		CString result = L"Параметр сигнала с неизвестной ошибкой!";
-		result.Format(L"%s\n (Имя листа: %s, Параметр: %s)", result, name, param);
+	UndefinedError(const CString& book, const CString& sheet, const CString& param) 
+	{
+		this->book = book;
+		this->sheet = sheet;
+		this->param = param;
+	}
+
+	virtual CString GetMsg() 
+	{
+		CString result = L"Ошибка: Параметр сигнала с неизвестной ошибкой!\n";
+		result.Format(L"%s\n Протокол: %s;\nИмя листа: %s;\n Параметр: %s.", result, book, sheet, param);
 		return result; 
 	};
 private:
-	CString name = L"";		// Имя листа, на котором найдена неизвестная ошибка
-	CString param = L"";	// Параметр, который обрабатывался
+	CString param = L"";	// Параметр с ошибкой
 };
 
-class UndefinedBook : public MyException {
+class BookNotFound : public MyException 
+{
 public:
-	void SetName(const CString& name) { this->name = name; }
-	virtual CString GetMsg() {
+	BookNotFound(const CString& book) { this->book = book; }
+	virtual CString GetMsg() 
+	{
 		CString result;
-		result.Format(L"Книга \"%s\" не была прочитана, ее проверка невозможна.", name);
+		result.Format(L"Ошибка: Протокол \"%s\" в памяти отсутствует!", book);
 		return result;
-	}
-private: 
-	CString name = L"";	// Имя неопознанной книги
+	};
 };
 
-// Исключения для класс Report
-class EmptyPathException : public MyException {
+// Исключения для класса CReport
+class EmptyPathException : public MyException 
+{
 public:
-	virtual CString GetMsg() { return L"Путь для сохранения отчета не задан!"; };
+	virtual CString GetMsg() { return L"Ошибка: Путь для хранения отчета и txt не задан!"; };
 };

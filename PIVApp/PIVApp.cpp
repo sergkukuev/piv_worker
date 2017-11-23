@@ -1,26 +1,27 @@
 
-// PIVWorkerApp.cpp : Определяет поведение классов для приложения.
+// PIVApp.cpp : Определяет поведение классов для приложения.
 //
 
 #include "stdafx.h"
-#include "PIVWorkerApp.h"
-#include "PIVWorkerDlg.h"
+#include "PIVApp.h"
+#include "PIVDlg.h"
+#include "WebBrowser.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #endif
 
 
-// CPIVWorkerApp
+// CPIVApp
 
-BEGIN_MESSAGE_MAP(CPIVWorkerApp, CWinApp)
+BEGIN_MESSAGE_MAP(CPIVApp, CWinApp)
 	ON_COMMAND(ID_HELP, &CWinApp::OnHelp)
 END_MESSAGE_MAP()
 
 
-// создание CPIVWorkerApp
+// создание CPIVApp
 
-CPIVWorkerApp::CPIVWorkerApp()
+CPIVApp::CPIVApp()
 {
 	// поддержка диспетчера перезагрузки
 	m_dwRestartManagerSupportFlags = AFX_RESTART_MANAGER_SUPPORT_RESTART;
@@ -30,13 +31,14 @@ CPIVWorkerApp::CPIVWorkerApp()
 }
 
 
-// Единственный объект CPIVWorkerApp
+// Единственный объект CPIVApp
 
-CPIVWorkerApp theApp;
+CPIVApp theApp;
 
-// инициализация CPIVWorkerApp
 
-BOOL CPIVWorkerApp::InitInstance()
+// инициализация CPIVApp
+
+BOOL CPIVApp::InitInstance()
 {
 	// InitCommonControlsEx() требуется для Windows XP, если манифест
 	// приложения использует ComCtl32.dll версии 6 или более поздней версии для включения
@@ -49,6 +51,15 @@ BOOL CPIVWorkerApp::InitInstance()
 	InitCommonControlsEx(&InitCtrls);
 
 	CWinApp::InitInstance();
+
+	if (!AfxSocketInit())
+	{
+		AfxMessageBox(IDP_SOCKETS_INIT_FAILED);
+		return FALSE;
+	}
+
+
+	AfxEnableControlContainer();
 
 	// Создать диспетчер оболочки, в случае, если диалоговое окно содержит
 	// представление дерева оболочки или какие-либо его элементы управления.
@@ -66,13 +77,9 @@ BOOL CPIVWorkerApp::InitInstance()
 	// например на название организации
 	SetRegistryKey(_T("Локальные приложения, созданные с помощью мастера приложений"));
 
-	m_hAccel = LoadAccelerators(AfxGetInstanceHandle(), MAKEINTRESOURCE(IDR_ACCELERATOR));
-
-	CMainDlg dlg;
+	CPIVDlg dlg;
 	m_pMainWnd = &dlg;
-
 	INT_PTR nResponse = dlg.DoModal();
-
 	if (nResponse == IDOK)
 	{
 		// TODO: Введите код для обработки закрытия диалогового окна
@@ -95,7 +102,7 @@ BOOL CPIVWorkerApp::InitInstance()
 		delete pShellManager;
 	}
 
-#ifndef _AFXDLL
+#if !defined(_AFXDLL) && !defined(_AFX_NO_MFC_CONTROLS_IN_DIALOGS)
 	ControlBarCleanUp();
 #endif
 
@@ -104,7 +111,7 @@ BOOL CPIVWorkerApp::InitInstance()
 	return FALSE;
 }
 
-BOOL CPIVWorkerApp::ProcessMessageFilter(int code, LPMSG lpMsg)
+BOOL CPIVApp::ProcessMessageFilter(int code, LPMSG lpMsg)
 {
 	if (code >= 0 && m_pMainWnd && m_hAccel)
 	{
@@ -113,4 +120,3 @@ BOOL CPIVWorkerApp::ProcessMessageFilter(int code, LPMSG lpMsg)
 	}
 	return CWinApp::ProcessMessageFilter(code, lpMsg);
 }
-

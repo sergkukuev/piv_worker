@@ -3,16 +3,15 @@
 
 #include "stdafx.h"
 #include "PIVWorker.h"
-#include "ReaderExcel.h"	// чтение протоколов
-#include "Test.h"			// проверка на ошибки протоколов
-#include "Report.h"			// создание отчетов об ошибках
+
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #endif
 
 //
-//TODO: если эта библиотека DLL динамически связана с библиотеками DLL MFC,
+//TODO: Важно! Перейдите по ссылке, чтобы увидеть подробности.
+//		Если эта библиотека DLL динамически связана с библиотеками DLL MFC,
 //		все функции, экспортированные из данной DLL-библиотеки, которые выполняют вызовы к
 //		MFC, должны содержать макрос AFX_MANAGE_STATE в
 //		самое начало функции.
@@ -36,320 +35,368 @@
 //		подробные сведения.
 //
 
-// Единственный объект CPIVWorkerApp
-CWinApp theApp;
-
-struct MyData {
+struct ThreadData
+{
 	CPIV* object;
 };
 
-MyData mD;
+// Единственный объект CPIVWorkerApp
+CWinApp theApp;
+ThreadData mData;
 
-DWORD WINAPI PrimaryThread(LPVOID lpParam) {
+// Основной поток
+DWORD WINAPI PrimaryThread(LPVOID lpParam) 
+{
 	CoInitialize(NULL);
 	SetThreadPriorityBoost(GetCurrentThread(), TRUE);
-	MyData* myD = static_cast<MyData*>(lpParam);
-
-	Thread(*(myD->object));
+	ThreadData* data = static_cast<ThreadData*>(lpParam);
+	Thread(*data->object);
 	CoUninitialize();
 	return 0;
 }
 
 // Конструктор
-CPIV::CPIV() { }
+CPIV::CPIV() 
+{
+	logger.SetPath(&path);
+}
 
 // Деструктор
-CPIV::~CPIV() {
+CPIV::~CPIV() 
+{
 	Close();
 	CloseProject();
+	logger.Write(LOG_SLASH);
 }
 
-// Установить путь для хранения артефактов
-void CPIV::setPathToSave(const CString& pathToReport) { 
-	SHFILEOPSTRUCT fos;
-	ZeroMemory(&fos, sizeof(fos));
+bool CPIV::IsUpdate() { return logger.IsRead(); }
 
-	// Установка функций для переноса папки артефактов
-	fos.wFunc = FO_MOVE;
-	path.Format(L"%s\\Artefacts", path);
-	path.AppendChar(0);
-	path.AppendChar(0);
-	CString to = pathToReport;
-	to.AppendChar(0);
-	to.AppendChar(0);
-	
-	fos.pFrom = path;
-	fos.pTo = to;
-	fos.fFlags = FOF_NOCONFIRMATION | FOF_NOCONFIRMMKDIR | FOF_NOERRORUI | FOF_SILENT;
-	
-	SHFileOperation(&fos);
-	path = pathToReport; 
+CString CPIV::GetStatus() { return logger.GetStatus(); }
+
+void CPIV::WriteLog(const CString& msg) { logger.Write(msg); }
+
+// Получение путей параметров
+CString CPIV::GetPath() { return path; }
+
+CString CPIV::GetOtherPath()
+{
+	CString result;
+	result.Format(L"%s%s", path, OTHER_FOLDER);
+	return result;
 }
 
-// Установить флаг bNumPK
-void CPIV::setStatusNumPK(const bool& status) { bNumPK = status; }
+CString CPIV::GetProjectPath()
+{
+	CString result;
+	result.Format(L"%s%s", path, PROJECT_FOLDER);
+	return result;
+}
+#pragma region SET_PARAMETERS
+// Установка пути хранения артефактов
+void CPIV::SetPathToSave(const CString pathToReport)
+{
+	if (!path.IsEmpty())
+	{
+		SHFILEOPSTRUCT fos;
+		ZeroMemory(&fos, sizeof(fos));
 
-#pragma region OPEN_PIV
-// Открыть ПИВ и задать путь для артефактов (чтение, проверка, выдача артефактов)
-void CPIV::Open(const vector<CString>& pathToExcel, const CString& pathToReport) {
+		// Установка функций для переноса папки артефактов
+		fos.wFunc = FO_MOVE;
+		path.AppendChar(0);		// '\0' чтобы закрыть строку
+		path.AppendChar(0);		// '\0' чтобы закрыть набор
+
+		CString to = pathToReport;	// Формируется аналогично path
+		to.AppendChar(0);	// для строки
+		to.AppendChar(0);	// для всего набора
+
+		fos.pFrom = path;
+		fos.pTo = to;
+		fos.fFlags = FOF_NOCONFIRMATION | FOF_NOCONFIRMMKDIR | FOF_NOERRORUI | FOF_SILENT;
+
+		SHFileOperation(&fos);
+	}
+	
+	path.Format(L"%s%s", pathToReport, BASE_FOLDER);	// Установка пути хранения артефактов
+	CreateDirectory(path, NULL);
+	logger.Write(L"Изменено расположение папки отчетов");
+}
+
+void CPIV::SetSettings(const pivParam& parameters) 
+{ 
+	while (!GetStatusThread(primary))
+		Sleep(100);
+	param = parameters;
+	logger.Write(L"Изменены настройки приложения");
+}
+
+pivParam CPIV::GetSettings() { return param; }
+#pragma endregion
+
+#pragma region OPEN_PROJECT
+// Открытие проекта (набора ПИВ) с установкой пути хранения артефактов
+void CPIV::Open(const vector<CString> pathToExcel, const CString pathToReport) 
+{
 	buffer = pathToExcel;
 	path = pathToReport;
 	StartOpen();
 }
 
-// Открыть ПИВ и использовать старый путь для артефактов
-void CPIV::Open(const vector<CString>& pathToExcel) {
+// использовать старый путь хранения
+void CPIV::Open(const vector<CString> pathToExcel)
+{
 	buffer = pathToExcel;
 	StartOpen();
 }
 
-// Начало открытия ПИВ
-void CPIV::StartOpen() {
-	if (getStatusThread(primary)) {
-		CloseProject();
-		hCmd = command.open;
-		mD.object = this;
-		primary = CreateThread(NULL, 0, PrimaryThread, &mD, 0, 0);
+// Запуск потока для операции открытия проекта
+void CPIV::StartOpen() 
+{
+	if (GetStatusThread(primary))
+	{
+		CloseProject();	// Очистка старых данных проекта
+		hCmd = open;
+		mData.object = this;
+		primary = CreateThread(NULL, 0, PrimaryThread, &mData, 0, 0);
 	}
 	else
-		WriteError(THREAD_BUSY);
+		AfxMessageBox(LOG_THREAD_BUSY, MB_ICONINFORMATION);
 }
 
-// Открытие ПИВ, пути которых лежат в буфере
-void CPIV::OpenExcel() {
-	try {
-		CReaderExcel reader; // Чтение
+void CPIV::OpenExcel() 
+{
+	try 
+	{
+		logger.Write(L"Идет открытие пив...", true);
+		CReaderExcel reader; 
 		for (size_t i = 0; i < buffer.size(); i++)
-			project.books.push_back(reader.getBook(buffer[i]));
+			project.books.push_back(reader.GetBook(buffer[i]));
 
-		CTest tester;	// Проверка
-		project.db = tester.Start(project.books);
+		CTest tester;
+		project.db = tester.Start(project.books, !param.bMethod);
 
 		// Генерация артефактов
 		CReport report;
-		CString tPath = path + L"\\Artefacts";
-		CreateDirectory(tPath, NULL);
-		tPath.Format(L"%s\\Project", tPath);
-		CreateDirectory(tPath, NULL);
-		report.getReport(project, tPath);
-		report.getTxt(project.books, path, bNumPK);
-		closeThread(primary);
-		
-		WriteLog("Открытие проекта завершено");	// Логирование
-		//AfxMessageBox(L"Открытие завершено!", MB_ICONINFORMATION);
+		report.GetReport(project, path, true);		// true -  проект, false - отдельные протоколы
+		report.GetTxt(project.books, path, param);
+		CloseThread(primary);
+		logger.Write(L"Открытие пив завершено");	// Логирование
 	}
-	catch (MyException& exc) {
-		WriteError(exc.GetMsg());
+	catch (MyException& exc)
+	{
+		logger.WriteError(exc.GetMsg());
 	}
 }
 #pragma endregion
 
-#pragma region ADD_PIV
-// Добавить ПИВ
-void CPIV::Add(const CString& pathToExcel) {
+#pragma region OPEN_PIV
+// Открыть отдельные протоколы:
+// один
+void CPIV::Add(const CString pathToExcel) 
+{
 	buffer.push_back(pathToExcel);
 	StartAdd();
 }
 
-// Добавить ПИВ (перегрузка)
-void CPIV::Add(const vector<CString>& pathToExcel) {
+// несколько
+void CPIV::Add(const vector<CString> pathToExcel) 
+{
 	buffer = pathToExcel;
 	StartAdd();
 }
 
-// Начало добавления ПИВ
-void CPIV::StartAdd() {
-	if (getStatusThread(primary)) {
-		hCmd = command.add;
-		mD.object = this;
-		primary = CreateThread(NULL, 0, PrimaryThread, &mD, 0, 0);
+// Запуск потока для открытия отдельных протоколов
+void CPIV::StartAdd() 
+{
+	if (GetStatusThread(primary))
+	{
+		hCmd = add;
+		mData.object = this;
+		primary = CreateThread(NULL, 0, PrimaryThread, &mData, 0, 0);
 	}
 	else
-		WriteError(THREAD_BUSY);
+		AfxMessageBox(LOG_THREAD_BUSY, MB_ICONINFORMATION);
 }
 
-// Добавление ПИВ, пути которых лежат в буфере
-void CPIV::AddExcel() {
-	try {
+void CPIV::AddExcel() 
+{
+	try 
+	{
+		logger.Write(L"Идет добавление пив...", true);
 		CReport report;
-		for (size_t i = 0; i < buffer.size(); i++) {
-			if (IsContain(project, buffer[i]))
-				continue;
-
-			// Добавление ПИВ и ошибок
+		for (size_t i = 0; i < buffer.size(); i++) 
+		{
 			bool contain = IsContain(other, buffer[i]);
 			CReaderExcel reader;
-			bookData book = reader.getBook(buffer[i]);
+			bookData book = reader.GetBook(buffer[i]);
 			contain ? Refresh(other, book) : other.books.push_back(book);
 			
 			CTest tester;
-			bookData& pBook = getBook(other, buffer[i]);
-			errorSet error = tester.Start(pBook);
+			list <bookData>::iterator pBook = GetBook(other, buffer[i]);
+			errorSet error = tester.Start(*pBook, !param.bMethod);
 			contain ? Refresh(other, error) : other.db.push_back(error);
 
-			report.getTxt(book, path, bNumPK);
+			report.GetTxt(*pBook, path, param);
 		}
-		CString tPath = path + L"\\Artefacts";
-		CreateDirectory(tPath, NULL);
-		tPath.Format(L"%s\\Other", tPath);
-		CreateDirectory(tPath, NULL);
-		report.getReport(other, tPath);	// Обновление отчета
-		closeThread(primary);
 		
-		WriteLog("Добавление ПИВ завершено");	// Логирование
-		//AfxMessageBox(L"Добавление завершено!", MB_ICONINFORMATION);
+		report.GetReport(other, path, false);	// true -  проект, false - отдельные протоколы
+		CloseThread(primary);
+		
+		logger.Write(L"Добавление пив завершено");	// Логирование
 	}
-	catch (MyException& exc) {
-		WriteError(exc.GetMsg());
+	catch (MyException& exc) 
+	{
+		logger.WriteError(exc.GetMsg());
 	}
 }
 #pragma endregion
 
 #pragma region REFRESH_PIV
-// Обновить ПИВ
-void CPIV::Refresh(const CString& pathToExcel) {
-	buffer.push_back(pathToExcel);
-	StartRefresh();
-}
-
-// Обновить несколько ПИВ
-void CPIV::Refresh(const vector<CString>& pathToExcel) {
+// Обновление протоколов
+void CPIV::Refresh(const vector<CString> pathToExcel)
+{
 	buffer = pathToExcel;
 	StartRefresh();
 }
 
-// Начало обновления ПИВ
-void CPIV::StartRefresh() {
-	if (getStatusThread(primary)) {
-		hCmd = command.refresh;
-		mD.object = this;
-		primary = CreateThread(NULL, 0, PrimaryThread, &mD, 0, 0);
-	}
-	else
-		WriteError(THREAD_BUSY);
+void CPIV::Refresh(const CString pathToExcel) 
+{
+	buffer.push_back(pathToExcel);
+	StartRefresh();
 }
 
-// Обновление ПИВ
-void CPIV::RefreshExcel() {
-	try {
+// Запуск операции обновления протоколов
+void CPIV::StartRefresh() 
+{
+	if (GetStatusThread(primary))
+	{
+		hCmd = refresh;
+		mData.object = this;
+		primary = CreateThread(NULL, 0, PrimaryThread, &mData, 0, 0);
+	}
+	else
+		AfxMessageBox(LOG_THREAD_BUSY, MB_ICONINFORMATION);
+}
+
+void CPIV::RefreshExcel() 
+{
+	try 
+	{
+		logger.Write(L"Идет обновление выбранных пив...", true);
 		CReport report;
-		bool flagProj = false, flagOther = false;
-		for (size_t i = 0; i < buffer.size(); i++) {
-			// Добавление ПИВ и ошибок
+		bool flag = true;
+		for (size_t i = 0; i < buffer.size(); i++)
+		{
 			CReaderExcel reader;
-			bookData book = reader.getBook(buffer[i]);
+			bookData book = reader.GetBook(buffer[i]);
+			list <bookData>::iterator pBook;
 
 			CTest tester;
-			bool contain = IsContain(project, buffer[i]);
-			if (IsContain(project, buffer[i])) {
-				flagProj = true;
+			if (IsContain(project, buffer[i])) 
+			{
+				flag = true;
 				Refresh(project, book);
-				bookData& pBook = getBook(project, buffer[i]);
-				errorSet error = tester.Start(pBook);
+				pBook = GetBook(project, buffer[i]);
+				errorSet error = tester.Start(*pBook, !param.bMethod);
 				Refresh(project, error);
 			}
-			else if (IsContain(other, buffer[i])) {
-				flagOther = true;
+			else if (IsContain(other, buffer[i])) 
+			{
+				flag = false;
 				Refresh(other, book);
-				bookData& pBook = getBook(other, buffer[i]);
-				errorSet error = tester.Start(pBook);
+				pBook = GetBook(other, buffer[i]);
+				errorSet error = tester.Start(*pBook, !param.bMethod);
 				Refresh(other, error);
 			}
-			else {
-				BookNotFound exc;
-				exc.setName(nameFromPath(buffer[i]));
-				throw exc;
-			}
-			report.getTxt(book, path, bNumPK);
+			else
+				throw BookNotFound(NameFromPath(buffer[i]));
+
+			report.GetTxt(*pBook, path, param);
 		}
-		CString tPath = path + L"\\Artefacts";
-		if (flagProj) {
-			tPath.Format(L"%s\\Project", tPath);
-			report.getReport(project, tPath);
-		}
-			
-		if (flagOther) {
-			tPath.Format(L"%s\\Other", tPath);
-			report.getReport(other, tPath);
-		}
-		closeThread(primary);
 		
-		WriteLog("Обновление ПИВ завершено");	// Логирование
-		//AfxMessageBox(L"Обновление завершено!", MB_ICONINFORMATION);
+		flag ?	report.GetReport(project, path, true) : report.GetReport(other, path, false);
+	
+		CloseThread(primary);
+		
+		logger.Write(L"Обновление пив завершено");	// Логирование
 	}
-	catch (MyException& exc) {
-		WriteError(exc.GetMsg());
+	catch (MyException& exc) 
+	{
+		logger.WriteError(exc.GetMsg());
 	}
 }
 #pragma endregion
 
 #pragma region CLOSE_PIV
-// Закрыть все
-void CPIV::Close() {
-	other.books.clear();
-	other.db.clear();
-	WriteLog("Закрытие ПИВ завершено");	// Логирование
+// Закрытие всех протоколов
+void CPIV::Close() 
+{
+	if (!other.books.empty() || !other.db.empty())
+	{
+		logger.Write(L"Идет закрытие всех пив...", true);
+		other.books.clear();
+		other.db.clear();
+		logger.Write(L"Закрытие пив завершено");	// Логирование
+	}
 }
 
-// Закрытие ПИВ проекта
-void CPIV::CloseProject() {
-	project.books.clear();
-	project.db.clear();
-}
-
-// Закрыть один ПИВ и его отчет в базе ошибок
-void CPIV::Close(const CString& path) {
+// одного
+void CPIV::Close(const CString path)
+{
 	buffer.push_back(path);
 	StartClose();
 }
 
-// Закрыть несколько ПИВ и их отчеты в базе ошибок
-void CPIV::Close(const vector<CString>& path) {
+// нескольких
+void CPIV::Close(const vector<CString> path) 
+{
 	buffer = path;
 	StartClose();
 }
 
-// Начало закрытия ПИВ
-void CPIV::StartClose() {
-	if (getStatusThread(primary)) {
-		hCmd = command.close;
-		mD.object = this;
-		primary = CreateThread(NULL, 0, PrimaryThread, &mD, 0, 0);
+// Запуск операции закрытия
+void CPIV::StartClose() 
+{
+	if (GetStatusThread(primary))
+	{
+		hCmd = close;
+		mData.object = this;
+		primary = CreateThread(NULL, 0, PrimaryThread, &mData, 0, 0);
 	}
 	else
-		WriteError(THREAD_BUSY);
+		AfxMessageBox(LOG_THREAD_BUSY, MB_ICONINFORMATION);
 }
 
-// Закрытие ПИВ, пути которых лежат в буфере
-void CPIV::CloseExcel() {
-	for (size_t i = 0; i < buffer.size(); i++) {
-		for (list <errorSet>::iterator it = other.db.begin(); it != other.db.end();)
-			it->book->name.Compare(nameFromPath(buffer[i])) == 0 ? other.db.erase(it++) : it++;
-		for (list <bookData>::iterator it = other.books.begin(); it != other.books.end();)
-			it->name.Compare(nameFromPath(buffer[i])) == 0 ? other.books.erase(it++) : it++;
+// Закрытие проекта
+void CPIV::CloseProject() 
+{
+	if (!project.books.empty() || !project.db.empty())
+	{
+		logger.Write(L"Идет закрытие проекта...", true);
+		project.books.clear();
+		project.db.clear();
+		logger.Write(L"Закрытие проекта завершено");	// Логирование
 	}
-	closeThread(primary);
-	WriteLog("Закрытие ПИВ завершено");	// Логирование
+}
+
+void CPIV::CloseExcel() 
+{
+	logger.Write(L"Идет закрытие выбранных пив...", true);
+	for (size_t i = 0; i < buffer.size(); i++) 
+	{
+		for (list <errorSet>::iterator it = other.db.begin(); it != other.db.end();)
+			it->book->name.Compare(NameFromPath(buffer[i])) == 0 ? other.db.erase(it++) : it++;
+		for (list <bookData>::iterator it = other.books.begin(); it != other.books.end();)
+			it->name.Compare(NameFromPath(buffer[i])) == 0 ? other.books.erase(it++) : it++;
+	}
+	CloseThread(primary);
+	logger.Write(L"Закрытие пив завершено");	// Логирование
 }
 #pragma endregion
 
-#pragma region subFunc
-// Дружественная функция для запуска операции в потоке
-void Thread(CPIV& piv) {
-	if (piv.hCmd == piv.command.open)
-		piv.OpenExcel();
-	else if (piv.hCmd == piv.command.add)
-		piv.AddExcel();
-	else if (piv.hCmd == piv.command.refresh)
-		piv.RefreshExcel();
-	else if (piv.hCmd == piv.command.close)
-		piv.CloseExcel();
-	else
-		piv.WriteError(L"Ошибка: Неопознанная команда!");
-}
-
-// Обновление ПИВ и ошибок
-void CPIV::Refresh(pivData& data, const bookData& book, const errorSet& error) {
+#pragma region SUB_FUNCTION
+// Обновление протоколов (данные + база ошибок)
+void CPIV::Refresh(pivData& data, const bookData& book, const errorSet& error) 
+{
 	for (list <bookData>::iterator it = data.books.begin(); it != data.books.end(); it++)
 		if (book.name.Compare(it->name) == 0)
 			*it = book;
@@ -359,45 +406,75 @@ void CPIV::Refresh(pivData& data, const bookData& book, const errorSet& error) {
 			*it = error;
 }
 
-// Обновление ПИВ
-void CPIV::Refresh(pivData& data, const bookData& book) {
+// Обновление (данные)
+void CPIV::Refresh(pivData& data, const bookData& book) 
+{
 	for (list <bookData>::iterator it = data.books.begin(); it != data.books.end(); it++)
 		if (book.name.Compare(it->name) == 0)
 			*it = book;
 }
 
-// Обновление ПИВ
-void CPIV::Refresh(pivData& data, const errorSet& error) {
+// Обновление (база ошибок)
+void CPIV::Refresh(pivData& data, const errorSet& error) 
+{
 	for (list <errorSet>::iterator it = data.db.begin(); it != data.db.end(); it++)
 		if (error.book->name.Compare(it->book->name) == 0)
 			*it = error;
 }
 
-// Получить ссылку на книгу
-bookData& CPIV::getBook(pivData& data, const CString& path) {
+// Получение ссылки на данные требуемого протокола
+list<bookData>::iterator CPIV::GetBook(pivData& data, const CString& path)
+{
 	for (list <bookData>::iterator it = data.books.begin(); it != data.books.end(); it++)
-		if (nameFromPath(path).Compare(it->name) == 0)
-			return *it;
-	return *data.books.end();
+		if (NameFromPath(path).Compare(it->name) == 0)
+			return it;
+	return data.books.end();
 }
 
-// Извлечение имени файла из его пути
-CString CPIV::nameFromPath(const CString& path) {
+// Выделение имени протокола из его пути
+CString CPIV::NameFromPath(const CString& path) 
+{
 	int startPos = path.ReverseFind(L'\\') + 1;
 	return path.Mid(startPos, path.GetLength());
 }
 
-// Проверка наличия файла в памяти
-bool CPIV::IsContain(pivData& data, const CString& path) {
+// Проверка наличия данных требуемого протокола
+bool CPIV::IsContain(pivData& data, const CString& path)
+{
 	bool result = false;
 	for (list <bookData>::iterator it = data.books.begin(); it != data.books.end(); it++)
-		nameFromPath(path).Compare(it->name) == 0 ? result = true : result = result;
-	
+		NameFromPath(path).Compare(it->name) == 0 ? result = true : result = result;
 	return result;
+}
+#pragma endregion
+
+#pragma region THREAD_FUNC
+// Запуск операций DLL в потоке
+void Thread(CPIV& piv)
+{
+	switch (piv.hCmd)
+	{
+	case CPIV::open:
+		piv.OpenExcel();
+		break;
+	case CPIV::add:
+		piv.AddExcel();
+		break;
+	case CPIV::refresh:
+		piv.RefreshExcel();
+		break;
+	case CPIV::close:
+		piv.CloseExcel();
+		break;
+	default:
+		piv.logger.WriteError(L"Ошибка: неопознанная команда");
+		break;
+	}
 }
 
 // Проверка доступности потока
-bool CPIV::getStatusThread(const HANDLE& h) {
+bool CPIV::GetStatusThread(const HANDLE& h)
+{
 	DWORD ty;
 	bool result = true;
 	GetExitCodeThread(h, &ty);
@@ -406,37 +483,20 @@ bool CPIV::getStatusThread(const HANDLE& h) {
 }
 
 // Закрытие потока
-void CPIV::closeThread(HANDLE& h) {
-	buffer.clear();
-	buffer.shrink_to_fit();
-	if (h != 0) {
+void CPIV::CloseThread(HANDLE& h)
+{
+	if (!buffer.empty())	// Очистка буфера
+	{
+		buffer.clear();
+		buffer.shrink_to_fit();
+	}
+
+	if (h != 0)
+	{
 		CloseHandle(h);
 		h = NULL;
 	}
 	else
-		WriteError(L"Ошибка: Не удалось закрыть поток!");
-}
-
-// Запись в именованный канал
-void CPIV::WriteLog(char szBuf[256]) {
-	HANDLE hLogPipe = CreateFile(pipeName, GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL);
-	DWORD  NumBytesToWrite;	
-	WriteFile(hLogPipe, szBuf, strlen(szBuf), &NumBytesToWrite, NULL);
-	CloseHandle(hLogPipe);
-}
-
-// Запись ошибки в файл
-void CPIV::WriteError(const CString& msg) {
-	SYSTEMTIME st;
-	CString str;
-	GetLocalTime(&st);
-	str.Format(L"%02d:%02d:%02d %02d/%02d/%d:\t%s\n", st.wHour, st.wMinute, st.wSecond, st.wDay, st.wMonth, st.wYear, msg);
-	CString logPath;
-	logPath.Format(L"%s\\Artefacts\\log.txt", path);
-	ofstream log(logPath, ios::out | ios::app);
-	log << CT2A(msg);
-	log.close();
-	
-	AfxMessageBox(msg, MB_ICONERROR);
+		logger.WriteError(L"Ошибка: Не удалось закрыть поток");
 }
 #pragma endregion

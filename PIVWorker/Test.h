@@ -4,40 +4,69 @@
 #include "MyException.h"
 
 #include <regex>
+#include <set>
 
-#define ERROR_DATA L"Не удалось прочитать значение %s. (Поле пустое или содержит недопустимые символы)"
-#define MAX_NUMWORD 32
 #define MAX_BITS 32
 
-class PIV_DECLARE CTest {
+// Повторения номеров слов(адресов) и битов
+typedef struct
+{
+	int adr;	// Номер слова (адрес)
+	bool* bits;	// 0 - присутствие номера слова(адреса), 1...MAX_BITS - присутствие битов
+} repiter;
+
+// Некорректные регулярные выражения
+typedef struct
+{
+	string reg;		// Шаблон выражения
+	CString desc;	// Замечание (дескриптор)
+} regular;
+
+// База регулярных выражений
+typedef struct
+{
+	string correct;
+	vector <regular> incorrect;
+} regBase;
+
+class PIV_DECLARE CTest 
+{
 public:
 	CTest();	// Конструктор
 	~CTest();	// Деструктор
 
-	errorSet Start(bookData& book);					// Проверка на ошибки одного протокола
-	list <errorSet> Start(list <bookData>& books);	// Проверка на все ошибки
+	// Запуск проверки на ошибки
+	errorSet Start(bookData& book, const bool& fast);
+	list <errorSet> Start(list <bookData>& books, const bool& fast);	
 
 private:
-	void getErrors(sheetData* sheet, vector <errorSignal>& syntax, vector <errorSignal>& simantic); // Проверка на ошибки
-	void getWarnings(sheetData* sheet, vector <errorSignal>& warning);								// Проверка на замечания
+	bookData* book = nullptr;	// Указатель на текущую книгу
+	sheetData* sheet = nullptr;	// Указатель на текущий лист
+	set<CString> exception;	// Множество исключений задается в конструкторе
 
-	void checkNP(signalData& signal, const int& np, vector <errorSignal>& syntax);	// Проверка ошибок, связанных с номером набора
-	void initRepiter(bool* num, bool** bits);	// Инициализация репитеров
-	
+	vector <regBase> base;	// База регулярных выражений
+	const enum index {numword, title, value, bits, /*adress, */size};	// Индексы параметров в базе регулярных выражений (value = min, max, csr в одном флаконе)
+
+	void GetErrors(vector <errorSignal>& syntax, vector <errorSignal>& simantic, const bool& fast);	// Проверка листа на синтаксические и семантические ошибки
+	void GetWarnings(vector <errorSignal>& warning);	// Проверка листа на незначительные ошибки (замечания) 
+
+	void InitRepiter(vector<repiter>& repit);	// Инициализация репитера для проверки перекрытия
+	int IsRepitContain(const vector<repiter>& repit, const int& numeric);	// Имеется ли уже такой номер слова (адрес) (в случае неудачи возвр. индекс, иначе -1)
+
 	// Синтаксический анализ
-	bool syntaxValue(const signalData& signal, vector <CString>& error);			// Проверка числовых параметров
-	bool syntaxBits(const intData& bits, vector <CString>& error);					// Проверка используемых разрядов
-	bool syntaxTitle(const vector <CString>& title, vector <CString>& error);		// Проверка синтаксиса идентификатора
-
-	void checkValueByFlag(const CString& field, const int& indx, const bool& flag, vector <CString>& error); // Проверка числовых параметров по набору флагов
+	bool NpTest(vector <errorSignal>& error);	// Проверка номера набора параметров
+	bool SimpleTest(errorSignal& set);			// Простая проверка флагов всех числовых параметров
+	bool TemplateTest(const CString& field, const int& check, const regBase& test, errorSignal& set); // Проверка шаблоном
 
 	// Семантический анализ
-	bool simanticNumWord(const intData& numWord, bool* repiter, vector <CString>& error);		// Проверка номера слова
-	bool simanticTitle(sheetData* sheet, const int& indx, const CString& title, const bool& flag, vector <CString>& error);				// Проверка наименований сигнала
-	bool simanticValue(const signalData& signal, vector <CString>& error);						// Проверка минимального, максимального и цср
-	bool simanticBits(const signalData& signal, const CString& prevTitle, bool** repiter, vector <CString>& error);		// Проверка используемых разрядов
+	bool ValueTest(errorSignal& set, vector <repiter>& repit);	// Проверка всех числовых параметров
+	bool RepiterTest(errorSignal& set, const int& index);		// Поиск повторений идентификатора на листе
+	bool BitsTest(errorSignal& set, const CString& prevTitle, vector<repiter>& repit);	// Проверка используемых разрядов
+	vector<int> CrossBits(const vector <int>& bits, const vector <int>& numWord, vector<repiter>& repit); // Проверка перекрытия битов
+	bool CheckSameTitle(const CString& next, const CString& prev);		// Проверка двух соседних наименований на совпадение
 	
-	bool checkCrossBits(const vector <int>& bits, const vector <int>& numWord, bool** repiter); // Проверка перекрытия битов
-	bool checkTitle(const CString& next, const CString& prev);							// Проверка двух наименований на совпадение
-	bool findRepiteInSheet(const CString& field, sheetData* sheet, const int& start);	// Поиск повторений на листе
+	// Замечания
+	void FindRepiteTitleInBook(errorSignal& set, const int& index);		// Поиск повторений идентификатора в книге
+
+	bool WriteError(errorSignal& result, const CString& msg, const int& index);	// Запись ошибки 
 };

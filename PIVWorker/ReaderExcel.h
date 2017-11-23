@@ -1,40 +1,55 @@
 #pragma once
 
+#include <cstdlib>
+#include <cerrno>
+
 #include "StructPIV.h"
 #include "WorkExcel.h"
 #include "MyException.h"
 
-#include <cstdlib>
-#include <cerrno>
+// Информация о повторения в ARINC протоколах
+struct arincData 
+{
+	CString symbol;		// Символ замены в идентификаторе
+	int current = 0;	// Текущее повторение
+	int amount = 0;		// Всего повторений
+	int startRow;		// Начало блока повторения
+	bool flag = true;	// Флаг отсутствия повторения
+};
 
-#define SIGN_FIELD L"Зн-4"
-
-// Класс для чтения протоколов из excel файлов
-class PIV_DECLARE CReaderExcel	{
+// Класс для чтения протоколов из Excel
+class PIV_DECLARE CReaderExcel	
+{
 public:
 	CReaderExcel();		// Конструктор
 	~CReaderExcel();	// Деструктор
 
-	bookData getBook(const CString& pathToExcel);	// Чтение одной книги
+	bookData GetBook(const CString& pathToExcel);	// Чтение протокола
 private:
 	vector <CString> extension;	// Допустимые расширения файлов
 	Header header;				// Информация о заголовках
 
-	void getSheets(vector <sheetData>& book, CWorkExcel& work);			// Чтение листов из книги
-	void getSignals(vector <signalData>& signals, CWorkExcel& work);	// Чтение параметров на листе
+	void GetSheets(vector <sheetData>& book, CWorkExcel& work);								// Чтение таблиц протокола
+	void GetSignals(vector <signalData>& signals, CWorkExcel& work, const bool& isArinc);	// Чтение параметров на листе
+	void GetArinc(const CString& field, const long& row, arincData& arinc);					// Чтение циклов повторений в ARINC протоколе (порядковый номер в кадре)
 
-	intData getNumWord(const CString& field);			// Получить номера слов из строки в числа
-	intData getBits(const CString& bits);				// Получить используемые разряды
-	vector <int> stepGetBits(const CString& bits, bool& flag);			// Доп функция для разрядов
-	void getMinMaxCsr(signalData& signal, CWorkExcel& work, const long& row);				// Получить значения мин, макс и цср
-	CString getComment(CWorkExcel& work, const long& row, const int& size, bool& flag);		// Чтение примечания
+	// Чтение параметров:
+	intData GetNumWord(const CString& field);					// Номер слова
+	intData GetBits(const CString& bits, const int& size);		// Используемые разряды
+	intData GetAdress(const CString& field, const int& num);	// Адрес
+	void GetMinMaxCsr(signalData& signal, CWorkExcel& work, const long& row);				// Мин, макс и цср
+	CString GetComment(CWorkExcel& work, const long& row, const int& size, bool& flag);		// Примечание
+	
+	int GetSubIndex(CString& numeric);							// Получение подстрочного индекса адреса и удаление его из строки
+	vector <int> StepAdress(const CString& adress, bool& flag);	// Доп функция для адреса
+	vector <int> StepBits(const CString& bits, bool& flag);		// Доп функция для используемых разрядов
+	
+	double GetDouble(const CString& field, bool& flag);	// Получение значения double (иначе = 0)
+	int GetInt(const CString& field, bool& flag);		// Получение значения int (иначе = 0)
 
-	double getDouble(const CString& field, bool& flag);	// Получение значения double (если есть)
-	int getInt(const CString& field, bool& flag);		// Получение значения int (если есть)
-
-
-	bool isEmpty(CWorkExcel& work, const long& row);	// Проверка строки на пустоту
-	bool isRemark(CWorkExcel& work, const long& row);	// Проверка строки на наличие примечания
-	bool checkExtension(const CString& path);			// Проверка расширений файлов
+	bool IsTitle(CWorkExcel& work, const long& row);	// Проверка строки на заголовок
+	bool IsEmpty(CWorkExcel& work, const long& row);	// Проверка строки на пустоту
+	bool IsRemark(CWorkExcel& work, const long& row);	// Проверка строки на наличие примечания
+	bool CheckExtension(const CString& path);			// Проверка расширений файлов
 };
 
