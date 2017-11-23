@@ -172,7 +172,7 @@ void CPIV::OpenExcel()
 			project.books.push_back(reader.GetBook(buffer[i]));
 
 		CTest tester;
-		project.db = tester.Start(project.books);
+		project.db = tester.Start(project.books, !param.bMethod);
 
 		// Генерация артефактов
 		CReport report;
@@ -232,7 +232,7 @@ void CPIV::AddExcel()
 			
 			CTest tester;
 			list <bookData>::iterator pBook = GetBook(other, buffer[i]);
-			errorSet error = tester.Start(*pBook);
+			errorSet error = tester.Start(*pBook, !param.bMethod);
 			contain ? Refresh(other, error) : other.db.push_back(error);
 
 			report.GetTxt(*pBook, path, param);
@@ -296,7 +296,7 @@ void CPIV::RefreshExcel()
 				flag = true;
 				Refresh(project, book);
 				pBook = GetBook(project, buffer[i]);
-				errorSet error = tester.Start(*pBook);
+				errorSet error = tester.Start(*pBook, !param.bMethod);
 				Refresh(project, error);
 			}
 			else if (IsContain(other, buffer[i])) 
@@ -304,7 +304,7 @@ void CPIV::RefreshExcel()
 				flag = false;
 				Refresh(other, book);
 				pBook = GetBook(other, buffer[i]);
-				errorSet error = tester.Start(*pBook);
+				errorSet error = tester.Start(*pBook, !param.bMethod);
 				Refresh(other, error);
 			}
 			else

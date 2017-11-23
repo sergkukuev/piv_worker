@@ -36,8 +36,8 @@ public:
 	~CTest();	// Деструктор
 
 	// Запуск проверки на ошибки
-	errorSet Start(bookData& book);
-	list <errorSet> Start(list <bookData>& books);	
+	errorSet Start(bookData& book, const bool& fast);
+	list <errorSet> Start(list <bookData>& books, const bool& fast);	
 
 private:
 	bookData* book = nullptr;	// Указатель на текущую книгу
@@ -47,7 +47,7 @@ private:
 	vector <regBase> base;	// База регулярных выражений
 	const enum index {numword, title, value, bits, /*adress, */size};	// Индексы параметров в базе регулярных выражений (value = min, max, csr в одном флаконе)
 
-	void GetErrors(vector <errorSignal>& syntax, vector <errorSignal>& simantic);	// Проверка листа на синтаксические и семантические ошибки
+	void GetErrors(vector <errorSignal>& syntax, vector <errorSignal>& simantic, const bool& fast);	// Проверка листа на синтаксические и семантические ошибки
 	void GetWarnings(vector <errorSignal>& warning);	// Проверка листа на незначительные ошибки (замечания) 
 
 	void InitRepiter(vector<repiter>& repit);	// Инициализация репитера для проверки перекрытия

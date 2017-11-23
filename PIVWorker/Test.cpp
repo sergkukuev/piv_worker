@@ -63,7 +63,7 @@ CTest::CTest()
 CTest::~CTest() {	}
 
 // Запуск проверки на ошибки
-errorSet CTest::Start(bookData& book) 
+errorSet CTest::Start(bookData& book, const bool& fast) 
 {
 	errorSet result;
 	result.book = this->book = &book;
@@ -73,14 +73,14 @@ errorSet CTest::Start(bookData& book)
 		errorSheet tmp;
 		tmp.sheet = this->sheet = &book.sheets[j];
 		ASSERT(this->sheet != nullptr);
-		GetErrors(tmp.syntax, tmp.simantic);
+		GetErrors(tmp.syntax, tmp.simantic, fast);
 		GetWarnings(tmp.warning);
 		result.set.push_back(tmp);
 	}
 	return result;
 }
 
-list <errorSet> CTest::Start(list <bookData>& books) 
+list <errorSet> CTest::Start(list <bookData>& books, const bool& fast) 
 {
 	list <errorSet> result;
 	for (list <bookData>::iterator it = books.begin(); it != books.end(); it++) 
@@ -93,7 +93,7 @@ list <errorSet> CTest::Start(list <bookData>& books)
 			errorSheet tmp;
 			tmp.sheet = this->sheet = &it->sheets[j];
 			ASSERT(this->sheet != nullptr);
-			GetErrors(tmp.syntax, tmp.simantic);
+			GetErrors(tmp.syntax, tmp.simantic, fast);
 			GetWarnings(tmp.warning);
 			error.set.push_back(tmp);
 		}
@@ -103,7 +103,7 @@ list <errorSet> CTest::Start(list <bookData>& books)
 }
 
 // Проверка листа на синтаксические и семантические ошибки
-void CTest::GetErrors(vector <errorSignal>& syntax, vector <errorSignal>& simantic) 
+void CTest::GetErrors(vector <errorSignal>& syntax, vector <errorSignal>& simantic, const bool& fast) 
 {
 		if (!sheet->arinc)	// Если линия передачи не arinc, то необходимо проверять набор параметра 
 			sheet->error = NpTest(syntax);
@@ -120,25 +120,28 @@ void CTest::GetErrors(vector <errorSignal>& syntax, vector <errorSignal>& simant
 
 				// Проход по синтаксическим ошибкам
 				// TODO: Сделать регулярные выражения для ячейки адреса (arinc)
-				if (sheet->arinc)
-				{
-					if (sheet->signals[i].numWord.flag)
-						sheet->error = WriteError(tmp, L"Поле пустое или содержит недопустимые символы.", check::numword);
-				}
+				if (fast)
+					SimpleTest(tmp) ? sheet->error = true : sheet->error = sheet->error;
 				else
-					TemplateTest(sheet->signals[i].numWord.field, check::numword, base[numword], tmp) ? sheet->error = true : sheet->error = sheet->error;
-				//SimpleTest(tmp) ? sheet->error = true : sheet->error = sheet->error;
-				
-				TemplateTest(sheet->signals[i].title[1], check::title, base[title], tmp) ? sheet->error = true : sheet->error = sheet->error;
-				// TODO: Три пустые ячейки не считаются ошибкой (исправить костыль)
-				if (sheet->signals[i].min.flag || sheet->signals[i].max.flag || sheet->signals[i].csr.flag)
 				{
-					TemplateTest(sheet->signals[i].min.field, check::min, base[value], tmp) ? sheet->error = true : sheet->error = sheet->error;
-					TemplateTest(sheet->signals[i].max.field, check::max, base[value], tmp) ? sheet->error = true : sheet->error = sheet->error;
-					TemplateTest(sheet->signals[i].csr.field, check::csr, base[value], tmp) ? sheet->error = true : sheet->error = sheet->error;
+					if (sheet->arinc)
+					{
+						if (sheet->signals[i].numWord.flag)
+							sheet->error = WriteError(tmp, L"Поле пустое или содержит недопустимые символы.", check::numword);
+					}
+					else
+						TemplateTest(sheet->signals[i].numWord.field, check::numword, base[numword], tmp) ? sheet->error = true : sheet->error = sheet->error;
+
+					TemplateTest(sheet->signals[i].title[1], check::title, base[title], tmp) ? sheet->error = true : sheet->error = sheet->error;
+					// TODO: Три пустые ячейки не считаются ошибкой (исправить костыль)
+					if (sheet->signals[i].min.flag || sheet->signals[i].max.flag || sheet->signals[i].csr.flag)
+					{
+						TemplateTest(sheet->signals[i].min.field, check::min, base[value], tmp) ? sheet->error = true : sheet->error = sheet->error;
+						TemplateTest(sheet->signals[i].max.field, check::max, base[value], tmp) ? sheet->error = true : sheet->error = sheet->error;
+						TemplateTest(sheet->signals[i].csr.field, check::csr, base[value], tmp) ? sheet->error = true : sheet->error = sheet->error;
+					}
+					TemplateTest(sheet->signals[i].bit.field, check::bits, base[bits], tmp) ? sheet->error = true : sheet->error = sheet->error;
 				}
-				TemplateTest(sheet->signals[i].bit.field, check::bits, base[bits], tmp) ? sheet->error = true : sheet->error = sheet->error;
-				
 				if (!tmp.error.empty())
 				{
 					syntax.push_back(tmp);
@@ -228,7 +231,9 @@ bool CTest::SimpleTest(errorSignal& set)
 		result = WriteError(set, L"Поле пустое или содержит недопустимые символы.", check::max);
 	if (set.signal->csr.flag)
 		result = WriteError(set, L"Поле пустое или содержит недопустимые символы.", check::csr);
-		
+	if (set.signal->bit.flag)
+		result = WriteError(set, L"Поле пустое или содержит недопустимые символы.", check::bits);
+
 	return result;
 }
 
