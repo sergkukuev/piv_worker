@@ -112,10 +112,9 @@ BOOL CPIVDlg::OnInitDialog()
 {
 	CDialogEx::OnInitDialog();
 
-	// Добавление пункта "О программе..." в системное меню.
-
+	// TODO: Добавление пункта "О программе..." в системное меню.
 	// IDM_ABOUTBOX должен быть в пределах системной команды.
-	ASSERT((IDM_ABOUTBOX & 0xFFF0) == IDM_ABOUTBOX);
+	/*ASSERT((IDM_ABOUTBOX & 0xFFF0) == IDM_ABOUTBOX);
 	ASSERT(IDM_ABOUTBOX < 0xF000);
 
 	CMenu* pSysMenu = GetSystemMenu(FALSE);
@@ -130,7 +129,7 @@ BOOL CPIVDlg::OnInitDialog()
 			pSysMenu->AppendMenu(MF_SEPARATOR);
 			pSysMenu->AppendMenu(MF_STRING, IDM_ABOUTBOX, strAboutMenu);
 		}
-	}
+	}*/
 
 	// Задает значок для этого диалогового окна.  Среда делает это автоматически,
 	//  если главное окно приложения не является диалоговым
@@ -388,13 +387,6 @@ void CPIVDlg::OnCbnSelchangeCombo()
 	BrowserNavigate();
 }
 
-// Открыть окно настроек
-void CPIVDlg::OnBnClickedSetting()
-{
-	CSettingDlg dlg;
-	dlg.DoModal();
-}
-
 // Показывать отчет рядом со списком открытых протоколов или нет
 void CPIVDlg::OnBnClickedShowRep()
 {
@@ -411,6 +403,7 @@ void CPIVDlg::OnBnClickedShowRep()
 }
 #pragma endregion
 
+#pragma region SUB_FUNC
 // Открытие файлов
 void  CPIVDlg::OpenFile(vector <CString>& path)
 {
@@ -490,6 +483,7 @@ CString CPIVDlg::NameFromPath(const CString& path)
 	int startPos = path.ReverseFind(L'\\') + 1;
 	return path.Mid(startPos, path.GetLength());
 }
+#pragma endregion
 
 #pragma region Browser
 void CPIVDlg::OnBnClickedBtnHome()
@@ -529,7 +523,16 @@ void CPIVDlg::BrowserNavigate()
 #pragma endregion
 
 #pragma region Settings
-
+// Открыть окно настроек
+void CPIVDlg::OnBnClickedSetting()
+{
+	CSettingDlg stgDlg(this);
+	if (stgDlg.DoModal() == IDOK)
+	{
+		stgDlg.SetParameters();
+		piv.SetSettings(settings);
+	}
+}
 #pragma endregion
 
 // Обновление листа

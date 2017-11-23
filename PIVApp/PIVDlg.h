@@ -86,4 +86,6 @@ public:
 	afx_msg void OnBnClickedBtnPrev();
 	afx_msg void OnBnClickedBtnNext();
 	afx_msg void OnBnClickedBtnRefresh();
+
+	pivParam settings;
 };

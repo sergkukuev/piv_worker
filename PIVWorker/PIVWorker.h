@@ -14,6 +14,15 @@
 #include "Test.h"			// проверка на ошибки протоколов
 #include "Report.h"			// создание отчетов об ошибках
 
+// Параметры настройки
+struct pivParam
+{
+	bool bProject = true;	// Проверка проекта: true - 930М, false - кпрно35
+	bool bMethod = true;	// Метод проверки: true - шаблонная, false - быстрая
+	bool bNumPK = false;	// Установить номер подкадра при генерации txt
+	bool bGenTxt = false;	// Генерация txt в любом случае
+};
+
  // TODO: Изменить описание в связи расширением функций
 //	Основной класс DLL для работы с протоколами информационного взаимодействия (ПИВ)
 //	Содержит следующий перечень функций:
@@ -51,8 +60,9 @@ public:
 	CString GetOtherPath();
 	CString GetPath();
 
-	void SetPathToSave(const CString pathToReport);	// Установка пути хранения артефактов
-	void SetStatusNumPK(const bool status);			// Установка флага bNumPK (значение подкадра)
+	void SetPathToSave(const CString pathToReport);		// Установка пути хранения артефактов
+	pivParam GetSettings();	// Получение текущих настроек
+	void SetSettings(const pivParam& parameters);	// Установка настроек DLL
 
 protected:
 	friend void Thread(CPIV& piv);	// Запуск операций DLL в потоке
@@ -63,13 +73,13 @@ private:
 
 	pivData project;	// Данные проекта
 	pivData other;		// Данные остальных протоколов
+	pivParam param;		// Настройка
 
 	const enum command {open, add, refresh, close};	// Набор потоковых команд
 	int hCmd;					// Текущая потоковая команда
 
 	vector <CString> buffer;	// Временное хранение путей протоколов
 	CString path;				// Путь сохранения отчетов
-	bool bNumPK = false;		// Значение установки подкадра в txt: устанавливать (true) или не устанавливать (false)
 
 	// Методы запуска потока для старта операций:
 	void StartOpen();		// открытие проекта

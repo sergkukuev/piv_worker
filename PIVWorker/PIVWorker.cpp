@@ -121,8 +121,15 @@ void CPIV::SetPathToSave(const CString pathToReport)
 	logger.Write(L"Изменено расположение папки отчетов");
 }
 
-// Установка флага bNumPK (значение подкадра)
-void CPIV::SetStatusNumPK(const bool status) {	bNumPK = status; }
+void CPIV::SetSettings(const pivParam& parameters) 
+{ 
+	while (!GetStatusThread(primary))
+		Sleep(100);
+	param = parameters;
+	logger.Write(L"Изменены настройки приложения");
+}
+
+pivParam CPIV::GetSettings() { return param; }
 #pragma endregion
 
 #pragma region OPEN_PROJECT
@@ -170,7 +177,7 @@ void CPIV::OpenExcel()
 		// Генерация артефактов
 		CReport report;
 		report.GetReport(project, path, true);		// true -  проект, false - отдельные протоколы
-		report.GetTxt(project.books, path, bNumPK);
+		report.GetTxt(project.books, path, param.bNumPK);
 		CloseThread(primary);
 		logger.Write(L"Открытие пив завершено");	// Логирование
 	}
@@ -228,7 +235,7 @@ void CPIV::AddExcel()
 			errorSet error = tester.Start(*pBook);
 			contain ? Refresh(other, error) : other.db.push_back(error);
 
-			report.GetTxt(*pBook, path, bNumPK);
+			report.GetTxt(*pBook, path, param.bNumPK);
 		}
 		
 		report.GetReport(other, path, false);	// true -  проект, false - отдельные протоколы
@@ -303,7 +310,7 @@ void CPIV::RefreshExcel()
 			else
 				throw BookNotFound(NameFromPath(buffer[i]));
 
-			report.GetTxt(*pBook, path, bNumPK);
+			report.GetTxt(*pBook, path, param.bNumPK);
 		}
 		
 		flag ?	report.GetReport(project, path, true) : report.GetReport(other, path, false);
