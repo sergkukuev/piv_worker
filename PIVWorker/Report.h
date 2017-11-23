@@ -36,8 +36,8 @@ public:
 
 	void GetReport(pivData& data, const CString& pathToSave, const bool& isProj);			// Генерация отчета об ошибках
 	// Генерация txt файлов
-	void GetTxt(list <bookData>& books, const CString& pathToSave, const bool& bNumPK);		// несколько файлов
-	void GetTxt(const bookData& book, const CString& pathToSave, const bool& bNumPK);		// один файл
+	void GetTxt(list <bookData>& books, const CString& pathToSave, const pivParam& bNumPK);		// несколько файлов
+	void GetTxt(const bookData& book, const CString& pathToSave, const pivParam& bNumPK);		// один файл
 
 private:
 	bool isProject;		// Метка о создании отчета проекта или отдельных ПИВ (true - проект, false - отдельные протоколы)
@@ -60,7 +60,7 @@ private:
 	void SetAmountError(list <errorSet>& Db);		// Подсчет ошибок и предупреждений
 
 ////////////////////////////////////	ГЕНЕРАЦИЯ TXT ФАЙЛОВ	////////////////////////////////////
-	void Generate(const bookData& book, const bool& bNumPK);	// Генерация txt протокола
+	void Generate(const bookData& book, const pivParam& bNumPK);	// Генерация txt протокола
 	void WriteTxtParam(ofstream& file, const signalData& signal, const sheetInfo& info, const int& arincNum);	// Запись одного набора данных из таблицы в txt файл
 	
 };

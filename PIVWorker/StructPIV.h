@@ -8,6 +8,15 @@
 
 using namespace std;
 
+// Параметры настройки
+struct pivParam
+{
+	bool bProject = true;	// Проверка проекта: true - 930М, false - кпрно35
+	bool bMethod = true;	// Метод проверки: true - шаблонная, false - быстрая
+	bool bNumPK = false;	// Установить номер подкадра при генерации txt
+	bool bGenTxt = false;	// Генерация txt в любом случае
+};
+
 #pragma region Data
 
 const enum check {numword, title, min, max, csr, bits, comment, size}; // Индексы ячеек в таблице

@@ -360,7 +360,7 @@ void CReport::SetAmountError(list <errorSet>& db)
 // Генерация txt файлов
 #pragma region GENERATE_TXT
 // одного 
-void CReport::GetTxt(const bookData& book, const CString& pathToSave, const bool& bNumPK)
+void CReport::GetTxt(const bookData& book, const CString& pathToSave, const pivParam& params)
 {
 	if (pathToSave.IsEmpty())
 		throw EmptyPathException();
@@ -370,11 +370,11 @@ void CReport::GetTxt(const bookData& book, const CString& pathToSave, const bool
 	path.Format(L"%s%s", path, TEXT_FOLDER);
 	CreateDirectory(path, NULL);
 
-	Generate(book, bNumPK);
+	Generate(book, params);
 }
 
 // нескольких
-void CReport::GetTxt(list <bookData>& books, const CString& pathToSave, const bool& bNumPK) 
+void CReport::GetTxt(list <bookData>& books, const CString& pathToSave, const pivParam& params) 
 {
 	if (pathToSave.IsEmpty())
 		throw EmptyPathException();
@@ -386,11 +386,11 @@ void CReport::GetTxt(list <bookData>& books, const CString& pathToSave, const bo
 
 	// Обход по книгам
 	for (list <bookData>::iterator it = books.begin(); it != books.end(); it++)
-		Generate(*it, bNumPK);
+		Generate(*it, params);
 }
 
 // Генерация txt протоколов
-void CReport::Generate(const bookData& book, const bool& bNumPK) 
+void CReport::Generate(const bookData& book, const pivParam& params) 
 {
 	CString tPath = path;
 	tPath.Format(L"%s\\%s", path, book.name);
@@ -408,7 +408,7 @@ void CReport::Generate(const bookData& book, const bool& bNumPK)
 	for (size_t i = 0; i < book.sheets.size(); i++, cNP++, cNumWord = 1) 
 	{
 		// Если нет на странице ошибок
-		if (!book.sheets[i].error) 
+		if (!book.sheets[i].error || params.bGenTxt) 
 		{ 
 			CString name;
 			sheetInfo info;
@@ -416,7 +416,7 @@ void CReport::Generate(const bookData& book, const bool& bNumPK)
 			info.arinc = book.sheets[i].arinc;
 			info.arinc ? info.np = cNP : info.np = book.sheets[i].np;
 			info.pk = book.sheets[i].pk;
-			info.bPK = bNumPK;
+			info.bPK = params.bNumPK;
 
 			// Создание txt файла для записи
 			name.Format(L"NP_%d_%s.txt", info.np, book.sheets[i].name);

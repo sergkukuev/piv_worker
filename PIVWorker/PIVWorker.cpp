@@ -177,7 +177,7 @@ void CPIV::OpenExcel()
 		// Генерация артефактов
 		CReport report;
 		report.GetReport(project, path, true);		// true -  проект, false - отдельные протоколы
-		report.GetTxt(project.books, path, param.bNumPK);
+		report.GetTxt(project.books, path, param);
 		CloseThread(primary);
 		logger.Write(L"Открытие пив завершено");	// Логирование
 	}
@@ -235,7 +235,7 @@ void CPIV::AddExcel()
 			errorSet error = tester.Start(*pBook);
 			contain ? Refresh(other, error) : other.db.push_back(error);
 
-			report.GetTxt(*pBook, path, param.bNumPK);
+			report.GetTxt(*pBook, path, param);
 		}
 		
 		report.GetReport(other, path, false);	// true -  проект, false - отдельные протоколы
@@ -310,7 +310,7 @@ void CPIV::RefreshExcel()
 			else
 				throw BookNotFound(NameFromPath(buffer[i]));
 
-			report.GetTxt(*pBook, path, param.bNumPK);
+			report.GetTxt(*pBook, path, param);
 		}
 		
 		flag ?	report.GetReport(project, path, true) : report.GetReport(other, path, false);
