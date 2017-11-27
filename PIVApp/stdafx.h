@@ -10,6 +10,7 @@
 #endif
 
 #include "targetver.h"
+#include "vld.h"	// Программа для поиска утечек памяти (требуется дополнительная установка)
 
 #define _ATL_CSTRING_EXPLICIT_CONSTRUCTORS      // некоторые конструкторы CString будут явными
 
