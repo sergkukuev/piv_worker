@@ -12,7 +12,7 @@
 typedef struct
 {
 	int adr;	// Ќомер слова (адрес)
-	bool* bits;	// 0 - присутствие номера слова(адреса), 1...MAX_BITS - присутствие битов
+	vector<bool> bits;	// 0 - присутствие номера слова(адреса), 1...MAX_BITS - присутствие битов
 } repiter;
 
 // Ќекорректные регул€рные выражени€
@@ -50,7 +50,7 @@ private:
 	void GetErrors(vector <errorSignal>& syntax, vector <errorSignal>& simantic, const bool& fast);	// ѕроверка листа на синтаксические и семантические ошибки
 	void GetWarnings(vector <errorSignal>& warning);	// ѕроверка листа на незначительные ошибки (замечани€) 
 
-	void InitRepiter(vector<repiter>& repit);	// »нициализаци€ репитера дл€ проверки перекрыти€
+	void InitRepiter(vector<repiter>& repit);		// »нициализаци€ репитера дл€ проверки перекрыти€
 	int IsRepitContain(const vector<repiter>& repit, const int& numeric);	// »меетс€ ли уже такой номер слова (адрес) (в случае неудачи возвр. индекс, иначе -1)
 
 	// —интаксический анализ

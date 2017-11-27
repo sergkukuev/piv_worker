@@ -350,7 +350,7 @@ void CTest::InitRepiter(vector <repiter>& repit)
 			{
 				repiter tmp;
 				tmp.adr = sheet->signals[i].numWord.value[j];
-				tmp.bits = new bool[MAX_BITS + 1];	// Выделение память под биты и номер слова
+				tmp.bits.resize(MAX_BITS + 1);	// Выделение память под биты и номер слова
 				for (int k = 0; k < MAX_BITS + 1; k++)
 					tmp.bits[k] = true;
 				repit.push_back(tmp);
