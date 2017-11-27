@@ -166,7 +166,7 @@ void CPIV::OpenExcel()
 {
 	try 
 	{
-		logger.Write(L"Идет открытие пив...", true);
+		logger.Write(L"Идет открытие протоколов...", true);
 		CReaderExcel reader; 
 		for (size_t i = 0; i < buffer.size(); i++)
 			project.books.push_back(reader.GetBook(buffer[i]));
@@ -179,7 +179,7 @@ void CPIV::OpenExcel()
 		report.GetReport(project, path, true);		// true -  проект, false - отдельные протоколы
 		report.GetTxt(project.books, path, param);
 		CloseThread(primary);
-		logger.Write(L"Открытие пив завершено");	// Логирование
+		logger.Write(L"Открытие протоколов завершено");	// Логирование
 	}
 	catch (MyException& exc)
 	{
@@ -221,7 +221,7 @@ void CPIV::AddExcel()
 {
 	try 
 	{
-		logger.Write(L"Идет добавление пив...", true);
+		logger.Write(L"Идет добавление протоколов...", true);
 		CReport report;
 		for (size_t i = 0; i < buffer.size(); i++) 
 		{
@@ -241,7 +241,7 @@ void CPIV::AddExcel()
 		report.GetReport(other, path, false);	// true -  проект, false - отдельные протоколы
 		CloseThread(primary);
 		
-		logger.Write(L"Добавление пив завершено");	// Логирование
+		logger.Write(L"Добавление протоколов завершено");	// Логирование
 	}
 	catch (MyException& exc) 
 	{
@@ -281,7 +281,7 @@ void CPIV::RefreshExcel()
 {
 	try 
 	{
-		logger.Write(L"Идет обновление выбранных пив...", true);
+		logger.Write(L"Идет обновление выбранных протоколов...", true);
 		CReport report;
 		bool flag = true;
 		for (size_t i = 0; i < buffer.size(); i++)
@@ -317,7 +317,7 @@ void CPIV::RefreshExcel()
 	
 		CloseThread(primary);
 		
-		logger.Write(L"Обновление пив завершено");	// Логирование
+		logger.Write(L"Обновление протоколов завершено");	// Логирование
 	}
 	catch (MyException& exc) 
 	{
@@ -332,10 +332,10 @@ void CPIV::Close()
 {
 	if (!other.books.empty() || !other.db.empty())
 	{
-		logger.Write(L"Идет закрытие всех пив...", true);
+		logger.Write(L"Идет закрытие всех протоколов...", true);
 		other.books.clear();
 		other.db.clear();
-		logger.Write(L"Закрытие пив завершено");	// Логирование
+		logger.Write(L"Закрытие протоколов завершено");	// Логирование
 	}
 }
 
@@ -380,7 +380,7 @@ void CPIV::CloseProject()
 
 void CPIV::CloseExcel() 
 {
-	logger.Write(L"Идет закрытие выбранных пив...", true);
+	logger.Write(L"Идет закрытие выбранных протоколов...", true);
 	for (size_t i = 0; i < buffer.size(); i++) 
 	{
 		for (list <errorSet>::iterator it = other.db.begin(); it != other.db.end();)
@@ -389,7 +389,7 @@ void CPIV::CloseExcel()
 			it->name.Compare(NameFromPath(buffer[i])) == 0 ? other.books.erase(it++) : it++;
 	}
 	CloseThread(primary);
-	logger.Write(L"Закрытие пив завершено");	// Логирование
+	logger.Write(L"Закрытие протоколов завершено");	// Логирование
 }
 #pragma endregion
 

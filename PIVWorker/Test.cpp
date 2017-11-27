@@ -260,7 +260,7 @@ bool CTest::TemplateTest(const CString& field, const int& check, const regBase& 
 		if (!bFind)	// Неопознанная ошибка
 			throw UndefinedError(book->name, sheet->name, set.signal->numWord.field + L"\n\t" + set.signal->title[1]);
 	}
-	return result;
+	return !result;
 }
 #pragma endregion
 

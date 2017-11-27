@@ -452,8 +452,9 @@ void CReport::WriteTxtParam(ofstream& file, const signalData& signal, const shee
 		buffer.Format(L"PAR=%s\n", signal.title[1]);	// Запись обозначения сигнала
 		file << CT2A(buffer);
 
+		buffer = signal.title[0];
 		buffer.Replace(L"\"", L"\\\"");
-		buffer.Format(L"\tNAME=\"%s\"\n", signal.title[0]); // Наименования сигнала
+		buffer.Format(L"\tNAME=\"%s\"\n", buffer); // Наименования сигнала
 		file << CT2A(buffer);
 
 		if (!signal.dimension.IsEmpty()) 
@@ -492,13 +493,13 @@ void CReport::WriteTxtParam(ofstream& file, const signalData& signal, const shee
 			file << "\tVALDESCR\n";
 			signal.bitSign ? file << "\t\tSIGNED\n" : file << "\t\tUNSIGNED\n";
 
-			buffer.Format(L"\t\tMIN = %lf\n", signal.min.value);
+			IsInt(signal.min.value) ? buffer.Format(L"\t\tMIN = %.0lf\n", signal.min.value) : buffer.Format(L"\t\tMIN = %lf\n", signal.min.value);
 			file << CT2A(buffer);
 
-			buffer.Format(L"\t\tMAX = %lf\n", signal.max.value);
+			IsInt(signal.max.value) ? buffer.Format(L"\t\tMAX = %.0lf\n", signal.max.value) : buffer.Format(L"\t\tMAX = %lf\n", signal.max.value);
 			file << CT2A(buffer);
-
-			buffer.Format(L"\t\tMSB = %lf\n", signal.csr.value);
+			
+			IsInt(signal.csr.value) ? buffer.Format(L"\t\tMSB = %.0lf\n", signal.csr.value) : buffer.Format(L"\t\tMSB = %lf\n", signal.csr.value);
 			file << CT2A(buffer);
 
 			file << "\tEND_VALDESCR\n";
@@ -520,5 +521,15 @@ void CReport::WriteTxtParam(ofstream& file, const signalData& signal, const shee
 		}
 		file << "END_PAR\n\n";
 	}
+}
+
+// Проверка на int значение
+bool CReport::IsInt(const double& numeric)
+{
+	int whole = (int)numeric;
+	double fract = numeric - whole;
+	bool result;
+	fract == 0 ? result = true : result = false;
+	return result;
 }
 #pragma endregion

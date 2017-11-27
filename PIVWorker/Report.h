@@ -62,6 +62,6 @@ private:
 ////////////////////////////////////	ГЕНЕРАЦИЯ TXT ФАЙЛОВ	////////////////////////////////////
 	void Generate(const bookData& book, const pivParam& bNumPK);	// Генерация txt протокола
 	void WriteTxtParam(ofstream& file, const signalData& signal, const sheetInfo& info, const int& arincNum);	// Запись одного набора данных из таблицы в txt файл
-	
+	bool IsInt(const double& numeric);	// Проверка на int значение
 };
 
