@@ -485,6 +485,7 @@ int CReaderExcel::GetInt(const CString& field, bool& flag)
 	else
 		flag = true;
 
+	delete[] str;
 	return result;
 }
 #pragma endregion
