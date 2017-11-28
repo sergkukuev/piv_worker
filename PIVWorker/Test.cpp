@@ -389,7 +389,7 @@ bool CTest::BitsTest(errorSignal& set, vector<repiter>& repit)
 			bool replaced;
 			(set.signal->numWord.value.size() == 2) ? replaced = IsReplaceable(set.signal->title[0], repit[IsRepitContain(repit, set.signal->numWord.value[1])].signals) || 
 				IsReplaceable(set.signal->title[0], repit[IsRepitContain(repit, set.signal->numWord.value[0])].signals) :
-				IsReplaceable(set.signal->title[0], repit[IsRepitContain(repit, set.signal->numWord.value[0])].signals);
+				replaced = IsReplaceable(set.signal->title[0], repit[IsRepitContain(repit, set.signal->numWord.value[0])].signals);
 			
 			vector<int> bits = CrossBits(set.signal->bit.value, set.signal->numWord.value, repit);
 			if (bits.size() != 0 && !replaced)
