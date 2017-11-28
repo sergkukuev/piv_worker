@@ -133,6 +133,10 @@ BOOL CPIVDlg::OnInitDialog()
 		}
 	}*/
 
+	/* break into debugger at specific memory allocation */
+	if (_crtBreakAlloc != -1L)
+		_CrtDbgBreak();
+		
 	// Задает значок для этого диалогового окна.  Среда делает это автоматически,
 	//  если главное окно приложения не является диалоговым
 	SetIcon(m_hIcon, TRUE);			// Крупный значок
