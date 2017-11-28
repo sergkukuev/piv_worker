@@ -125,11 +125,11 @@ void CTest::GetErrors(vector <errorSignal>& syntax, vector <errorSignal>& simant
 				tmp.signal = &sheet->signals[i];
 
 				// Проход по синтаксическим ошибкам
-				// TODO: Сделать регулярные выражения для ячейки адреса (arinc)
 				if (fast)
 					SimpleTest(tmp) ? sheet->error = true : sheet->error = sheet->error;
 				else
 				{
+					// TODO: Сделать регулярные выражения для ячейки адреса (arinc)
 					if (sheet->arinc)
 					{
 						if (sheet->signals[i].numWord.flag)
@@ -155,11 +155,9 @@ void CTest::GetErrors(vector <errorSignal>& syntax, vector <errorSignal>& simant
 				}
 				
 				// Проход по семантическим ошибкам
-				ValueTest(tmp, repit) ? sheet->error = true : sheet->error = sheet->error;
+				ValueTest(tmp) ? sheet->error = true : sheet->error = sheet->error;
 				RepiterTest(tmp, (int)i) ? sheet->error = true : sheet->error = sheet->error;
-				CString prevTitle;
-				(i > 0) ? prevTitle = sheet->signals[i - 1].title[0] : prevTitle = L"";
-				BitsTest(tmp, prevTitle, repit) ? sheet->error = true : sheet->error = sheet->error;
+				BitsTest(tmp, repit) ? sheet->error = true : sheet->error = sheet->error;
 
 				if (!tmp.error.empty())
 					simantic.push_back(tmp);
@@ -272,7 +270,7 @@ bool CTest::TemplateTest(const CString& field, const int& check, const regBase& 
 
 #pragma region Simantic
 // Проверка всех числовых параметров
-bool CTest::ValueTest(errorSignal& set, vector <repiter>& repit) 
+bool CTest::ValueTest(errorSignal& set) 
 {
 	bool result = false;
 	// Проверка номера слова (адреса)
@@ -289,7 +287,6 @@ bool CTest::ValueTest(errorSignal& set, vector <repiter>& repit)
 			*/
 			if (set.signal->numWord.value[i] > 32 && !sheet->arinc)
 				result = WriteError(set, L"Значение номера слова должно быть меньше 32.", check::numword);
-
 			if (set.signal->numWord.sys != 8 && sheet->arinc)
 				result = WriteError(set, L"Адрес сигнала должен быть записан в 8-ой системе счисления.", check::numword);
 		}
@@ -345,16 +342,26 @@ bool CTest::RepiterTest(errorSignal& set, const int& index)
 void CTest::InitRepiter(vector <repiter>& repit)
 {
 	for (int i = 0; i < sheet->signals.size(); i++)
+	{
 		for (int j = 0; j < sheet->signals[i].numWord.value.size(); j++)
-			if (IsRepitContain(repit, sheet->signals[i].numWord.value[j]) == -1)
+		{
+			int indx = IsRepitContain(repit, sheet->signals[i].numWord.value[j]);
+			if (indx == -1)
 			{
 				repiter tmp;
 				tmp.adr = sheet->signals[i].numWord.value[j];
-				tmp.bits.resize(MAX_BITS + 1);	// Выделение память под биты и номер слова
-				for (int k = 0; k < MAX_BITS + 1; k++)
+				tmp.signals.push_back(&sheet->signals[i]);
+				tmp.bits.resize(MAX_BITS);	// Выделение память под биты и номер слова
+				for (int k = 0; k < MAX_BITS; k++)
 					tmp.bits[k] = true;
 				repit.push_back(tmp);
 			}
+			else
+			{
+				repit[indx].signals.push_back(&sheet->signals[i]);
+			}
+		}
+	}
 }
 
 // Имеется ли уже такой номер слова (адрес) (в случае удачи возвр. индекс, иначе -1)
@@ -368,7 +375,7 @@ int CTest::IsRepitContain(const vector<repiter>& repit, const int& numeric)
 }
 
 // Проверка используемых разрядов
-bool CTest::BitsTest(errorSignal& set, const CString& prevTitle, vector<repiter>& repit) 
+bool CTest::BitsTest(errorSignal& set, vector<repiter>& repit) 
 {
 	bool result = false;
 	// Кол-во № слов должно совпадать с кол-вами интервалов исп. разрядов
@@ -379,9 +386,13 @@ bool CTest::BitsTest(errorSignal& set, const CString& prevTitle, vector<repiter>
 				result = WriteError(set, L"Старший бит меньше младшего.", check::bits);
 		if (set.signal->numWord.value.size() * 2 == set.signal->bit.value.size()) 
 		{
+			bool replaced;
+			(set.signal->numWord.value.size() == 2) ? replaced = IsReplaceable(set.signal->title[0], repit[IsRepitContain(repit, set.signal->numWord.value[1])].signals) || 
+				IsReplaceable(set.signal->title[0], repit[IsRepitContain(repit, set.signal->numWord.value[0])].signals) :
+				IsReplaceable(set.signal->title[0], repit[IsRepitContain(repit, set.signal->numWord.value[0])].signals);
+			
 			vector<int> bits = CrossBits(set.signal->bit.value, set.signal->numWord.value, repit);
-			// TODO: Организовать нормальный поиск двойных слов
-			if (bits.size() != 0 && !CheckSameTitle(set.signal->title[0], prevTitle)) 
+			if (bits.size() != 0 && !replaced)
 			{
 				CString str = L"Следующий(ие) бит(ы) перекрывает(ют)ся: ";
 				for (size_t i = 0; i < bits.size(); i++)
@@ -408,26 +419,33 @@ vector<int> CTest::CrossBits(const vector <int>& bits, const vector <int>& numWo
 			for (; start <= end; start++) 
 			{
 				int indx = IsRepitContain(repit, numWord[i]);
+				ASSERT(indx != -1);
 				repit[indx].bits[start] ? repit[indx].bits[start] = false :	result.push_back(start);	// отметка в матрице о наличии бита
 			}
 		}
 	return result;
 }
 
-// Проверка двух соседних наименований на совпадение
-bool CTest::CheckSameTitle(const CString& next, const CString& prev)
+// Проверка на заменяемость
+bool CTest::IsReplaceable(const CString& title, const vector <signalData*> signals)
 {
-	CString first = next, second = prev;
+	bool result = false;
+	CString first = title;
+	for (size_t i = 0; i < signals.size(); i++)
+	{
+		CString second = signals[i]->title[0];
+		if (first.CompareNoCase(second) == 0)
+			continue;
 
-	int indx = first.ReverseFind(L',');
-	if (indx != -1)
-		first.Delete(indx, first.GetLength() - indx);
-	indx = second.ReverseFind(L',');
-	if (indx != -1)
-		second.Delete(indx, second.GetLength() - indx);
+		int indx = first.ReverseFind(L',');
+		if (indx != -1)
+			first.Delete(indx, first.GetLength() - indx);
+		indx = second.ReverseFind(L',');
+		if (indx != -1)
+			second.Delete(indx, second.GetLength() - indx);
+		first.CompareNoCase(second) == 0 ? result = true : result = result;
+	}
 
-	bool result;
-	first.CompareNoCase(second) == 0 ? result = true : result = false;
 	return result;
 }
 #pragma endregion

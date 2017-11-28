@@ -12,7 +12,8 @@
 typedef struct
 {
 	int adr;	// Номер слова (адрес)
-	vector<bool> bits;	// 0 - присутствие номера слова(адреса), 1...MAX_BITS - присутствие битов
+	vector <signalData*> signals;	// Указатели на сигналы с данным адресом
+	vector <bool> bits;	// 0...MAX_BITS - присутствие битов
 } repiter;
 
 // Некорректные регулярные выражения
@@ -59,11 +60,11 @@ private:
 	bool TemplateTest(const CString& field, const int& check, const regBase& test, errorSignal& set); // Проверка шаблоном
 
 	// Семантический анализ
-	bool ValueTest(errorSignal& set, vector <repiter>& repit);	// Проверка всех числовых параметров
+	bool ValueTest(errorSignal& set);	// Проверка всех числовых параметров
 	bool RepiterTest(errorSignal& set, const int& index);		// Поиск повторений идентификатора на листе
-	bool BitsTest(errorSignal& set, const CString& prevTitle, vector<repiter>& repit);	// Проверка используемых разрядов
+	bool BitsTest(errorSignal& set, vector<repiter>& repit);	// Проверка используемых разрядов
 	vector<int> CrossBits(const vector <int>& bits, const vector <int>& numWord, vector<repiter>& repit); // Проверка перекрытия битов
-	bool CheckSameTitle(const CString& next, const CString& prev);		// Проверка двух соседних наименований на совпадение
+	bool IsReplaceable(const CString& title, const vector <signalData*> signals);		// Проверка на заменяемость
 	
 	// Замечания
 	void FindRepiteTitleInBook(errorSignal& set, const int& index);		// Поиск повторений идентификатора в книге
