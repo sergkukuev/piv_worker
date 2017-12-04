@@ -112,6 +112,7 @@ END_MESSAGE_MAP()
 
 BOOL CPIVDlg::OnInitDialog()
 {
+	//_crtBreakAlloc = 587;
 	CDialogEx::OnInitDialog();
 
 	// TODO: Добавление пункта "О программе..." в системное меню.
@@ -132,10 +133,6 @@ BOOL CPIVDlg::OnInitDialog()
 			pSysMenu->AppendMenu(MF_STRING, IDM_ABOUTBOX, strAboutMenu);
 		}
 	}*/
-
-	/* break into debugger at specific memory allocation */
-	if (_crtBreakAlloc != -1L)
-		_CrtDbgBreak();
 		
 	// Задает значок для этого диалогового окна.  Среда делает это автоматически,
 	//  если главное окно приложения не является диалоговым
