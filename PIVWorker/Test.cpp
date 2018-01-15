@@ -285,10 +285,12 @@ bool CTest::ValueTest(errorSignal& set)
 			str.Format(L"Значение %s %d уже содержится на этом листе.", str,signal.numWord.value[i]);
 			repit[indx].bits[0] ? repit[indx].bits[0] = false : set.push_back(str);
 			*/
-			if (set.signal->numWord.value[i] > 32 && !sheet->arinc)
-				result = WriteError(set, L"Значение номера слова должно быть меньше 32.", check::numword);
+			if (set.signal->numWord.value[i] < 0 && !sheet->arinc)
+				result = WriteError(set, L"Значение <b>№ слова</b> не должно быть отрицательным.", check::numword);
+			else if (set.signal->numWord.value[i] > 32 && !sheet->arinc)
+				result = WriteError(set, L"Значение <b>№ слова</b> должно быть меньше 32.", check::numword);
 			if (set.signal->numWord.sys != 8 && sheet->arinc)
-				result = WriteError(set, L"Адрес сигнала должен быть записан в 8-ой системе счисления.", check::numword);
+				result = WriteError(set, L"<b>Адрес сигнала</b> должен быть записан в 8-ой системе счисления.", check::numword);
 		}
 	}
 	// Проверка мин, макс и цср
@@ -308,14 +310,14 @@ bool CTest::ValueTest(errorSignal& set)
 		double nMax = (set.signal->csr.value * 2) - nMin;
 
 		if (set.signal->max.value - nMax >= 2) 
-			result = WriteError(set, L"Нельзя упаковать данное значение", check::max);
+			result = WriteError(set, L"Нельзя упаковать <b>максимальное значение</b>", check::max);
 		else if (((abs(set.signal->min.value) > (nMax + nMin)) || (abs(set.signal->min.value) < nMin)) && set.signal->min.value != 0) 
-			result = WriteError(set, L"Нельзя упаковать данное значение", check::min);
+			result = WriteError(set, L"Нельзя упаковать <b>минимальное значение</b>", check::min);
 
 		if ((set.signal->min.value < 0) && !set.signal->bitSign && !sheet->arinc)
-			result = WriteError(set, L"Не может быть отрицательным числом или не верно задан знаковый бит в поле \"Примечание\"", check::min);
+			result = WriteError(set, L"<b>Минимальное значение</b> не может быть отрицательным числом или не верно задан знаковый бит в поле \"Примечание\"", check::min);
 		else if ((set.signal->min.value >= 0) && set.signal->bitSign && !sheet->arinc)
-			result = WriteError(set, L"Должно быть отрицательным числом или не верно задан знаковый бит в поле \"Примечание\"", check::min);
+			result = WriteError(set, L"<b>Минимальное значение</b> должно быть отрицательным числом или не верно задан знаковый бит в поле \"Примечание\"", check::min);
 	}
 	return result;
 }
@@ -333,7 +335,7 @@ bool CTest::RepiterTest(errorSignal& set, const int& index)
 				result = true;
 
 	if (result)
-		WriteError(set, L"Сигнал с таким идентификатором присутствует на этом листе.", check::title);
+		WriteError(set, L"Сигнал с таким <b>условным обозначением</b> присутствует на этом листе.", check::title);
 
 	return result;
 }
@@ -381,9 +383,10 @@ bool CTest::BitsTest(errorSignal& set, vector<repiter>& repit)
 	// Кол-во № слов должно совпадать с кол-вами интервалов исп. разрядов
 	if (!set.signal->numWord.flag && !set.signal->bit.flag) 
 	{
-		for (size_t i = 0; i < set.signal->bit.value.size(); i+=2)
+		for (size_t i = 0; i < set.signal->bit.value.size(); i+=2) 
 			if (set.signal->bit.value[i] > set.signal->bit.value[i + 1] && set.signal->bit.value[i+1] != -1) 
-				result = WriteError(set, L"Старший бит меньше младшего.", check::bits);
+				result = WriteError(set, L"Старший бит меньше младшего в <b>используемых разрядах</b>.", check::bits);
+		// TODO: Добавить проверку на диапазон битов (Должен быть от 1 до 32)
 		if (set.signal->numWord.value.size() * 2 == set.signal->bit.value.size()) 
 		{
 			bool replaced;
@@ -394,14 +397,15 @@ bool CTest::BitsTest(errorSignal& set, vector<repiter>& repit)
 			vector<int> bits = CrossBits(set.signal->bit.value, set.signal->numWord.value, repit);
 			if (bits.size() != 0 && !replaced)
 			{
-				CString str = L"Следующие биты перекрываются: ";
+				CString str = L"Следующие <b>используемые разряды</b> перекрываются: ";
 				for (size_t i = 0; i < bits.size(); i++)
 					str.Format(L"%s %d", str, bits[i]);
 				result = WriteError(set, str, check::bits);
 			}
 		}
 		else 
-			result = (set.signal->numWord.value.size() == 1) ? WriteError(set, L"Должен быть один интервал.", check::bits) : WriteError(set, L"Должно быть два интервала.",  check::bits);
+			result = (set.signal->numWord.value.size() == 1) ? WriteError(set, L"Должен быть один интервал <b>используемых разрядов</b>", check::bits) : 
+				WriteError(set, L"Должно быть два интервала <b>используемых разрядов</b>",  check::bits);
 	}
 	return result;
 }
@@ -410,20 +414,21 @@ bool CTest::BitsTest(errorSignal& set, vector<repiter>& repit)
 vector<int> CTest::CrossBits(const vector <int>& bits, const vector <int>& numWord, vector<repiter>& repit) 
 {
 	vector<int> result;
-	for (size_t j = 0; j < 2; j += 2)
-		for (size_t i = 0; i < numWord.size(); i++) 
-		{
-			int end, start = bits[j];
-			(bits[j + 1] == -1) ? end = start : end = bits[j + 1];
+	for (size_t j = 0, i = 0; i < numWord.size(); j += 2, i++)
+	{
+		int end, start = bits[j];
+		(bits[j + 1] == -1) ? end = start : end = bits[j + 1];
 
-			for (; start <= end; start++) 
-			{
-				int indx = IsRepitContain(repit, numWord[i]);
-				ASSERT(start <= 32);
-				ASSERT(indx != -1);
-				repit[indx].bits[start] ? repit[indx].bits[start] = false :	result.push_back(start);	// отметка в матрице о наличии бита
-			}
+		for (; start <= end; start++) 
+		{
+			if (start > 32)
+				break;
+			int indx = IsRepitContain(repit, numWord[i]);
+			ASSERT(start <= 32);
+			ASSERT(indx != -1);
+			repit[indx].bits[start] ? repit[indx].bits[start] = false :	result.push_back(start);	// отметка в матрице о наличии бита
 		}
+	}
 	return result;
 }
 
@@ -473,7 +478,7 @@ void CTest::FindRepiteTitleInBook(errorSignal& set, const int& index)
 	}
 	if (repitSheet.size() != 0)
 	{
-		CString msg = L"Сигнал с таким идентификатором встречается на следующих листах в книге:\n";
+		CString msg = L"Сигнал с таким <b>условным обозначением</b> встречается на следующих листах в книге:\n";
 		for (size_t i = 0; i < repitSheet.size(); i++)
 			msg += repitSheet[i] + L", ";
 		int posDot = msg.ReverseFind(L',');
