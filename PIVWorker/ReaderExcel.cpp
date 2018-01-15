@@ -204,51 +204,36 @@ void CReaderExcel::GetArinc(const CString& field, const long& row, arincData& ar
 void CReaderExcel::ConcatDW(vector <signalData>& signals)
 {
 	CString LOW_PART = L"(мл.ч)";
+	CString LPART = L"(мл. ч.)";
 	CString HIGHT_PART = L"(ст.ч)";
+	CString HPART = L"(ст. ч.)";
 
 	for (size_t i = 0; i < signals.size(); i++)
 	{
-		if (signals[i].title[0].Find(LOW_PART) != -1) 
-		{
-			int numeric = ParsePart(signals[i].comment);
-			if (numeric != -1)
-			{
-				CString temp = L"мл.ч. в сл." + signals[i].numWord.value[0];
-				int index = findSignalByNum(signals, i, numeric, HIGHT_PART, temp);
-				if (index != -1) 
-				{
-					signals[i].title[0].Replace(LOW_PART, L"");
-					temp.Format(L"ст.ч. в сл.%d", numeric);
-					signals[i].comment.Replace(temp, L"");
-					signals[i].numWord.value.push_back(signals[index].numWord.value[0]);
-					signals[i].bit.value.push_back(signals[index].bit.value[0]);
-					signals[i].bit.value.push_back(signals[index].bit.value[1]);
+		if (signals[i].title[0].Find(HIGHT_PART) != -1)
+			findAndReplace(signals, i, HIGHT_PART, LOW_PART);
+		else if (signals[i].title[0].Find(HPART) != -1)
+			findAndReplace(signals, i, HPART, LPART);
+		else if (signals[i].title[0].Find(LOW_PART) != -1)
+			findAndReplace(signals, i, LOW_PART, HIGHT_PART);
+		else if (signals[i].title[0].Find(LPART) != -1) 
+			findAndReplace(signals, i, LPART, HPART);
+	}
+}
 
-					signals.erase(signals.begin() + index);
-				}
-			}
-		}
-		else if (signals[i].title[0].Find(HIGHT_PART) != -1) 
-		{
-			int numeric = ParsePart(signals[i].comment);
-			if (numeric != -1)
-			{
-				CString temp = L"ст.ч. в сл.";
-				temp.Format(L"%s%d",temp, signals[i].numWord.value[0]);
-				int index = findSignalByNum(signals, i, numeric, LOW_PART, temp);
-				if (index != -1)
-				{
-					signals[i].title[0].Replace(HIGHT_PART, L"");
-					temp.Format(L"мл.ч. в сл.%d", numeric);
-					signals[i].comment.Replace(temp, L"");
-					signals[i].numWord.value.push_back(signals[index].numWord.value[0]);
-					signals[i].bit.value.push_back(signals[index].bit.value[0]);
-					signals[i].bit.value.push_back(signals[index].bit.value[1]);
+void CReaderExcel::findAndReplace(vector <signalData>& signals, size_t i, CString old, CString revert)
+{
+	CString temp = signals[i].title[0];
+	temp.Replace(old, revert);
+	int index = findSignalByNum(signals, i, temp);
+	if (index != -1)
+	{
+		signals[i].title[0].Replace(revert, L"");
+		signals[i].numWord.value.push_back(signals[index].numWord.value[0]);
+		signals[i].bit.value.push_back(signals[index].bit.value[0]);
+		signals[i].bit.value.push_back(signals[index].bit.value[1]);
 
-					signals.erase(signals.begin() + index);
-				}
-			}
-		}
+		signals.erase(signals.begin() + index);
 	}
 }
 
@@ -271,17 +256,26 @@ int CReaderExcel::ParsePart(const CString& part)
 	return result;
 }
 
-int CReaderExcel::findSignalByNum(vector <signalData>& signals, size_t start, int numeric, CString& partNum, CString& partComment)
+int CReaderExcel::findSignalByNum(vector <signalData>& signals, size_t start,const CString& title/* int numeric, CString& partNum, CString& partComment*/)
 {
+	CString temp = title;
+	temp.Remove(L' ');
 	int result = -1;
 	for (size_t i = start; i < signals.size(); i++)
 	{
-		if (signals[i].numWord.value[0] == numeric)
+		CString temp2 = signals[i].title[0];
+		temp2.Remove(L' ');
+		if (temp2.Compare(temp) == 0)
+		{
+			result = i;
+			break;
+		}
+		/*if (signals[i].numWord.value[0] == numeric)
 			if (signals[i].title[0].Find(partNum) != -1 && signals[i].comment.Find(partComment) != -1)
 			{
 				result = i;
 				break;
-			}
+			}*/
 	}
 	return result;
 }
