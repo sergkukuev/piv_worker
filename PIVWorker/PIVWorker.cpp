@@ -170,7 +170,7 @@ void CPIV::OpenExcel()
 		logger.Write(L"Идет открытие протоколов...", true);
 		CReaderExcel reader; 
 		for (size_t i = 0; i < buffer.size(); i++)
-			project.books.push_back(reader.GetBook(buffer[i]));
+			project.books.push_back(reader.GetBook(buffer[i], param.bProject));
 
 		CTest tester;
 		project.db = tester.Start(project.books, !param.bMethod);
@@ -228,7 +228,7 @@ void CPIV::AddExcel()
 		{
 			bool contain = IsContain(other, buffer[i]);
 			CReaderExcel reader;
-			bookData book = reader.GetBook(buffer[i]);
+			bookData book = reader.GetBook(buffer[i], param.bProject);
 			contain ? Refresh(other, book) : other.books.push_back(book);
 			
 			CTest tester;
@@ -288,7 +288,7 @@ void CPIV::RefreshExcel()
 		for (size_t i = 0; i < buffer.size(); i++)
 		{
 			CReaderExcel reader;
-			bookData book = reader.GetBook(buffer[i]);
+			bookData book = reader.GetBook(buffer[i], param.bProject);
 			list <bookData>::iterator pBook;
 
 			CTest tester;

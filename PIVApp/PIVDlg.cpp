@@ -112,7 +112,7 @@ END_MESSAGE_MAP()
 
 BOOL CPIVDlg::OnInitDialog()
 {
-	//_crtBreakAlloc = 587;
+	//_crtBreakAlloc = /*587*/879627;
 	CDialogEx::OnInitDialog();
 
 	// TODO: Добавление пункта "О программе..." в системное меню.

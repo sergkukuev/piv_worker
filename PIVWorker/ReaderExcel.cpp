@@ -37,10 +37,12 @@ CReaderExcel::~CReaderExcel()
 }
 
 // Чтение протокола
-bookData CReaderExcel::GetBook(const CString& pathToExcel) 
+bookData CReaderExcel::GetBook(const CString& pathToExcel, bool bProject) 
 {
 	bookData book;
 	CWorkExcel work;
+
+	bProj = bProject;
 
 	if (!CheckExtension(pathToExcel))
 		throw BadTypeException(work.BookName(pathToExcel));
@@ -158,6 +160,9 @@ void CReaderExcel::GetSignals(vector <signalData>& signals, CWorkExcel& work, co
 		if (work.CountRows() == row + merge - 1 && !arinc.flag && arinc.amount != arinc.current)
 			row = arinc.startRow - merge;
 	}
+	// TODO: Флаг для кпрно35
+	if (!bProj)
+		ConcatDW(signals);
 }
 
 // Чтение циклов повторений в ARINC протоколе (порядковый номер в кадре)
@@ -193,6 +198,92 @@ void CReaderExcel::GetArinc(const CString& field, const long& row, arincData& ar
 		arinc.amount = 0;
 		arinc.current = 0;
 	}
+}
+
+// Объединение двойных слов
+void CReaderExcel::ConcatDW(vector <signalData>& signals)
+{
+	CString LOW_PART = L"(мл.ч)";
+	CString HIGHT_PART = L"(ст.ч)";
+
+	for (size_t i = 0; i < signals.size(); i++)
+	{
+		if (signals[i].title[0].Find(LOW_PART) != -1) 
+		{
+			int numeric = ParsePart(signals[i].comment);
+			if (numeric != -1)
+			{
+				CString temp = L"мл.ч. в сл." + signals[i].numWord.value[0];
+				int index = findSignalByNum(signals, i, numeric, HIGHT_PART, temp);
+				if (index != -1) 
+				{
+					signals[i].title[0].Replace(LOW_PART, L"");
+					temp.Format(L"ст.ч. в сл.%d", numeric);
+					signals[i].comment.Replace(temp, L"");
+					signals[i].numWord.value.push_back(signals[index].numWord.value[0]);
+					signals[i].bit.value.push_back(signals[index].bit.value[0]);
+					signals[i].bit.value.push_back(signals[index].bit.value[1]);
+
+					signals.erase(signals.begin() + index);
+				}
+			}
+		}
+		else if (signals[i].title[0].Find(HIGHT_PART) != -1) 
+		{
+			int numeric = ParsePart(signals[i].comment);
+			if (numeric != -1)
+			{
+				CString temp = L"ст.ч. в сл.";
+				temp.Format(L"%s%d",temp, signals[i].numWord.value[0]);
+				int index = findSignalByNum(signals, i, numeric, LOW_PART, temp);
+				if (index != -1)
+				{
+					signals[i].title[0].Replace(HIGHT_PART, L"");
+					temp.Format(L"мл.ч. в сл.%d", numeric);
+					signals[i].comment.Replace(temp, L"");
+					signals[i].numWord.value.push_back(signals[index].numWord.value[0]);
+					signals[i].bit.value.push_back(signals[index].bit.value[0]);
+					signals[i].bit.value.push_back(signals[index].bit.value[1]);
+
+					signals.erase(signals.begin() + index);
+				}
+			}
+		}
+	}
+}
+
+// Парсинг строки с расположением второй части слова
+int CReaderExcel::ParsePart(const CString& part)
+{
+	// мл.ч. в сл. // ст.ч. в сл.
+	CString temp = L".ч. в сл.";
+	int result = -1;
+	int posPart = part.Find(temp);
+	
+	if (posPart != -1)
+	{
+		bool error = false;
+		CString num = part.Mid(posPart + temp.GetLength());
+		result = GetInt(num, error);
+		if (error)
+			result = -1;
+	}
+	return result;
+}
+
+int CReaderExcel::findSignalByNum(vector <signalData>& signals, size_t start, int numeric, CString& partNum, CString& partComment)
+{
+	int result = -1;
+	for (size_t i = start; i < signals.size(); i++)
+	{
+		if (signals[i].numWord.value[0] == numeric)
+			if (signals[i].title[0].Find(partNum) != -1 && signals[i].comment.Find(partComment) != -1)
+			{
+				result = i;
+				break;
+			}
+	}
+	return result;
 }
 
 // Отдельное чтение требуемых параметров таблицы

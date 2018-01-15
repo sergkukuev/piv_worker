@@ -24,9 +24,10 @@ public:
 	CReaderExcel();		// Конструктор
 	~CReaderExcel();	// Деструктор
 
-	bookData GetBook(const CString& pathToExcel);	// Чтение протокола
+	bookData GetBook(const CString& pathToExcel, bool bProject);	// Чтение протокола
 private:
 	vector <CString> extension;	// Допустимые расширения файлов
+	bool bProj = false;
 	Header header;				// Информация о заголовках
 
 	void GetSheets(vector <sheetData>& book, CWorkExcel& work);								// Чтение таблиц протокола
@@ -44,6 +45,9 @@ private:
 	vector <int> StepAdress(const CString& adress, bool& flag);	// Доп функция для адреса
 	vector <int> StepBits(const CString& bits, bool& flag);		// Доп функция для используемых разрядов
 	
+	void ConcatDW(vector <signalData>& signals);	// Объединение двойных слов
+	int ParsePart(const CString& part);					// Парсинг строки с расположением слова
+	int findSignalByNum(vector <signalData>& signals, size_t start, int num, CString& partNum, CString& partComment);		// Поиск сигнала по номеру и примечанию
 	double GetDouble(const CString& field, bool& flag);	// Получение значения double (иначе = 0)
 	int GetInt(const CString& field, bool& flag);		// Получение значения int (иначе = 0)
 
