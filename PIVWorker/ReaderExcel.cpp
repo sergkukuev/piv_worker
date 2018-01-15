@@ -70,11 +70,11 @@ void CReaderExcel::GetSheets(vector <sheetData>& sheets, CWorkExcel& work)
 
 		sheets[i - 1].arinc = work.IsArinc();
 		sheets[i - 1].pk = work.PkValue(header);
-		sheets[i - 1].arinc ? sheets[i - 1].np = -1 : sheets[i - 1].np = work.NpValue(header);
 
 		header.adress[header.iRow]++;
 
 		GetSignals(sheets[i - 1].signals, work, sheets[i - 1].arinc);
+		sheets[i - 1].arinc ? sheets[i - 1].np = -1 : sheets[i - 1].np = work.NpValue(sheets[i - 1].signals[0].comment/*header*/);
 	}
 }
 

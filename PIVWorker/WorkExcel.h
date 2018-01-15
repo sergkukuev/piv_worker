@@ -76,7 +76,7 @@ public:
 	long CountRows();			// Получение количества строк на текущем листе
 
 	bool IsArinc();						// Значение линии передачи (arinc или mkio)
-	int NpValue(const Header& head);	// Значение номера набора
+	int NpValue(const CString& comment/*const Header& head*/);	// Значение номера набора
 	int PkValue(const Header& head);	// Значение номера подкадра			
 
 	CString CellValue(const long& row, const long& column);		// Значение ячейки
