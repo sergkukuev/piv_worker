@@ -299,7 +299,7 @@ void CReport::ErrorTable(CStdioFile& file)
 		"\t\t\t</tr>\n"
 		"\t\t\t<tr>\n"
 		"\t\t\t\t<th align=\"left\">Количество листов с ошибками</th>\n"
-		"\t\t\t\t\<td align=\"center\">");	
+		"\t\t\t\t<td align=\"center\">");	
 	file.WriteString(IntToCString(amount.withError)); 
 	file.WriteString(L"</td> \n"
 		"\t\t\t</tr>\n"
