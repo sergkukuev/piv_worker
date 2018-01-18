@@ -160,7 +160,7 @@ CString CReport::WriteSheets(sheetData* sheet, const vector <errorSignal>& db, c
 		file.WriteString(L"\"</title>\n"
 			"\t</head>\n"
 			"\t<body style=\"margin: 0px; padding: 0px\">\n"
-			"\t\t<table style=\"word-break: break-all;\" border=\"1\"cellspacing=\"0\" class=\"fixed\">\n"
+		);/* "\t\t<table style=\"word-break: break-all;\" border=\"1\"cellspacing=\"0\" class=\"fixed\">\n"
 			"\t\t\t<tr>\n"
 			"\t\t\t\t<th rowspan=\"2\" style=\"width: 5%\">№ Замечания</th>\n"
 			"\t\t\t\t<th colspan=\"9\">Замечания. Книга \"");
@@ -180,10 +180,10 @@ CString CReport::WriteSheets(sheetData* sheet, const vector <errorSignal>& db, c
 			"\t\t\t\t<th style=\"width: 10%\">Используемые разряды</th>\n"
 			"\t\t\t\t<th style=\"width: 30%\">Примечание</th>\n"
 			"\t\t\t</tr>\n"
-			"\t\t</table>\n"
-			"\t\t<table style=\"word-break: break-all;\" border=\"1\"cellspacing=\"0\">\n"
+			"\t\t</table>\n"*/
+		file.WriteString(L"\t\t<table style=\"word-break: break-all;\" border=\"1\"cellspacing=\"0\">\n"
 			"\t\t\t<tr>\n"
-				"\t\t\t\t<th rowspan=\"2\" style=\"width: 5%\">№ Замечания</th>\n"
+			"\t\t\t\t<th rowspan=\"2\" style=\"width: 5%\">№ Замечания</th>\n"
 			"\t\t\t\t<th colspan=\"9\">Замечания. Книга \""); 
 		file.WriteString(bookName);
 		file.WriteString(L"\". Лист \""); 
@@ -456,7 +456,7 @@ void CReport::WriteTxtParam(ofstream& file, const signalData& signal, const shee
 	if (buffer.Find(RESERVE_SIGNAL) == -1) 
 	{
 		CString title = signal.title[1];
-		title.Replace(L' ', L'');
+		title.Remove(L' ');
 		buffer.Format(L"PAR=%s\n", title);	// Запись обозначения сигнала
 		file << CT2A(buffer);
 
