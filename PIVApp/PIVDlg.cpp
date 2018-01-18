@@ -13,7 +13,7 @@ static char THIS_FILE[] = __FILE__;
 #endif
 
 // Диалоговое окно CPIVDlg
-#define RECT_MOVE 779
+//#define RECT_MOVE 779
 
 struct ThreadData
 {
@@ -178,11 +178,16 @@ BOOL CPIVDlg::OnInitDialog()
 
 	m_ListBox = (CListBox*)GetDlgItem(IDC_LISTBOX);	
 
+	CRect table_rect;
+	CWnd *pReport = GetDlgItem(IDC_REPORT_TABLE);
+	pReport->GetWindowRect(&table_rect);
+	this->ScreenToClient(&table_rect);
+
 	// Скрыть окошечко показа отчета
 	CRect rect;
 	this->GetWindowRect(&rect);
 	CWnd* pWnd = this->GetWindow(IDR_MAINFRAME);
-	this->SetWindowPos(pWnd, 0, 0, rect.Width() - RECT_MOVE, rect.Height(), SWP_NOMOVE | SWP_NOZORDER);
+	this->SetWindowPos(pWnd, 0, 0, rect.Width() - table_rect.Width() - 9, rect.Height(), SWP_NOMOVE | SWP_NOZORDER);
 
 	// Инициализация индикатора
 	GetClientRect(&rect);
@@ -397,9 +402,14 @@ void CPIVDlg::OnBnClickedShowRep()
 	CButton* chk = (CButton*)GetDlgItem(IDC_SHOW_REP);
 	CRect rect;
 
+	CRect table_rect;
+	CWnd *pReport = GetDlgItem(IDC_REPORT_TABLE);
+	pReport->GetWindowRect(&table_rect);
+	this->ScreenToClient(&table_rect);
+
 	this->GetWindowRect(&rect);
-	chk->GetCheck() == BST_CHECKED ? this->SetWindowPos(pWnd, 0, 0, rect.Width() + RECT_MOVE, rect.Height(), SWP_NOMOVE | SWP_NOZORDER) :
-		this->SetWindowPos(pWnd, 0, 0, rect.Width() - RECT_MOVE, rect.Height(), SWP_NOMOVE | SWP_NOZORDER);
+	chk->GetCheck() == BST_CHECKED ? this->SetWindowPos(pWnd, 0, 0, rect.Width() + 9 + table_rect.Width(), rect.Height(), SWP_NOMOVE | SWP_NOZORDER) :
+		this->SetWindowPos(pWnd, 0, 0, rect.Width() - table_rect.Width() - 9, rect.Height(), SWP_NOMOVE | SWP_NOZORDER);
 	GetClientRect(&rect);
 	m_StatusBar.SetPaneInfo(0, ID_INDICATOR_DLL, SBPS_NORMAL, rect.Width());
 	RepositionBars(AFX_IDW_CONTROLBAR_FIRST, AFX_IDW_CONTROLBAR_LAST, ID_INDICATOR_DLL);

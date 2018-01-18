@@ -44,6 +44,7 @@
 #define IDC_TEMPLATE                    1052
 #define IDC_RADIO_PROJ                  1055
 #define IDC_RADIO_TEST                  1056
+#define IDC_REPORT_TABLE                1057
 
 // Next default values for new objects
 // 
@@ -51,7 +52,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        164
 #define _APS_NEXT_COMMAND_VALUE         32775
-#define _APS_NEXT_CONTROL_VALUE         1057
+#define _APS_NEXT_CONTROL_VALUE         1058
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif
