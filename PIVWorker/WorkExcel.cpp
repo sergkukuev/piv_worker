@@ -103,7 +103,7 @@ bool CWorkExcel::IsArinc()
 }
 
 // Получение номера набора
-int CWorkExcel::NpValue(const CString& comment/*const Header& head*/) 
+int CWorkExcel::NpValue(const CString& comment) 
 {
 	CString item = comment;
 	if (!item.IsEmpty())
@@ -114,17 +114,22 @@ int CWorkExcel::NpValue(const CString& comment/*const Header& head*/)
 		return _wtoi(item);
 	}
 	return -1;
-	/*if (head.adress[head.iRow] + 1 > last.row || head.adress[head.iComment] > last.column)
+}
+
+// Получение номера набора
+int CWorkExcel::NpValue(const Header& head)
+{
+	if (head.adress[head.iRow] + 1 > last.row || head.adress[head.iComment] > last.column)
 		return -1;
 
 	CString item = CellValue(head.adress[head.iRow] + 1, head.adress[head.iComment]);
-	if (!item.IsEmpty()) 
+	if (!item.IsEmpty())
 	{
 		int pos = item.Find(NP_FIELD);
 		item.Delete(0, pos + 3);
 		item.Trim();
 		return _wtoi(item);
-	}*/
+	}
 	return 0;
 }
 
