@@ -429,7 +429,7 @@ void CReport::Generate(const bookData& book, const pivParam& params)
 			filePath.Format(L"%s\\%s", tPath, name);
 			
 			ofstream tmpFile(filePath);
-			mainFile << L"#include \"";
+			mainFile << "#include \"";
 			mainFile << CT2A(name);
 			mainFile << "\"\n";
 
@@ -455,7 +455,9 @@ void CReport::WriteTxtParam(ofstream& file, const signalData& signal, const shee
 
 	if (buffer.Find(RESERVE_SIGNAL) == -1) 
 	{
-		buffer.Format(L"PAR=%s\n", signal.title[1]);	// Запись обозначения сигнала
+		CString title = signal.title[1];
+		title.Replace(L' ', L'');
+		buffer.Format(L"PAR=%s\n", title);	// Запись обозначения сигнала
 		file << CT2A(buffer);
 
 		buffer = signal.title[0];
