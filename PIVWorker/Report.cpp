@@ -457,6 +457,8 @@ void CReport::WriteTxtParam(ofstream& file, const signalData& signal, const shee
 	{
 		CString title = signal.title[1];
 		title.Remove(L' ');
+		if (signal.repWord && info.pk != -1)
+			title.Format(L"%s_%d", title, info.pk);
 		buffer.Format(L"PAR=%s\n", title);	// Запись обозначения сигнала
 		file << CT2A(buffer);
 

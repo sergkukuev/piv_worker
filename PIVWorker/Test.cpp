@@ -471,6 +471,7 @@ void CTest::FindRepiteTitleInBook(errorSignal& set, const int& index)
 		{
 			if (book->sheets[i].signals[j].title[1].Compare(title) == 0 && book->sheets[i].signals[j].title[0].CompareNoCase(RESERVE_SIGNAL) == -1)
 			{
+				book->sheets[i].signals[j].repWord = true;
 				repitSheet.push_back(book->sheets[i].name);
 				continue;
 			}

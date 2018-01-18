@@ -48,6 +48,7 @@ struct signalData
 	intData bit;								// Используемые разряды
 	CString comment;							// Примечание
 	bool bitSign = false;						// Флаг наличия знака
+	bool repWord = false;						// Флаг повторения сигнала на других листах
 };
 
 // Лист
