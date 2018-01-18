@@ -210,11 +210,11 @@ void CReaderExcel::ConcatDW(vector <signalData>& signals)
 	for (size_t i = 0; i < signals.size(); i++)
 		for (size_t j = 0; j < lPart.size(); j++)
 			if (signals[i].title[0].Find(hPart[j]) != -1)
-				findAndReplace(signals, i+1, hPart[j], lPart);
+				findAndReplace(signals, i, hPart[j], lPart);
 			else if (signals[i].title[0].Find(hPart2[j]) != -1)
-				findAndReplace(signals, i+1, hPart2[j], lPart);
+				findAndReplace(signals, i, hPart2[j], lPart);
 			else if (signals[i].title[0].Find(lPart[j]) != -1)
-				findAndReplace(signals, i+1, lPart[j], hPart);
+				findAndReplace(signals, i, lPart[j], hPart);
 }
 
 void CReaderExcel::findAndReplace(vector <signalData>& signals, size_t start, CString old, vector <CString> revert)
@@ -239,16 +239,16 @@ void CReaderExcel::findAndReplace(vector <signalData>& signals, size_t start, CS
 				index = (int)i;
 				break;
 			}
-			if (index != -1)
-			{
-				signals[start].title[0].Replace(revert[rev_index], L"");
-				signals[start].numWord.value.push_back(signals[index].numWord.value[0]);
-				signals[start].bit.value.push_back(signals[index].bit.value[0]);
-				signals[start].bit.value.push_back(signals[index].bit.value[1]);
+		}
+		if (index != -1)
+		{
+			signals[start].title[0].Replace(revert[rev_index], L"");
+			signals[start].numWord.value.push_back(signals[index].numWord.value[0]);
+			signals[start].bit.value.push_back(signals[index].bit.value[0]);
+			signals[start].bit.value.push_back(signals[index].bit.value[1]);
 
-				signals.erase(signals.begin() + index);
-				break;
-			}
+			signals.erase(signals.begin() + index);
+			break;
 		}
 	}
 }
