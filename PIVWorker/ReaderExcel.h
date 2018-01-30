@@ -46,9 +46,7 @@ private:
 	vector <int> StepBits(const CString& bits, bool& flag);		// Доп функция для используемых разрядов
 	
 	void ConcatDW(vector <signalData>& signals);	// Объединение двойных слов
-	int ParsePart(const CString& part);					// Парсинг строки с расположением слова
-	void findAndReplace(vector <signalData>& signals, size_t index, CString old, vector <CString> revert);
-	int findSignalByNum(vector <signalData>& signals, size_t start, vector <CString> part/* int num, CString& partNum, CString& partComment*/);		// Поиск сигнала по номеру и примечанию
+	void findAndConcat(vector <signalData>& signals, size_t index, CString old, vector <CString> revert); // Найти вторую часть и заменить ее
 	double GetDouble(const CString& field, bool& flag);	// Получение значения double (иначе = 0)
 	int GetInt(const CString& field, bool& flag);		// Получение значения int (иначе = 0)
 

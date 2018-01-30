@@ -74,7 +74,7 @@ void CReaderExcel::GetSheets(vector <sheetData>& sheets, CWorkExcel& work)
 		header.adress[header.iRow]++;
 
 		GetSignals(sheets[i - 1].signals, work, sheets[i - 1].arinc);
-		sheets[i - 1].arinc ? sheets[i - 1].np = -1 : sheets[i - 1].np = work.NpValue(sheets[i - 1].signals[0].comment/*header*/);
+		sheets[i - 1].arinc ? sheets[i - 1].np = -1 : sheets[i - 1].np = work.NpValue(sheets[i - 1].signals[0].comment);
 	}
 }
 
@@ -137,7 +137,7 @@ void CReaderExcel::GetSignals(vector <signalData>& signals, CWorkExcel& work, co
 		if (!arinc.flag) 
 		{
 			CString tmp;
-			// Сделать соответствие латинских и кириллицу (хитрецы пишут разными буковками)
+			// Сделать соответствие латинских и кириллицу (потому что хитрецы пишут разными буковками)
 			tmp.Format(L"%d", arinc.current);
 			int pos = signal.title[1].Find(arinc.symbol);
 			signal.title[1].Replace(arinc.symbol, tmp);
@@ -160,7 +160,6 @@ void CReaderExcel::GetSignals(vector <signalData>& signals, CWorkExcel& work, co
 		if (work.CountRows() == row + merge - 1 && !arinc.flag && arinc.amount != arinc.current)
 			row = arinc.startRow - merge;
 	}
-	// TODO: Флаг для кпрно35
 	if (!bProj)
 		ConcatDW(signals);
 }
@@ -207,17 +206,22 @@ void CReaderExcel::ConcatDW(vector <signalData>& signals)
 	vector <CString> hPart = { L"(ст.ч)", L"(ст.ч.)", L"(ст. ч)", L"(ст. ч.)" };
 	vector <CString> hPart2 = { L"(cт.ч)", L"(cт.ч.)", L"(cт. ч)", L"(cт. ч.)" }; // С английской буквой "c"
 
-	for (size_t i = 0; i < signals.size(); i++)
-		for (size_t j = 0; j < lPart.size(); j++)
-			if (signals[i].title[0].Find(hPart[j]) != -1)
-				findAndReplace(signals, i, hPart[j], lPart);
-			else if (signals[i].title[0].Find(hPart2[j]) != -1)
-				findAndReplace(signals, i, hPart2[j], lPart);
-			else if (signals[i].title[0].Find(lPart[j]) != -1)
-				findAndReplace(signals, i, lPart[j], hPart);
+		for (size_t i = 0; i < signals.size(); i++)
+		{
+			for (size_t j = 0; j < lPart.size(); j++)
+			{
+				if (signals[i].title[0].Find(hPart[j]) != -1)
+					findAndConcat(signals, i, hPart[j], lPart);
+				else if (signals[i].title[0].Find(hPart2[j]) != -1)
+					findAndConcat(signals, i, hPart2[j], lPart);
+				else if (signals[i].title[0].Find(lPart[j]) != -1)
+					findAndConcat(signals, i, lPart[j], hPart);
+			}
+		}
 }
 
-void CReaderExcel::findAndReplace(vector <signalData>& signals, size_t start, CString old, vector <CString> revert)
+// Найти вторую часть и соединить двойное слово
+void CReaderExcel::findAndConcat(vector <signalData>& signals, size_t start, CString old, vector <CString> revert)
 {
 	CString temp = signals[start].title[0];
 	temp.Remove(L'\n');
@@ -251,25 +255,6 @@ void CReaderExcel::findAndReplace(vector <signalData>& signals, size_t start, CS
 			break;
 		}
 	}
-}
-
-// Парсинг строки с расположением второй части слова
-int CReaderExcel::ParsePart(const CString& part)
-{
-	// мл.ч. в сл. // ст.ч. в сл.
-	CString temp = L".ч. в сл.";
-	int result = -1;
-	int posPart = part.Find(temp);
-	
-	if (posPart != -1)
-	{
-		bool error = false;
-		CString num = part.Mid(posPart + temp.GetLength());
-		result = GetInt(num, error);
-		if (error)
-			result = -1;
-	}
-	return result;
 }
 
 // Отдельное чтение требуемых параметров таблицы
@@ -508,7 +493,8 @@ CString CReaderExcel::GetComment(CWorkExcel& work, const long& row, const int& s
 		CString tmp = work.CellValue(tmpRow + i, column);
 		if (!tmp.IsEmpty()) 
 		{
-			(tmp.Find(SIGN_FIELD) != -1) ? flag = true : flag = flag;
+			for (size_t j = 0; j < SIGN_FIELD.size(); j++) 
+				tmp.Find(SIGN_FIELD[j]) != -1 ? flag = true : flag = flag;
 			result.IsEmpty() ? result = tmp : result += L'\n' + tmp;
 		}
 	}
