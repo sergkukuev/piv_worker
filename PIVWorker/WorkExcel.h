@@ -19,7 +19,7 @@
 #define MKIO L"МКИО"
 
 // Специальные обозначения для MKIO
-#define SIGN_FIELD L"Зн-4"	// Наличие отрицательного символа
+const vector<CString> SIGN_FIELD = { L"Зн-", L"зн.", L"Зн.", L"зн-" };	// Наличие отрицательного символа
 #define NP_FIELD L"NP="		// Значение номера набора
 #define PK_FIELD L'№'		// Номер подкадра
 
