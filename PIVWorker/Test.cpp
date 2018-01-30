@@ -469,7 +469,7 @@ void CTest::FindRepiteTitleInBook(errorSignal& set, const int& index)
 		book->sheets[i].name.Compare(sheet->name) == 0 ? start = index + 1 : start = 0;
 		for (size_t j = start; j < book->sheets[i].signals.size(); j++)
 		{
-			if (book->sheets[i].signals[j].title[1].Compare(title) == 0 && book->sheets[i].signals[j].title[0].CompareNoCase(RESERVE_SIGNAL) == -1)
+			if (book->sheets[i].signals[j].title[1].Compare(title) == 0 && book->sheets[i].signals[j].title[0].CompareNoCase(RESERVE_SIGNAL) == -1 && !title.IsEmpty())
 			{
 				book->sheets[i].signals[j].repWord = true;
 				repitSheet.push_back(book->sheets[i].name);
