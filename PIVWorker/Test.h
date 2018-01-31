@@ -37,8 +37,8 @@ public:
 	~CTest();	// Деструктор
 
 	// Запуск проверки на ошибки
-	errorSet Start(bookData& book, const bool& fast);
-	list <errorSet> Start(list <bookData>& books, const bool& fast);	
+	errorData Start(bookData& book, const bool& fast);
+	list <errorData> Start(list <bookData>& books, const bool& fast);	
 
 private:
 	bookData* book = nullptr;	// Указатель на текущую книгу

@@ -45,8 +45,8 @@ private:
 	amountInfo amount;	// Информация о количестве наборов данных
 
 ////////////////////////////////////	ГЕНЕРАЦИЯ ОТЧЕТА О ЗАМЕЧАНИЯХ	////////////////////////////////////
-	void StartWrite(CStdioFile& file, list <errorSet>& Db);				// Начало записи замечаний
-	void WriteBook(CStdioFile& file, list <errorSet>::iterator& it);	// Запись листов текущего протокола
+	void StartWrite(CStdioFile& file, list <errorData>& Db);				// Начало записи замечаний
+	void WriteBook(CStdioFile& file, list <errorData>::iterator& it);	// Запись листов текущего протокола
 	CString WriteSheets(sheetData* sheet, const vector <errorSignal>& errors, const CString& folder, const CString& bookName);	// Запись таблицы текущего листа
 	void WriteSignal(CStdioFile& file, const errorSignal& set);			// Запись одного набора параметров таблицы
 	CString WriteParam(const CString& field, const bool& color, const int& width);	// Запись одного параметра из набора
@@ -57,7 +57,7 @@ private:
 	// Подсчет информации о наборах данных
 	int CountError(const vector<errorSignal>& set);	// Количество ошибок в текущей таблице
 	void SetAmount(list <bookData>& books);			// Подсчет количества наборов данных (всего, с ошибками, без ошибок)
-	void SetAmountError(list <errorSet>& Db);		// Подсчет ошибок и предупреждений
+	void SetAmountError(list <errorData>& Db);		// Подсчет ошибок и предупреждений
 
 ////////////////////////////////////	ГЕНЕРАЦИЯ TXT ФАЙЛОВ	////////////////////////////////////
 	void Generate(const bookData& book, const pivParam& bNumPK);	// Генерация txt протокола

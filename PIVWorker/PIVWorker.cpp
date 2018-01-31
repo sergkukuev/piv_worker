@@ -233,7 +233,7 @@ void CPIV::AddExcel()
 			
 			CTest tester;
 			list <bookData>::iterator pBook = GetBook(other, buffer[i]);
-			errorSet error = tester.Start(*pBook, !param.iMethod);
+			errorData error = tester.Start(*pBook, !param.iMethod);
 			contain ? Refresh(other, error) : other.db.push_back(error);
 
 			report.GetTxt(*pBook, path, param);
@@ -297,7 +297,7 @@ void CPIV::RefreshExcel()
 				flag = true;
 				Refresh(project, book);
 				pBook = GetBook(project, buffer[i]);
-				errorSet error = tester.Start(*pBook, !param.iMethod);
+				errorData error = tester.Start(*pBook, !param.iMethod);
 				Refresh(project, error);
 			}
 			else if (IsContain(other, buffer[i])) 
@@ -305,7 +305,7 @@ void CPIV::RefreshExcel()
 				flag = false;
 				Refresh(other, book);
 				pBook = GetBook(other, buffer[i]);
-				errorSet error = tester.Start(*pBook, !param.iMethod);
+				errorData error = tester.Start(*pBook, !param.iMethod);
 				Refresh(other, error);
 			}
 			else
@@ -384,7 +384,7 @@ void CPIV::CloseExcel()
 	logger.Write(L"Идет закрытие выбранных протоколов...", true);
 	for (size_t i = 0; i < buffer.size(); i++) 
 	{
-		for (list <errorSet>::iterator it = other.db.begin(); it != other.db.end();)
+		for (list <errorData>::iterator it = other.db.begin(); it != other.db.end();)
 			it->book->name.Compare(NameFromPath(buffer[i])) == 0 ? other.db.erase(it++) : it++;
 		for (list <bookData>::iterator it = other.books.begin(); it != other.books.end();)
 			it->name.Compare(NameFromPath(buffer[i])) == 0 ? other.books.erase(it++) : it++;
@@ -396,13 +396,13 @@ void CPIV::CloseExcel()
 
 #pragma region SUB_FUNCTION
 // Обновление протоколов (данные + база ошибок)
-void CPIV::Refresh(pivData& data, const bookData& book, const errorSet& error) 
+void CPIV::Refresh(pivData& data, const bookData& book, const errorData& error) 
 {
 	for (list <bookData>::iterator it = data.books.begin(); it != data.books.end(); it++)
 		if (book.name.Compare(it->name) == 0)
 			*it = book;
 
-	for (list <errorSet>::iterator it = data.db.begin(); it != data.db.end(); it++)
+	for (list <errorData>::iterator it = data.db.begin(); it != data.db.end(); it++)
 		if (error.book->name.Compare(it->book->name) == 0)
 			*it = error;
 }
@@ -416,9 +416,9 @@ void CPIV::Refresh(pivData& data, const bookData& book)
 }
 
 // Обновление (база ошибок)
-void CPIV::Refresh(pivData& data, const errorSet& error) 
+void CPIV::Refresh(pivData& data, const errorData& error) 
 {
-	for (list <errorSet>::iterator it = data.db.begin(); it != data.db.end(); it++)
+	for (list <errorData>::iterator it = data.db.begin(); it != data.db.end(); it++)
 		if (error.book->name.Compare(it->book->name) == 0)
 			*it = error;
 }

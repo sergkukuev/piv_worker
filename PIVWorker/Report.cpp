@@ -45,7 +45,7 @@ void CReport::GetReport(pivData& data, const CString& pathToSave, const bool& is
 }
 
 // Начало записи замечаний
-void CReport::StartWrite(CStdioFile& file, list <errorSet>& Db) 
+void CReport::StartWrite(CStdioFile& file, list <errorData>& Db) 
 {
 	// Создание директорий для отчета
 	CString tPath, folder;
@@ -74,7 +74,7 @@ void CReport::StartWrite(CStdioFile& file, list <errorSet>& Db)
 		"\t\t\t</tr>\n");
 
 	// Обход по книгам
-	for (list <errorSet>::iterator it = Db.begin(); it != Db.end(); it++) 
+	for (list <errorData>::iterator it = Db.begin(); it != Db.end(); it++) 
 	{
 		file.WriteString(L"\t\t\t<tr>\n"
 			"\t\t\t\t<td>"); 
@@ -90,7 +90,7 @@ void CReport::StartWrite(CStdioFile& file, list <errorSet>& Db)
 }
 
 // Запись листов текущего протокола
-void CReport::WriteBook(CStdioFile& file, list <errorSet>::iterator& it) 
+void CReport::WriteBook(CStdioFile& file, list <errorData>::iterator& it) 
 {
 	// Формирование шапки таблицы
 	for (size_t i = 0; i < it->set.size(); i++)
@@ -350,9 +350,9 @@ void CReport::SetAmount(list <bookData>& books)
 }
 
 // Подсчет ошибок и предупреждений
-void CReport::SetAmountError(list <errorSet>& db) 
+void CReport::SetAmountError(list <errorData>& db) 
 {
-	for (list<errorSet>::iterator it = db.begin(); it != db.end(); it++)
+	for (list<errorData>::iterator it = db.begin(); it != db.end(); it++)
 		for (size_t i = 0; i < it->set.size(); i++) 
 		{
 			amount.error += CountError(it->set[i].syntax) + CountError(it->set[i].simantic);

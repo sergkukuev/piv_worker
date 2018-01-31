@@ -94,7 +94,7 @@ struct errorSheet
 	vector <errorSignal> warning;	// Предупреждения
 };
 
-struct errorSet 
+struct errorData 
 {
 	bookData* book;		// Указатель на книгу, в которой содержатся данные ошибки
 	vector <errorSheet> set;	// Наборы ошибок
@@ -122,5 +122,5 @@ const CString errRemarks[check::size] =
 struct pivData 
 {
 	list <bookData> books;	// Данные о прочитанных ПИВ
-	list <errorSet> db;		// База ошибок
+	list <errorData> db;		// База ошибок
 };

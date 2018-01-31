@@ -86,9 +86,9 @@ private:
 	void CloseProject();	// закрытие проекта
 
 	// Дополнительные методы
-	void Refresh(pivData& data, const bookData& book, const errorSet& error);	// Общее обновление протоколов (данные + база ошибок)
+	void Refresh(pivData& data, const bookData& book, const errorData& error);	// Общее обновление протоколов (данные + база ошибок)
 	void Refresh(pivData& data, const bookData& book);							// Обновление только данных
-	void Refresh(pivData& data, const errorSet& error);							// Обновление только базы ошибок
+	void Refresh(pivData& data, const errorData& error);							// Обновление только базы ошибок
 	
 	list<bookData>::iterator GetBook(pivData& data, const CString& pathToExcel);		// Получение указателя на данные требуемого протокола
 	CString NameFromPath(const CString& pathToExcel);					// Выделение имени протокола из его пути

@@ -69,9 +69,9 @@ CTest::CTest()
 CTest::~CTest() {	}
 
 // Запуск проверки на ошибки
-errorSet CTest::Start(bookData& book, const bool& fast) 
+errorData CTest::Start(bookData& book, const bool& fast) 
 {
-	errorSet result;
+	errorData result;
 	result.book = this->book = &book;
 	ASSERT(this->book != nullptr);
 	for (size_t j = 0; j < book.sheets.size(); j++) 
@@ -86,12 +86,12 @@ errorSet CTest::Start(bookData& book, const bool& fast)
 	return result;
 }
 
-list <errorSet> CTest::Start(list <bookData>& books, const bool& fast) 
+list <errorData> CTest::Start(list <bookData>& books, const bool& fast) 
 {
-	list <errorSet> result;
+	list <errorData> result;
 	for (list <bookData>::iterator it = books.begin(); it != books.end(); it++) 
 	{
-		errorSet error;
+		errorData error;
 		error.book = this->book = &*it;
 		ASSERT(this->book != nullptr);
 		for (size_t j = 0; j < it->sheets.size(); j++) 
