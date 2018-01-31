@@ -8,7 +8,7 @@
 #include "MyException.h"
 
 // Информация о повторения в ARINC протоколах
-struct arincData 
+struct arincData
 {
 	CString symbol;		// Символ замены в идентификаторе
 	int current = 0;	// Текущее повторение
@@ -18,41 +18,44 @@ struct arincData
 };
 
 // Класс для чтения протоколов из Excel
-class PIV_DECLARE CReaderExcel	
+class PIV_DECLARE CReaderExcel
 {
 public:
 	CReaderExcel();		// Конструктор
 	~CReaderExcel();	// Деструктор
 
-	bookData GetBook(const CString& pathToExcel, bool bProject);	// Чтение протокола
+	bookData GetBook(const CString& pathToExcel, const int& iProject);	// Чтение протокола
 private:
 	vector <CString> extension;	// Допустимые расширения файлов
-	bool bProj = false;
+	CWorkExcel work;			// Работа пространство excel файла
 	Header header;				// Информация о заголовках
+	int iProject;				// Проект проверки (930М или Су35)
 
-	void GetSheets(vector <sheetData>& book, CWorkExcel& work);								// Чтение таблиц протокола
-	void GetSignals(vector <signalData>& signals, CWorkExcel& work, const bool& isArinc);	// Чтение параметров на листе
-	void GetArinc(const CString& field, const long& row, arincData& arinc);					// Чтение циклов повторений в ARINC протоколе (порядковый номер в кадре)
+	void GetSheets(vector <sheetData>& sheets);	// Чтение таблиц протоколов (листов)
+	void GetSignals(vector <signalData>& signals, const bool& bArinc);	// Чтение параметров на листе
 
-	// Чтение параметров:
-	intData GetNumWord(const CString& field);					// Номер слова
-	intData GetBits(const CString& bits, const int& size);		// Используемые разряды
-	intData GetAdress(const CString& field, const int& num);	// Адрес
-	void GetMinMaxCsr(signalData& signal, CWorkExcel& work, const long& row);				// Мин, макс и цср
-	CString GetComment(CWorkExcel& work, const long& row, const int& size, bool& flag);		// Примечание
+	// ARINC
+	void ArincChecker(arincData& arinc, long& row);	//  Поиск повторяющихся блоков
+	void GetArinc(arincData& arinc, const long& row, CString field);	// Чтение циклов повторений в ARINC протоколе (порядковый номер в кадре)
+
+	// Read_params
+	// Чтение параметров
+	intData GetNumWord(CString field);	// Номера слова
+	intData GetAdress(CString field, int current);	// Адреса
+	int GetSubIndex(CString& numeric);				// Получение подстрочного индекса адреса и удаление его из строки
+	vector <int> StepAdress(CString adress, bool& flag);		// Парсинг поля адреса и преобразование его значений в int
+	void GetMinMaxCsr(signalData& signal, const long& row);		// Мин, макс и цср
+	intData GetBits(CString field, const int& size);			// Используемых разрядов
+	vector <int> StepBits(CString bits, bool& flag);			// Парсинг поля разрядов и преобразование в int
+	CString GetComment(long row, const int& size, bool& flag);	// Примечания
 	
-	int GetSubIndex(CString& numeric);							// Получение подстрочного индекса адреса и удаление его из строки
-	vector <int> StepAdress(const CString& adress, bool& flag);	// Доп функция для адреса
-	vector <int> StepBits(const CString& bits, bool& flag);		// Доп функция для используемых разрядов
-	
-	void ConcatDW(vector <signalData>& signals);	// Объединение двойных слов
-	void findAndConcat(vector <signalData>& signals, size_t index, CString old, vector <CString> revert); // Найти вторую часть и заменить ее
-	double GetDouble(const CString& field, bool& flag);	// Получение значения double (иначе = 0)
-	int GetInt(const CString& field, bool& flag);		// Получение значения int (иначе = 0)
+	// Converters
+	int GetInt(CString field, bool& flag);		// Конвертер int значения
+	double GetDouble(CString field, bool& flag);	// Конвертер double значения
 
-	bool IsTitle(CWorkExcel& work, const long& row);	// Проверка строки на заголовок
-	bool IsEmpty(CWorkExcel& work, const long& row);	// Проверка строки на пустоту
-	bool IsRemark(CWorkExcel& work, const long& row);	// Проверка строки на наличие примечания
-	bool CheckExtension(const CString& path);			// Проверка расширений файлов
+	// Checkers
+	bool IsTitle(const long& row);	// Проверка строки на заголовок
+	bool IsEmpty(const long& row);	// Проверка строки на пустоту
+	bool IsRemark(const long& row);	// Проверка строки на примечание
+	bool ExtensionChecker(const CString& path); // Проверка расширения файла
 };
-
