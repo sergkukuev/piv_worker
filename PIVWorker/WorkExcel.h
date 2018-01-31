@@ -27,8 +27,7 @@ const vector<CString> SIGN_FIELD = { L"Зн-", L"зн.", L"Зн.", L"зн-" };	// Наличи
 #define ARINC_REMARK L"*Примечание:"
 
 // Примечания в конце таблицы
-#define REMARK1 L"Примечания:"
-#define REMARK2 L"Примечание:"
+const vector<CString> REMARK = { L"Примечания:", L"Примечание:" };
 
 // Хранение заголовков таблицы протоколов
 struct Header 

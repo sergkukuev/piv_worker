@@ -519,8 +519,8 @@ bool CReaderExcel::IsRemark(const long& row)
 		if (header.adress[i] != -1)
 		{
 			CString tmp = work.CellValue(row, column);
-			result = (tmp.Find(REMARK1) > -1 ||
-				tmp.Find(REMARK2) > -1) ? true : result;
+			for (size_t j = 0; j < REMARK.size(); j++)
+				result = tmp.Find(REMARK[j]) > -1 ? true : result;
 		}
 	}
 	return result;
