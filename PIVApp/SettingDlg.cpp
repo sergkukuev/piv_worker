@@ -27,8 +27,8 @@ CSettingDlg::CSettingDlg(CWnd* pParent /*=NULL*/)
 	param = &pDlg->settings;
 	bNumPk = (BOOL)param->bNumPK;
 	bGenTxt = (BOOL)param->bGenTxt;
-	param->bProject ? iProject = p930m : iProject = kprno35;
-	param->bMethod ? iMethod = regex : iMethod = fast;
+	iProject = param->iProject;
+	iMethod = param->iMethod;
 }
 
 CSettingDlg::~CSettingDlg() {	}
@@ -62,15 +62,15 @@ BOOL CSettingDlg::OnInitDialog()
 	pCheck = (CButton*)GetDlgItem(IDC_CHECK_TXT100);
 	pCheck->SetCheck(bGenTxt);
 	
-	if (iProject == p930m)
+	if (iProject == project::p930m)
 		pCheck = (CButton*)this->GetDlgItem(IDC_930M);
-	else if (iProject == kprno35)
+	else if (iProject == project::kprno35)
 		pCheck = (CButton*)this->GetDlgItem(IDC_KPRNO35);
 		pCheck->SetCheck(TRUE);
 
-	if (iMethod == fast)
+	if (iMethod == method::fasted)
 		pCheck = (CButton*)this->GetDlgItem(IDC_FAST);
-	else if (iMethod == regex)
+	else if (iMethod == method::patterned)
 		pCheck = (CButton*)this->GetDlgItem(IDC_TEMPLATE);
 		pCheck->SetCheck(TRUE);
 
@@ -83,15 +83,8 @@ void CSettingDlg::SetParameters()
 	param->bNumPK = (bool)bNumPk;
 	param->bGenTxt = (bool)bGenTxt;
 
-	if (iProject == p930m)
-		param->bProject = true;
-	else if (iProject == kprno35)
-		param->bProject = false;
-
-	if (iMethod == fast)
-		param->bMethod = false;
-	else if (iProject == regex)
-		param->bMethod = true;
+	param->iProject = iProject;
+	param->iMethod = iMethod;
 }
 
 void CSettingDlg::OnEnableBtnSave()

@@ -170,10 +170,10 @@ void CPIV::OpenExcel()
 		logger.Write(L"Идет открытие протоколов...", true);
 		CReaderExcel reader; 
 		for (size_t i = 0; i < buffer.size(); i++)
-			project.books.push_back(reader.GetBook(buffer[i], param.bProject));
+			project.books.push_back(reader.GetBook(buffer[i], param.iProject));
 
 		CTest tester;
-		project.db = tester.Start(project.books, !param.bMethod);
+		project.db = tester.Start(project.books, !param.iMethod);
 
 		// Генерация артефактов
 		CReport report;
@@ -228,12 +228,12 @@ void CPIV::AddExcel()
 		{
 			bool contain = IsContain(other, buffer[i]);
 			CReaderExcel reader;
-			bookData book = reader.GetBook(buffer[i], param.bProject);
+			bookData book = reader.GetBook(buffer[i], param.iProject);
 			contain ? Refresh(other, book) : other.books.push_back(book);
 			
 			CTest tester;
 			list <bookData>::iterator pBook = GetBook(other, buffer[i]);
-			errorSet error = tester.Start(*pBook, !param.bMethod);
+			errorSet error = tester.Start(*pBook, !param.iMethod);
 			contain ? Refresh(other, error) : other.db.push_back(error);
 
 			report.GetTxt(*pBook, path, param);
@@ -288,7 +288,7 @@ void CPIV::RefreshExcel()
 		for (size_t i = 0; i < buffer.size(); i++)
 		{
 			CReaderExcel reader;
-			bookData book = reader.GetBook(buffer[i], param.bProject);
+			bookData book = reader.GetBook(buffer[i], param.iProject);
 			list <bookData>::iterator pBook;
 
 			CTest tester;
@@ -297,7 +297,7 @@ void CPIV::RefreshExcel()
 				flag = true;
 				Refresh(project, book);
 				pBook = GetBook(project, buffer[i]);
-				errorSet error = tester.Start(*pBook, !param.bMethod);
+				errorSet error = tester.Start(*pBook, !param.iMethod);
 				Refresh(project, error);
 			}
 			else if (IsContain(other, buffer[i])) 
@@ -305,7 +305,7 @@ void CPIV::RefreshExcel()
 				flag = false;
 				Refresh(other, book);
 				pBook = GetBook(other, buffer[i]);
-				errorSet error = tester.Start(*pBook, !param.bMethod);
+				errorSet error = tester.Start(*pBook, !param.iMethod);
 				Refresh(other, error);
 			}
 			else

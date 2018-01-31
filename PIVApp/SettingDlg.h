@@ -26,8 +26,8 @@ private:
 	BOOL bNumPk, bGenTxt;
 	int iProject = -1, iMethod = -1;
 
-	const enum project {p930m, kprno35};
-	const enum method {regex, fast};
+	const enum project { p930m, kprno35 };
+	const enum method { patterned, fasted };
 public:
 	void SetParameters();	// Возврат значений настроек
 	afx_msg void OnEnableBtnSave();
