@@ -29,7 +29,7 @@ private:
 	vector <CString> extension;	// Допустимые расширения файлов
 	CWorkExcel work;			// Работа пространство excel файла
 	Header header;				// Информация о заголовках
-	int iProject;				// Проект проверки (930М или Су35)
+	int iProject;				// Проект проверки (930М или Кпрно35)
 
 	void GetSheets(vector <sheetData>& sheets);	// Чтение таблиц протоколов (листов)
 	void GetSignals(vector <signalData>& signals, const bool& bArinc);	// Чтение параметров на листе
