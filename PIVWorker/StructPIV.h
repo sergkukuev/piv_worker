@@ -14,7 +14,7 @@ const enum method { patterned, fasted };
 // Параметры настройки
 struct pivParam
 {
-	int iProject = project::p930m;	// Проверка проекта: true - 930М, false - кпрно35
+	int iProject = project::p930m;	// Проверк а проекта: true - 930М, false - кпрно35
 	int iMethod = method::patterned;	// Метод проверки: true - шаблонная, false - быстрая
 	bool bNumPK = false;	// Установить номер подкадра при генерации txt
 	bool bGenTxt = false;	// Генерация txt в любом случае
@@ -101,7 +101,7 @@ struct errorData
 };
 
 // Шапки таблицы
-const CString errRemarks[check::size] = 
+const CString erRemarks[check::size] = 
 {
 	// Номер параметра
 	L"Замечание. Поле \"№ слова\" заполнено не верно.",
