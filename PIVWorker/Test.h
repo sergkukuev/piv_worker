@@ -70,10 +70,11 @@ private:
 	// Simantic
 	void SimanticCheker(errorSignal& signal, const int& index, vector <repiter>& repit);	// Проверка всех параметров сигнала на семантические ошибки
 	bool ValueTest(errorSignal& set);	// Проверка всех числовых параметров
-	bool TitleRepitTest(errorSignal& signal, const int& index);		// Поиск повторений идентификатора на листе
+	bool TitleRepitTest(errorSignal& signal, const int& index);	// Поиск повторений идентификатора на листе
 	bool BitsTest(errorSignal& signal);	// Проверка используемых разрядов
+	bool CheckReplace(CString title, const vector <signalData*> signals);	// Проверка слов, которые выборочно кладутся в одно слово 
 	vector<int> CrossBits(const vector <int>& bits, const vector <int>& numWord);		// Проверка перекрытия битов
-	bool CheckReplace(const CString& title, const vector <signalData*> signals);	// Проверка на заменяемость
+	
 
 	// Repiter
 	void InitRepiter();		// Инициализация репитера для проверки перекрытия битов
@@ -82,5 +83,5 @@ private:
 	int GetIndexRepiter(const int& numWord);	// Получить индекс сетки битов по номеру слова (в случае неудачи возвр. индекс, иначе -1)
 	
 	// Замечания
-	void FindRepiteTitleInBook(errorSignal& signal, const int& index);		// Поиск повторений идентификатора в книге
+	void FindRepiteTitleInBook(errorSignal& signal, const int& index);	// Поиск повторений идентификатора в книге
 };

@@ -375,7 +375,7 @@ bool CTest::BitsTest(errorSignal& signal)
 	#define FL(x) signal.data->x.flag
 	#define VAL(x) signal.data->x.value
 	
-	bool result = false;
+	bool result = false, bMaxVal = false;
 	// Кол-во № слов должно совпадать с кол-вами интервалов исп. разрядов
 	if (!FL(numWord) && !signal.data->bit.flag)
 	{
@@ -385,30 +385,29 @@ bool CTest::BitsTest(errorSignal& signal)
 				result = WriteError(signal, L"Старший бит меньше младшего в <b>используемых разрядах</b>.", check::bits);
 			if (VAL(bit)[i] > MAX_BITS || VAL(bit)[i + 1] > MAX_BITS)
 			{
+				bMaxVal = true;
 				CString msg = L"Значение бита превышает максимально допустимое в <b>используемых разрядах</b> ";
 				msg.Format(L"%s(%d).", msg, MAX_BITS);
 				result = WriteError(signal, msg, check::bits);
 			}
 		}
 
-		if ((VAL(numWord).size() * 2 == VAL(bit).size()))
+		if ((VAL(numWord).size() * 2 == VAL(bit).size()) && !bMaxVal)
 		{
 			#define RepSigByIndex(idx) repit[GetIndexRepiter(VAL(numWord)[idx])].signals
-			bool bReplase = false;
+			bool bReplase = false;	// Взаимозаменяемые слова, которые кладутся в зависимости от чего-то там (отличаются обозначениями в наименовании после запятой)
 
-			if (VAL(numWord).size() == 2)
-			(signal.data->numWord.value.size() == 2) ? 
-				bReplase = CheckReplace(signal.data->title[0], RepSigByIndex(1)) ||
-				CheckReplace(signal.data->title[0], RepSigByIndex(0)) :
+			VAL(numWord).size() == 2 ? 
+				bReplase = CheckReplace(signal.data->title[0], RepSigByIndex(1)) || CheckReplace(signal.data->title[0], RepSigByIndex(0)) :
 				bReplase = CheckReplace(signal.data->title[0], RepSigByIndex(0));
 			
 			vector<int> bits = CrossBits(VAL(bit), VAL(numWord));
 			if (bits.size() != 0 && !bReplase)
 			{
-				CString str = L"Следующие <b>используемые разряды</b> перекрываются: ";
+				CString msg = L"Следующие <b>используемые разряды</b> перекрываются: ";
 				for (size_t i = 0; i < bits.size(); i++)
-					str.Format(L"%s %d", str, bits[i]);
-				result = WriteError(signal, str, check::bits);
+					msg.Format(L"%s %d", msg, bits[i]);
+				result = WriteError(signal, msg, check::bits);
 			}
 		}
 		else 
@@ -429,10 +428,8 @@ vector<int> CTest::CrossBits(const vector <int>& bits, const vector <int>& numWo
 
 		for (; start <= end; start++) 
 		{
-			if (start > 32)
-				break;
-			int indx = GetIndexRepiter(numWord[i]);
 			ASSERT(start <= 32);
+			int indx = GetIndexRepiter(numWord[i]);
 			ASSERT(indx != -1);
 			repit[indx].bits[start] ? repit[indx].bits[start] = false :	result.push_back(start);	// отметка в матрице о наличии бита
 		}
@@ -440,11 +437,13 @@ vector<int> CTest::CrossBits(const vector <int>& bits, const vector <int>& numWo
 	return result;
 }
 
-// Проверка на заменяемость
-bool CTest::CheckReplace(const CString& title, const vector <signalData*> signals)
+// Проверка слов, которые выборочно кладутся в одно слово
+bool CTest::CheckReplace(CString first, const vector <signalData*> signals)
 {
 	bool result = false;
-	CString first = title;
+	if (sheet->arinc)
+		return result;
+
 	for (size_t i = 0; i < signals.size(); i++)
 	{
 		CString second = signals[i]->title[0];
@@ -452,11 +451,18 @@ bool CTest::CheckReplace(const CString& title, const vector <signalData*> signal
 			continue;
 
 		int indx = first.ReverseFind(L',');
-		if (indx != -1)
+
+		if (indx == -1)
+			continue;
+		else
 			first.Delete(indx, first.GetLength() - indx);
+		
 		indx = second.ReverseFind(L',');
-		if (indx != -1)
+		if (indx == -1)
+			continue;
+		else
 			second.Delete(indx, second.GetLength() - indx);
+
 		first.CompareNoCase(second) == 0 ? result = true : result = result;
 	}
 
