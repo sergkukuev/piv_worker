@@ -167,18 +167,17 @@ void CTest::GetWarnings(vector <errorSignal>& warning)
 }
 
 // Запись ошибки
-bool CTest::WriteError(errorSignal& res, const CString& msg, const int& index) 
+bool CTest::WriteError(errorSignal& signal, CString msg, const int& index) 
 {
-	CString message = msg;
 	if (index == check::min)
-		message.Replace(L"*", L"Минимальное значение");
+		msg.Replace(L"*", L"Минимальное значение");
 	else if (index == check::max)
-		message.Replace(L"*", L"Максимальное значение");
+		msg.Replace(L"*", L"Максимальное значение");
 	else if (index == check::csr)
-		message.Replace(L"*", L"Значение ЦСР");
+		msg.Replace(L"*", L"Значение ЦСР");
 	
-	res.error.push_back(message);
-	res.check[index] = true;
+	signal.error.push_back(msg);
+	signal.check[index] = true;
 	return true;
 }
 
@@ -192,7 +191,7 @@ void CTest::SyntaxChecker(errorSignal& signal, const int& i)
 		if (sheet->arinc)
 		{
 			if (sheet->signals[i].numWord.flag)
-				sheet->error = WriteError(signal, L"Поле пустое или содержит недопустимые символы.", check::numword);
+				WriteError(signal, L"Поле пустое или содержит недопустимые символы.", check::numword);
 		}
 		else
 			TemplateTest(sheet->signals[i].numWord.field, check::numword, base[numword], signal);
@@ -212,22 +211,25 @@ void CTest::SyntaxChecker(errorSignal& signal, const int& i)
 }
 
 // Проверка номера набора параметров
-bool CTest::NpTest(vector <errorSignal>& error) 
+bool CTest::NpTest(vector <errorSignal>& signals) 
 {
 	bool result = false;	// true -  есть ошибка, false - нет ошибки
-	errorSignal tmp;
-	tmp.data = &sheet->signals[0];
-	ASSERT(tmp.data != nullptr);
+	errorSignal signal;
+	signal.data = &sheet->signals[0];
+	ASSERT(signal.data != nullptr);
+
+	#define MAX signal.data->max.value
+	#define MIN signal.data->min.value
+	#define FL_MAX signal.data->max.flag
+	#define FL_MIN signal.data->min.flag
 
 	if (sheet->np == 0)
-		result = WriteError(tmp, L"Отсутствует значение набора параметров.", check::comment);
-	else
-		if (!tmp.data->min.flag && !tmp.data->max.flag)
-			if (tmp.data->min.value > sheet->np || sheet->np > tmp.data->max.value)
-				result = WriteError(tmp, L"Набор параметров не соответствует указанному интервалу значений.", check::comment);
+		result = WriteError(signal, L"Отсутствует значение набора параметров.", check::comment);
+	else if ((!FL_MAX && !FL_MIN) && (MIN > sheet->np || sheet->np > MAX))
+		result = WriteError(signal, L"Набор параметров не соответствует указанному интервалу значений.", check::comment);
 
-	if (!tmp.error.empty()) 
-		error.push_back(tmp);
+	if (!signal.error.empty()) 
+		signals.push_back(signal);
 
 	return result;
 }
@@ -236,17 +238,18 @@ bool CTest::NpTest(vector <errorSignal>& error)
 bool CTest::SimpleTest(errorSignal& set) 
 {
 	bool result = false; // true -  есть ошибка, false - нет ошибки
+	CString msg = L"Поле пустое или содержит недопустимые символы.";
 	
 	if (set.data->numWord.flag)
-		result = WriteError(set, L"Поле пустое или содержит недопустимые символы.", check::numword);
+		result = WriteError(set, msg, check::numword);
 	if (set.data->min.flag)
-		result = WriteError(set, L"Поле пустое или содержит недопустимые символы.", check::min);
+		result = WriteError(set, msg, check::min);
 	if (set.data->max.flag)
-		result = WriteError(set, L"Поле пустое или содержит недопустимые символы.", check::max);
+		result = WriteError(set, msg, check::max);
 	if (set.data->csr.flag)
-		result = WriteError(set, L"Поле пустое или содержит недопустимые символы.", check::csr);
+		result = WriteError(set, msg, check::csr);
 	if (set.data->bit.flag)
-		result = WriteError(set, L"Поле пустое или содержит недопустимые символы.", check::bits);
+		result = WriteError(set, msg, check::bits);
 
 	return result;
 }
