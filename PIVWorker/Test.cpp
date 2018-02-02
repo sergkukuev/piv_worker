@@ -345,8 +345,8 @@ bool CTest::TitleRepitTest(errorSignal& signal, const int& index)
 	CString title = TITLE(index, 1);
 	std::set<CString>::iterator current, end;
 
-	if (title.IsEmpty())
-		return result;
+	//if (title.IsEmpty())
+		//return result;
 
 	if (sheet->arinc)
 	{
@@ -361,10 +361,10 @@ bool CTest::TitleRepitTest(errorSignal& signal, const int& index)
 
 	// Если идентификатор не найден в множестве исключений
 	if (current == end)
-		for (size_t i = index + 1; i < sheet->signals.size() && result; i++)
+		for (size_t i = index + 1; i < sheet->signals.size() && !result; i++)
 			if (TITLE(i, 1).Compare(title) == 0 && TITLE(i, 0).CompareNoCase(RESERVE_SIGNAL) != 0)
 				result = WriteError(signal, L"Сигнал с таким <b>условным обозначением</b> присутствует на этом листе.", check::title);
-	
+
 	return result;
 }
 
