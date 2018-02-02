@@ -345,8 +345,8 @@ bool CTest::TitleRepitTest(errorSignal& signal, const int& index)
 	CString title = TITLE(index, 1);
 	std::set<CString>::iterator current, end;
 
-	//if (title.IsEmpty())
-		//return result;
+	if (title.IsEmpty())
+		return result;
 
 	if (sheet->arinc)
 	{
