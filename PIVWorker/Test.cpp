@@ -215,14 +215,12 @@ bool CTest::NpTest(vector <errorSignal>& signals)
 	signal.data = &sheet->signals[0];
 	ASSERT(signal.data != nullptr);
 
-	#define MAX signal.data->max.value
-	#define MIN signal.data->min.value
-	#define FL_MAX signal.data->max.flag
-	#define FL_MIN signal.data->min.flag
+	#define FL(x) signal.data->x.flag
+	#define VAL(x) signal.data->x.value
 
 	if (sheet->np == 0)
 		result = WriteError(signal, L"Отсутствует значение набора параметров.", check::comment);
-	else if ((!FL_MAX && !FL_MIN) && (MIN > sheet->np || sheet->np > MAX))
+	else if ((!FL(max) && !FL(min)) && (VAL(min) > sheet->np || sheet->np > VAL(max)))
 		result = WriteError(signal, L"Набор параметров не соответствует указанному интервалу значений.", check::comment);
 
 	if (!signal.error.empty()) 
@@ -232,21 +230,21 @@ bool CTest::NpTest(vector <errorSignal>& signals)
 }
 
 // Проверка всех числовых параметров
-bool CTest::SimpleTest(errorSignal& set) 
+bool CTest::SimpleTest(errorSignal& signal) 
 {
 	bool result = false; // true -  есть ошибка, false - нет ошибки
 	CString msg = L"Поле пустое или содержит недопустимые символы.";
 	
-	if (set.data->numWord.flag)
-		result = WriteError(set, msg, check::numword);
-	if (set.data->min.flag)
-		result = WriteError(set, msg, check::min);
-	if (set.data->max.flag)
-		result = WriteError(set, msg, check::max);
-	if (set.data->csr.flag)
-		result = WriteError(set, msg, check::csr);
-	if (set.data->bit.flag)
-		result = WriteError(set, msg, check::bits);
+	if (signal.data->numWord.flag)
+		result = WriteError(signal, msg, check::numword);
+	if (signal.data->min.flag)
+		result = WriteError(signal, msg, check::min);
+	if (signal.data->max.flag)
+		result = WriteError(signal, msg, check::max);
+	if (signal.data->csr.flag)
+		result = WriteError(signal, msg, check::csr);
+	if (signal.data->bit.flag)
+		result = WriteError(signal, msg, check::bits);
 
 	return result;
 }
@@ -288,60 +286,57 @@ void CTest::SimanticCheker(errorSignal& signal, const int& i, vector <repiter>& 
 }
 
 // Проверка всех числовых параметров
-bool CTest::ValueTest(errorSignal& set) 
+bool CTest::ValueTest(errorSignal& signal) 
 {
 	bool result = false;
+	#define FL(x) signal.data->x.flag
+	#define VAL(x) signal.data->x.value
+	
 	// Проверка номера слова (адреса)
-	if (!set.data->numWord.flag)
+	if (!FL(numWord))
 	{
-		for (size_t i = 0; i < set.data->numWord.value.size(); i++)
+		for (size_t i = 0; i < VAL(numWord).size(); i++)
 		{
-			// Повторение на листе номера слова или адреса
-			/*int indx = IsRepitContain(repit, signal.numWord.value[i]);
-			CString str;
-			sheet->arinc ? str = L"адреса" : str = L"номера слова";
-			str.Format(L"Значение %s %d уже содержится на этом листе.", str,signal.numWord.value[i]);
-			repit[indx].bits[0] ? repit[indx].bits[0] = false : set.push_back(str);
-			*/
-			if (set.data->numWord.value[i] < 0 && !sheet->arinc)
-				result = WriteError(set, L"Значение <b>№ слова</b> не должно быть отрицательным.", check::numword);
-			else if (set.data->numWord.value[i] > 32 && !sheet->arinc)
-				result = WriteError(set, L"Значение <b>№ слова</b> должно быть меньше 32.", check::numword);
-			if (set.data->numWord.sys != 8 && sheet->arinc)
-				result = WriteError(set, L"<b>Адрес сигнала</b> должен быть записан в 8-ой системе счисления.", check::numword);
+			if (VAL(numWord)[i] < 0 && !sheet->arinc)
+				result = WriteError(signal, L"Значение <b>№ слова</b> не должно быть отрицательным.", check::numword);
+			else if (VAL(numWord)[i] > 32 && !sheet->arinc)
+				result = WriteError(signal, L"Значение <b>№ слова</b> должно быть меньше 32.", check::numword);
+			if (signal.data->numWord.sys != 8 && sheet->arinc)
+				result = WriteError(signal, L"<b>Адрес сигнала</b> должен быть записан в 8-ой системе счисления.", check::numword);
 		}
 	}
 	// Проверка мин, макс и цср
-	if (!set.data->min.flag && !set.data->max.flag && !set.data->csr.flag && !set.data->bit.flag)
+	if (!FL(min) && !FL(max) && !signal.data->csr.flag && !FL(bit))
 	{
 		int nBit = 0;
-		(set.data->bit.value.size() == 4) ? nBit = (set.data->bit.value[1] - set.data->bit.value[0]) + (set.data->bit.value[3] - set.data->bit.value[2]) + 2 :
-			nBit = (set.data->bit.value[1] - set.data->bit.value[0]) + 1;
+		(VAL(bit).size() == 4) ? nBit = (VAL(bit)[1] - VAL(bit)[0]) + (VAL(bit)[3] - VAL(bit)[2]) + 2 :
+			nBit = (VAL(bit)[1] - VAL(bit)[0]) + 1;
 
 		// Выделение бита под знак, если он присутствует
-		if (set.data->bitSign) nBit--;
+		if (signal.data->bitSign) 
+			nBit--;
 
-		double nMin = set.data->csr.value;
+		double nMin = signal.data->csr.value;
 		for (int i = 1; i <= nBit; i++)
 			nMin = nMin / 2;
 
-		double nMax = (set.data->csr.value * 2) - nMin;
+		double nMax = (signal.data->csr.value * 2) - nMin;
 
-		if (set.data->max.value - nMax >= 2)
-			result = WriteError(set, L"Нельзя упаковать <b>максимальное значение</b>", check::max);
-		else if (((abs(set.data->min.value) > (nMax + nMin)) || (abs(set.data->min.value) < nMin)) && set.data->min.value != 0)
-			result = WriteError(set, L"Нельзя упаковать <b>минимальное значение</b>", check::min);
+		if (VAL(max) - nMax >= 2)
+			result = WriteError(signal, L"Нельзя упаковать <b>максимальное значение</b>", check::max);
+		else if (((abs(VAL(min)) > (nMax + nMin)) || (abs(VAL(min)) < nMin)) && VAL(min) != 0)
+			result = WriteError(signal, L"Нельзя упаковать <b>минимальное значение</b>", check::min);
 
-		if ((set.data->min.value < 0) && !set.data->bitSign && !sheet->arinc)
-			result = WriteError(set, L"<b>Минимальное значение</b> не может быть отрицательным числом или не верно задан знаковый бит в поле \"Примечание\"", check::min);
-		else if ((set.data->min.value >= 0) && set.data->bitSign && !sheet->arinc)
-			result = WriteError(set, L"<b>Минимальное значение</b> должно быть отрицательным числом или не верно задан знаковый бит в поле \"Примечание\"", check::min);
+		if ((VAL(min) < 0) && !signal.data->bitSign && !sheet->arinc)
+			result = WriteError(signal, L"<b>Минимальное значение</b> не может быть отрицательным числом или не верно задан знаковый бит в поле \"Примечание\"", check::min);
+		else if ((VAL(min) >= 0) && signal.data->bitSign && !sheet->arinc)
+			result = WriteError(signal, L"<b>Минимальное значение</b> должно быть отрицательным числом или не верно задан знаковый бит в поле \"Примечание\"", check::min);
 	}
 	return result;
 }
 
 // Поиск повторений идентификатора на листе
-bool CTest::RepiterTest(errorSignal& set, const int& index) 
+bool CTest::RepiterTest(errorSignal& signal, const int& index) 
 {
 	bool result = false;
 	CString title = sheet->signals[index].title[1];
@@ -353,7 +348,7 @@ bool CTest::RepiterTest(errorSignal& set, const int& index)
 				result = true;
 
 	if (result)
-		WriteError(set, L"Сигнал с таким <b>условным обозначением</b> присутствует на этом листе.", check::title);
+		WriteError(signal, L"Сигнал с таким <b>условным обозначением</b> присутствует на этом листе.", check::title);
 
 	return result;
 }
@@ -395,35 +390,35 @@ int CTest::IsRepitContain(const vector<repiter>& repit, const int& numeric)
 }
 
 // Проверка используемых разрядов
-bool CTest::BitsTest(errorSignal& set, vector<repiter>& repit) 
+bool CTest::BitsTest(errorSignal& signal, vector<repiter>& repit) 
 {
 	bool result = false;
 	// Кол-во № слов должно совпадать с кол-вами интервалов исп. разрядов
-	if (!set.data->numWord.flag && !set.data->bit.flag)
+	if (!signal.data->numWord.flag && !signal.data->bit.flag)
 	{
-		for (size_t i = 0; i < set.data->bit.value.size(); i+=2)
-			if (set.data->bit.value[i] > set.data->bit.value[i + 1] && set.data->bit.value[i+1] != -1)
-				result = WriteError(set, L"Старший бит меньше младшего в <b>используемых разрядах</b>.", check::bits);
+		for (size_t i = 0; i < signal.data->bit.value.size(); i+=2)
+			if (signal.data->bit.value[i] > signal.data->bit.value[i + 1] && signal.data->bit.value[i+1] != -1)
+				result = WriteError(signal, L"Старший бит меньше младшего в <b>используемых разрядах</b>.", check::bits);
 		// TODO: Добавить проверку на диапазон битов (Должен быть от 1 до 32)
-		if (set.data->numWord.value.size() * 2 == set.data->bit.value.size())
+		if (signal.data->numWord.value.size() * 2 == signal.data->bit.value.size())
 		{
 			bool replaced;
-			(set.data->numWord.value.size() == 2) ? replaced = IsReplaceable(set.data->title[0], repit[IsRepitContain(repit, set.data->numWord.value[1])].signals) ||
-				IsReplaceable(set.data->title[0], repit[IsRepitContain(repit, set.data->numWord.value[0])].signals) :
-				replaced = IsReplaceable(set.data->title[0], repit[IsRepitContain(repit, set.data->numWord.value[0])].signals);
+			(signal.data->numWord.value.size() == 2) ? replaced = IsReplaceable(signal.data->title[0], repit[IsRepitContain(repit, signal.data->numWord.value[1])].signals) ||
+				IsReplaceable(signal.data->title[0], repit[IsRepitContain(repit, signal.data->numWord.value[0])].signals) :
+				replaced = IsReplaceable(signal.data->title[0], repit[IsRepitContain(repit, signal.data->numWord.value[0])].signals);
 			
-			vector<int> bits = CrossBits(set.data->bit.value, set.data->numWord.value, repit);
+			vector<int> bits = CrossBits(signal.data->bit.value, signal.data->numWord.value, repit);
 			if (bits.size() != 0 && !replaced)
 			{
 				CString str = L"Следующие <b>используемые разряды</b> перекрываются: ";
 				for (size_t i = 0; i < bits.size(); i++)
 					str.Format(L"%s %d", str, bits[i]);
-				result = WriteError(set, str, check::bits);
+				result = WriteError(signal, str, check::bits);
 			}
 		}
 		else 
-			result = (set.data->numWord.value.size() == 1) ? WriteError(set, L"Должен быть один интервал <b>используемых разрядов</b>", check::bits) :
-				WriteError(set, L"Должно быть два интервала <b>используемых разрядов</b>",  check::bits);
+			result = (signal.data->numWord.value.size() == 1) ? WriteError(signal, L"Должен быть один интервал <b>используемых разрядов</b>", check::bits) :
+				WriteError(signal, L"Должно быть два интервала <b>используемых разрядов</b>",  check::bits);
 	}
 	return result;
 }
@@ -476,7 +471,7 @@ bool CTest::IsReplaceable(const CString& title, const vector <signalData*> signa
 
 #pragma region Warning
 // Поиск повторений идентификатора в книге
-void CTest::FindRepiteTitleInBook(errorSignal& set, const int& index)
+void CTest::FindRepiteTitleInBook(errorSignal& signal, const int& index)
 {
 	vector <CString> repitSheet;
 	CString title = sheet->signals[index].title[1];
@@ -502,7 +497,7 @@ void CTest::FindRepiteTitleInBook(errorSignal& set, const int& index)
 			msg += repitSheet[i] + L", ";
 		int posDot = msg.ReverseFind(L',');
 		msg.Delete(posDot);
-		WriteError(set, msg, check::title);
+		WriteError(signal, msg, check::title);
 	}
 }
 #pragma endregion
