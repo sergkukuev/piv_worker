@@ -188,23 +188,20 @@ void CTest::SyntaxChecker(errorSignal& signal, const int& i)
 	// Проход по синтаксическим ошибкам
 	if (iMethod == method::patterned)
 	{
-		if (sheet->arinc)
-		{
-			if (sheet->signals[i].numWord.flag)
-				WriteError(signal, L"Поле пустое или содержит недопустимые символы.", check::numword);
-		}
+		if (sheet->arinc && sheet->signals[i].numWord.flag)
+			WriteError(signal, L"Поле пустое или содержит недопустимые символы.", check::numword);	// TODO: Добавить регулярные выражения для адреса (ARINC)
 		else
-			TemplateTest(sheet->signals[i].numWord.field, check::numword, base[numword], signal);
+			TemplateTest(sheet->signals[i].numWord.field, check::numword, index::numword, signal);
 
-		TemplateTest(sheet->signals[i].title[1], check::title, base[title], signal);
+		TemplateTest(sheet->signals[i].title[1], check::title, index::title, signal);
 		// TODO: Исправить костыль (три пустые ячейки не считаются ошибкой)
 		if (sheet->signals[i].min.flag || sheet->signals[i].max.flag || sheet->signals[i].csr.flag)
 		{
-			TemplateTest(sheet->signals[i].min.field, check::min, base[value], signal);
-			TemplateTest(sheet->signals[i].max.field, check::max, base[value], signal);
-			TemplateTest(sheet->signals[i].csr.field, check::csr, base[value], signal);
+			TemplateTest(sheet->signals[i].min.field, check::min, index::value, signal);
+			TemplateTest(sheet->signals[i].max.field, check::max, index::value, signal);
+			TemplateTest(sheet->signals[i].csr.field, check::csr, index::value, signal);
 		}
-		TemplateTest(sheet->signals[i].bit.field, check::bits, base[bits], signal);
+		TemplateTest(sheet->signals[i].bit.field, check::bits, index::bits, signal);
 	}
 	else
 		SimpleTest(signal);
@@ -255,9 +252,9 @@ bool CTest::SimpleTest(errorSignal& set)
 }
 
 // Синтаксическая проверка шаблонным методом
-bool CTest::TemplateTest(const CString& field, const int& check, const regBase& test, errorSignal& set) 
+bool CTest::TemplateTest(const CString& field, const int& check, const int& index, errorSignal& signal) 
 {
-	regex correct(test.correct);
+	regex correct(base[index].correct);
 	string str = CT2A(field);
 	bool result = regex_match(str, correct);
 
@@ -265,17 +262,17 @@ bool CTest::TemplateTest(const CString& field, const int& check, const regBase& 
 	{
 		bool bFind = false;	// Найдена ли ошибка из набора регулярных выражений
 		// Поиск ошибки (обход по набору регулярок)
-		for (size_t i = 0; i < test.incorrect.size(); i++)
+		for (size_t i = 0; i < base[index].incorrect.size(); i++)
 		{
-			regex reg(test.incorrect[i].reg);
+			regex reg(base[index].incorrect[i].reg);
 			if (regex_search(str, reg))
 			{
-				result = WriteError(set, test.incorrect[i].desc, check);
+				result = WriteError(signal, base[index].incorrect[i].desc, check);
 				bFind = true;
 			}
 		}
 		if (!bFind)	// Неопознанная ошибка
-			throw UndefinedError(book->name, sheet->name, set.data->numWord.field + L"\n\t" + set.data->title[1]);
+			throw UndefinedError(book->name, sheet->name, signal.data->numWord.field + L"; " + signal.data->title[1]);
 	}
 	return !result;
 }

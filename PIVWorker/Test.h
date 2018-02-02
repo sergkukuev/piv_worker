@@ -51,17 +51,18 @@ private:
 
 	void GetErrors(vector <errorSignal>& syntax, vector <errorSignal>& simantic);	// Проверка листа на синтаксические и семантические ошибки
 	void GetWarnings(vector <errorSignal>& warning);	// Проверка листа на незначительные ошибки (замечания) 
-
+	bool WriteError(errorSignal& signal, CString msg, const int& index);	// Запись ошибки 
+	
 	void InitRepiter(vector<repiter>& repit);		// Инициализация репитера для проверки перекрытия
 	int IsRepitContain(const vector<repiter>& repit, const int& numeric);	// Имеется ли уже такой номер слова (адрес) (в случае неудачи возвр. индекс, иначе -1)
 
 	// Syntax
 	void SyntaxChecker(errorSignal& signal, const int& index);	// Проверка всех параметров сигнала на синтаксические ошибки
-	bool NpTest(vector <errorSignal>& error);	// Проверка номера набора параметров
+	bool TemplateTest(const CString& field, const int& check, const int& index, errorSignal& signal); // Проверка шаблоном
+	bool NpTest(vector <errorSignal>& signals);	// Проверка номера набора параметров
 	bool SimpleTest(errorSignal& set);			// Простая проверка флагов всех числовых параметров
-	bool TemplateTest(const CString& field, const int& check, const regBase& test, errorSignal& set); // Проверка шаблоном
 
-	// Семантический анализ
+	// Semantic
 	void SemanticCheker(errorSignal& signal, const int& index, vector <repiter>& repit);	// Проверка всех параметров сигнала на семантические ошибки
 	bool ValueTest(errorSignal& set);	// Проверка всех числовых параметров
 	bool RepiterTest(errorSignal& set, const int& index);		// Поиск повторений идентификатора на листе
@@ -71,6 +72,4 @@ private:
 	
 	// Замечания
 	void FindRepiteTitleInBook(errorSignal& set, const int& index);		// Поиск повторений идентификатора в книге
-
-	bool WriteError(errorSignal& result, const CString& msg, const int& index);	// Запись ошибки 
 };
