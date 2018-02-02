@@ -96,7 +96,7 @@ void CReport::WriteBook(CStdioFile& file, list <errorData>::iterator& it)
 	for (size_t i = 0; i < it->set.size(); i++)
 	{
 		file.WriteString(L"\t\t\t\t\t\t<dt>");
-		file.WriteString(it->set[i].sheet->name);
+		file.WriteString(it->set[i].data->name);
 		file.WriteString(L"</dt>\n");
 	}
 	file.WriteString(L"\t\t\t\t\t</dl>\n"
@@ -106,7 +106,7 @@ void CReport::WriteBook(CStdioFile& file, list <errorData>::iterator& it)
 	file.WriteString(L"\t\t\t\t<td align=\"center\">\n"
 		"\t\t\t\t\t<dl>\n");
 	for (size_t i = 0; i < it->set.size(); i++)
-		file.WriteString(WriteSheets(it->set[i].sheet, it->set[i].syntax, SYNTAX_FOLDER, it->book->name));
+		file.WriteString(WriteSheets(it->set[i].data, it->set[i].syntax, SYNTAX_FOLDER, it->book->name));
 
 	file.WriteString(L"\t\t\t\t\t</dl>\n"
 		"\t\t\t\t</td>\n");
@@ -114,7 +114,7 @@ void CReport::WriteBook(CStdioFile& file, list <errorData>::iterator& it)
 	file.WriteString(L"\t\t\t\t<td align=\"center\">\n"
 		"\t\t\t\t\t<dl>\n");
 	for (size_t i = 0; i < it->set.size(); i++)
-		file.WriteString(WriteSheets(it->set[i].sheet, it->set[i].simantic, SIMANTIC_FOLDER, it->book->name));
+		file.WriteString(WriteSheets(it->set[i].data, it->set[i].simantic, SIMANTIC_FOLDER, it->book->name));
 
 	file.WriteString(L"\t\t\t\t\t</dl>\n"
 		"\t\t\t\t</td>\n");
@@ -122,7 +122,7 @@ void CReport::WriteBook(CStdioFile& file, list <errorData>::iterator& it)
 	file.WriteString(L"\t\t\t\t<td colspan=\"3\" align=\"center\">\n"
 		"\t\t\t\t\t<dl>\n");
 	for (size_t i = 0; i < it->set.size(); i++)
-		file.WriteString(WriteSheets(it->set[i].sheet, it->set[i].warning, WARNING_FOLDER, it->book->name));
+		file.WriteString(WriteSheets(it->set[i].data, it->set[i].warning, WARNING_FOLDER, it->book->name));
 
 	file.WriteString(L"\t\t\t\t\t</dl>\n"
 		"\t\t\t\t</td>\n");
@@ -226,22 +226,22 @@ CString CReport::WriteSheets(sheetData* sheet, const vector <errorSignal>& db, c
 void CReport::WriteSignal(CStdioFile& file, const errorSignal& set) 
 {
 	CString buffer;
-	file.WriteString(WriteParam(set.signal->numWord.field, set.check[check::numword], 5));
+	file.WriteString(WriteParam(set.data->numWord.field, set.check[check::numword], 5));
 
-	buffer.Format(L"\t\t\t\t<td align=\"center\" style=\"width: 15%%\"> &nbsp %s</td>\n", set.signal->title[0]);
+	buffer.Format(L"\t\t\t\t<td align=\"center\" style=\"width: 15%%\"> &nbsp %s</td>\n", set.data->title[0]);
 	file.WriteString(buffer);
 
-	file.WriteString(WriteParam(set.signal->title[1], set.check[check::title], 10));
+	file.WriteString(WriteParam(set.data->title[1], set.check[check::title], 10));
 	
-	buffer.Format(L"\t\t\t\t<td align=\"center\" style=\"width: 5%%\"> &nbsp %s</td>\n", set.signal->dimension);
+	buffer.Format(L"\t\t\t\t<td align=\"center\" style=\"width: 5%%\"> &nbsp %s</td>\n", set.data->dimension);
 	file.WriteString(buffer);
 
-	file.WriteString(WriteParam(set.signal->min.field, set.check[check::min], 5));
-	file.WriteString(WriteParam(set.signal->max.field, set.check[check::max], 5));
-	file.WriteString(WriteParam(set.signal->csr.field, set.check[check::csr], 5));
+	file.WriteString(WriteParam(set.data->min.field, set.check[check::min], 5));
+	file.WriteString(WriteParam(set.data->max.field, set.check[check::max], 5));
+	file.WriteString(WriteParam(set.data->csr.field, set.check[check::csr], 5));
 
-	file.WriteString(WriteParam(set.signal->bit.field, set.check[check::bits], 10));
-	file.WriteString(WriteParam(set.signal->comment, set.check[check::comment], 30));
+	file.WriteString(WriteParam(set.data->bit.field, set.check[check::bits], 10));
+	file.WriteString(WriteParam(set.data->comment, set.check[check::comment], 30));
 
 	file.WriteString(L"\t\t\t</tr>\n"
 		"\t\t\t<tr>\n");
