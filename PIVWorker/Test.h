@@ -33,7 +33,7 @@ typedef struct
 // Исключения
 typedef struct
 {
-	set<CString> m930;
+	set<CString> mkio;
 	set<CString> arinc;
 } exceptTitle;
 
@@ -75,7 +75,6 @@ private:
 	bool CheckReplace(CString title, const vector <signalData*> signals);	// Проверка слов, которые выборочно кладутся в одно слово 
 	vector<int> CrossBits(const vector <int>& bits, const vector <int>& numWord);		// Проверка перекрытия битов
 	
-
 	// Repiter
 	void InitRepiter();		// Инициализация репитера для проверки перекрытия битов
 	void ClearRepiter();	// Очистка репитера

@@ -356,8 +356,8 @@ bool CTest::TitleRepitTest(errorSignal& signal, const int& index)
 	}
 	else
 	{
-		current = exception.m930.find(title);
-		end = exception.m930.end();
+		current = exception.mkio.find(title);
+		end = exception.mkio.end();
 	}
 
 	// Если идентификатор не найден в множестве исключений
