@@ -283,6 +283,7 @@ bool CTest::TemplateTest(const CString& field, const int& check, const int& inde
 // Проверка всех параметров сигнала на семантические ошибки
 void CTest::SimanticCheker(errorSignal& signal, const int& i, vector <repiter>& repit)
 {
+	// TODO: Сделать проверку в проекте КПРНО35 на отсутствие одной из частей слова (мл. или ст.)
 	ValueTest(signal);
 	TitleRepitTest(signal, (int)i);
 	BitsTest(signal);
