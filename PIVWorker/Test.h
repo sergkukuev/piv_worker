@@ -60,7 +60,7 @@ private:
 	void SyntaxChecker(errorSignal& signal, const int& index);	// Проверка всех параметров сигнала на синтаксические ошибки
 	bool TemplateTest(const CString& field, const int& check, const int& index, errorSignal& signal); // Проверка шаблоном
 	bool NpTest(vector <errorSignal>& signals);	// Проверка номера набора параметров
-	bool SimpleTest(errorSignal& set);			// Простая проверка флагов всех числовых параметров
+	bool SimpleTest(errorSignal& signal);			// Простая проверка флагов всех числовых параметров
 
 	// Semantic
 	void SemanticCheker(errorSignal& signal, const int& index, vector <repiter>& repit);	// Проверка всех параметров сигнала на семантические ошибки
