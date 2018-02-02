@@ -12,8 +12,10 @@ CTest::CTest()
 {	
 	// Множество исключений
 	// Для ARINC
-	exception.insert(L"ID_BPV1");	// Идентификатор блока 1
-	exception.insert(L"ID_BPV2");	// Идентификатор блока 2
+	exception.arinc.insert(L"ID_BPV1");	// Идентификатор блока 1
+	exception.arinc.insert(L"ID_BPV2");	// Идентификатор блока 2
+	// Для MKIO 
+	// Пусто
 
 	// Создание базы для проверки на ошибки с помощью регулярных выражений
 	// TODO: Добавить регулярные выражения для адреса (ARINC)
@@ -123,7 +125,7 @@ void CTest::GetErrors(vector <errorSignal>& syntax, vector <errorSignal>& simant
 
 	for (size_t i = 0; i < sheet->signals.size(); i++) 
 	{
-		if (sheet->signals[i].title[0].Find(RESERVE_SIGNAL) != -1)
+		if (sheet->signals[i].title[0].Find(RESERVE_SIGNAL) == 0)
 			continue;
 
 		errorSignal signal;
@@ -153,7 +155,7 @@ void CTest::GetWarnings(vector <errorSignal>& warning)
 {
 	for (size_t i = 0; i < sheet->signals.size(); i++) 
 	{
-		if (sheet->signals[i].title[0].Find(RESERVE_SIGNAL) == -1) 
+		if (sheet->signals[i].title[0].Find(RESERVE_SIGNAL) == 0) 
 		{
 			errorSignal tmp;
 			tmp.data = &sheet->signals[i];
@@ -281,7 +283,7 @@ bool CTest::TemplateTest(const CString& field, const int& check, const int& inde
 void CTest::SimanticCheker(errorSignal& signal, const int& i, vector <repiter>& repit)
 {
 	ValueTest(signal);
-	RepiterTest(signal, (int)i);
+	TitleRepitTest(signal, (int)i);
 	BitsTest(signal, repit);
 }
 
@@ -336,20 +338,40 @@ bool CTest::ValueTest(errorSignal& signal)
 }
 
 // Поиск повторений идентификатора на листе
-bool CTest::RepiterTest(errorSignal& signal, const int& index) 
+bool CTest::TitleRepitTest(errorSignal& signal, const int& index) 
 {
 	bool result = false;
-	CString title = sheet->signals[index].title[1];
-	std::set<CString>::iterator it = exception.find(title);
-	// TODO: Реализовать исключения под разные линии передачи
-	if (it == exception.end())	// Если идентификатор не найден в множестве исключений
-		for (size_t i = index + 1; i < sheet->signals.size(); i++)
-			if (sheet->signals[i].title[1].Compare(title) == 0 && sheet->signals[i].title[0].CompareNoCase(RESERVE_SIGNAL) != 0)
-				result = true;
+	#define TITLE(i, j) sheet->signals[i].title[j]
+	
+	CString title = TITLE(index, 1);
+	std::set<CString>::iterator current, end;
 
-	if (result)
-		WriteError(signal, L"Сигнал с таким <b>условным обозначением</b> присутствует на этом листе.", check::title);
+	if (title.IsEmpty())
+		return result;
 
+	if (sheet->arinc)
+	{
+		current = exception.arinc.find(title);
+		end = exception.arinc.end();
+	}
+	else
+	{
+		current = exception.m930.find(title);
+		end = exception.m930.end();
+	}
+
+	// Если идентификатор не найден в множестве исключений
+	if (current == end)
+	{
+		size_t i = index + 1;
+		for (size_t i = index + 1; i < sheet->signals.size() && result; i++)
+		{
+			if (TITLE(i, 0).CompareNoCase(RESERVE_SIGNAL) == 0)
+				continue;
+			if (TITLE(i, 1).Compare(title) == 0)
+				result = WriteError(signal, L"Сигнал с таким <b>условным обозначением</b> присутствует на этом листе.", check::title);
+		}
+	}
 	return result;
 }
 

@@ -30,6 +30,13 @@ typedef struct
 	vector <regular> incorrect;
 } regBase;
 
+// Исключения
+typedef struct
+{
+	set<CString> m930;
+	set<CString> arinc;
+} exceptTitle;
+
 class PIV_DECLARE CTest 
 {
 public:
@@ -43,7 +50,7 @@ public:
 private:
 	bookData* book = nullptr;	// Указатель на текущую книгу
 	sheetData* sheet = nullptr;	// Указатель на текущий лист
-	set<CString> exception;		// Множество исключений задается в конструкторе
+	exceptTitle exception;		// Множество исключений (задается в конструкторе)
 	int iMethod;				// Метод проверки
 
 	vector <regBase> base;	// База регулярных выражений
@@ -64,7 +71,7 @@ private:
 	bool ValueTest(errorSignal& set);	// Проверка всех числовых параметров
 	void InitRepiter(vector<repiter>& repit);		// Инициализация репитера для проверки перекрытия
 	int IsRepitContain(const vector<repiter>& repit, const int& numeric);	// Имеется ли уже такой номер слова (адрес) (в случае неудачи возвр. индекс, иначе -1)
-	bool RepiterTest(errorSignal& signal, const int& index);		// Поиск повторений идентификатора на листе
+	bool TitleRepitTest(errorSignal& signal, const int& index);		// Поиск повторений идентификатора на листе
 	bool BitsTest(errorSignal& signal, vector<repiter>& repit);	// Проверка используемых разрядов
 	vector<int> CrossBits(const vector <int>& bits, const vector <int>& numWord, vector<repiter>& repit); // Проверка перекрытия битов
 	bool IsReplaceable(const CString& title, const vector <signalData*> signals);		// Проверка на заменяемость
