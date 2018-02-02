@@ -71,9 +71,9 @@ private:
 	void SimanticCheker(errorSignal& signal, const int& index, vector <repiter>& repit);	// Проверка всех параметров сигнала на семантические ошибки
 	bool ValueTest(errorSignal& set);	// Проверка всех числовых параметров
 	bool TitleRepitTest(errorSignal& signal, const int& index);		// Поиск повторений идентификатора на листе
-	bool BitsTest(errorSignal& signal, vector<repiter>& repit);	// Проверка используемых разрядов
-	vector<int> CrossBits(const vector <int>& bits, const vector <int>& numWord, vector<repiter>& repit); // Проверка перекрытия битов
-	bool IsReplaceable(const CString& title, const vector <signalData*> signals);		// Проверка на заменяемость
+	bool BitsTest(errorSignal& signal);	// Проверка используемых разрядов
+	vector<int> CrossBits(const vector <int>& bits, const vector <int>& numWord);		// Проверка перекрытия битов
+	bool CheckReplace(const CString& title, const vector <signalData*> signals);	// Проверка на заменяемость
 
 	// Repiter
 	void InitRepiter();		// Инициализация репитера для проверки перекрытия битов

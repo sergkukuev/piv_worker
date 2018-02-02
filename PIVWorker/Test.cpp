@@ -285,7 +285,7 @@ void CTest::SimanticCheker(errorSignal& signal, const int& i, vector <repiter>& 
 {
 	ValueTest(signal);
 	TitleRepitTest(signal, (int)i);
-	BitsTest(signal, repit);
+	BitsTest(signal);
 }
 
 // Проверка всех числовых параметров
@@ -370,25 +370,40 @@ bool CTest::TitleRepitTest(errorSignal& signal, const int& index)
 }
 
 // Проверка используемых разрядов
-bool CTest::BitsTest(errorSignal& signal, vector<repiter>& repit) 
+bool CTest::BitsTest(errorSignal& signal) 
 {
+	#define FL(x) signal.data->x.flag
+	#define VAL(x) signal.data->x.value
+	
 	bool result = false;
 	// Кол-во № слов должно совпадать с кол-вами интервалов исп. разрядов
-	if (!signal.data->numWord.flag && !signal.data->bit.flag)
+	if (!FL(numWord) && !signal.data->bit.flag)
 	{
-		for (size_t i = 0; i < signal.data->bit.value.size(); i+=2)
-			if (signal.data->bit.value[i] > signal.data->bit.value[i + 1] && signal.data->bit.value[i+1] != -1)
-				result = WriteError(signal, L"Старший бит меньше младшего в <b>используемых разрядах</b>.", check::bits);
-		// TODO: Добавить проверку на диапазон битов (Должен быть от 1 до 32)
-		if (signal.data->numWord.value.size() * 2 == signal.data->bit.value.size())
+		for (size_t i = 0; i < VAL(bit).size(); i += 2)
 		{
-			bool replaced;
-			(signal.data->numWord.value.size() == 2) ? replaced = IsReplaceable(signal.data->title[0], repit[GetIndexRepiter(signal.data->numWord.value[1])].signals) ||
-				IsReplaceable(signal.data->title[0], repit[GetIndexRepiter(signal.data->numWord.value[0])].signals) :
-				replaced = IsReplaceable(signal.data->title[0], repit[GetIndexRepiter(signal.data->numWord.value[0])].signals);
+			if (VAL(bit)[i] > VAL(bit)[i + 1] && VAL(bit)[i + 1] != -1)
+				result = WriteError(signal, L"Старший бит меньше младшего в <b>используемых разрядах</b>.", check::bits);
+			if (VAL(bit)[i] > MAX_BITS || VAL(bit)[i + 1] > MAX_BITS)
+			{
+				CString msg = L"Значение бита превышает максимально допустимое в <b>используемых разрядах</b> ";
+				msg.Format(L"%s(%d).", msg, MAX_BITS);
+				result = WriteError(signal, msg, check::bits);
+			}
+		}
+
+		if ((VAL(numWord).size() * 2 == VAL(bit).size()))
+		{
+			#define RepSigByIndex(idx) repit[GetIndexRepiter(VAL(numWord)[idx])].signals
+			bool bReplase = false;
+
+			if (VAL(numWord).size() == 2)
+			(signal.data->numWord.value.size() == 2) ? 
+				bReplase = CheckReplace(signal.data->title[0], RepSigByIndex(1)) ||
+				CheckReplace(signal.data->title[0], RepSigByIndex(0)) :
+				bReplase = CheckReplace(signal.data->title[0], RepSigByIndex(0));
 			
-			vector<int> bits = CrossBits(signal.data->bit.value, signal.data->numWord.value, repit);
-			if (bits.size() != 0 && !replaced)
+			vector<int> bits = CrossBits(VAL(bit), VAL(numWord));
+			if (bits.size() != 0 && !bReplase)
 			{
 				CString str = L"Следующие <b>используемые разряды</b> перекрываются: ";
 				for (size_t i = 0; i < bits.size(); i++)
@@ -404,7 +419,7 @@ bool CTest::BitsTest(errorSignal& signal, vector<repiter>& repit)
 }
 
 // Проверка на перекрытие битов
-vector<int> CTest::CrossBits(const vector <int>& bits, const vector <int>& numWord, vector<repiter>& repit) 
+vector<int> CTest::CrossBits(const vector <int>& bits, const vector <int>& numWord) 
 {
 	vector<int> result;
 	for (size_t j = 0, i = 0; i < numWord.size(); j += 2, i++)
@@ -426,7 +441,7 @@ vector<int> CTest::CrossBits(const vector <int>& bits, const vector <int>& numWo
 }
 
 // Проверка на заменяемость
-bool CTest::IsReplaceable(const CString& title, const vector <signalData*> signals)
+bool CTest::CheckReplace(const CString& title, const vector <signalData*> signals)
 {
 	bool result = false;
 	CString first = title;
