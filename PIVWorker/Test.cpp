@@ -342,7 +342,6 @@ bool CTest::TitleRepitTest(errorSignal& signal, const int& index)
 {
 	bool result = false;
 	#define TITLE(i, j) sheet->signals[i].title[j]
-	
 	CString title = TITLE(index, 1);
 	std::set<CString>::iterator current, end;
 
@@ -362,16 +361,10 @@ bool CTest::TitleRepitTest(errorSignal& signal, const int& index)
 
 	// Если идентификатор не найден в множестве исключений
 	if (current == end)
-	{
-		size_t i = index + 1;
 		for (size_t i = index + 1; i < sheet->signals.size() && result; i++)
-		{
-			if (TITLE(i, 0).CompareNoCase(RESERVE_SIGNAL) == 0)
-				continue;
-			if (TITLE(i, 1).Compare(title) == 0)
+			if (TITLE(i, 1).Compare(title) == 0 && TITLE(i, 0).CompareNoCase(RESERVE_SIGNAL) != 0)
 				result = WriteError(signal, L"Сигнал с таким <b>условным обозначением</b> присутствует на этом листе.", check::title);
-		}
-	}
+	
 	return result;
 }
 
