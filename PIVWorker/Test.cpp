@@ -137,7 +137,7 @@ void CTest::GetErrors(vector <errorSignal>& syntax, vector <errorSignal>& simant
 			signal.error.clear();
 		}
 
-		SemanticCheker(signal, (int)i, repit);
+		SimanticCheker(signal, (int)i, repit);
 		if (!signal.error.empty())
 		{
 			simantic.push_back(signal);
@@ -278,9 +278,9 @@ bool CTest::TemplateTest(const CString& field, const int& check, const int& inde
 }
 #pragma endregion
 
-#pragma region Semantic
+#pragma region Simantic
 // Проверка всех параметров сигнала на семантические ошибки
-void CTest::SemanticCheker(errorSignal& signal, const int& i, vector <repiter>& repit)
+void CTest::SimanticCheker(errorSignal& signal, const int& i, vector <repiter>& repit)
 {
 	ValueTest(signal);
 	RepiterTest(signal, (int)i);

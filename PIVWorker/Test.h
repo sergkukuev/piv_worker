@@ -43,8 +43,8 @@ public:
 private:
 	bookData* book = nullptr;	// Указатель на текущую книгу
 	sheetData* sheet = nullptr;	// Указатель на текущий лист
-	set<CString> exception;	// Множество исключений задается в конструкторе
-	int iMethod;			// Метод проверки
+	set<CString> exception;		// Множество исключений задается в конструкторе
+	int iMethod;				// Метод проверки
 
 	vector <regBase> base;	// База регулярных выражений
 	const enum index {numword, title, value, bits, /*adress, */size};	// Индексы параметров в базе регулярных выражений (value = min, max, csr в одном флаконе)
@@ -60,10 +60,10 @@ private:
 	void SyntaxChecker(errorSignal& signal, const int& index);	// Проверка всех параметров сигнала на синтаксические ошибки
 	bool TemplateTest(const CString& field, const int& check, const int& index, errorSignal& signal); // Проверка шаблоном
 	bool NpTest(vector <errorSignal>& signals);	// Проверка номера набора параметров
-	bool SimpleTest(errorSignal& signal);			// Простая проверка флагов всех числовых параметров
+	bool SimpleTest(errorSignal& signal);		// Простая проверка флагов всех числовых параметров
 
-	// Semantic
-	void SemanticCheker(errorSignal& signal, const int& index, vector <repiter>& repit);	// Проверка всех параметров сигнала на семантические ошибки
+	// Simantic
+	void SimanticCheker(errorSignal& signal, const int& index, vector <repiter>& repit);	// Проверка всех параметров сигнала на семантические ошибки
 	bool ValueTest(errorSignal& set);	// Проверка всех числовых параметров
 	bool RepiterTest(errorSignal& set, const int& index);		// Поиск повторений идентификатора на листе
 	bool BitsTest(errorSignal& set, vector<repiter>& repit);	// Проверка используемых разрядов
