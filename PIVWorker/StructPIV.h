@@ -81,14 +81,14 @@ struct bookData
 
 struct errorSignal 
 {
-	signalData* signal = nullptr;	// Указатель на данные сигнала с ошибками
+	signalData* data = nullptr;	// Указатель на данные сигнала с ошибками
 	vector <CString> error;			// Набор ошибок параметра
 	vector <bool> check = { false, false, false, false, false, false, false };	// Отметки наличия ошибки в параметре
 };
 
 struct errorSheet 
 {
-	sheetData* sheet = nullptr;		// Указатель на лист, в котором содержатся данные ошибки
+	sheetData* data = nullptr;		// Указатель на лист, в котором содержатся данные ошибки
 	vector <errorSignal> syntax;	// Синтаксические ошибки
 	vector <errorSignal> simantic;	// Семантические ошибки
 	vector <errorSignal> warning;	// Предупреждения
