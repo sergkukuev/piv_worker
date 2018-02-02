@@ -52,9 +52,6 @@ private:
 	void GetErrors(vector <errorSignal>& syntax, vector <errorSignal>& simantic);	// Проверка листа на синтаксические и семантические ошибки
 	void GetWarnings(vector <errorSignal>& warning);	// Проверка листа на незначительные ошибки (замечания) 
 	bool WriteError(errorSignal& signal, CString msg, const int& index);	// Запись ошибки 
-	
-	void InitRepiter(vector<repiter>& repit);		// Инициализация репитера для проверки перекрытия
-	int IsRepitContain(const vector<repiter>& repit, const int& numeric);	// Имеется ли уже такой номер слова (адрес) (в случае неудачи возвр. индекс, иначе -1)
 
 	// Syntax
 	void SyntaxChecker(errorSignal& signal, const int& index);	// Проверка всех параметров сигнала на синтаксические ошибки
@@ -65,11 +62,13 @@ private:
 	// Simantic
 	void SimanticCheker(errorSignal& signal, const int& index, vector <repiter>& repit);	// Проверка всех параметров сигнала на семантические ошибки
 	bool ValueTest(errorSignal& set);	// Проверка всех числовых параметров
-	bool RepiterTest(errorSignal& set, const int& index);		// Поиск повторений идентификатора на листе
-	bool BitsTest(errorSignal& set, vector<repiter>& repit);	// Проверка используемых разрядов
+	void InitRepiter(vector<repiter>& repit);		// Инициализация репитера для проверки перекрытия
+	int IsRepitContain(const vector<repiter>& repit, const int& numeric);	// Имеется ли уже такой номер слова (адрес) (в случае неудачи возвр. индекс, иначе -1)
+	bool RepiterTest(errorSignal& signal, const int& index);		// Поиск повторений идентификатора на листе
+	bool BitsTest(errorSignal& signal, vector<repiter>& repit);	// Проверка используемых разрядов
 	vector<int> CrossBits(const vector <int>& bits, const vector <int>& numWord, vector<repiter>& repit); // Проверка перекрытия битов
 	bool IsReplaceable(const CString& title, const vector <signalData*> signals);		// Проверка на заменяемость
 	
 	// Замечания
-	void FindRepiteTitleInBook(errorSignal& set, const int& index);		// Поиск повторений идентификатора в книге
+	void FindRepiteTitleInBook(errorSignal& signal, const int& index);		// Поиск повторений идентификатора в книге
 };
