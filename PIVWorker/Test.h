@@ -53,6 +53,7 @@ private:
 	exceptTitle exception;		// Множество исключений (задается в конструкторе)
 	int iMethod;				// Метод проверки
 
+	vector <repiter> repit;	// Сетка перекрытия битов (для одного листа)
 	vector <regBase> base;	// База регулярных выражений
 	const enum index {numword, title, value, bits, /*adress, */size};	// Индексы параметров в базе регулярных выражений (value = min, max, csr в одном флаконе)
 
@@ -69,12 +70,16 @@ private:
 	// Simantic
 	void SimanticCheker(errorSignal& signal, const int& index, vector <repiter>& repit);	// Проверка всех параметров сигнала на семантические ошибки
 	bool ValueTest(errorSignal& set);	// Проверка всех числовых параметров
-	void InitRepiter(vector<repiter>& repit);		// Инициализация репитера для проверки перекрытия
-	int IsRepitContain(const vector<repiter>& repit, const int& numeric);	// Имеется ли уже такой номер слова (адрес) (в случае неудачи возвр. индекс, иначе -1)
 	bool TitleRepitTest(errorSignal& signal, const int& index);		// Поиск повторений идентификатора на листе
 	bool BitsTest(errorSignal& signal, vector<repiter>& repit);	// Проверка используемых разрядов
 	vector<int> CrossBits(const vector <int>& bits, const vector <int>& numWord, vector<repiter>& repit); // Проверка перекрытия битов
 	bool IsReplaceable(const CString& title, const vector <signalData*> signals);		// Проверка на заменяемость
+
+	// Repiter
+	void InitRepiter();		// Инициализация репитера для проверки перекрытия битов
+	void ClearRepiter();	// Очистка репитера
+	void AddRepiter(const int& numWord, const int& index);	// Добавление нового номера слова (адреса) в сетку
+	int GetIndexRepiter(const int& numWord);	// Получить индекс сетки битов по номеру слова (в случае неудачи возвр. индекс, иначе -1)
 	
 	// Замечания
 	void FindRepiteTitleInBook(errorSignal& signal, const int& index);		// Поиск повторений идентификатора в книге

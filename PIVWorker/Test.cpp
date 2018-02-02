@@ -120,8 +120,7 @@ void CTest::GetErrors(vector <errorSignal>& syntax, vector <errorSignal>& simant
 	if (!sheet->arinc)	// Если линия передачи не arinc, то необходимо проверять набор параметра 
 		sheet->error = NpTest(syntax);
 
-	vector <repiter> repit;
-	InitRepiter(repit);
+	InitRepiter();
 
 	for (size_t i = 0; i < sheet->signals.size(); i++) 
 	{
@@ -147,6 +146,8 @@ void CTest::GetErrors(vector <errorSignal>& syntax, vector <errorSignal>& simant
 			signal.error.clear();
 		}
 	}
+
+	ClearRepiter();
 }
 
 // Проверка листа на незначительные ошибки (замечания) 
@@ -368,42 +369,6 @@ bool CTest::TitleRepitTest(errorSignal& signal, const int& index)
 	return result;
 }
 
-// Инициализация репитера для проверки перекрытия
-void CTest::InitRepiter(vector <repiter>& repit)
-{
-	for (int i = 0; i < sheet->signals.size(); i++)
-	{
-		for (int j = 0; j < sheet->signals[i].numWord.value.size(); j++)
-		{
-			int indx = IsRepitContain(repit, sheet->signals[i].numWord.value[j]);
-			if (indx == -1)
-			{
-				repiter tmp;
-				tmp.adr = sheet->signals[i].numWord.value[j];
-				tmp.signals.push_back(&sheet->signals[i]);
-				tmp.bits.resize(MAX_BITS);	// Выделение память под биты и номер слова
-				for (int k = 0; k < MAX_BITS; k++)
-					tmp.bits[k] = true;
-				repit.push_back(tmp);
-			}
-			else
-			{
-				repit[indx].signals.push_back(&sheet->signals[i]);
-			}
-		}
-	}
-}
-
-// Имеется ли уже такой номер слова (адрес) (в случае удачи возвр. индекс, иначе -1)
-int CTest::IsRepitContain(const vector<repiter>& repit, const int& numeric)
-{
-	int result = -1;
-	for (int i = 0; i < repit.size(); i++)
-		if (repit[i].adr == numeric)
-			result = i;
-	return result;
-}
-
 // Проверка используемых разрядов
 bool CTest::BitsTest(errorSignal& signal, vector<repiter>& repit) 
 {
@@ -418,9 +383,9 @@ bool CTest::BitsTest(errorSignal& signal, vector<repiter>& repit)
 		if (signal.data->numWord.value.size() * 2 == signal.data->bit.value.size())
 		{
 			bool replaced;
-			(signal.data->numWord.value.size() == 2) ? replaced = IsReplaceable(signal.data->title[0], repit[IsRepitContain(repit, signal.data->numWord.value[1])].signals) ||
-				IsReplaceable(signal.data->title[0], repit[IsRepitContain(repit, signal.data->numWord.value[0])].signals) :
-				replaced = IsReplaceable(signal.data->title[0], repit[IsRepitContain(repit, signal.data->numWord.value[0])].signals);
+			(signal.data->numWord.value.size() == 2) ? replaced = IsReplaceable(signal.data->title[0], repit[GetIndexRepiter(signal.data->numWord.value[1])].signals) ||
+				IsReplaceable(signal.data->title[0], repit[GetIndexRepiter(signal.data->numWord.value[0])].signals) :
+				replaced = IsReplaceable(signal.data->title[0], repit[GetIndexRepiter(signal.data->numWord.value[0])].signals);
 			
 			vector<int> bits = CrossBits(signal.data->bit.value, signal.data->numWord.value, repit);
 			if (bits.size() != 0 && !replaced)
@@ -451,7 +416,7 @@ vector<int> CTest::CrossBits(const vector <int>& bits, const vector <int>& numWo
 		{
 			if (start > 32)
 				break;
-			int indx = IsRepitContain(repit, numWord[i]);
+			int indx = GetIndexRepiter(numWord[i]);
 			ASSERT(start <= 32);
 			ASSERT(indx != -1);
 			repit[indx].bits[start] ? repit[indx].bits[start] = false :	result.push_back(start);	// отметка в матрице о наличии бита
@@ -481,6 +446,61 @@ bool CTest::IsReplaceable(const CString& title, const vector <signalData*> signa
 	}
 
 	return result;
+}
+#pragma endregion
+
+#pragma region Repiter
+// Инициализация репитера для проверки перекрытия
+void CTest::InitRepiter()
+{
+	#define NUM_VAL(idx) sheet->signals[idx].numWord.value
+
+	for (int i = 0; i < sheet->signals.size(); i++)
+	{
+		for (int j = 0; j < NUM_VAL(i).size(); j++)
+		{
+			int indx = GetIndexRepiter(NUM_VAL(i)[j]);
+			indx == -1 ? AddRepiter(NUM_VAL(i)[j], i) : repit[indx].signals.push_back(&sheet->signals[i]);
+		}
+	}
+}
+
+// Добавление нового номера слова (адреса) в сетку
+void CTest::AddRepiter(const int& value, const int& index)
+{
+	repiter result;
+	result.adr = value;
+	result.signals.push_back(&sheet->signals[index]);
+	result.bits.resize(MAX_BITS);	// Выделение память под биты и номер слова
+	for (int k = 0; k < MAX_BITS; k++)	// Инициализация сетки перекрытия
+		result.bits[k] = true;
+
+	repit.push_back(result);
+}
+
+// Получить индекс сетки битов по номеру слова (в случае неудачи возвр. индекс, иначе -1)
+int CTest::GetIndexRepiter(const int& numeric)
+{
+	int index = -1;
+	for (int i = 0; i < repit.size() && index == -1; i++)
+		if (repit[i].adr == numeric)
+			index = i;
+
+	return index;
+}
+
+// Очистка репитера
+void CTest::ClearRepiter()
+{
+	for (size_t i = 0; i < repit.size(); i++)
+	{
+		repit[i].signals.clear();
+		repit[i].signals.shrink_to_fit();
+		repit[i].bits.clear();
+		repit[i].bits.shrink_to_fit();
+	}
+	repit.clear();
+	repit.shrink_to_fit();
 }
 #pragma endregion
 
