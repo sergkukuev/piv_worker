@@ -543,7 +543,7 @@ void CTest::FindRepiteTitleInBook(errorSignal& signal, const int& index)
 			{
 				book->sheets[i].signals[j].repWord = true;
 				repitSheet.push_back(book->sheets[i].name);
-				continue;
+				break;
 			}
 		}
 	}
