@@ -119,7 +119,7 @@ void CPIV::SetPathToSave(const CString pathToReport)
 	
 	path.Format(L"%s%s", pathToReport, BASE_FOLDER);	// Установка пути хранения артефактов
 	CreateDirectory(path, NULL);
-	//logger.Write(L"Изменено расположение папки отчетов"); // TODO: Здесь указало на протечку в памяти, надо посмотреть
+	logger.Write(L"Изменено расположение папки отчетов");
 }
 
 void CPIV::SetSettings(const pivParam& parameters) 
