@@ -60,7 +60,6 @@ protected:
 
 private:
 	HANDLE primary;		// Основной поток
-	CLogger logger;		// Логирование
 
 	pivData project;	// Данные проекта
 	pivData other;		// Данные остальных протоколов
