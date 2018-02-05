@@ -124,7 +124,7 @@ void CTest::GetErrors(vector <errorSignal>& syntax, vector <errorSignal>& simant
 
 	for (size_t i = 0; i < sheet->signals.size(); i++) 
 	{
-		if (sheet->signals[i].title[0].Find(RESERVE_SIGNAL) == 0)
+		if (sheet->signals[i].title[0].CompareNoCase(RESERVE_SIGNAL) == 0)
 			continue;
 
 		errorSignal signal;
@@ -156,16 +156,16 @@ void CTest::GetWarnings(vector <errorSignal>& warning)
 {
 	for (size_t i = 0; i < sheet->signals.size(); i++) 
 	{
-		if (sheet->signals[i].title[0].Find(RESERVE_SIGNAL) == 0) 
-		{
-			errorSignal tmp;
-			tmp.data = &sheet->signals[i];
+		if (sheet->signals[i].title[0].CompareNoCase(RESERVE_SIGNAL) == 0)
+			continue;
 
-			FindRepiteTitleInBook(tmp, (int)i);
+		errorSignal tmp;
+		tmp.data = &sheet->signals[i];
 
-			if (!tmp.error.empty())
-				warning.push_back(tmp);
-		}
+		FindRepiteTitleInBook(tmp, (int)i);
+
+		if (!tmp.error.empty())
+			warning.push_back(tmp);
 	}
 }
 
@@ -539,7 +539,7 @@ void CTest::FindRepiteTitleInBook(errorSignal& signal, const int& index)
 		book->sheets[i].name.Compare(sheet->name) == 0 ? start = index + 1 : start = 0;
 		for (size_t j = start; j < book->sheets[i].signals.size(); j++)
 		{
-			if (book->sheets[i].signals[j].title[1].Compare(title) == 0 && book->sheets[i].signals[j].title[0].CompareNoCase(RESERVE_SIGNAL) == -1 && !title.IsEmpty())
+			if (book->sheets[i].signals[j].title[1].Compare(title) == 0 && book->sheets[i].signals[j].title[0].CompareNoCase(RESERVE_SIGNAL) != 0 && !title.IsEmpty())
 			{
 				book->sheets[i].signals[j].repWord = true;
 				repitSheet.push_back(book->sheets[i].name);
