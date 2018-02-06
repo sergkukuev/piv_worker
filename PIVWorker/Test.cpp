@@ -73,10 +73,11 @@ CTest::CTest()
 CTest::~CTest() {	}
 
 // Запуск проверки на ошибки
-errorData CTest::Start(bookData& book, const int& iMethod) 
+errorData CTest::Start(bookData& book, const int& iProject, const int& iMethod) 
 {
 	errorData result;
 	this->iMethod = iMethod;
+	this->iProject = iProject;
 	result.book = this->book = &book;
 	ASSERT(this->book != nullptr);
 	for (size_t j = 0; j < book.sheets.size(); j++) 
@@ -91,10 +92,11 @@ errorData CTest::Start(bookData& book, const int& iMethod)
 	return result;
 }
 
-list <errorData> CTest::Start(list <bookData>& books, const int& iMethod) 
+list <errorData> CTest::Start(list <bookData>& books, const int& iProject, const int& iMethod)
 {
 	list <errorData> result;
 	this->iMethod = iMethod;
+	this->iProject = iProject;
 	for (list <bookData>::iterator it = books.begin(); it != books.end(); it++) 
 	{
 		errorData error;
@@ -283,8 +285,9 @@ bool CTest::TemplateTest(const CString& field, const int& check, const int& inde
 // Проверка всех параметров сигнала на семантические ошибки
 void CTest::SimanticCheker(errorSignal& signal, const int& i, vector <repiter>& repit)
 {
-	// TODO: Сделать проверку в проекте КПРНО35 на отсутствие одной из частей слова (мл. или ст.)
 	ValueTest(signal);
+	if (iProject == project::kprno35)
+		PartTest(signal);
 	TitleRepitTest(signal, (int)i);
 	BitsTest(signal);
 }
@@ -366,6 +369,28 @@ bool CTest::TitleRepitTest(errorSignal& signal, const int& index)
 		for (size_t i = index + 1; i < sheet->signals.size() && !result; i++)
 			if (TITLE(i, 1).Compare(title) == 0 && TITLE(i, 0).CompareNoCase(RESERVE_SIGNAL) != 0)
 				result = WriteError(signal, L"Сигнал с таким <b>условным обозначением</b> присутствует на этом листе.", check::title);
+
+	return result;
+}
+
+// Проверка двойного слова (КПРНО35)
+bool CTest::PartTest(errorSignal& signal)
+{
+	bool result = false;
+	ASSERT(dwPart::low.size() != dwPart::hight.size() != dwPart::hight2.size());
+
+	if (signal.data->part != nullptr)	// Указатель не пустой, значит двойное слово есть
+		return result;
+
+	for (size_t i = 0; i < dwPart::low.size(); i++)
+	{
+		if (signal.data->title[0].Find(dwPart::low[i]) != -1 && signal.data->part == nullptr)
+			result = WriteError(signal, L"Отсутствует старшая часть параметра на данном листе.", check::comment);
+		else if (signal.data->title[0].Find(dwPart::hight[i]) != -1 && signal.data->part == nullptr)
+			result = WriteError(signal, L"Отсутствует младшая часть параметра на данном листе.", check::comment);
+		else if (signal.data->title[0].Find(dwPart::hight2[i]) != -1 && signal.data->part == nullptr)
+			result = WriteError(signal, L"Отсутствует младшая часть параметра на данном листе.", check::comment);
+	}
 
 	return result;
 }

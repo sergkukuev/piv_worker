@@ -44,13 +44,14 @@ public:
 	~CTest();	// Деструктор
 
 	// Запуск проверки на ошибки
-	errorData Start(bookData& book, const int& iMethod);
-	list <errorData> Start(list <bookData>& books, const int& iMethod);	
+	errorData Start(bookData& book, const int& iProject, const int& iMethod);
+	list <errorData> Start(list <bookData>& books, const int& iProject, const int& iMethod);
 
 private:
 	bookData* book = nullptr;	// Указатель на текущую книгу
 	sheetData* sheet = nullptr;	// Указатель на текущий лист
 	exceptTitle exception;		// Множество исключений (задается в конструкторе)
+	int iProject;				// Объект проверки
 	int iMethod;				// Метод проверки
 
 	vector <repiter> repit;	// Сетка перекрытия битов (для одного листа)
@@ -69,8 +70,9 @@ private:
 
 	// Simantic
 	void SimanticCheker(errorSignal& signal, const int& index, vector <repiter>& repit);	// Проверка всех параметров сигнала на семантические ошибки
-	bool ValueTest(errorSignal& set);	// Проверка всех числовых параметров
+	bool ValueTest(errorSignal& signal);	// Проверка всех числовых параметров
 	bool TitleRepitTest(errorSignal& signal, const int& index);	// Поиск повторений идентификатора на листе
+	bool PartTest(errorSignal& signal);	// Проверка двойного слова (КПРНО35)
 	bool BitsTest(errorSignal& signal);	// Проверка используемых разрядов
 	bool CheckReplace(CString title, const vector <signalData*> signals);	// Проверка слов, которые выборочно кладутся в одно слово 
 	vector<int> CrossBits(const vector <int>& bits, const vector <int>& numWord);		// Проверка перекрытия битов
