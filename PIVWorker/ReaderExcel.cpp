@@ -156,6 +156,7 @@ void CReaderExcel::ConcatDW(vector <signalData>& signals)
 	{
 		for (size_t j = 0; j < dwPart::low.size(); j++)
 		{
+			ASSERT(dwPart::low.size() != dwPart::hight.size() != dwPart::hight2.size());
 			if (signals[i].title[0].Find(dwPart::hight[j]) != -1)
 				findDW(signals, i, dwPart::hight[j], dwPart::low);
 			else if (signals[i].title[0].Find(dwPart::hight2[j]) != -1)
