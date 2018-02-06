@@ -126,7 +126,7 @@ void CTest::GetErrors(vector <errorSignal>& syntax, vector <errorSignal>& simant
 
 	for (size_t i = 0; i < sheet->signals.size(); i++) 
 	{
-		if (sheet->signals[i].title[0].CompareNoCase(RESERVE_SIGNAL) == 0)
+		if (sheet->signals[i].title[0].Find(RESERVE_SIGNAL) != -1)
 			continue;
 
 		errorSignal signal;
@@ -158,7 +158,7 @@ void CTest::GetWarnings(vector <errorSignal>& warning)
 {
 	for (size_t i = 0; i < sheet->signals.size(); i++) 
 	{
-		if (sheet->signals[i].title[0].CompareNoCase(RESERVE_SIGNAL) == 0)
+		if (sheet->signals[i].title[0].Find(RESERVE_SIGNAL) != -1)
 			continue;
 
 		errorSignal tmp;
@@ -368,7 +368,7 @@ bool CTest::TitleRepitTest(errorSignal& signal, const int& index)
 	// Если идентификатор не найден в множестве исключений
 	if (current == end)
 		for (size_t i = index + 1; i < sheet->signals.size() && !result; i++)
-			if (TITLE(i, 1).Compare(title) == 0 && TITLE(i, 0).CompareNoCase(RESERVE_SIGNAL) != 0)
+			if (TITLE(i, 1).Compare(title) == 0 && TITLE(i, 0).Find(RESERVE_SIGNAL) != -1)
 				result = WriteError(signal, L"Сигнал с таким <b>условным обозначением</b> присутствует на этом листе.", check::title);
 
 	return result;
@@ -560,7 +560,7 @@ void CTest::FindRepiteTitleInBook(errorSignal& signal, const int& index)
 		book->sheets[i].name.Compare(sheet->name) == 0 ? start = index + 1 : start = 0;
 		for (size_t j = start; j < book->sheets[i].signals.size(); j++)
 		{
-			if (book->sheets[i].signals[j].title[1].Compare(title) == 0 && book->sheets[i].signals[j].title[0].CompareNoCase(RESERVE_SIGNAL) != 0 && !title.IsEmpty())
+			if (book->sheets[i].signals[j].title[1].Compare(title) == 0 && book->sheets[i].signals[j].title[0].Find(RESERVE_SIGNAL) != -1 && !title.IsEmpty())
 			{
 				book->sheets[i].signals[j].repWord = true;
 				repitSheet.push_back(book->sheets[i].name);
