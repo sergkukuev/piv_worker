@@ -193,12 +193,13 @@ void CTest::SyntaxChecker(errorSignal& signal, const int& i)
 	// Проход по синтаксическим ошибкам
 	if (iMethod == method::patterned)
 	{
-		if (sheet->arinc && sheet->signals[i].numWord.flag)
-			WriteError(signal, L"Поле пустое или содержит недопустимые символы.", check::numword);	// TODO: Добавить регулярные выражения для адреса (ARINC)
-		else
+		sheet->arinc && sheet->signals[i].numWord.flag ?
+			WriteError(signal, L"Поле пустое или содержит недопустимые символы.", check::numword) :	// TODO: Добавить регулярные выражения для адреса (ARINC)
 			TemplateTest(sheet->signals[i].numWord.field, check::numword, index::numword, signal);
 
-		TemplateTest(sheet->signals[i].title[1], check::title, index::title, signal);
+		if (iProject != project::kprno35 || !dwPart::checkLow(sheet->signals[i].title[0]))
+			TemplateTest(sheet->signals[i].title[1], check::title, index::title, signal);
+		
 		// TODO: Исправить костыль (три пустые ячейки не считаются ошибкой)
 		if (sheet->signals[i].min.flag || sheet->signals[i].max.flag || sheet->signals[i].csr.flag)
 		{
@@ -382,15 +383,10 @@ bool CTest::PartTest(errorSignal& signal)
 	if (signal.data->part != nullptr)	// Указатель не пустой, значит двойное слово есть
 		return result;
 
-	for (size_t i = 0; i < dwPart::low.size(); i++)
-	{
-		if (signal.data->title[0].Find(dwPart::low[i]) != -1 && signal.data->part == nullptr)
-			result = WriteError(signal, L"Отсутствует старшая часть параметра на данном листе.", check::comment);
-		else if (signal.data->title[0].Find(dwPart::hight[i]) != -1 && signal.data->part == nullptr)
-			result = WriteError(signal, L"Отсутствует младшая часть параметра на данном листе.", check::comment);
-		else if (signal.data->title[0].Find(dwPart::hight2[i]) != -1 && signal.data->part == nullptr)
-			result = WriteError(signal, L"Отсутствует младшая часть параметра на данном листе.", check::comment);
-	}
+	if (dwPart::checkLow(signal.data->title[0]) && signal.data->part == nullptr)
+		result = WriteError(signal, L"Отсутствует старшая часть параметра на данном листе.", check::comment);
+	else if (dwPart::checkHight(signal.data->title[0]) && signal.data->part == nullptr)
+		result = WriteError(signal, L"Отсутствует младшая часть параметра на данном листе.", check::comment);
 
 	return result;
 }
