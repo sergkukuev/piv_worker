@@ -152,20 +152,16 @@ void CReaderExcel::GetSignals(vector <signalData>& signals, const bool& bArinc)
 // Объединение двойных слов (установка указателя)
 void CReaderExcel::ConcatDW(vector <signalData>& signals)
 {
-	vector <CString> lPart = { L"(мл.ч)", L"(мл.ч.)", L"(мл. ч)", L"(мл. ч.)" };
-	vector <CString> hPart = { L"(ст.ч)", L"(ст.ч.)", L"(ст. ч)", L"(ст. ч.)" };
-	vector <CString> hPart2 = { L"(cт.ч)", L"(cт.ч.)", L"(cт. ч)", L"(cт. ч.)" }; // Версия старшей части с английской 'c'
-
 	for (size_t i = 0; i < signals.size(); i++)
 	{
-		for (size_t j = 0; j < lPart.size(); j++)
+		for (size_t j = 0; j < dwPart::low.size(); j++)
 		{
-			if (signals[i].title[0].Find(hPart[j]) != -1)
-				findDW(signals, i, hPart[j], lPart);
-			else if (signals[i].title[0].Find(hPart2[j]) != -1)
-				findDW(signals, i, hPart2[j], lPart);
-			else if (signals[i].title[0].Find(lPart[j]) != -1)
-				findDW(signals, i, lPart[j], hPart);
+			if (signals[i].title[0].Find(dwPart::hight[j]) != -1)
+				findDW(signals, i, dwPart::hight[j], dwPart::low);
+			else if (signals[i].title[0].Find(dwPart::hight2[j]) != -1)
+				findDW(signals, i, dwPart::hight2[j], dwPart::low);
+			else if (signals[i].title[0].Find(dwPart::low[j]) != -1)
+				findDW(signals, i, dwPart::low[j], dwPart::hight);
 		}
 	}
 }

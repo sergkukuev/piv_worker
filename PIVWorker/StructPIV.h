@@ -7,6 +7,14 @@
 #include "Defines.h"
 
 using namespace std;
+
+// Обозначения старшей и младшей частей в протоколах КПРНО35
+namespace dwPart {
+	const vector <CString> low = { L"(мл.ч)", L"(мл.ч.)", L"(мл. ч)", L"(мл. ч.)" };
+	const vector <CString> hight = { L"(ст.ч)", L"(ст.ч.)", L"(ст. ч)", L"(ст. ч.)" };
+	const vector <CString> hight2 = { L"(cт.ч)", L"(cт.ч.)", L"(cт. ч)", L"(cт. ч.)" }; // Версия старшей части с английской 'c'
+}
+
 #pragma region Settings
 const enum project { p930m, kprno35 };
 const enum method { patterned, fasted };
