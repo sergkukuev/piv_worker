@@ -15,6 +15,7 @@ namespace dwPart {
 	const vector <CString> hight = { L"(ст.ч)", L"(ст.ч.)", L"(ст. ч)", L"(ст. ч.)" };
 	const vector <CString> hight2 = { L"(cт.ч)", L"(cт.ч.)", L"(cт. ч)", L"(cт. ч.)" }; // Версия старшей части с английской 'c'
 
+	// Проверка на присутствии в строке (мл.ч.)
 	static bool checkLow(const CString& str)
 	{
 		for (size_t i = 0; i < low.size(); i++)
@@ -22,11 +23,35 @@ namespace dwPart {
 				return true;
 		return false;
 	}
+	// Проверка на присутствии в строке (ст.ч.)
 	static bool checkHight(const CString& str)
 	{
 		for (size_t i = 0; i < hight.size(); i++)
 			if (str.Find(hight[i]) != -1 || str.Find(hight2[i]) != -1)
 				return true;
+		return false;
+	}
+	// Удаление (ст.ч.) - для генерации txt файлов
+	static bool deleleHight(CString& str)
+	{
+		for (size_t i = 0; i < hight.size(); i++)
+		{
+			int index = str.Find(hight[i]);
+			int index2 = str.Find(hight2[i]);
+
+			if (index != -1)
+			{
+				str.Delete(index, hight[i].GetLength());
+				str.TrimRight();
+				return true;
+			}
+			else if (index2 != -1)
+			{
+				str.Delete(index2, hight2[i].GetLength());
+				str.TrimRight();
+				return true;
+			}
+		}
 		return false;
 	}
 }
