@@ -143,6 +143,64 @@ void CReaderExcel::GetSignals(vector <signalData>& signals, const bool& bArinc)
 		if (work.CountRows() == row + merge - 1 && !arinc.flag && arinc.amount != arinc.current)
 			row = arinc.startRow - merge;
 	}
+
+	// Поиск двойных слов в КПРНО35
+	if (iProject == project::kprno35)
+		ConcatDW(signals);
+}
+
+// Объединение двойных слов (установка указателя)
+void CReaderExcel::ConcatDW(vector <signalData>& signals)
+{
+	vector <CString> lPart = { L"(мл.ч)", L"(мл.ч.)", L"(мл. ч)", L"(мл. ч.)" };
+	vector <CString> hPart = { L"(ст.ч)", L"(ст.ч.)", L"(ст. ч)", L"(ст. ч.)" };
+	vector <CString> hPart2 = { L"(cт.ч)", L"(cт.ч.)", L"(cт. ч)", L"(cт. ч.)" }; // Версия старшей части с английской 'c'
+
+	for (size_t i = 0; i < signals.size(); i++)
+	{
+		for (size_t j = 0; j < lPart.size(); j++)
+		{
+			if (signals[i].title[0].Find(hPart[j]) != -1)
+				findDW(signals, i, hPart[j], lPart);
+			else if (signals[i].title[0].Find(hPart2[j]) != -1)
+				findDW(signals, i, hPart2[j], lPart);
+			else if (signals[i].title[0].Find(lPart[j]) != -1)
+				findDW(signals, i, lPart[j], hPart);
+		}
+	}
+}
+
+// Поиск второй части двойного слова
+void CReaderExcel::findDW(vector <signalData>& signals, size_t start, CString old, vector <CString> revert)
+{
+	CString title = signals[start].title[0];
+	title.Remove(L'\n');
+
+	int index = -1, rev_index = 0;
+	for (size_t i = start; i < signals.size(); i++)
+	{
+		CString tmp = signals[i].title[0];
+		tmp.Remove(L' ');
+		tmp.Remove(L'\n');
+		for (size_t j = 0; j < revert.size(); j++)
+		{
+			CString rev_title = title;
+			rev_title.Replace(old, revert[j]);
+			rev_title.Remove(L' ');
+			if (tmp.Compare(rev_title) == 0)
+			{
+				rev_index = (int)j;
+				index = (int)i;
+				break;
+			}
+		}
+		if (index != -1)
+		{
+			signals[start].part = &signals[index];
+			signals[index].part = &signals[start];
+			break;
+		}
+	}
 }
 
 #pragma region ARINC

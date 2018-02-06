@@ -52,6 +52,7 @@ struct signalData
 	CString comment;							// Примечание
 	bool bitSign = false;						// Флаг наличия знака
 	bool repWord = false;						// Флаг повторения сигнала на других листах
+	signalData* part = nullptr;					// Указатель на старшую (младшую) часть в КПРНО35
 };
 
 // Лист
