@@ -383,9 +383,9 @@ bool CTest::PartTest(errorSignal& signal)
 	if (signal.data->part != nullptr)	// Указатель не пустой, значит двойное слово есть
 		return result;
 
-	if (dwPart::checkLow(signal.data->title[0]) && signal.data->part == nullptr)
+	if (dwPart::checkLow(signal.data->title[0]))
 		result = WriteError(signal, L"Отсутствует старшая часть параметра на данном листе.", check::comment);
-	else if (dwPart::checkHight(signal.data->title[0]) && signal.data->part == nullptr)
+	else if (dwPart::checkHight(signal.data->title[0]))
 		result = WriteError(signal, L"Отсутствует младшая часть параметра на данном листе.", check::comment);
 
 	return result;
