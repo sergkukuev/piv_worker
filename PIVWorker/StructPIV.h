@@ -14,6 +14,21 @@ namespace dwPart {
 	const vector <CString> low = { L"(мл.ч)", L"(мл.ч.)", L"(мл. ч)", L"(мл. ч.)" };
 	const vector <CString> hight = { L"(ст.ч)", L"(ст.ч.)", L"(ст. ч)", L"(ст. ч.)" };
 	const vector <CString> hight2 = { L"(cт.ч)", L"(cт.ч.)", L"(cт. ч)", L"(cт. ч.)" }; // Версия старшей части с английской 'c'
+
+	static bool checkLow(const CString& str)
+	{
+		for (size_t i = 0; i < low.size(); i++)
+			if (str.Find(low[i]) != -1)
+				return true;
+		return false;
+	}
+	static bool checkHight(const CString& str)
+	{
+		for (size_t i = 0; i < hight.size(); i++)
+			if (str.Find(hight[i]) != -1 || str.Find(hight2[i]) != -1)
+				return true;
+		return false;
+	}
 }
 
 #pragma region Settings
