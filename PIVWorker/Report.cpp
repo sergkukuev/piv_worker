@@ -438,7 +438,7 @@ void CReport::Generate(const bookData& book, const pivParam& params)
 				if (j != 0 && info.arinc)
 					if (book.sheets[i].signals[j].numWord.value[0] != book.sheets[i].signals[j - 1].numWord.value[0])
 						cNumWord++;
-				WriteTxtParam(tmpFile, book.sheets[i].signals[j], info, cNumWord);	// Запись параметра
+				WriteTxtParam(tmpFile, book.sheets[i].signals[j], info, params.iProject, cNumWord);	// Запись параметра
 			}
 			tmpFile.close();
 		}
@@ -449,88 +449,103 @@ void CReport::Generate(const bookData& book, const pivParam& params)
 }
 
 // Запись одного набора данных из таблицы в txt файл
-void CReport::WriteTxtParam(ofstream& file, const signalData& signal, const sheetInfo& info, const int& arincNum) 
+void CReport::WriteTxtParam(ofstream& file, const signalData& signal, const sheetInfo& info, const int& iProject, const int& arincNum)
 {
 	CString buffer = signal.title[0];
 
-	if (buffer.Find(RESERVE_SIGNAL) == -1) 
+	if (buffer.Find(RESERVE_SIGNAL) != -1 || (iProject == project::kprno35 && dwPart::checkLow(buffer)))
+		return;
+
+	buffer = signal.title[1];
+	buffer.Remove(L' ');
+	if (signal.repWord && info.pk != -1)
+		buffer.Format(L"%s_%d", buffer, info.pk);
+	buffer.Format(L"PAR=%s\n", buffer);	// Запись обозначения сигнала
+	file << CT2A(buffer);
+
+	buffer = signal.title[0];
+	bool dwKprno = false;
+	if (iProject == project::kprno35)
+		dwKprno = dwPart::deleleHight(buffer);
+	buffer.Replace(L"\"", L"\\\"");
+	buffer.Format(L"\tNAME=\"%s\"\n", buffer); // Наименования сигнала
+	file << CT2A(buffer);
+
+	if (!signal.dimension.IsEmpty()) 
 	{
-		CString title = signal.title[1];
-		title.Remove(L' ');
-		if (signal.repWord && info.pk != -1)
-			title.Format(L"%s_%d", title, info.pk);
-		buffer.Format(L"PAR=%s\n", title);	// Запись обозначения сигнала
+		buffer.Format(L"\tUNIT=\"%s\"\n", signal.dimension);	// Размерности
 		file << CT2A(buffer);
-
-		buffer = signal.title[0];
-		buffer.Replace(L"\"", L"\\\"");
-		buffer.Format(L"\tNAME=\"%s\"\n", buffer); // Наименования сигнала
-		file << CT2A(buffer);
-
-		if (!signal.dimension.IsEmpty()) 
-		{
-			buffer.Format(L"\tUNIT=\"%s\"\n", signal.dimension);	// Размерности
-			file << CT2A(buffer);
-		}
-
-		// Установка набора
-		info.pk > 0 && info.bPK ? buffer.Format(L"\tSET=%d:%d\n", info.pk, info.np) : buffer.Format(L"\tSET=%d\n", info.np);
-		file << CT2A(buffer);
-
-		int max = (signal.bit.value[1] == -1 ? signal.bit.value[0] : signal.bit.value[1]);
-
-		// Запись номера слова и битов
-		if (signal.numWord.value.size() == 2)
-		{ 
-			file << "\tMERGE\n";
-			buffer.Format(L"\t\tWDADDR = %d,%d,%d\n", signal.numWord.value[0], signal.bit.value[0], max);
-			file << CT2A(buffer);
-			max = (signal.bit.value[3] == -1) ? signal.bit.value[2] : signal.bit.value[3];
-			buffer.Format(L"\t\tWDADDR = %d,%d,%d\n", signal.numWord.value[1], signal.bit.value[2], max);
-			file << CT2A(buffer);
-			file << "\tEND_MERGE\n";
-		}
-		else
-		{
-			info.arinc ? buffer.Format(L"\tWDADDR = %d,%d,%d\n", arincNum, signal.bit.value[0], max) :
-				buffer.Format(L"\tWDADDR = %d,%d,%d\n", signal.numWord.value[0], signal.bit.value[0], max);
-			file << CT2A(buffer);
-		}
-
-		// Мин, макс, цср
-		if (signal.max.value != DBL_MIN && signal.csr.value != DBL_MIN) 
-		{ 
-			file << "\tVALDESCR\n";
-			signal.bitSign ? file << "\t\tSIGNED\n" : file << "\t\tUNSIGNED\n";
-
-			IsInt(signal.min.value) ? buffer.Format(L"\t\tMIN = %.0lf\n", signal.min.value) : buffer.Format(L"\t\tMIN = %lf\n", signal.min.value);
-			file << CT2A(buffer);
-
-			IsInt(signal.max.value) ? buffer.Format(L"\t\tMAX = %.0lf\n", signal.max.value) : buffer.Format(L"\t\tMAX = %lf\n", signal.max.value);
-			file << CT2A(buffer);
-			
-			IsInt(signal.csr.value) ? buffer.Format(L"\t\tMSB = %.0lf\n", signal.csr.value) : buffer.Format(L"\t\tMSB = %lf\n", signal.csr.value);
-			file << CT2A(buffer);
-
-			file << "\tEND_VALDESCR\n";
-		}
-
-		// Запись комментариев
-		if (!signal.comment.IsEmpty()) 
-		{	
-			file << "\tCOMMENT\n";
-
-			buffer = signal.comment;
-			buffer.Replace(L"\"", L"");
-			buffer.Replace(L"\n", L"\"\n\t\t\"");
-			buffer.Insert(0, L"\t\t\"");
-			buffer.Insert(buffer.GetLength(), L"\"\n");
-
-			file << CT2A(buffer);
-			file << "\tEND_COMMENT\n";
-		}
-		file << "END_PAR\n\n";
 	}
+
+	// Установка набора
+	info.pk > 0 && info.bPK ? buffer.Format(L"\tSET=%d:%d\n", info.pk, info.np) : buffer.Format(L"\tSET=%d\n", info.np);
+	file << CT2A(buffer);
+
+	int max = (signal.bit.value[1] == -1 ? signal.bit.value[0] : signal.bit.value[1]);
+
+	// Запись номера слова и битов
+	if (signal.numWord.value.size() == 2)
+	{ 
+		file << "\tMERGE\n";
+		buffer.Format(L"\t\tWDADDR = %d,%d,%d\n", signal.numWord.value[0], signal.bit.value[0], max);
+		file << CT2A(buffer);
+
+		max = (signal.bit.value[3] == -1) ? signal.bit.value[2] : signal.bit.value[3];
+		buffer.Format(L"\t\tWDADDR = %d,%d,%d\n", signal.numWord.value[1], signal.bit.value[2], max);
+		file << CT2A(buffer);
+		file << "\tEND_MERGE\n";
+	}
+	else if (dwKprno && signal.part != nullptr)
+	{
+		file << "\tMERGE\n";
+		buffer.Format(L"\t\tWDADDR = %d,%d,%d\n", signal.numWord.value[0], signal.bit.value[0], max);
+		file << CT2A(buffer);
+
+		max = (signal.part->bit.value[1] == -1) ? signal.part->bit.value[0] : signal.part->bit.value[1];
+		buffer.Format(L"\t\tWDADDR = %d,%d,%d\n", signal.part->numWord.value[0], signal.part->bit.value[0], max);
+		file << CT2A(buffer);
+		file << "\tEND_MERGE\n";
+	}
+	else
+	{
+		info.arinc ? buffer.Format(L"\tWDADDR = %d,%d,%d\n", arincNum, signal.bit.value[0], max) :
+			buffer.Format(L"\tWDADDR = %d,%d,%d\n", signal.numWord.value[0], signal.bit.value[0], max);
+		file << CT2A(buffer);
+	}
+
+	// Мин, макс, цср
+	if (signal.max.value != DBL_MIN && signal.csr.value != DBL_MIN) 
+	{ 
+		file << "\tVALDESCR\n";
+		signal.bitSign ? file << "\t\tSIGNED\n" : file << "\t\tUNSIGNED\n";
+
+		IsInt(signal.min.value) ? buffer.Format(L"\t\tMIN = %.0lf\n", signal.min.value) : buffer.Format(L"\t\tMIN = %lf\n", signal.min.value);
+		file << CT2A(buffer);
+
+		IsInt(signal.max.value) ? buffer.Format(L"\t\tMAX = %.0lf\n", signal.max.value) : buffer.Format(L"\t\tMAX = %lf\n", signal.max.value);
+		file << CT2A(buffer);
+			
+		IsInt(signal.csr.value) ? buffer.Format(L"\t\tMSB = %.0lf\n", signal.csr.value) : buffer.Format(L"\t\tMSB = %lf\n", signal.csr.value);
+		file << CT2A(buffer);
+
+		file << "\tEND_VALDESCR\n";
+	}
+
+	// Запись комментариев
+	if (!signal.comment.IsEmpty()) 
+	{	
+		file << "\tCOMMENT\n";
+
+		buffer = signal.comment;
+		buffer.Replace(L"\"", L"");
+		buffer.Replace(L"\n", L"\"\n\t\t\"");
+		buffer.Insert(0, L"\t\t\"");
+		buffer.Insert(buffer.GetLength(), L"\"\n");
+
+		file << CT2A(buffer);
+		file << "\tEND_COMMENT\n";
+	}
+	file << "END_PAR\n\n";
 }
 
 // Проверка на int значение
