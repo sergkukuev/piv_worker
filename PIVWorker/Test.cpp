@@ -193,8 +193,10 @@ void CTest::SyntaxChecker(errorSignal& signal, const int& i)
 	// Проход по синтаксическим ошибкам
 	if (iMethod == method::patterned)
 	{
-		sheet->arinc && sheet->signals[i].numWord.flag ?
-			WriteError(signal, L"Поле пустое или содержит недопустимые символы.", check::numword) :	// TODO: Добавить регулярные выражения для адреса (ARINC)
+		if (sheet->arinc && sheet->signals[i].numWord.flag)
+			WriteError(signal, L"Поле пустое или содержит недопустимые символы.", check::numword);	
+		// TODO: Добавить регулярные выражения для адреса (ARINC)
+		if (!sheet->arinc)
 			TemplateTest(sheet->signals[i].numWord.field, check::numword, index::numword, signal);
 
 		if (iProject != project::kprno35 || !dwPart::checkLow(sheet->signals[i].title[0]))
