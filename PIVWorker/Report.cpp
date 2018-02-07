@@ -60,6 +60,8 @@ void CReport::CreateFolders(const CString& path)
 	CreateDirectory(folder, NULL);
 	folder.Format(L"%s%s", path, SIMANTIC_FOLDER);
 	CreateDirectory(folder, NULL);
+	folder.Format(L"%s%s", path, WARNING_FOLDER);
+	CreateDirectory(folder, NULL);
 }
 
 // Начало записи замечаний
