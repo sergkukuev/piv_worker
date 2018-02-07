@@ -10,30 +10,32 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
+CLogger logger;
+
 //
-//TODO: Важно! Перейдите по ссылке, чтобы увидеть подробности.
-//		Если эта библиотека DLL динамически связана с библиотеками DLL MFC,
-//		все функции, экспортированные из данной DLL-библиотеки, которые выполняют вызовы к
-//		MFC, должны содержать макрос AFX_MANAGE_STATE в
-//		самое начало функции.
+// TODO: Важно! Перейдите по ссылке, чтобы увидеть подробности.
+//	 	 Если эта библиотека DLL динамически связана с библиотеками DLL MFC,
+//		 все функции, экспортированные из данной DLL-библиотеки, которые выполняют вызовы к
+//		 MFC, должны содержать макрос AFX_MANAGE_STATE в
+//		 самое начало функции.
 //
-//		Например:
+//		 Например:
 //
-//		extern "C" BOOL PASCAL EXPORT ExportedFunction()
-//		{
-//			AFX_MANAGE_STATE(AfxGetStaticModuleState());
-//			// тело нормальной функции
-//		}
+//		 extern "C" BOOL PASCAL EXPORT ExportedFunction()
+//		 {
+//			 AFX_MANAGE_STATE(AfxGetStaticModuleState());
+//			 // тело нормальной функции
+//		 }
 //
-//		Важно, чтобы данный макрос был представлен в каждой
-//		функции до вызова MFC.  Это означает, что
-//		он должен быть первым оператором 
-//		функции и предшествовать даже любым объявлениям переменных объекта,
-//		поскольку их конструкторы могут выполнять вызовы к MFC
-//		DLL.
+//		 Важно, чтобы данный макрос был представлен в каждой
+//		 функции до вызова MFC.  Это означает, что
+//		 он должен быть первым оператором 
+//		 функции и предшествовать даже любым объявлениям переменных объекта,
+//		 поскольку их конструкторы могут выполнять вызовы к MFC
+//		 DLL.
 //
-//		В Технических указаниях MFC 33 и 58 содержатся более
-//		подробные сведения.
+//		 В Технических указаниях MFC 33 и 58 содержатся более
+//		 подробные сведения.
 //
 
 struct ThreadData
@@ -119,7 +121,7 @@ void CPIV::SetPathToSave(const CString pathToReport)
 	
 	path.Format(L"%s%s", pathToReport, BASE_FOLDER);	// Установка пути хранения артефактов
 	CreateDirectory(path, NULL);
-	//logger.Write(L"Изменено расположение папки отчетов"); // TODO: Здесь указало на протечку в памяти, надо посмотреть
+	logger.Write(L"Изменено расположение папки отчетов");
 }
 
 void CPIV::SetSettings(const pivParam& parameters) 
@@ -173,7 +175,7 @@ void CPIV::OpenExcel()
 			project.books.push_back(reader.GetBook(buffer[i], param.iProject));
 
 		CTest tester;
-		project.db = tester.Start(project.books, !param.iMethod);
+		project.db = tester.Start(project.books, param.iProject, param.iMethod);
 
 		// Генерация артефактов
 		CReport report;
@@ -233,7 +235,7 @@ void CPIV::AddExcel()
 			
 			CTest tester;
 			list <bookData>::iterator pBook = GetBook(other, buffer[i]);
-			errorData error = tester.Start(*pBook, !param.iMethod);
+			errorData error = tester.Start(*pBook, param.iProject, param.iMethod);
 			contain ? Refresh(other, error) : other.db.push_back(error);
 
 			report.GetTxt(*pBook, path, param);
@@ -297,7 +299,7 @@ void CPIV::RefreshExcel()
 				flag = true;
 				Refresh(project, book);
 				pBook = GetBook(project, buffer[i]);
-				errorData error = tester.Start(*pBook, !param.iMethod);
+				errorData error = tester.Start(*pBook, param.iProject, param.iMethod);
 				Refresh(project, error);
 			}
 			else if (IsContain(other, buffer[i])) 
@@ -305,7 +307,7 @@ void CPIV::RefreshExcel()
 				flag = false;
 				Refresh(other, book);
 				pBook = GetBook(other, buffer[i]);
-				errorData error = tester.Start(*pBook, !param.iMethod);
+				errorData error = tester.Start(*pBook, param.iProject, param.iMethod);
 				Refresh(other, error);
 			}
 			else
@@ -468,7 +470,7 @@ void Thread(CPIV& piv)
 		piv.CloseExcel();
 		break;
 	default:
-		piv.logger.WriteError(L"Ошибка: неопознанная команда");
+		logger.WriteError(L"Ошибка: неопознанная команда");
 		break;
 	}
 }

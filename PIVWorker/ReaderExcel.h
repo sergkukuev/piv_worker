@@ -34,6 +34,9 @@ private:
 	void GetSheets(vector <sheetData>& sheets);	// Чтение таблиц протоколов (листов)
 	void GetSignals(vector <signalData>& signals, const bool& bArinc);	// Чтение параметров на листе
 
+	void ConcatDW(vector <signalData>& signals);	// Объединение двойных слов (установка указателя)
+	void findDW(vector<signalData>& signals, size_t start, CString old, vector <CString> revert);	// Поиск второй части двойного слова
+
 	// ARINC
 	void ArincChecker(arincData& arinc, long& row);	//  Поиск повторяющихся блоков
 	void GetArinc(arincData& arinc, const long& row, CString field);	// Чтение циклов повторений в ARINC протоколе (порядковый номер в кадре)

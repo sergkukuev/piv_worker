@@ -13,6 +13,7 @@
 #define TEXT_FOLDER L"\\Text"
 #define PROJECT_FOLDER L"\\Project"
 #define OTHER_FOLDER L"\\Other"
+#define ERROR_FOLDER L"\\Error"
 #define SYNTAX_FOLDER L"\\Error\\Syntax"
 #define SIMANTIC_FOLDER L"\\Error\\Simantic"
 #define WARNING_FOLDER L"\\Warning"

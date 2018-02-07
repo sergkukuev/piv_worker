@@ -7,6 +7,55 @@
 #include "Defines.h"
 
 using namespace std;
+
+// Обозначения старшей и младшей частей в протоколах КПРНО35
+namespace dwPart {
+	// Размеры массивов должны быть одинаковы
+	const vector <CString> low = { L"(мл.ч)", L"(мл.ч.)", L"(мл. ч)", L"(мл. ч.)" };
+	const vector <CString> hight = { L"(ст.ч)", L"(ст.ч.)", L"(ст. ч)", L"(ст. ч.)" };
+	const vector <CString> hight2 = { L"(cт.ч)", L"(cт.ч.)", L"(cт. ч)", L"(cт. ч.)" }; // Версия старшей части с английской 'c'
+
+	// Проверка на присутствии в строке (мл.ч.)
+	static bool checkLow(const CString& str)
+	{
+		for (size_t i = 0; i < low.size(); i++)
+			if (str.Find(low[i]) != -1)
+				return true;
+		return false;
+	}
+	// Проверка на присутствии в строке (ст.ч.)
+	static bool checkHight(const CString& str)
+	{
+		for (size_t i = 0; i < hight.size(); i++)
+			if (str.Find(hight[i]) != -1 || str.Find(hight2[i]) != -1)
+				return true;
+		return false;
+	}
+	// Удаление (ст.ч.) - для генерации txt файлов
+	static bool deleleHight(CString& str)
+	{
+		for (size_t i = 0; i < hight.size(); i++)
+		{
+			int index = str.Find(hight[i]);
+			int index2 = str.Find(hight2[i]);
+
+			if (index != -1)
+			{
+				str.Delete(index, hight[i].GetLength());
+				str.TrimRight();
+				return true;
+			}
+			else if (index2 != -1)
+			{
+				str.Delete(index2, hight2[i].GetLength());
+				str.TrimRight();
+				return true;
+			}
+		}
+		return false;
+	}
+}
+
 #pragma region Settings
 const enum project { p930m, kprno35 };
 const enum method { patterned, fasted };
@@ -52,6 +101,7 @@ struct signalData
 	CString comment;							// Примечание
 	bool bitSign = false;						// Флаг наличия знака
 	bool repWord = false;						// Флаг повторения сигнала на других листах
+	signalData* part = nullptr;					// Указатель на старшую (младшую) часть в КПРНО35
 };
 
 // Лист
@@ -81,14 +131,14 @@ struct bookData
 
 struct errorSignal 
 {
-	signalData* signal = nullptr;	// Указатель на данные сигнала с ошибками
+	signalData* data = nullptr;	// Указатель на данные сигнала с ошибками
 	vector <CString> error;			// Набор ошибок параметра
 	vector <bool> check = { false, false, false, false, false, false, false };	// Отметки наличия ошибки в параметре
 };
 
 struct errorSheet 
 {
-	sheetData* sheet = nullptr;		// Указатель на лист, в котором содержатся данные ошибки
+	sheetData* data = nullptr;		// Указатель на лист, в котором содержатся данные ошибки
 	vector <errorSignal> syntax;	// Синтаксические ошибки
 	vector <errorSignal> simantic;	// Семантические ошибки
 	vector <errorSignal> warning;	// Предупреждения

@@ -30,6 +30,13 @@ typedef struct
 	vector <regular> incorrect;
 } regBase;
 
+// Исключения
+typedef struct
+{
+	set<CString> mkio;
+	set<CString> arinc;
+} exceptTitle;
+
 class PIV_DECLARE CTest 
 {
 public:
@@ -37,37 +44,45 @@ public:
 	~CTest();	// Деструктор
 
 	// Запуск проверки на ошибки
-	errorData Start(bookData& book, const bool& fast);
-	list <errorData> Start(list <bookData>& books, const bool& fast);	
+	errorData Start(bookData& book, const int& iProject, const int& iMethod);
+	list <errorData> Start(list <bookData>& books, const int& iProject, const int& iMethod);
 
 private:
 	bookData* book = nullptr;	// Указатель на текущую книгу
 	sheetData* sheet = nullptr;	// Указатель на текущий лист
-	set<CString> exception;	// Множество исключений задается в конструкторе
+	exceptTitle exception;		// Множество исключений (задается в конструкторе)
+	int iProject;				// Объект проверки
+	int iMethod;				// Метод проверки
 
+	vector <repiter> repit;	// Сетка перекрытия битов (для одного листа)
 	vector <regBase> base;	// База регулярных выражений
 	const enum index {numword, title, value, bits, /*adress, */size};	// Индексы параметров в базе регулярных выражений (value = min, max, csr в одном флаконе)
 
-	void GetErrors(vector <errorSignal>& syntax, vector <errorSignal>& simantic, const bool& fast);	// Проверка листа на синтаксические и семантические ошибки
+	void GetErrors(vector <errorSignal>& syntax, vector <errorSignal>& simantic);	// Проверка листа на синтаксические и семантические ошибки
 	void GetWarnings(vector <errorSignal>& warning);	// Проверка листа на незначительные ошибки (замечания) 
+	bool WriteError(errorSignal& signal, CString msg, const int& index);	// Запись ошибки 
 
-	void InitRepiter(vector<repiter>& repit);		// Инициализация репитера для проверки перекрытия
-	int IsRepitContain(const vector<repiter>& repit, const int& numeric);	// Имеется ли уже такой номер слова (адрес) (в случае неудачи возвр. индекс, иначе -1)
+	// Syntax
+	void SyntaxChecker(errorSignal& signal, const int& index);	// Проверка всех параметров сигнала на синтаксические ошибки
+	bool TemplateTest(const CString& field, const int& check, const int& index, errorSignal& signal); // Проверка шаблоном
+	bool NpTest(vector <errorSignal>& signals);	// Проверка номера набора параметров
+	bool SimpleTest(errorSignal& signal);		// Простая проверка флагов всех числовых параметров
 
-	// Синтаксический анализ
-	bool NpTest(vector <errorSignal>& error);	// Проверка номера набора параметров
-	bool SimpleTest(errorSignal& set);			// Простая проверка флагов всех числовых параметров
-	bool TemplateTest(const CString& field, const int& check, const regBase& test, errorSignal& set); // Проверка шаблоном
-
-	// Семантический анализ
-	bool ValueTest(errorSignal& set);	// Проверка всех числовых параметров
-	bool RepiterTest(errorSignal& set, const int& index);		// Поиск повторений идентификатора на листе
-	bool BitsTest(errorSignal& set, vector<repiter>& repit);	// Проверка используемых разрядов
-	vector<int> CrossBits(const vector <int>& bits, const vector <int>& numWord, vector<repiter>& repit); // Проверка перекрытия битов
-	bool IsReplaceable(const CString& title, const vector <signalData*> signals);		// Проверка на заменяемость
+	// Simantic
+	void SimanticCheker(errorSignal& signal, const int& index, vector <repiter>& repit);	// Проверка всех параметров сигнала на семантические ошибки
+	bool ValueTest(errorSignal& signal);	// Проверка всех числовых параметров
+	bool TitleRepitTest(errorSignal& signal, const int& index);	// Поиск повторений идентификатора на листе
+	bool PartTest(errorSignal& signal);	// Проверка двойного слова (КПРНО35)
+	bool BitsTest(errorSignal& signal);	// Проверка используемых разрядов
+	bool CheckReplace(CString title, const vector <signalData*> signals);	// Проверка слов, которые выборочно кладутся в одно слово 
+	vector<int> CrossBits(const vector <int>& bits, const vector <int>& numWord);		// Проверка перекрытия битов
+	
+	// Repiter
+	void InitRepiter();		// Инициализация репитера для проверки перекрытия битов
+	void ClearRepiter();	// Очистка репитера
+	void AddRepiter(const int& numWord, const int& index);	// Добавление нового номера слова (адреса) в сетку
+	int GetIndexRepiter(const int& numWord);	// Получить индекс сетки битов по номеру слова (в случае неудачи возвр. индекс, иначе -1)
 	
 	// Замечания
-	void FindRepiteTitleInBook(errorSignal& set, const int& index);		// Поиск повторений идентификатора в книге
-
-	bool WriteError(errorSignal& result, const CString& msg, const int& index);	// Запись ошибки 
+	void FindRepiteTitleInBook(errorSignal& signal, const int& index);	// Поиск повторений идентификатора в книге
 };

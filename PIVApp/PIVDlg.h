@@ -88,4 +88,5 @@ public:
 	afx_msg void OnBnClickedBtnRefresh();
 
 	pivParam settings;
+	afx_msg void OnClose();
 };

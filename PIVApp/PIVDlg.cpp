@@ -20,6 +20,8 @@ struct ThreadData
 	CPIVDlg* dlg;
 	HWND hWnd;
 };
+
+#define APP_END L"Приложение завершило работу"
 static UINT BASED_CODE indicators[] =
 {
 	ID_INDICATOR_DLL,
@@ -48,11 +50,15 @@ void Waiting(CPIVDlg& dlg, HWND hWnd)
 
 void CPIVDlg::ReceiveMessage(HWND hWnd)
 {
-	while (&piv != NULL)
+	while (1)
 	{
 		CString temp = piv.GetStatus();
-		::SendMessage(hWnd, WM_EXCHANGE_DLL, 0, reinterpret_cast<LPARAM>(&temp));
 		
+		if (temp.Compare(APP_END) == 0)
+			break;
+
+		::SendMessage(hWnd, WM_EXCHANGE_DLL, 0, reinterpret_cast<LPARAM>(&temp));
+
 		if (!piv.IsUpdate())
 		{
 			RefreshList();
@@ -105,6 +111,7 @@ BEGIN_MESSAGE_MAP(CPIVDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_SHOW_REP, &CPIVDlg::OnBnClickedShowRep)
 	ON_REGISTERED_MESSAGE(WM_EXCHANGE_DLL, &CPIVDlg::OnReceiveMessage)
 	//ON_WM_MOUSEMOVE()
+	ON_WM_CLOSE()
 END_MESSAGE_MAP()
 
 
@@ -145,6 +152,8 @@ BOOL CPIVDlg::OnInitDialog()
 	m_Cmb->AddString(L"Проект");
 	m_Cmb->AddString(L"Отдельные ПИВ");
 	m_Cmb->SetCurSel(1);
+
+	piv.WriteLog(L"Приложение запущено");
 
 	// Добавить путь отчетов
 	CString reports;
@@ -617,4 +626,14 @@ void CPIVDlg::UpdateMenu()
 			menu->EnableMenuItem(ID_OPEN_REPORT, MFS_GRAYED);
 		}
 	}
+}
+
+// Закрытие окна
+void CPIVDlg::OnClose()
+{
+	piv.WriteLog(APP_END);
+	WaitForSingleObject(hWait, INFINITE);
+
+	hWait != 0 ? CloseHandle(hWait) : AfxMessageBox(L"Поток логирования закрылся где-то раньше");
+	CDialogEx::OnClose();
 }

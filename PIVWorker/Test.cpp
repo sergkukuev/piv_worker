@@ -12,10 +12,13 @@ CTest::CTest()
 {	
 	// Множество исключений
 	// Для ARINC
-	exception.insert(L"ID_BPV1");	// Идентификатор блока 1
-	exception.insert(L"ID_BPV2");	// Идентификатор блока 2
+	exception.arinc.insert(L"ID_BPV1");	// Идентификатор блока 1
+	exception.arinc.insert(L"ID_BPV2");	// Идентификатор блока 2
+	// Для MKIO 
+	// Пусто
 
 	// Создание базы для проверки на ошибки с помощью регулярных выражений
+	// TODO: Добавить регулярные выражения для адреса (ARINC)
 	base.resize(index::size);
 	base[numword].correct = "^[0-9]+(, ?[0-9]+)?$";
 	base[numword].incorrect = 
@@ -59,7 +62,8 @@ CTest::CTest()
 		{ "[^0-9,.… \t\n]", L"Значение <b>используемых разрядов</b> содержит недопустимые символы." },
 		{ "[^ \t\n,]+[ \t\n]", L"Значение <b>используемых разрядов</b> содержит лишние пробелы. (Допускается только после запятой)" },
 		{ "[.]{1,2}|[.]{4,}[^.…]*", L"Значение <b>используемых разрядов</b> содержит неверное обозначение промежутка." },
-		{ "(…|[.]{2,})[^….]*(…|[.]{2,})[^….]*(…|[.]{2,})", L"Значение <b>используемых разрядов</b> содержит более двух промежутков." },	// TODO: Отладить регулярку получше
+		// TODO: Отладить регулярное выражение
+		{ "(…|[.]{2,})[^….]*(…|[.]{2,})[^….]*(…|[.]{2,})", L"Значение <b>используемых разрядов</b> содержит более двух промежутков." },
 		{ "(^|,)[ \t\n]*(…|[.])", L"Значение <b>используемых разрядов</b> не содержит значения в начале одного из промежутков." },
 		{ "(…|[.])[ \t\n]*(,|$)", L"Значение <b>используемых разрядов</b> не содержит значения в конце одного из промежутков." }
 	};
@@ -69,26 +73,30 @@ CTest::CTest()
 CTest::~CTest() {	}
 
 // Запуск проверки на ошибки
-errorData CTest::Start(bookData& book, const bool& fast) 
+errorData CTest::Start(bookData& book, const int& iProject, const int& iMethod) 
 {
 	errorData result;
+	this->iMethod = iMethod;
+	this->iProject = iProject;
 	result.book = this->book = &book;
 	ASSERT(this->book != nullptr);
 	for (size_t j = 0; j < book.sheets.size(); j++) 
 	{
 		errorSheet tmp;
-		tmp.sheet = this->sheet = &book.sheets[j];
+		tmp.data = this->sheet = &book.sheets[j];
 		ASSERT(this->sheet != nullptr);
-		GetErrors(tmp.syntax, tmp.simantic, fast);
+		GetErrors(tmp.syntax, tmp.simantic);
 		GetWarnings(tmp.warning);
 		result.set.push_back(tmp);
 	}
 	return result;
 }
 
-list <errorData> CTest::Start(list <bookData>& books, const bool& fast) 
+list <errorData> CTest::Start(list <bookData>& books, const int& iProject, const int& iMethod)
 {
 	list <errorData> result;
+	this->iMethod = iMethod;
+	this->iProject = iProject;
 	for (list <bookData>::iterator it = books.begin(); it != books.end(); it++) 
 	{
 		errorData error;
@@ -97,9 +105,9 @@ list <errorData> CTest::Start(list <bookData>& books, const bool& fast)
 		for (size_t j = 0; j < it->sheets.size(); j++) 
 		{
 			errorSheet tmp;
-			tmp.sheet = this->sheet = &it->sheets[j];
+			tmp.data = this->sheet = &it->sheets[j];
 			ASSERT(this->sheet != nullptr);
-			GetErrors(tmp.syntax, tmp.simantic, fast);
+			GetErrors(tmp.syntax, tmp.simantic);
 			GetWarnings(tmp.warning);
 			error.set.push_back(tmp);
 		}
@@ -109,60 +117,39 @@ list <errorData> CTest::Start(list <bookData>& books, const bool& fast)
 }
 
 // Проверка листа на синтаксические и семантические ошибки
-void CTest::GetErrors(vector <errorSignal>& syntax, vector <errorSignal>& simantic, const bool& fast) 
+void CTest::GetErrors(vector <errorSignal>& syntax, vector <errorSignal>& simantic) 
 {
-		if (!sheet->arinc)	// Если линия передачи не arinc, то необходимо проверять набор параметра 
-			sheet->error = NpTest(syntax);
+	if (!sheet->arinc)	// Если линия передачи не arinc, то необходимо проверять набор параметра 
+		sheet->error = NpTest(syntax);
 
-		vector <repiter> repit;
-		InitRepiter(repit);
+	InitRepiter();
 
-		for (size_t i = 0; i < sheet->signals.size(); i++) 
+	for (size_t i = 0; i < sheet->signals.size(); i++) 
+	{
+		if (sheet->signals[i].title[0].Find(RESERVE_SIGNAL) != -1)
+			continue;
+
+		errorSignal signal;
+		signal.data = &sheet->signals[i];
+
+		SyntaxChecker(signal, (int)i);
+		if (!signal.error.empty())
 		{
-			if (sheet->signals[i].title[0].Find(RESERVE_SIGNAL) == -1) 
-			{
-				errorSignal tmp;
-				tmp.signal = &sheet->signals[i];
-
-				// Проход по синтаксическим ошибкам
-				if (fast)
-					SimpleTest(tmp) ? sheet->error = true : sheet->error = sheet->error;
-				else
-				{
-					// TODO: Сделать регулярные выражения для ячейки адреса (arinc)
-					if (sheet->arinc)
-					{
-						if (sheet->signals[i].numWord.flag)
-							sheet->error = WriteError(tmp, L"Поле пустое или содержит недопустимые символы.", check::numword);
-					}
-					else
-						TemplateTest(sheet->signals[i].numWord.field, check::numword, base[numword], tmp) ? sheet->error = true : sheet->error = sheet->error;
-
-					TemplateTest(sheet->signals[i].title[1], check::title, base[title], tmp) ? sheet->error = true : sheet->error = sheet->error;
-					// TODO: Три пустые ячейки не считаются ошибкой (исправить костыль)
-					if (sheet->signals[i].min.flag || sheet->signals[i].max.flag || sheet->signals[i].csr.flag)
-					{
-						TemplateTest(sheet->signals[i].min.field, check::min, base[value], tmp) ? sheet->error = true : sheet->error = sheet->error;
-						TemplateTest(sheet->signals[i].max.field, check::max, base[value], tmp) ? sheet->error = true : sheet->error = sheet->error;
-						TemplateTest(sheet->signals[i].csr.field, check::csr, base[value], tmp) ? sheet->error = true : sheet->error = sheet->error;
-					}
-					TemplateTest(sheet->signals[i].bit.field, check::bits, base[bits], tmp) ? sheet->error = true : sheet->error = sheet->error;
-				}
-				if (!tmp.error.empty())
-				{
-					syntax.push_back(tmp);
-					tmp.error.clear();
-				}
-				
-				// Проход по семантическим ошибкам
-				ValueTest(tmp) ? sheet->error = true : sheet->error = sheet->error;
-				RepiterTest(tmp, (int)i) ? sheet->error = true : sheet->error = sheet->error;
-				BitsTest(tmp, repit) ? sheet->error = true : sheet->error = sheet->error;
-
-				if (!tmp.error.empty())
-					simantic.push_back(tmp);
-			}
+			syntax.push_back(signal);
+			sheet->error = true;
+			signal.error.clear();
 		}
+
+		SimanticCheker(signal, (int)i, repit);
+		if (!signal.error.empty())
+		{
+			simantic.push_back(signal);
+			sheet->error = true;
+			signal.error.clear();
+		}
+	}
+
+	ClearRepiter();
 }
 
 // Проверка листа на незначительные ошибки (замечания) 
@@ -171,80 +158,107 @@ void CTest::GetWarnings(vector <errorSignal>& warning)
 {
 	for (size_t i = 0; i < sheet->signals.size(); i++) 
 	{
-		if (sheet->signals[i].title[0].Find(RESERVE_SIGNAL) == -1) 
-		{
-			errorSignal tmp;
-			tmp.signal = &sheet->signals[i];
+		if (sheet->signals[i].title[0].Find(RESERVE_SIGNAL) != -1)
+			continue;
 
-			FindRepiteTitleInBook(tmp, (int)i);
+		errorSignal tmp;
+		tmp.data = &sheet->signals[i];
 
-			if (!tmp.error.empty())
-				warning.push_back(tmp);
-		}
+		FindRepiteTitleInBook(tmp, (int)i);
+
+		if (!tmp.error.empty())
+			warning.push_back(tmp);
 	}
 }
 
 // Запись ошибки
-bool CTest::WriteError(errorSignal& res, const CString& msg, const int& index) 
+bool CTest::WriteError(errorSignal& signal, CString msg, const int& index) 
 {
-	CString message = msg;
 	if (index == check::min)
-		message.Replace(L"*", L"Минимальное значение");
+		msg.Replace(L"*", L"Минимальное значение");
 	else if (index == check::max)
-		message.Replace(L"*", L"Максимальное значение");
+		msg.Replace(L"*", L"Максимальное значение");
 	else if (index == check::csr)
-		message.Replace(L"*", L"Значение ЦСР");
+		msg.Replace(L"*", L"Значение ЦСР");
 	
-	res.error.push_back(message);
-	res.check[index] = true;
+	signal.error.push_back(msg);
+	signal.check[index] = true;
 	return true;
 }
 
 #pragma region Syntax
+// Проверка всех параметров сигнала на синтаксические ошибки
+void CTest::SyntaxChecker(errorSignal& signal, const int& i)
+{
+	// Проход по синтаксическим ошибкам
+	if (iMethod == method::patterned)
+	{
+		sheet->arinc && sheet->signals[i].numWord.flag ?
+			WriteError(signal, L"Поле пустое или содержит недопустимые символы.", check::numword) :	// TODO: Добавить регулярные выражения для адреса (ARINC)
+			TemplateTest(sheet->signals[i].numWord.field, check::numword, index::numword, signal);
+
+		if (iProject != project::kprno35 || !dwPart::checkLow(sheet->signals[i].title[0]))
+			TemplateTest(sheet->signals[i].title[1], check::title, index::title, signal);
+		
+		// TODO: Исправить костыль (три пустые ячейки не считаются ошибкой)
+		if (sheet->signals[i].min.flag || sheet->signals[i].max.flag || sheet->signals[i].csr.flag)
+		{
+			TemplateTest(sheet->signals[i].min.field, check::min, index::value, signal);
+			TemplateTest(sheet->signals[i].max.field, check::max, index::value, signal);
+			TemplateTest(sheet->signals[i].csr.field, check::csr, index::value, signal);
+		}
+		TemplateTest(sheet->signals[i].bit.field, check::bits, index::bits, signal);
+	}
+	else
+		SimpleTest(signal);
+}
+
 // Проверка номера набора параметров
-bool CTest::NpTest(vector <errorSignal>& error) 
+bool CTest::NpTest(vector <errorSignal>& signals) 
 {
 	bool result = false;	// true -  есть ошибка, false - нет ошибки
-	errorSignal tmp;
-	tmp.signal = &sheet->signals[0];
-	ASSERT(tmp.signal != nullptr);
+	errorSignal signal;
+	signal.data = &sheet->signals[0];
+	ASSERT(signal.data != nullptr);
+
+	#define FL(x) signal.data->x.flag
+	#define VAL(x) signal.data->x.value
 
 	if (sheet->np == 0)
-		result = WriteError(tmp, L"Отсутствует значение набора параметров.", check::comment);
-	else
-		if (!tmp.signal->min.flag && !tmp.signal->max.flag)
-			if (tmp.signal->min.value > sheet->np || sheet->np > tmp.signal->max.value)
-				result = WriteError(tmp, L"Набор параметров не соответствует указанному интервалу значений.", check::comment);
+		result = WriteError(signal, L"Отсутствует значение набора параметров.", check::comment);
+	else if ((!FL(max) && !FL(min)) && (VAL(min) > sheet->np || sheet->np > VAL(max)))
+		result = WriteError(signal, L"Набор параметров не соответствует указанному интервалу значений.", check::comment);
 
-	if (!tmp.error.empty()) 
-		error.push_back(tmp);
+	if (!signal.error.empty()) 
+		signals.push_back(signal);
 
 	return result;
 }
 
 // Проверка всех числовых параметров
-bool CTest::SimpleTest(errorSignal& set) 
+bool CTest::SimpleTest(errorSignal& signal) 
 {
 	bool result = false; // true -  есть ошибка, false - нет ошибки
+	CString msg = L"Поле пустое или содержит недопустимые символы.";
 	
-	if (set.signal->numWord.flag)
-		result = WriteError(set, L"Поле пустое или содержит недопустимые символы.", check::numword);
-	if (set.signal->min.flag)
-		result = WriteError(set, L"Поле пустое или содержит недопустимые символы.", check::min);
-	if (set.signal->max.flag)
-		result = WriteError(set, L"Поле пустое или содержит недопустимые символы.", check::max);
-	if (set.signal->csr.flag)
-		result = WriteError(set, L"Поле пустое или содержит недопустимые символы.", check::csr);
-	if (set.signal->bit.flag)
-		result = WriteError(set, L"Поле пустое или содержит недопустимые символы.", check::bits);
+	if (signal.data->numWord.flag)
+		result = WriteError(signal, msg, check::numword);
+	if (signal.data->min.flag)
+		result = WriteError(signal, msg, check::min);
+	if (signal.data->max.flag)
+		result = WriteError(signal, msg, check::max);
+	if (signal.data->csr.flag)
+		result = WriteError(signal, msg, check::csr);
+	if (signal.data->bit.flag)
+		result = WriteError(signal, msg, check::bits);
 
 	return result;
 }
 
 // Синтаксическая проверка шаблонным методом
-bool CTest::TemplateTest(const CString& field, const int& check, const regBase& test, errorSignal& set) 
+bool CTest::TemplateTest(const CString& field, const int& check, const int& index, errorSignal& signal) 
 {
-	regex correct(test.correct);
+	regex correct(base[index].correct);
 	string str = CT2A(field);
 	bool result = regex_match(str, correct);
 
@@ -252,166 +266,181 @@ bool CTest::TemplateTest(const CString& field, const int& check, const regBase& 
 	{
 		bool bFind = false;	// Найдена ли ошибка из набора регулярных выражений
 		// Поиск ошибки (обход по набору регулярок)
-		for (size_t i = 0; i < test.incorrect.size(); i++)
+		for (size_t i = 0; i < base[index].incorrect.size(); i++)
 		{
-			regex reg(test.incorrect[i].reg);
+			regex reg(base[index].incorrect[i].reg);
 			if (regex_search(str, reg))
 			{
-				result = WriteError(set, test.incorrect[i].desc, check);
+				result = WriteError(signal, base[index].incorrect[i].desc, check);
 				bFind = true;
 			}
 		}
 		if (!bFind)	// Неопознанная ошибка
-			throw UndefinedError(book->name, sheet->name, set.signal->numWord.field + L"\n\t" + set.signal->title[1]);
+			throw UndefinedError(book->name, sheet->name, signal.data->numWord.field + L"; " + signal.data->title[1]);
 	}
 	return !result;
 }
 #pragma endregion
 
 #pragma region Simantic
+// Проверка всех параметров сигнала на семантические ошибки
+void CTest::SimanticCheker(errorSignal& signal, const int& i, vector <repiter>& repit)
+{
+	ValueTest(signal);
+	if (iProject == project::kprno35)
+		PartTest(signal);
+	TitleRepitTest(signal, (int)i);
+	BitsTest(signal);
+}
+
 // Проверка всех числовых параметров
-bool CTest::ValueTest(errorSignal& set) 
+bool CTest::ValueTest(errorSignal& signal) 
 {
 	bool result = false;
+	#define FL(x) signal.data->x.flag
+	#define VAL(x) signal.data->x.value
+	
 	// Проверка номера слова (адреса)
-	if (!set.signal->numWord.flag)
+	if (!FL(numWord))
 	{
-		for (size_t i = 0; i < set.signal->numWord.value.size(); i++) 
+		for (size_t i = 0; i < VAL(numWord).size(); i++)
 		{
-			// Повторение на листе номера слова или адреса
-			/*int indx = IsRepitContain(repit, signal.numWord.value[i]);
-			CString str;
-			sheet->arinc ? str = L"адреса" : str = L"номера слова";
-			str.Format(L"Значение %s %d уже содержится на этом листе.", str,signal.numWord.value[i]);
-			repit[indx].bits[0] ? repit[indx].bits[0] = false : set.push_back(str);
-			*/
-			if (set.signal->numWord.value[i] < 0 && !sheet->arinc)
-				result = WriteError(set, L"Значение <b>№ слова</b> не должно быть отрицательным.", check::numword);
-			else if (set.signal->numWord.value[i] > 32 && !sheet->arinc)
-				result = WriteError(set, L"Значение <b>№ слова</b> должно быть меньше 32.", check::numword);
-			if (set.signal->numWord.sys != 8 && sheet->arinc)
-				result = WriteError(set, L"<b>Адрес сигнала</b> должен быть записан в 8-ой системе счисления.", check::numword);
+			if (VAL(numWord)[i] < 0 && !sheet->arinc)
+				result = WriteError(signal, L"Значение <b>№ слова</b> не должно быть отрицательным.", check::numword);
+			else if (VAL(numWord)[i] > 32 && !sheet->arinc)
+				result = WriteError(signal, L"Значение <b>№ слова</b> должно быть меньше 32.", check::numword);
+			if (signal.data->numWord.sys != 8 && sheet->arinc)
+				result = WriteError(signal, L"<b>Адрес сигнала</b> должен быть записан в 8-ой системе счисления.", check::numword);
 		}
 	}
 	// Проверка мин, макс и цср
-	if (!set.signal->min.flag && !set.signal->max.flag && !set.signal->csr.flag && !set.signal->bit.flag) 
+	if (!FL(min) && !FL(max) && !signal.data->csr.flag && !FL(bit))
 	{
 		int nBit = 0;
-		(set.signal->bit.value.size() == 4) ? nBit = (set.signal->bit.value[1] - set.signal->bit.value[0]) + (set.signal->bit.value[3] - set.signal->bit.value[2]) + 2 :
-			nBit = (set.signal->bit.value[1] - set.signal->bit.value[0]) + 1;
+		(VAL(bit).size() == 4) ? nBit = (VAL(bit)[1] - VAL(bit)[0]) + (VAL(bit)[3] - VAL(bit)[2]) + 2 :
+			nBit = (VAL(bit)[1] - VAL(bit)[0]) + 1;
 
 		// Выделение бита под знак, если он присутствует
-		if (set.signal->bitSign) nBit--;
+		if (signal.data->bitSign) 
+			nBit--;
 
-		double nMin = set.signal->csr.value;
+		double nMin = signal.data->csr.value;
 		for (int i = 1; i <= nBit; i++)
 			nMin = nMin / 2;
 
-		double nMax = (set.signal->csr.value * 2) - nMin;
+		double nMax = (signal.data->csr.value * 2) - nMin;
 
-		if (set.signal->max.value - nMax >= 2) 
-			result = WriteError(set, L"Нельзя упаковать <b>максимальное значение</b>", check::max);
-		else if (((abs(set.signal->min.value) > (nMax + nMin)) || (abs(set.signal->min.value) < nMin)) && set.signal->min.value != 0) 
-			result = WriteError(set, L"Нельзя упаковать <b>минимальное значение</b>", check::min);
+		if (VAL(max) - nMax >= 2)
+			result = WriteError(signal, L"Нельзя упаковать <b>максимальное значение</b>", check::max);
+		else if (((abs(VAL(min)) > (nMax + nMin)) || (abs(VAL(min)) < nMin)) && VAL(min) != 0)
+			result = WriteError(signal, L"Нельзя упаковать <b>минимальное значение</b>", check::min);
 
-		if ((set.signal->min.value < 0) && !set.signal->bitSign && !sheet->arinc)
-			result = WriteError(set, L"<b>Минимальное значение</b> не может быть отрицательным числом или не верно задан знаковый бит в поле \"Примечание\"", check::min);
-		else if ((set.signal->min.value >= 0) && set.signal->bitSign && !sheet->arinc)
-			result = WriteError(set, L"<b>Минимальное значение</b> должно быть отрицательным числом или не верно задан знаковый бит в поле \"Примечание\"", check::min);
+		if ((VAL(min) < 0) && !signal.data->bitSign && !sheet->arinc)
+			result = WriteError(signal, L"<b>Минимальное значение</b> не может быть отрицательным числом или не верно задан знаковый бит в поле \"Примечание\"", check::min);
+		else if ((VAL(min) >= 0) && signal.data->bitSign && !sheet->arinc)
+			result = WriteError(signal, L"<b>Минимальное значение</b> должно быть отрицательным числом или не верно задан знаковый бит в поле \"Примечание\"", check::min);
 	}
 	return result;
 }
 
 // Поиск повторений идентификатора на листе
-bool CTest::RepiterTest(errorSignal& set, const int& index) 
+bool CTest::TitleRepitTest(errorSignal& signal, const int& index) 
 {
 	bool result = false;
-	CString title = sheet->signals[index].title[1];
-	std::set<CString>::iterator it = exception.find(title);
-	// TODO: Реализовать исключения под разные линии передачи
-	if (it == exception.end())	// Если идентификатор не найден в множестве исключений
-		for (size_t i = index + 1; i < sheet->signals.size(); i++)
-			if (sheet->signals[i].title[1].Compare(title) == 0 && sheet->signals[i].title[0].CompareNoCase(RESERVE_SIGNAL) != 0)
-				result = true;
+	#define TITLE(i, j) sheet->signals[i].title[j]
+	CString title = TITLE(index, 1);
+	std::set<CString>::iterator current, end;
 
-	if (result)
-		WriteError(set, L"Сигнал с таким <b>условным обозначением</b> присутствует на этом листе.", check::title);
+	if (title.IsEmpty())
+		return result;
+
+	if (sheet->arinc)
+	{
+		current = exception.arinc.find(title);
+		end = exception.arinc.end();
+	}
+	else
+	{
+		current = exception.mkio.find(title);
+		end = exception.mkio.end();
+	}
+
+	// Если идентификатор не найден в множестве исключений
+	if (current == end)
+		for (size_t i = index + 1; i < sheet->signals.size() && !result; i++)
+			if (TITLE(i, 1).Compare(title) == 0 && TITLE(i, 0).Find(RESERVE_SIGNAL) != -1)
+				result = WriteError(signal, L"Сигнал с таким <b>условным обозначением</b> присутствует на этом листе.", check::title);
 
 	return result;
 }
 
-// Инициализация репитера для проверки перекрытия
-void CTest::InitRepiter(vector <repiter>& repit)
+// Проверка двойного слова (КПРНО35)
+bool CTest::PartTest(errorSignal& signal)
 {
-	for (int i = 0; i < sheet->signals.size(); i++)
-	{
-		for (int j = 0; j < sheet->signals[i].numWord.value.size(); j++)
-		{
-			int indx = IsRepitContain(repit, sheet->signals[i].numWord.value[j]);
-			if (indx == -1)
-			{
-				repiter tmp;
-				tmp.adr = sheet->signals[i].numWord.value[j];
-				tmp.signals.push_back(&sheet->signals[i]);
-				tmp.bits.resize(MAX_BITS);	// Выделение память под биты и номер слова
-				for (int k = 0; k < MAX_BITS; k++)
-					tmp.bits[k] = true;
-				repit.push_back(tmp);
-			}
-			else
-			{
-				repit[indx].signals.push_back(&sheet->signals[i]);
-			}
-		}
-	}
-}
+	bool result = false;
+	ASSERT(dwPart::low.size() != dwPart::hight.size() != dwPart::hight2.size());
 
-// Имеется ли уже такой номер слова (адрес) (в случае удачи возвр. индекс, иначе -1)
-int CTest::IsRepitContain(const vector<repiter>& repit, const int& numeric)
-{
-	int result = -1;
-	for (int i = 0; i < repit.size(); i++)
-		if (repit[i].adr == numeric)
-			result = i;
+	if (signal.data->part != nullptr)	// Указатель не пустой, значит двойное слово есть
+		return result;
+
+	if (dwPart::checkLow(signal.data->title[0]))
+		result = WriteError(signal, L"Отсутствует старшая часть параметра на данном листе.", check::comment);
+	else if (dwPart::checkHight(signal.data->title[0]))
+		result = WriteError(signal, L"Отсутствует младшая часть параметра на данном листе.", check::comment);
+
 	return result;
 }
 
 // Проверка используемых разрядов
-bool CTest::BitsTest(errorSignal& set, vector<repiter>& repit) 
+bool CTest::BitsTest(errorSignal& signal) 
 {
-	bool result = false;
+	#define FL(x) signal.data->x.flag
+	#define VAL(x) signal.data->x.value
+	
+	bool result = false, bMaxVal = false;
 	// Кол-во № слов должно совпадать с кол-вами интервалов исп. разрядов
-	if (!set.signal->numWord.flag && !set.signal->bit.flag) 
+	if (!FL(numWord) && !signal.data->bit.flag)
 	{
-		for (size_t i = 0; i < set.signal->bit.value.size(); i+=2) 
-			if (set.signal->bit.value[i] > set.signal->bit.value[i + 1] && set.signal->bit.value[i+1] != -1) 
-				result = WriteError(set, L"Старший бит меньше младшего в <b>используемых разрядах</b>.", check::bits);
-		// TODO: Добавить проверку на диапазон битов (Должен быть от 1 до 32)
-		if (set.signal->numWord.value.size() * 2 == set.signal->bit.value.size()) 
+		for (size_t i = 0; i < VAL(bit).size(); i += 2)
 		{
-			bool replaced;
-			(set.signal->numWord.value.size() == 2) ? replaced = IsReplaceable(set.signal->title[0], repit[IsRepitContain(repit, set.signal->numWord.value[1])].signals) || 
-				IsReplaceable(set.signal->title[0], repit[IsRepitContain(repit, set.signal->numWord.value[0])].signals) :
-				replaced = IsReplaceable(set.signal->title[0], repit[IsRepitContain(repit, set.signal->numWord.value[0])].signals);
-			
-			vector<int> bits = CrossBits(set.signal->bit.value, set.signal->numWord.value, repit);
-			if (bits.size() != 0 && !replaced)
+			if (VAL(bit)[i] > VAL(bit)[i + 1] && VAL(bit)[i + 1] != -1)
+				result = WriteError(signal, L"Старший бит меньше младшего в <b>используемых разрядах</b>.", check::bits);
+			if (VAL(bit)[i] > MAX_BITS || VAL(bit)[i + 1] > MAX_BITS)
 			{
-				CString str = L"Следующие <b>используемые разряды</b> перекрываются: ";
+				bMaxVal = true;
+				CString msg = L"Значение бита превышает максимально допустимое в <b>используемых разрядах</b> ";
+				msg.Format(L"%s(%d).", msg, MAX_BITS);
+				result = WriteError(signal, msg, check::bits);
+			}
+		}
+
+		if ((VAL(numWord).size() * 2 == VAL(bit).size()) && !bMaxVal)
+		{
+			#define RepSigByIndex(idx) repit[GetIndexRepiter(VAL(numWord)[idx])].signals
+			bool bReplase = false;	// Взаимозаменяемые слова, которые кладутся в зависимости от чего-то там (отличаются обозначениями в наименовании после запятой)
+
+			VAL(numWord).size() == 2 ? 
+				bReplase = CheckReplace(signal.data->title[0], RepSigByIndex(1)) || CheckReplace(signal.data->title[0], RepSigByIndex(0)) :
+				bReplase = CheckReplace(signal.data->title[0], RepSigByIndex(0));
+			
+			vector<int> bits = CrossBits(VAL(bit), VAL(numWord));
+			if (bits.size() != 0 && !bReplase)
+			{
+				CString msg = L"Следующие <b>используемые разряды</b> перекрываются: ";
 				for (size_t i = 0; i < bits.size(); i++)
-					str.Format(L"%s %d", str, bits[i]);
-				result = WriteError(set, str, check::bits);
+					msg.Format(L"%s %d", msg, bits[i]);
+				result = WriteError(signal, msg, check::bits);
 			}
 		}
 		else 
-			result = (set.signal->numWord.value.size() == 1) ? WriteError(set, L"Должен быть один интервал <b>используемых разрядов</b>", check::bits) : 
-				WriteError(set, L"Должно быть два интервала <b>используемых разрядов</b>",  check::bits);
+			result = (signal.data->numWord.value.size() == 1) ? WriteError(signal, L"Должен быть один интервал <b>используемых разрядов</b>", check::bits) :
+				WriteError(signal, L"Должно быть два интервала <b>используемых разрядов</b>",  check::bits);
 	}
 	return result;
 }
 
 // Проверка на перекрытие битов
-vector<int> CTest::CrossBits(const vector <int>& bits, const vector <int>& numWord, vector<repiter>& repit) 
+vector<int> CTest::CrossBits(const vector <int>& bits, const vector <int>& numWord) 
 {
 	vector<int> result;
 	for (size_t j = 0, i = 0; i < numWord.size(); j += 2, i++)
@@ -421,10 +450,8 @@ vector<int> CTest::CrossBits(const vector <int>& bits, const vector <int>& numWo
 
 		for (; start <= end; start++) 
 		{
-			if (start > 32)
-				break;
-			int indx = IsRepitContain(repit, numWord[i]);
 			ASSERT(start <= 32);
+			int indx = GetIndexRepiter(numWord[i]);
 			ASSERT(indx != -1);
 			repit[indx].bits[start] ? repit[indx].bits[start] = false :	result.push_back(start);	// отметка в матрице о наличии бита
 		}
@@ -432,11 +459,13 @@ vector<int> CTest::CrossBits(const vector <int>& bits, const vector <int>& numWo
 	return result;
 }
 
-// Проверка на заменяемость
-bool CTest::IsReplaceable(const CString& title, const vector <signalData*> signals)
+// Проверка слов, которые выборочно кладутся в одно слово
+bool CTest::CheckReplace(CString first, const vector <signalData*> signals)
 {
 	bool result = false;
-	CString first = title;
+	if (sheet->arinc)
+		return result;
+
 	for (size_t i = 0; i < signals.size(); i++)
 	{
 		CString second = signals[i]->title[0];
@@ -444,11 +473,18 @@ bool CTest::IsReplaceable(const CString& title, const vector <signalData*> signa
 			continue;
 
 		int indx = first.ReverseFind(L',');
-		if (indx != -1)
+
+		if (indx == -1)
+			continue;
+		else
 			first.Delete(indx, first.GetLength() - indx);
+		
 		indx = second.ReverseFind(L',');
-		if (indx != -1)
+		if (indx == -1)
+			continue;
+		else
 			second.Delete(indx, second.GetLength() - indx);
+
 		first.CompareNoCase(second) == 0 ? result = true : result = result;
 	}
 
@@ -456,9 +492,64 @@ bool CTest::IsReplaceable(const CString& title, const vector <signalData*> signa
 }
 #pragma endregion
 
+#pragma region Repiter
+// Инициализация репитера для проверки перекрытия
+void CTest::InitRepiter()
+{
+	#define NUM_VAL(idx) sheet->signals[idx].numWord.value
+
+	for (int i = 0; i < sheet->signals.size(); i++)
+	{
+		for (int j = 0; j < NUM_VAL(i).size(); j++)
+		{
+			int indx = GetIndexRepiter(NUM_VAL(i)[j]);
+			indx == -1 ? AddRepiter(NUM_VAL(i)[j], i) : repit[indx].signals.push_back(&sheet->signals[i]);
+		}
+	}
+}
+
+// Добавление нового номера слова (адреса) в сетку
+void CTest::AddRepiter(const int& value, const int& index)
+{
+	repiter result;
+	result.adr = value;
+	result.signals.push_back(&sheet->signals[index]);
+	result.bits.resize(MAX_BITS);	// Выделение память под биты и номер слова
+	for (int k = 0; k < MAX_BITS; k++)	// Инициализация сетки перекрытия
+		result.bits[k] = true;
+
+	repit.push_back(result);
+}
+
+// Получить индекс сетки битов по номеру слова (в случае неудачи возвр. индекс, иначе -1)
+int CTest::GetIndexRepiter(const int& numeric)
+{
+	int index = -1;
+	for (int i = 0; i < repit.size() && index == -1; i++)
+		if (repit[i].adr == numeric)
+			index = i;
+
+	return index;
+}
+
+// Очистка репитера
+void CTest::ClearRepiter()
+{
+	for (size_t i = 0; i < repit.size(); i++)
+	{
+		repit[i].signals.clear();
+		repit[i].signals.shrink_to_fit();
+		repit[i].bits.clear();
+		repit[i].bits.shrink_to_fit();
+	}
+	repit.clear();
+	repit.shrink_to_fit();
+}
+#pragma endregion
+
 #pragma region Warning
 // Поиск повторений идентификатора в книге
-void CTest::FindRepiteTitleInBook(errorSignal& set, const int& index)
+void CTest::FindRepiteTitleInBook(errorSignal& signal, const int& index)
 {
 	vector <CString> repitSheet;
 	CString title = sheet->signals[index].title[1];
@@ -469,11 +560,11 @@ void CTest::FindRepiteTitleInBook(errorSignal& set, const int& index)
 		book->sheets[i].name.Compare(sheet->name) == 0 ? start = index + 1 : start = 0;
 		for (size_t j = start; j < book->sheets[i].signals.size(); j++)
 		{
-			if (book->sheets[i].signals[j].title[1].Compare(title) == 0 && book->sheets[i].signals[j].title[0].CompareNoCase(RESERVE_SIGNAL) == -1 && !title.IsEmpty())
+			if (book->sheets[i].signals[j].title[1].Compare(title) == 0 && book->sheets[i].signals[j].title[0].Find(RESERVE_SIGNAL) != -1 && !title.IsEmpty())
 			{
 				book->sheets[i].signals[j].repWord = true;
 				repitSheet.push_back(book->sheets[i].name);
-				continue;
+				break;
 			}
 		}
 	}
@@ -484,7 +575,7 @@ void CTest::FindRepiteTitleInBook(errorSignal& set, const int& index)
 			msg += repitSheet[i] + L", ";
 		int posDot = msg.ReverseFind(L',');
 		msg.Delete(posDot);
-		WriteError(set, msg, check::title);
+		WriteError(signal, msg, check::title);
 	}
 }
 #pragma endregion

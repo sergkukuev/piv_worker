@@ -143,6 +143,61 @@ void CReaderExcel::GetSignals(vector <signalData>& signals, const bool& bArinc)
 		if (work.CountRows() == row + merge - 1 && !arinc.flag && arinc.amount != arinc.current)
 			row = arinc.startRow - merge;
 	}
+
+	// Поиск двойных слов в КПРНО35
+	if (iProject == project::kprno35)
+		ConcatDW(signals);
+}
+
+// Объединение двойных слов (установка указателя)
+void CReaderExcel::ConcatDW(vector <signalData>& signals)
+{
+	for (size_t i = 0; i < signals.size(); i++)
+	{
+		for (size_t j = 0; j < dwPart::low.size(); j++)
+		{
+			ASSERT(dwPart::low.size() != dwPart::hight.size() != dwPart::hight2.size());
+			if (signals[i].title[0].Find(dwPart::hight[j]) != -1)
+				findDW(signals, i, dwPart::hight[j], dwPart::low);
+			else if (signals[i].title[0].Find(dwPart::hight2[j]) != -1)
+				findDW(signals, i, dwPart::hight2[j], dwPart::low);
+			else if (signals[i].title[0].Find(dwPart::low[j]) != -1)
+				findDW(signals, i, dwPart::low[j], dwPart::hight);
+		}
+	}
+}
+
+// Поиск второй части двойного слова
+void CReaderExcel::findDW(vector <signalData>& signals, size_t start, CString old, vector <CString> revert)
+{
+	CString title = signals[start].title[0];
+	title.Remove(L'\n');
+
+	int index = -1, rev_index = 0;
+	for (size_t i = start; i < signals.size(); i++)
+	{
+		CString tmp = signals[i].title[0];
+		tmp.Remove(L' ');
+		tmp.Remove(L'\n');
+		for (size_t j = 0; j < revert.size(); j++)
+		{
+			CString rev_title = title;
+			rev_title.Replace(old, revert[j]);
+			rev_title.Remove(L' ');
+			if (tmp.Compare(rev_title) == 0)
+			{
+				rev_index = (int)j;
+				index = (int)i;
+				break;
+			}
+		}
+		if (index != -1)
+		{
+			signals[start].part = &signals[index];
+			signals[index].part = &signals[start];
+			break;
+		}
+	}
 }
 
 #pragma region ARINC
