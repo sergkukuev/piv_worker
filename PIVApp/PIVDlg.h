@@ -6,7 +6,6 @@
 #include "afxwin.h"
 #include <vector>
 
-#include "RegWinMsg.h"
 #include "PIVApp.h"
 #include "SettingDlg.h"
 #include "WebBrowser.h"
@@ -67,6 +66,7 @@ private:
 	void UpdateMenu();		// Обновление меню
 	void BrowserNavigate();	// Установка пути отчета для встроенного браузера
 public:
+	pivParams settings;
 	// Обработчики событий
 	afx_msg void OnOpenProj();			// Открытие проекта
 	afx_msg void OnRefreshPiv();		// Обновление выбранных файлов

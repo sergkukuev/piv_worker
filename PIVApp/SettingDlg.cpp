@@ -20,11 +20,26 @@ CSettingDlg::CSettingDlg(CWnd* pParent /*=NULL*/)
 #ifndef _WIN32_WCE
 	EnableActiveAccessibility();
 #endif	
-	// Установка параметра
-	bNumPk = TRUE;
-	bGenTxt = FALSE;
-	iProject = project::p930m;
-	iMethod = method::patterned;
+	CPIVDlg* dlgParent = (CPIVDlg*) pParent;
+	ASSERT(dlgParent != NULL);
+
+	if (dlgParent != NULL)
+	{
+		this->settings = &dlgParent->settings;
+		bNumPk = settings->bNumPK;
+		bGenTxt = settings->bGenTxt;
+		iProject = settings->iProject;
+		iMethod = settings->iMethod;
+	}
+	else
+	{
+		AfxMessageBox(L"Не удалось получить текущие настройки DLL. Установлены настройки по умолчанию.");
+		// Установка параметра
+		bNumPk = TRUE;
+		bGenTxt = FALSE;
+		iProject = project::p930m;
+		iMethod = method::patterned;
+	}
 }
 
 CSettingDlg::~CSettingDlg() {	}
@@ -37,7 +52,6 @@ void CSettingDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Radio(pDX, IDC_930M, iProject);
 	DDX_Radio(pDX, IDC_TEMPLATE, iMethod);
 }
-
 
 BEGIN_MESSAGE_MAP(CSettingDlg, CDialog)
 	ON_BN_CLICKED(IDC_CHECK_TXT100, &CSettingDlg::OnEnableBtnSave)
@@ -73,16 +87,17 @@ BOOL CSettingDlg::OnInitDialog()
 	return TRUE;
 }
 
+void CSettingDlg::SetParameters()
+{
+	settings->bNumPK = (bool)bNumPk;
+	settings->bGenTxt = (bool)bGenTxt;
+
+	settings->iProject = iProject;
+	settings->iMethod = iMethod;
+}
+
 void CSettingDlg::OnEnableBtnSave()
 {
 	CButton* m_btnSave = (CButton*)GetDlgItem(IDOK);
 	m_btnSave->EnableWindow(TRUE);
-
-	pivParams param;
-	param.bNumPK = (bool)bNumPk;
-	param.bGenTxt = (bool)bGenTxt;
-
-	param.iProject = iProject;
-	param.iMethod = iMethod;
-	::SendMessage((HWND) m_pParentWnd, WM_SETTINGS_DLL, 0, reinterpret_cast<LPARAM>(&param));
 }

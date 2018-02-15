@@ -1,7 +1,7 @@
 #pragma once
 
 #include "PIVApp.h"
-#include "RegWinMsg.h"
+#include "PIVDlg.h"
 #include "Settings.h"
 
 // диалоговое окно CSettingDlg
@@ -22,11 +22,13 @@ protected:
 
 	DECLARE_MESSAGE_MAP()
 private:
+	pivParams* settings;
 	BOOL bNumPk, bGenTxt;
 	int iProject = -1, iMethod = -1;
 
 	const enum project { p930m, kprno35 };
 	const enum method { patterned, fasted };
 public:
+	void SetParameters();
 	afx_msg void OnEnableBtnSave();
 };
