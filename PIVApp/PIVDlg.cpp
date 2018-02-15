@@ -2,9 +2,7 @@
 //
 
 #include "stdafx.h"
-#include "PIVApp.h"
 #include "PIVDlg.h"
-#include "afxdialogex.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -29,7 +27,7 @@ static UINT BASED_CODE indicators[] =
 };
 
 ThreadData mData;
-const UINT WM_EXCHANGE_DLL = ::RegisterWindowMessage(_T("WM_EXCHANGE_DLL"));	// Событие обмена сообщением
+
 
 #pragma region EXCHANGE
 // Логирование
@@ -110,13 +108,13 @@ BEGIN_MESSAGE_MAP(CPIVDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_BTN_SETTING, &CPIVDlg::OnBnClickedSetting)
 	ON_BN_CLICKED(IDC_SHOW_REP, &CPIVDlg::OnBnClickedShowRep)
 	ON_REGISTERED_MESSAGE(WM_EXCHANGE_DLL, &CPIVDlg::OnReceiveMessage)
+	ON_REGISTERED_MESSAGE(WM_SETTINGS_DLL, &CPIVDlg::OnSaveSettings)
 	//ON_WM_MOUSEMOVE()
 	ON_WM_CLOSE()
 END_MESSAGE_MAP()
 
 
 // Обработчики сообщений CPIVDlg
-
 BOOL CPIVDlg::OnInitDialog()
 {
 	//_crtBreakAlloc = /*587*/879627;
@@ -545,14 +543,24 @@ void CPIVDlg::BrowserNavigate()
 #pragma endregion
 
 #pragma region Settings
+LRESULT CPIVDlg::OnSaveSettings(WPARAM, LPARAM lParam)
+{
+	pivParams* pParam = reinterpret_cast<pivParams*>(lParam);
+	ASSERT(pParam != NULL);
+
+	pParam != NULL ? piv.SetSettings(*pParam) : AfxMessageBox(L"Не удалось сохранить настройки приложения!");
+	return 0;
+}
+
 // Открыть окно настроек
 void CPIVDlg::OnBnClickedSetting()
 {
 	CSettingDlg stgDlg(this);
 	if (stgDlg.DoModal() == IDOK)
 	{
-		stgDlg.SetParameters();
-		piv.SetSettings(settings);
+		int a = 0;
+		//stgDlg.SetParameters();
+		//piv.SetSettings(settings);
 	}
 }
 #pragma endregion

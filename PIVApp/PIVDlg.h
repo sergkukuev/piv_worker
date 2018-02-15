@@ -6,6 +6,8 @@
 #include "afxwin.h"
 #include <vector>
 
+#include "RegWinMsg.h"
+#include "PIVApp.h"
 #include "SettingDlg.h"
 #include "WebBrowser.h"
 #include "PIVWorker.h"
@@ -51,8 +53,8 @@ protected:
 	DECLARE_MESSAGE_MAP()
 private:
 	CPIV piv;	// Класс для работы с DLL по обработке протоколов
-	std::vector <CString> pathProj;		// Пути файлов проекта
-	std::vector <CString> pathOther;	// Пути отдельных файлов
+	vector <CString> pathProj;		// Пути файлов проекта
+	vector <CString> pathOther;	// Пути отдельных файлов
 	
 	void OpenFile(vector <CString>& path);	// Открытие файлов
 	CString GetFolder();	// Выбор папки
@@ -80,6 +82,7 @@ public:
 	afx_msg void OnMouseMove(UINT nFlags, CPoint point);
 
 	afx_msg LRESULT OnReceiveMessage(WPARAM, LPARAM lParam);	// Отображение статуса DLL
+	afx_msg LRESULT OnSaveSettings(WPARAM, LPARAM lParam);		// Сохранение настроек
 
 	//	Работа с браузером
 	afx_msg void OnBnClickedBtnHome();
@@ -87,6 +90,6 @@ public:
 	afx_msg void OnBnClickedBtnNext();
 	afx_msg void OnBnClickedBtnRefresh();
 
-	pivParam settings;
+	//pivParams settings;
 	afx_msg void OnClose();
 };

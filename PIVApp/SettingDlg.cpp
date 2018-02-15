@@ -19,16 +19,12 @@ CSettingDlg::CSettingDlg(CWnd* pParent /*=NULL*/)
 {
 #ifndef _WIN32_WCE
 	EnableActiveAccessibility();
-#endif
-	CPIVDlg* pDlg = (CPIVDlg*)pParent;
-	ASSERT(pDlg != NULL);
-	
+#endif	
 	// Установка параметра
-	param = &pDlg->settings;
-	bNumPk = (BOOL)param->bNumPK;
-	bGenTxt = (BOOL)param->bGenTxt;
-	iProject = param->iProject;
-	iMethod = param->iMethod;
+	bNumPk = TRUE;
+	bGenTxt = FALSE;
+	iProject = project::p930m;
+	iMethod = method::patterned;
 }
 
 CSettingDlg::~CSettingDlg() {	}
@@ -77,18 +73,16 @@ BOOL CSettingDlg::OnInitDialog()
 	return TRUE;
 }
 
-// Возврат значений настроек
-void CSettingDlg::SetParameters()
-{
-	param->bNumPK = (bool)bNumPk;
-	param->bGenTxt = (bool)bGenTxt;
-
-	param->iProject = iProject;
-	param->iMethod = iMethod;
-}
-
 void CSettingDlg::OnEnableBtnSave()
 {
 	CButton* m_btnSave = (CButton*)GetDlgItem(IDOK);
 	m_btnSave->EnableWindow(TRUE);
+
+	pivParams param;
+	param.bNumPK = (bool)bNumPk;
+	param.bGenTxt = (bool)bGenTxt;
+
+	param.iProject = iProject;
+	param.iMethod = iMethod;
+	::SendMessage((HWND) m_pParentWnd, WM_SETTINGS_DLL, 0, reinterpret_cast<LPARAM>(&param));
 }

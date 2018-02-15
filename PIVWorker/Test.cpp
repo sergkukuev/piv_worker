@@ -10,62 +10,74 @@ static char THIS_FILE[] = __FILE__;
 // Конструктор
 CTest::CTest() 
 {	
+	Initialize();
+}
+
+CTest::CTest(CSettings* setting)
+{
+	Initialize();
+	this->stg = setting;
+}
+
+
+void CTest::Initialize()
+{
 	// Множество исключений
 	// Для ARINC
 	exception.arinc.insert(L"ID_BPV1");	// Идентификатор блока 1
 	exception.arinc.insert(L"ID_BPV2");	// Идентификатор блока 2
-	// Для MKIO 
-	// Пусто
+										// Для MKIO 
+										// Пусто
 
-	// Создание базы для проверки на ошибки с помощью регулярных выражений
-	// TODO: Добавить регулярные выражения для адреса (ARINC)
+										// Создание базы для проверки на ошибки с помощью регулярных выражений
+										// TODO: Добавить регулярные выражения для адреса (ARINC)
 	base.resize(index::size);
 	base[numword].correct = "^[0-9]+(, ?[0-9]+)?$";
-	base[numword].incorrect = 
+	base[numword].incorrect =
 	{
 		{ "^[ \t\n]*$", L"Значение <b>№ слова</b> отсутствует." },
-		{ "[^0-9 \t\n,]", L"Значение <b>№ слова</b> содержит недопустимые символы." },
-		{ "[^,][ \t\n]", L"Значение <b>№ слова</b> содержит лишние пробелы. (Допускается только после запятой)" },
-		{ ",[^,]*,+", L"Значение <b>№ слова</b> содержит больше одной запятой." },
-		{ "^[ \t\n]*,", L"Значение <b>№ слова</b> до запятой отсутствует." },
-		{ ",[ \t\n]*$", L"Значение <b>№ слова</b> после запятой отсутствует." }
+	{ "[^0-9 \t\n,]", L"Значение <b>№ слова</b> содержит недопустимые символы." },
+	{ "[^,][ \t\n]", L"Значение <b>№ слова</b> содержит лишние пробелы. (Допускается только после запятой)" },
+	{ ",[^,]*,+", L"Значение <b>№ слова</b> содержит больше одной запятой." },
+	{ "^[ \t\n]*,", L"Значение <b>№ слова</b> до запятой отсутствует." },
+	{ ",[ \t\n]*$", L"Значение <b>№ слова</b> после запятой отсутствует." }
 	};
 
 	base[title].correct = "^[A-Za-z]([A-za-z_0-9]*[A-Za-z0-9])?$";
-	base[title].incorrect = 
+	base[title].incorrect =
 	{
 		{ "^[ \t\n]*$", L"<b>Обозначение сигнала</b> отсутствует. (Возможно сигнал зарезервирован, но \"Резерв\" не написано)" },
-		{ "[ \t\n]", L"<b>Обозначение сигнала</b> содержит пробел." },
-		{ "[^A-Za-z_ \t\n0-9]", L"<b>Обозначение сигнала</b> содержит недопустимые символы" },
-		{ "^[^A-Za-z]", L"<b>Обозначение сигнала</b> начинается не с латинской буквы." },
-		{ "_[ \t\n]*$", L"<b>Обозначение сигнала</b> заканчивается на недопустимый символ '_'." },
-		{ "[А-Яа-я]", L"<b>Обозначение сигнала</b> содержит кириллицу." }
+	{ "[ \t\n]", L"<b>Обозначение сигнала</b> содержит пробел." },
+	{ "[^A-Za-z_ \t\n0-9]", L"<b>Обозначение сигнала</b> содержит недопустимые символы" },
+	{ "^[^A-Za-z]", L"<b>Обозначение сигнала</b> начинается не с латинской буквы." },
+	{ "_[ \t\n]*$", L"<b>Обозначение сигнала</b> заканчивается на недопустимый символ '_'." },
+	{ "[А-Яа-я]", L"<b>Обозначение сигнала</b> содержит кириллицу." }
 	};
 
 	base[value].correct = "^-?[0-9]+(,[0-9]+)?$";
-	base[value].incorrect = 
+	base[value].incorrect =
 	{	// Значение '*' подставляется в методе WriteError в зависимости от проверенной ячейки (min, max, csr)
 		{ "^[ \t\n]*$", L"<b>*</b> отсутствует." },
-		{ "[^-,. \t\n0-9]", L"<b>*</b> содержит недопустимые символы." },
-		{ "[ \t\n]", L"<b>*</b> содержит пробелы." },
-		{ "(,|[.])[^,.]*([.]|,)", L"<b>*</b> содержит более одного разделителя." },
-		{ "-[^-]*-", L"<b>*</b> содержит больше одного знака '-'." },
-		{ "^[^- \t\n]+-", L"<b>*</b> содержит знак '-' в недопустимом месте. (Допускается только перед значением)" },
-		{ "^[ \t\n]*([.]|,)", L"<b>*</b> не содержит значения до разделителя" },
-		{ "([.]|,)[ \t\n]*$", L"<b>*</b> не содержит значения после разделителя" }
+	{ "[^-,. \t\n0-9]", L"<b>*</b> содержит недопустимые символы." },
+	{ "[ \t\n]", L"<b>*</b> содержит пробелы." },
+	{ "(,|[.])[^,.]*([.]|,)", L"<b>*</b> содержит более одного разделителя." },
+	{ "-[^-]*-", L"<b>*</b> содержит больше одного знака '-'." },
+	{ "^[^- \t\n]+-", L"<b>*</b> содержит знак '-' в недопустимом месте. (Допускается только перед значением)" },
+	{ "^[ \t\n]*([.]|,)", L"<b>*</b> не содержит значения до разделителя" },
+	{ "([.]|,)[ \t\n]*$", L"<b>*</b> не содержит значения после разделителя" }
 	};
 
 	base[bits].correct = "^[0-9]+((…|[.]{3})[0-9]+)?(, ?[0-9]+((…|[.]{3})[0-9]+)?)?$";
-	base[bits].incorrect = 
+	base[bits].incorrect =
 	{
 		{ "^[ \t\n]*$", L"Значение <b>используемых разрядов</b> отсутствует." },
-		{ "[^0-9,.… \t\n]", L"Значение <b>используемых разрядов</b> содержит недопустимые символы." },
-		{ "[^ \t\n,]+[ \t\n]", L"Значение <b>используемых разрядов</b> содержит лишние пробелы. (Допускается только после запятой)" },
-		{ "[.]{1,2}|[.]{4,}[^.…]*", L"Значение <b>используемых разрядов</b> содержит неверное обозначение промежутка." },
-		// TODO: Отладить регулярное выражение
-		{ "(…|[.]{2,})[^….]*(…|[.]{2,})[^….]*(…|[.]{2,})", L"Значение <b>используемых разрядов</b> содержит более двух промежутков." },
-		{ "(^|,)[ \t\n]*(…|[.])", L"Значение <b>используемых разрядов</b> не содержит значения в начале одного из промежутков." },
-		{ "(…|[.])[ \t\n]*(,|$)", L"Значение <b>используемых разрядов</b> не содержит значения в конце одного из промежутков." }
+	{ "[^0-9,.… \t\n]", L"Значение <b>используемых разрядов</b> содержит недопустимые символы." },
+	{ "[^ \t\n,]+[ \t\n]", L"Значение <b>используемых разрядов</b> содержит лишние пробелы. (Допускается только после запятой)" },
+	{ "[.]{1,2}|[.]{4,}[^.…]*", L"Значение <b>используемых разрядов</b> содержит неверное обозначение промежутка." },
+	// TODO: Отладить регулярное выражение
+	{ "(…|[.]{2,})[^….]*(…|[.]{2,})[^….]*(…|[.]{2,})", L"Значение <b>используемых разрядов</b> содержит более двух промежутков." },
+	{ "(^|,)[ \t\n]*(…|[.])", L"Значение <b>используемых разрядов</b> не содержит значения в начале одного из промежутков." },
+	{ "(…|[.])[ \t\n]*(,|$)", L"Значение <b>используемых разрядов</b> не содержит значения в конце одного из промежутков." }
 	};
 }
 
@@ -73,11 +85,9 @@ CTest::CTest()
 CTest::~CTest() {	}
 
 // Запуск проверки на ошибки
-errorData CTest::Start(bookData& book, const int& iProject, const int& iMethod) 
+errorData CTest::Start(bookData& book) 
 {
 	errorData result;
-	this->iMethod = iMethod;
-	this->iProject = iProject;
 	result.book = this->book = &book;
 	ASSERT(this->book != nullptr);
 	for (size_t j = 0; j < book.sheets.size(); j++) 
@@ -92,11 +102,9 @@ errorData CTest::Start(bookData& book, const int& iProject, const int& iMethod)
 	return result;
 }
 
-list <errorData> CTest::Start(list <bookData>& books, const int& iProject, const int& iMethod)
+list <errorData> CTest::Start(list <bookData>& books)
 {
 	list <errorData> result;
-	this->iMethod = iMethod;
-	this->iProject = iProject;
 	for (list <bookData>::iterator it = books.begin(); it != books.end(); it++) 
 	{
 		errorData error;
@@ -156,7 +164,7 @@ void CTest::GetErrors(vector <errorSignal>& syntax, vector <errorSignal>& simant
 // TODO: Сделать нормальный поиск по книге
 void CTest::GetWarnings(vector <errorSignal>& warning) 
 {
-	if (iMethod == method::fasted)
+	if (stg->GetMethod() == stg->method::fasted)
 		return;
 
 	for (size_t i = 0; i < sheet->signals.size(); i++) 
@@ -194,7 +202,7 @@ bool CTest::WriteError(errorSignal& signal, CString msg, const int& index)
 void CTest::SyntaxChecker(errorSignal& signal, const int& i)
 {
 	// Проход по синтаксическим ошибкам
-	if (iMethod == method::patterned)
+	if (stg->GetMethod() == stg->method::patterned)
 	{
 		if (sheet->arinc && sheet->signals[i].numWord.flag)
 			WriteError(signal, L"Поле пустое или содержит недопустимые символы.", check::numword);	
@@ -202,7 +210,7 @@ void CTest::SyntaxChecker(errorSignal& signal, const int& i)
 		if (!sheet->arinc)
 			TemplateTest(sheet->signals[i].numWord.field, check::numword, index::numword, signal);
 
-		if (iProject != project::kprno35 || !dwPart::checkLow(sheet->signals[i].title[0]))
+		if (stg->GetProject() != stg->project::kprno35 || !dwPart::checkLow(sheet->signals[i].title[0]))
 			TemplateTest(sheet->signals[i].title[1], check::title, index::title, signal);
 		
 		// TODO: Исправить костыль (три пустые ячейки не считаются ошибкой)
@@ -292,7 +300,7 @@ bool CTest::TemplateTest(const CString& field, const int& check, const int& inde
 void CTest::SimanticCheker(errorSignal& signal, const int& i, vector <repiter>& repit)
 {
 	ValueTest(signal);
-	if (iProject == project::kprno35)
+	if (stg->GetProject() == stg->project::kprno35)
 		PartTest(signal);
 	TitleRepitTest(signal, (int)i);
 	BitsTest(signal);

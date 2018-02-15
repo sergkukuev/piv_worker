@@ -61,7 +61,7 @@ DWORD WINAPI PrimaryThread(LPVOID lpParam)
 // Конструктор
 CPIV::CPIV() 
 {
-	logger.SetPath(&path);
+	logger.SetPath(setting.GetRefPath());
 }
 
 // Деструктор
@@ -79,60 +79,38 @@ CString CPIV::GetStatus() { return logger.GetStatus(); }
 void CPIV::WriteLog(const CString& msg) { logger.Write(msg); }
 
 // Получение путей параметров
-CString CPIV::GetPath() { return path; }
+CString CPIV::GetPath() { return setting.GetPath(); }
 
 CString CPIV::GetOtherPath()
 {
 	CString result;
-	result.Format(L"%s%s", path, OTHER_FOLDER);
+	result.Format(L"%s%s", setting.GetPath(), OTHER_FOLDER);
 	return result;
 }
 
 CString CPIV::GetProjectPath()
 {
 	CString result;
-	result.Format(L"%s%s", path, PROJECT_FOLDER);
+	result.Format(L"%s%s", setting.GetPath(), PROJECT_FOLDER);
 	return result;
 }
 #pragma region SET_PARAMETERS
 // Установка пути хранения артефактов
-void CPIV::SetPathToSave(const CString pathToReport)
+void CPIV::SetPathToSave(const CString& pathToReport)
 {
-	if (!path.IsEmpty())
-	{
-		SHFILEOPSTRUCT fos;
-		ZeroMemory(&fos, sizeof(fos));
-
-		// Установка функций для переноса папки артефактов
-		fos.wFunc = FO_MOVE;
-		path.AppendChar(0);		// '\0' чтобы закрыть строку
-		path.AppendChar(0);		// '\0' чтобы закрыть набор
-
-		CString to = pathToReport;	// Формируется аналогично path
-		to.AppendChar(0);	// для строки
-		to.AppendChar(0);	// для всего набора
-
-		fos.pFrom = path;
-		fos.pTo = to;
-		fos.fFlags = FOF_NOCONFIRMATION | FOF_NOCONFIRMMKDIR | FOF_NOERRORUI | FOF_SILENT;
-
-		SHFileOperation(&fos);
-	}
-	
-	path.Format(L"%s%s", pathToReport, BASE_FOLDER);	// Установка пути хранения артефактов
-	CreateDirectory(path, NULL);
+	setting.SetPath(pathToReport);
 	logger.Write(L"Изменено расположение папки отчетов");
 }
 
-void CPIV::SetSettings(const pivParam& parameters) 
+void CPIV::SetSettings(const pivParams& parameters) 
 { 
 	while (!GetStatusThread(primary))
 		Sleep(100);
-	param = parameters;
+	setting.SetParameters(parameters);
 	logger.Write(L"Изменены настройки приложения");
 }
 
-pivParam CPIV::GetSettings() { return param; }
+pivParams CPIV::GetSettings() { return setting.GetParameters(); }
 #pragma endregion
 
 #pragma region OPEN_PROJECT
@@ -140,7 +118,7 @@ pivParam CPIV::GetSettings() { return param; }
 void CPIV::Open(const vector<CString> pathToExcel, const CString pathToReport) 
 {
 	buffer = pathToExcel;
-	path = pathToReport;
+	setting.SetPath(pathToReport);
 	StartOpen();
 }
 
@@ -172,15 +150,15 @@ void CPIV::OpenExcel()
 		logger.Write(L"Идет открытие протоколов...", true);
 		CReaderExcel reader; 
 		for (size_t i = 0; i < buffer.size(); i++)
-			project.books.push_back(reader.GetBook(buffer[i], param.iProject));
+			project.books.push_back(reader.GetBook(buffer[i]));
 
 		CTest tester;
-		project.db = tester.Start(project.books, param.iProject, param.iMethod);
+		project.db = tester.Start(project.books);
 
 		// Генерация артефактов
 		CReport report;
-		report.GetReport(project, path, true);		// true -  проект, false - отдельные протоколы
-		report.GetTxt(project.books, path, param);
+		report.GetReport(project, true);		// true -  проект, false - отдельные протоколы
+		report.GetTxt(project.books);
 		CloseThread(primary);
 		logger.Write(L"Открытие протоколов завершено");	// Логирование
 	}
@@ -230,18 +208,18 @@ void CPIV::AddExcel()
 		{
 			bool contain = IsContain(other, buffer[i]);
 			CReaderExcel reader;
-			bookData book = reader.GetBook(buffer[i], param.iProject);
+			bookData book = reader.GetBook(buffer[i]);
 			contain ? Refresh(other, book) : other.books.push_back(book);
 			
 			CTest tester;
 			list <bookData>::iterator pBook = GetBook(other, buffer[i]);
-			errorData error = tester.Start(*pBook, param.iProject, param.iMethod);
+			errorData error = tester.Start(*pBook);
 			contain ? Refresh(other, error) : other.db.push_back(error);
 
-			report.GetTxt(*pBook, path, param);
+			report.GetTxt(*pBook);
 		}
 		
-		report.GetReport(other, path, false);	// true -  проект, false - отдельные протоколы
+		report.GetReport(other, false);	// true -  проект, false - отдельные протоколы
 		CloseThread(primary);
 		
 		logger.Write(L"Добавление протоколов завершено");	// Логирование
@@ -290,7 +268,7 @@ void CPIV::RefreshExcel()
 		for (size_t i = 0; i < buffer.size(); i++)
 		{
 			CReaderExcel reader;
-			bookData book = reader.GetBook(buffer[i], param.iProject);
+			bookData book = reader.GetBook(buffer[i]);
 			list <bookData>::iterator pBook;
 
 			CTest tester;
@@ -299,7 +277,7 @@ void CPIV::RefreshExcel()
 				flag = true;
 				Refresh(project, book);
 				pBook = GetBook(project, buffer[i]);
-				errorData error = tester.Start(*pBook, param.iProject, param.iMethod);
+				errorData error = tester.Start(*pBook);
 				Refresh(project, error);
 			}
 			else if (IsContain(other, buffer[i])) 
@@ -307,16 +285,16 @@ void CPIV::RefreshExcel()
 				flag = false;
 				Refresh(other, book);
 				pBook = GetBook(other, buffer[i]);
-				errorData error = tester.Start(*pBook, param.iProject, param.iMethod);
+				errorData error = tester.Start(*pBook);
 				Refresh(other, error);
 			}
 			else
 				throw BookNotFound(NameFromPath(buffer[i]));
 
-			report.GetTxt(*pBook, path, param);
+			report.GetTxt(*pBook);
 		}
 		
-		flag ?	report.GetReport(project, path, true) : report.GetReport(other, path, false);
+		flag ?	report.GetReport(project, true) : report.GetReport(other, false);
 	
 		CloseThread(primary);
 		

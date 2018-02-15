@@ -10,6 +10,17 @@ static char THIS_FILE[] = __FILE__;
 // Конструктор
 CReaderExcel::CReaderExcel()
 {
+	Initialize();
+}
+
+CReaderExcel::CReaderExcel(CSettings* setting)
+{
+	Initialize();
+	this->stg = setting;
+}
+
+void CReaderExcel::Initialize()
+{
 	// Установка набора заголовков
 	header.list.push_back(vector<CString>{ L"№ слов", L"№ слова", L"№ п/п", L"№ слова в подадресе" });				// Для номера слова
 	header.list.push_back(vector<CString>{ L"Наименование параметра", L"Наименование сигнала" });					// Для наименование параметра
@@ -37,10 +48,9 @@ CReaderExcel::~CReaderExcel()
 }
 
 // Чтение протокола
-bookData CReaderExcel::GetBook(const CString& pathToExcel, const int& iProject)
+bookData CReaderExcel::GetBook(const CString& pathToExcel)
 {
 	bookData book;
-	this->iProject = iProject;
 
 	if (!ExtensionChecker(pathToExcel))
 		throw BadTypeException(work.BookName(pathToExcel));
@@ -145,7 +155,7 @@ void CReaderExcel::GetSignals(vector <signalData>& signals, const bool& bArinc)
 	}
 
 	// Поиск двойных слов в КПРНО35
-	if (iProject == project::kprno35)
+	if (stg->GetProject() == stg->project::kprno35)
 		ConcatDW(signals);
 }
 

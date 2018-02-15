@@ -33,16 +33,17 @@ class PIV_DECLARE CReport
 {
 public:
 	CReport();	// Конструктор
+	CReport(CSettings*);
 	~CReport();	// Деструктор
 
-	void GetReport(pivData& data, const CString& pathToSave, const bool& isProj);			// Генерация отчета об ошибках
+	void GetReport(pivData& data, const bool& isProj);			// Генерация отчета об ошибках
 	// Генерация txt файлов
-	void GetTxt(list <bookData>& books, const CString& pathToSave, const pivParam& bNumPK);		// несколько файлов
-	void GetTxt(const bookData& book, const CString& pathToSave, const pivParam& bNumPK);		// один файл
+	void GetTxt(list <bookData>& books);		// несколько файлов
+	void GetTxt(const bookData& book);		// один файл
 
 private:
+	CSettings* stg;
 	bool isProject;		// Метка о создании отчета проекта или отдельных ПИВ (true - проект, false - отдельные протоколы)
-	CString path;		// Путь сохранения отчета
 
 	// GENERATE_REPORT
 	void CreateMainFile(pivData& data, CString path);	// Создание основного файла
@@ -62,8 +63,8 @@ private:
 	amountInfo SetAmount(pivData& data);			// Подсчет количества данных( всего, с ошибками и без ошибок), ошибок и предупреждений
 
 	// GENERATE_TXT
-	void Generate(const bookData& book, const pivParam& bNumPK);	// Генерация txt протокола
-	void WriteTxtParam(ofstream& file, const signalData& signal, const sheetInfo& info, const int& iProject, const int& arincNum);	// Запись одного набора данных из таблицы в txt файл
+	void Generate(const bookData& book);	// Генерация txt протокола
+	void WriteTxtParam(ofstream& file, const signalData& signal, const sheetInfo& info, const int& arincNum);	// Запись одного набора данных из таблицы в txt файл
 	bool IsInt(const double& numeric);	// Проверка на int значение
 };
 

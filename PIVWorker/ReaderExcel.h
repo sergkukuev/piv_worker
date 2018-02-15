@@ -22,15 +22,17 @@ class PIV_DECLARE CReaderExcel
 {
 public:
 	CReaderExcel();		// Конструктор
+	CReaderExcel(CSettings*);
 	~CReaderExcel();	// Деструктор
 
-	bookData GetBook(const CString& pathToExcel, const int& iProject);	// Чтение протокола
+	bookData GetBook(const CString& pathToExcel);	// Чтение протокола
 private:
+	CSettings* stg;
 	vector <CString> extension;	// Допустимые расширения файлов
 	CWorkExcel work;			// Работа пространство excel файла
 	Header header;				// Информация о заголовках
-	int iProject;				// Проект проверки (930М или Кпрно35)
 
+	void Initialize();
 	void GetSheets(vector <sheetData>& sheets);	// Чтение таблиц протоколов (листов)
 	void GetSignals(vector <signalData>& signals, const bool& bArinc);	// Чтение параметров на листе
 

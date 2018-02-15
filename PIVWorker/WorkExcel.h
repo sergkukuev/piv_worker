@@ -32,7 +32,7 @@ const vector<CString> REMARK = { L"Примечания:", L"Примечание:" };
 // Хранение заголовков таблицы протоколов
 struct Header 
 {
-	std::vector <std::vector<CString>> list;	// Список допустимых заголовков 
+	vector <vector<CString>> list;	// Список допустимых заголовков 
 	static const int size = 11;		// Количество заголовков
 	long adress[size];				// Адреса заголовков
 

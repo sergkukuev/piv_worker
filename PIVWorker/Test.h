@@ -41,23 +41,24 @@ class PIV_DECLARE CTest
 {
 public:
 	CTest();	// Конструктор
+	CTest(CSettings*);
 	~CTest();	// Деструктор
 
 	// Запуск проверки на ошибки
-	errorData Start(bookData& book, const int& iProject, const int& iMethod);
-	list <errorData> Start(list <bookData>& books, const int& iProject, const int& iMethod);
+	errorData Start(bookData& book);
+	list <errorData> Start(list <bookData>& books);
 
 private:
+	CSettings* stg;
 	bookData* book = nullptr;	// Указатель на текущую книгу
 	sheetData* sheet = nullptr;	// Указатель на текущий лист
 	exceptTitle exception;		// Множество исключений (задается в конструкторе)
-	int iProject;				// Объект проверки
-	int iMethod;				// Метод проверки
 
 	vector <repiter> repit;	// Сетка перекрытия битов (для одного листа)
 	vector <regBase> base;	// База регулярных выражений
 	const enum index {numword, title, value, bits, /*adress, */size};	// Индексы параметров в базе регулярных выражений (value = min, max, csr в одном флаконе)
 
+	void Initialize();
 	void GetErrors(vector <errorSignal>& syntax, vector <errorSignal>& simantic);	// Проверка листа на синтаксические и семантические ошибки
 	void GetWarnings(vector <errorSignal>& warning);	// Проверка листа на незначительные ошибки (замечания) 
 	bool WriteError(errorSignal& signal, CString msg, const int& index);	// Запись ошибки 

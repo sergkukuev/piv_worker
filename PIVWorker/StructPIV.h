@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "Defines.h"
+#include "Settings.h"
 
 using namespace std;
 
@@ -55,20 +56,6 @@ namespace dwPart {
 		return false;
 	}
 }
-
-#pragma region Settings
-const enum project { p930m, kprno35 };
-const enum method { patterned, fasted };
-
-// Параметры настройки
-struct pivParam
-{
-	int iProject = project::p930m;	// Проверка проекта: true - 930М, false - кпрно35
-	int iMethod = method::patterned;	// Метод проверки: true - шаблонная, false - быстрая
-	bool bNumPK = false;	// Установить номер подкадра при генерации txt
-	bool bGenTxt = false;	// Генерация txt в любом случае
-};
-#pragma endregion
 
 #pragma region Data
 const enum check {numword, title, min, max, csr, bits, comment, size}; // Индексы ячеек в таблице

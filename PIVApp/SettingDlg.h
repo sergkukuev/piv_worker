@@ -1,8 +1,8 @@
 #pragma once
 
 #include "PIVApp.h"
-#include "PIVDlg.h"
-#include "PIVWorker.h"	// TODO: Разобраться с ошибками С2143, С4430, С2238
+#include "RegWinMsg.h"
+#include "Settings.h"
 
 // диалоговое окно CSettingDlg
 
@@ -22,13 +22,11 @@ protected:
 
 	DECLARE_MESSAGE_MAP()
 private:
-	pivParam* param;
 	BOOL bNumPk, bGenTxt;
 	int iProject = -1, iMethod = -1;
 
 	const enum project { p930m, kprno35 };
 	const enum method { patterned, fasted };
 public:
-	void SetParameters();	// Возврат значений настроек
 	afx_msg void OnEnableBtnSave();
 };

@@ -280,6 +280,7 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="RegWinMsg.h" />
     <ClInclude Include="SettingDlg.h" />
     <ClInclude Include="WebBrowser.h" />
     <ClInclude Include="PIVApp.h" />
