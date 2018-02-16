@@ -1,6 +1,7 @@
 #pragma once
 
 #include "StructPIV.h"
+#include "Settings.h"
 #include "MyException.h"
 
 #include <regex>
@@ -41,7 +42,6 @@ class PIV_DECLARE CTest
 {
 public:
 	CTest();	// Конструктор
-	CTest(CSettings*);
 	~CTest();	// Деструктор
 
 	// Запуск проверки на ошибки
@@ -49,7 +49,6 @@ public:
 	list <errorData> Start(list <bookData>& books);
 
 private:
-	CSettings* stg;
 	bookData* book = nullptr;	// Указатель на текущую книгу
 	sheetData* sheet = nullptr;	// Указатель на текущий лист
 	exceptTitle exception;		// Множество исключений (задается в конструкторе)

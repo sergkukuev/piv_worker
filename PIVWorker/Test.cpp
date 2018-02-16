@@ -7,18 +7,13 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
+using namespace stgdll;
+
 // Конструктор
 CTest::CTest() 
 {	
 	Initialize();
 }
-
-CTest::CTest(CSettings* setting)
-{
-	Initialize();
-	this->stg = setting;
-}
-
 
 void CTest::Initialize()
 {
@@ -164,7 +159,7 @@ void CTest::GetErrors(vector <errorSignal>& syntax, vector <errorSignal>& simant
 // TODO: Сделать нормальный поиск по книге
 void CTest::GetWarnings(vector <errorSignal>& warning) 
 {
-	if (stg->GetMethod() == stg->method::fasted)
+	if (settings.GetMethod() == method::fasted)
 		return;
 
 	for (size_t i = 0; i < sheet->signals.size(); i++) 
@@ -202,7 +197,7 @@ bool CTest::WriteError(errorSignal& signal, CString msg, const int& index)
 void CTest::SyntaxChecker(errorSignal& signal, const int& i)
 {
 	// Проход по синтаксическим ошибкам
-	if (stg->GetMethod() == stg->method::patterned)
+	if (settings.GetMethod() == method::patterned)
 	{
 		if (sheet->arinc && sheet->signals[i].numWord.flag)
 			WriteError(signal, L"Поле пустое или содержит недопустимые символы.", check::numword);	
@@ -210,7 +205,7 @@ void CTest::SyntaxChecker(errorSignal& signal, const int& i)
 		if (!sheet->arinc)
 			TemplateTest(sheet->signals[i].numWord.field, check::numword, index::numword, signal);
 
-		if (stg->GetProject() != stg->project::kprno35 || !dwPart::checkLow(sheet->signals[i].title[0]))
+		if (settings.GetProject() != project::kprno35 || !dwPart::checkLow(sheet->signals[i].title[0]))
 			TemplateTest(sheet->signals[i].title[1], check::title, index::title, signal);
 		
 		// TODO: Исправить костыль (три пустые ячейки не считаются ошибкой)
@@ -300,7 +295,7 @@ bool CTest::TemplateTest(const CString& field, const int& check, const int& inde
 void CTest::SimanticCheker(errorSignal& signal, const int& i, vector <repiter>& repit)
 {
 	ValueTest(signal);
-	if (stg->GetProject() == stg->project::kprno35)
+	if (settings.GetProject() == project::kprno35)
 		PartTest(signal);
 	TitleRepitTest(signal, (int)i);
 	BitsTest(signal);
