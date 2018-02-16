@@ -25,8 +25,11 @@ namespace stgdll
 	{
 		friend class CPIV;
 	public:
-		CSettings();
-		~CSettings();
+		static CSettings& Instance()
+		{
+			static CSettings stg;
+			return stg;
+		}
 
 		// Получение параметров настройки
 		stgParams GetParameters();
@@ -39,11 +42,15 @@ namespace stgdll
 		CString GetPath();		// Текущий путь
 	
 	private:
+		CSettings();
+		~CSettings();
+
+		CSettings(CSettings const&) = delete;	// Удаляем конструктор копирования
+		CSettings& operator= (CSettings const&) = delete;	// И присваивания тоже
+
 		void SetStgPath(const CString&);	// Установка пути артефактов
 
 		stgParams parameters;	// Основные параметры
 		CString path = L"";		// Основной путь папки с артефактами
 	};
-
-	CSettings settings;
 };
