@@ -75,26 +75,26 @@ CString CPIV::GetStatus() { return logger.GetStatus(); }
 void CPIV::WriteLog(const CString& msg) { logger.Write(msg); }
 
 // Получение путей параметров
-CString CPIV::GetPath() { return setting.GetPath(); }
+CString CPIV::GetPath() { return settings.GetPath(); }
 
 CString CPIV::GetOtherPath()
 {
 	CString result;
-	result.Format(L"%s%s", setting.GetPath(), OTHER_FOLDER);
+	result.Format(L"%s%s", settings.GetPath(), OTHER_FOLDER);
 	return result;
 }
 
 CString CPIV::GetProjectPath()
 {
 	CString result;
-	result.Format(L"%s%s", setting.GetPath(), PROJECT_FOLDER);
+	result.Format(L"%s%s", settings.GetPath(), PROJECT_FOLDER);
 	return result;
 }
 #pragma region SET_PARAMETERS
 // Установка пути хранения артефактов
 void CPIV::SetPathToSave(const CString& pathToReport)
 {
-	setting.SetPath(pathToReport);
+	SetStgPath(pathToReport);
 	logger.Write(L"Изменено расположение папки отчетов");
 }
 
@@ -102,11 +102,11 @@ void CPIV::SetSettings(const stgParams& parameters)
 { 
 	while (!GetStatusThread(primary))
 		Sleep(100);
-	setting.SetParameters(parameters);
+	SetStgParams(parameters);
 	logger.Write(L"Изменены настройки приложения");
 }
 
-stgParams CPIV::GetSettings() { return setting.GetParameters(); }
+stgParams CPIV::GetSettings() { return settings.GetParameters(); }
 #pragma endregion
 
 #pragma region OPEN_PROJECT
@@ -114,7 +114,7 @@ stgParams CPIV::GetSettings() { return setting.GetParameters(); }
 void CPIV::Open(const vector<CString> pathToExcel, const CString pathToReport) 
 {
 	buffer = pathToExcel;
-	setting.SetPath(pathToReport);
+	SetStgPath(pathToReport);
 	StartOpen();
 }
 
@@ -144,15 +144,15 @@ void CPIV::OpenExcel()
 	try 
 	{
 		logger.Write(L"Идет открытие протоколов...", true);
-		CReaderExcel reader(&setting);
+		CReaderExcel reader(&settings);
 		for (size_t i = 0; i < buffer.size(); i++)
 			project.books.push_back(reader.GetBook(buffer[i]));
 
-		CTest tester(&setting);
+		CTest tester(&settings);
 		project.db = tester.Start(project.books);
 
 		// Генерация артефактов
-		CReport report(&setting);
+		CReport report(&settings);
 		report.GetReport(project, true);		// true -  проект, false - отдельные протоколы
 		report.GetTxt(project.books);
 		CloseThread(primary);
@@ -199,15 +199,15 @@ void CPIV::AddExcel()
 	try 
 	{
 		logger.Write(L"Идет добавление протоколов...", true);
-		CReport report(&setting);
+		CReport report(&settings);
 		for (size_t i = 0; i < buffer.size(); i++) 
 		{
 			bool contain = IsContain(other, buffer[i]);
-			CReaderExcel reader(&setting);
+			CReaderExcel reader(&settings);
 			bookData book = reader.GetBook(buffer[i]);
 			contain ? Refresh(other, book) : other.books.push_back(book);
 			
-			CTest tester(&setting);
+			CTest tester(&settings);
 			list <bookData>::iterator pBook = GetBook(other, buffer[i]);
 			errorData error = tester.Start(*pBook);
 			contain ? Refresh(other, error) : other.db.push_back(error);
@@ -259,15 +259,15 @@ void CPIV::RefreshExcel()
 	try 
 	{
 		logger.Write(L"Идет обновление выбранных протоколов...", true);
-		CReport report(&setting);
+		CReport report(&settings);
 		bool flag = true;
 		for (size_t i = 0; i < buffer.size(); i++)
 		{
-			CReaderExcel reader(&setting);
+			CReaderExcel reader(&settings);
 			bookData book = reader.GetBook(buffer[i]);
 			list <bookData>::iterator pBook;
 
-			CTest tester(&setting);
+			CTest tester(&settings);
 			if (IsContain(project, buffer[i])) 
 			{
 				flag = true;
