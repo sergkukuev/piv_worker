@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "Settings.h"
 
+using namespace stgdll;
 
 CSettings::CSettings()
 {
@@ -10,14 +11,15 @@ CSettings::CSettings()
 	parameters.bGenTxt = false;
 }
 
-
 CSettings::~CSettings() {	}
 
-void CSettings::SetParameters(const pivParams& params)
+// Установка параметров
+void CSettings::SetParameters(const stgParams& params)
 {
 	this->parameters = params;
 }
 
+// Установка пути
 void CSettings::SetPath(const CString& pathToArtefact)
 {
 	if (!path.IsEmpty())
@@ -46,12 +48,14 @@ void CSettings::SetPath(const CString& pathToArtefact)
 	this->path = path;
 }
 
-pivParams CSettings::GetParameters() { return this->parameters; }
+// Получение параметров настройки
+stgParams CSettings::GetParameters() { return this->parameters; }
 
 CString CSettings::GetPath() { return this->path; }
 
 CString* CSettings::GetRefPath() { return &path; }
 
+// Основные параметры
 int CSettings::GetProject() { return this->parameters.iProject; }
 
 int CSettings::GetMethod() { return this->parameters.iMethod; }
