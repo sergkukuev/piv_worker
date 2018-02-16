@@ -25,7 +25,8 @@ void CReport::GetReport(pivData& data, const bool& isProj)
 	CString tPath;	// Путь к текущему файлу
 
 	// Создание и открытие файла
-	isProject ? tPath.Format(L"%s%s", settings.GetPath(), PROJECT_FOLDER) : tPath.Format(L"%s%s", settings.GetPath(), OTHER_FOLDER);
+	isProject ? tPath.Format(L"%s%s", settings.GetPath(), settings.folders[project]) :
+		tPath.Format(L"%s%s", settings.GetPath(), settings.folders[other]);
 	CreateDirectory(tPath, NULL);
 	CreateMainFile(data, tPath);
 }
@@ -34,7 +35,7 @@ void CReport::GetReport(pivData& data, const bool& isProj)
 void CReport::CreateMainFile(pivData& data, CString path)
 {
 	CreateFolders(path);
-	path.Format(L"%s\\Отчет.html", path);
+	path.Format(L"%s\\%s", path, REPORT_NAME);
 	CStdioFile file(path, CFile::modeCreate | CFile::modeWrite | CFile::typeUnicode);	// Поток записи в файл
 	file.WriteString(L"<html>\n"
 		"\t<head>\n"
@@ -53,13 +54,13 @@ void CReport::CreateMainFile(pivData& data, CString path)
 void CReport::CreateFolders(const CString& path)
 {
 	CString folder = path;
-	folder.Format(L"%s%s", path, ERROR_FOLDER);
+	folder.Format(L"%s%s", path, settings.folders[error]);
 	CreateDirectory(folder, NULL);
-	folder.Format(L"%s%s", path, SYNTAX_FOLDER);
+	folder.Format(L"%s%s", path, settings.folders[syntax]);
 	CreateDirectory(folder, NULL);
-	folder.Format(L"%s%s", path, SIMANTIC_FOLDER);
+	folder.Format(L"%s%s", path, settings.folders[simantic]);
 	CreateDirectory(folder, NULL);
-	folder.Format(L"%s%s", path, WARNING_FOLDER);
+	folder.Format(L"%s%s", path, settings.folders[warning]);
 	CreateDirectory(folder, NULL);
 }
 
@@ -152,7 +153,7 @@ void CReport::WriteBook(CStdioFile& file, list <errorData>::iterator& it)
 	file.WriteString(L"\t\t\t\t<td align=\"center\">\n"
 		"\t\t\t\t\t<dl>\n"); 
 	for (size_t i = 0; i < it->set.size(); i++)
-		file.WriteString(WriteSheets(it->set[i].data, it->set[i].syntax, SYNTAX_FOLDER, it->book->name));
+		file.WriteString(WriteSheets(it->set[i].data, it->set[i].syntax, settings.folders[syntax], it->book->name));
 
 	file.WriteString(L"\t\t\t\t\t</dl>\n"
 		"\t\t\t\t</td>\n");
@@ -160,7 +161,7 @@ void CReport::WriteBook(CStdioFile& file, list <errorData>::iterator& it)
 	file.WriteString(L"\t\t\t\t<td align=\"center\">\n"
 		"\t\t\t\t\t<dl>\n");
 	for (size_t i = 0; i < it->set.size(); i++)
-		file.WriteString(WriteSheets(it->set[i].data, it->set[i].simantic, SIMANTIC_FOLDER, it->book->name));
+		file.WriteString(WriteSheets(it->set[i].data, it->set[i].simantic, settings.folders[simantic], it->book->name));
 
 	file.WriteString(L"\t\t\t\t\t</dl>\n"
 		"\t\t\t\t</td>\n");
@@ -168,7 +169,7 @@ void CReport::WriteBook(CStdioFile& file, list <errorData>::iterator& it)
 	file.WriteString(L"\t\t\t\t<td colspan=\"3\" align=\"center\">\n"
 		"\t\t\t\t\t<dl>\n");
 	for (size_t i = 0; i < it->set.size(); i++)
-		file.WriteString(WriteSheets(it->set[i].data, it->set[i].warning, WARNING_FOLDER, it->book->name));
+		file.WriteString(WriteSheets(it->set[i].data, it->set[i].warning, settings.folders[warning], it->book->name));
 
 	file.WriteString(L"\t\t\t\t\t</dl>\n"
 		"\t\t\t\t</td>\n");
@@ -178,7 +179,8 @@ void CReport::WriteBook(CStdioFile& file, list <errorData>::iterator& it)
 CString CReport::WriteSheets(sheetData* sheet, const vector <errorSignal>& db, const CString& folder, const CString& bookName) 
 {
 	CString pathFile;
-	isProject ? pathFile.Format(L"%s%s%s\\%s", settings.GetPath(), PROJECT_FOLDER, folder, bookName) : pathFile.Format(L"%s%s%s\\%s", settings.GetPath(), OTHER_FOLDER, folder, bookName);
+	isProject ? pathFile.Format(L"%s%s%s\\%s", settings.GetPath(), settings.folders[project], folder, bookName) : 
+		pathFile.Format(L"%s%s%s\\%s", settings.GetPath(), settings.folders[other], folder, bookName);
 	CreateDirectory(pathFile, NULL);
 	
 	CString result;	// Результирующая строка для записи ссылки в главный файл
@@ -189,7 +191,7 @@ CString CReport::WriteSheets(sheetData* sheet, const vector <errorSignal>& db, c
 		pathFile.Format(L"%s\\%s.html", pathFile, sheet->name);
 		CString relativePath = pathFile;
 		relativePath.Delete(0, settings.GetPath().GetLength());
-		isProject ? relativePath.Delete(0, PROJECT_SIZE) : relativePath.Delete(0, OTHER_SIZE);
+		isProject ? relativePath.Delete(0, settings.folders[project].GetLength()) : relativePath.Delete(0, settings.folders[other].GetLength());
 		relativePath.Insert(0, L".");
 		result.Format(L"\t\t\t\t\t\t<dt><a href=\"%s\">%d</a></dt>\n", relativePath, count);	// Формирование результирующей строки (ссылки)
 		
@@ -373,7 +375,7 @@ void CReport::GetTxt(const bookData& book)
 		throw EmptyPathException();
 	
 	CString path;
-	path.Format(L"%s%s", settings.GetPath(), TEXT_FOLDER);
+	path.Format(L"%s%s", settings.GetPath(), settings.folders[text]);
 	CreateDirectory(path, NULL);
 
 	Generate(book);
@@ -386,7 +388,7 @@ void CReport::GetTxt(list <bookData>& books)
 		throw EmptyPathException();
 
 	CString path;
-	path.Format(L"%s%s", settings.GetPath(), TEXT_FOLDER);
+	path.Format(L"%s%s", settings.GetPath(), settings.folders[text]);
 	CreateDirectory(path, NULL);
 
 	// Обход по книгам
@@ -398,7 +400,7 @@ void CReport::GetTxt(list <bookData>& books)
 void CReport::Generate(const bookData& book) 
 {
 	CString tPath = settings.GetPath();
-	tPath.Format(L"%s\\%s", tPath, book.name);
+	tPath.Format(L"%s%s\\%s", tPath, settings.folders[text], book.name);
 	CreateDirectory(tPath, NULL);
 
 	CString filePath = settings.GetPath();

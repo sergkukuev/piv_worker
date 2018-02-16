@@ -19,11 +19,11 @@ void CTest::Initialize()
 	// Для ARINC
 	exception.arinc.insert(L"ID_BPV1");	// Идентификатор блока 1
 	exception.arinc.insert(L"ID_BPV2");	// Идентификатор блока 2
-										// Для MKIO 
-										// Пусто
+	// Для MKIO 
+	// Пусто
 
-										// Создание базы для проверки на ошибки с помощью регулярных выражений
-										// TODO: Добавить регулярные выражения для адреса (ARINC)
+	// Создание базы для проверки на ошибки с помощью регулярных выражений
+	// TODO: Добавить регулярные выражения для адреса (ARINC)
 	base.resize(index::size);
 	base[numword].correct = "^[0-9]+(, ?[0-9]+)?$";
 	base[numword].incorrect =

@@ -98,10 +98,10 @@
     <ClInclude Include="Logger.h">
       <Filter>Заголовочные файлы</Filter>
     </ClInclude>
-    <ClInclude Include="Defines.h">
+    <ClInclude Include="Settings.h">
       <Filter>Заголовочные файлы</Filter>
     </ClInclude>
-    <ClInclude Include="Settings.h">
+    <ClInclude Include="DllDeclare.h">
       <Filter>Заголовочные файлы</Filter>
     </ClInclude>
   </ItemGroup>

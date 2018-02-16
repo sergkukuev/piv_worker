@@ -1,6 +1,7 @@
 #pragma once
 
 #include "StructPIV.h"
+#include "DllDeclare.h"
 
 // Базовый класс исключений
 class PIV_DECLARE MyException	

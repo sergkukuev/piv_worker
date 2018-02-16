@@ -8,6 +8,8 @@
 
 using namespace stgdll;
 
+#define REPORT_NAME L"Отчет.html"
+
 // Информация о количестве наборов данных
 struct amountInfo	
 {

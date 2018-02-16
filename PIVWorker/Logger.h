@@ -3,10 +3,11 @@
 #include <cstring>
 #include <fstream>
 
-#include "Defines.h"
+#include "DllDeclare.h"
 
 #define LOG_THREAD_BUSY L"Поток занят, подождите окончания процесса"
 #define LOG_SLASH	L"================================================================\n"
+#define LOG_FILE_NAME L"log.txt"
 
 class PIV_DECLARE CLogger
 {

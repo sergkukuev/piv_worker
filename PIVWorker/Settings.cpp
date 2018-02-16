@@ -5,15 +5,10 @@ using namespace stgdll;
 
 CSettings::CSettings()
 {
-	parameters.iProject = project::p930m;
-	parameters.iMethod = method::patterned;
-	parameters.bNumPK = false;
-	parameters.bGenTxt = false; 
-
 	GetModuleFileName(NULL, path.GetBuffer(_MAX_PATH), _MAX_PATH);
 	path.ReleaseBuffer();
 	path.Delete(path.ReverseFind(L'\\'), path.GetLength());
-	path.Format(L"%s%s", path, BASE_FOLDER);	// Установка пути хранения артефактов
+	path.Format(L"%s%s", path, folders[base]);	// Установка пути хранения артефактов
 	CreateDirectory(path, NULL);
 }
 
@@ -43,7 +38,7 @@ void CSettings::SetStgPath(const CString& pathToSave)
 		SHFileOperation(&fos);
 	}
 
-	path.Format(L"%s%s", pathToSave, BASE_FOLDER);	// Установка пути хранения артефактов
+	path.Format(L"%s%s", pathToSave, folders[base]);	// Установка пути хранения артефактов
 	CreateDirectory(path, NULL);
 }
 

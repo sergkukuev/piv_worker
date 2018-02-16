@@ -294,7 +294,7 @@
     <ClCompile Include="WorkExcel.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Defines.h" />
+    <ClInclude Include="DllDeclare.h" />
     <ClInclude Include="excel\CApplication.h" />
     <ClInclude Include="excel\CRange.h" />
     <ClInclude Include="excel\CWorkbook.h" />

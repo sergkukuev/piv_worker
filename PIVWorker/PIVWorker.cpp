@@ -80,14 +80,14 @@ CString CPIV::GetPath() { return settings.GetPath(); }
 CString CPIV::GetOtherPath()
 {
 	CString result;
-	result.Format(L"%s%s", settings.GetPath(), OTHER_FOLDER);
+	result.Format(L"%s%s", settings.GetPath(), settings.folders[folders::other]);
 	return result;
 }
 
 CString CPIV::GetProjectPath()
 {
 	CString result;
-	result.Format(L"%s%s", settings.GetPath(), PROJECT_FOLDER);
+	result.Format(L"%s%s", settings.GetPath(), settings.folders[folders::project]);
 	return result;
 }
 #pragma region SET_PARAMETERS

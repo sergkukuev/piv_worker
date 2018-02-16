@@ -4,8 +4,6 @@
 #include <list>
 #include <vector>
 
-#include "Defines.h"
-
 using namespace std;
 
 // Обозначения старшей и младшей частей в протоколах КПРНО35
@@ -57,6 +55,10 @@ namespace dwPart {
 }
 
 #pragma region Data
+// Идентификаторы значений таблицы
+#define RESERVE_SIGNAL L"Резерв"
+
+// Объединения
 const enum check {numword, title, min, max, csr, bits, comment, size}; // Индексы ячеек в таблице
 
 // Хранение номера слова и битов

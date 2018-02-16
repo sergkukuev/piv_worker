@@ -1,24 +1,27 @@
 #pragma once
 
 #include <cstring>
-#include "Defines.h"
+#include <vector>
+
+#include "DllDeclare.h"
 
 class PIV_DECLARE CPIV;	// Объявление существующего класса
 
 namespace stgdll
 {
+	// Объединения 
+	const enum folders { base, text, project, other, error, syntax, simantic, warning }; // индексы папок
+	const enum project { p930m, kprno35 };		// Объект проверки
+	const enum method { patterned, fasted };	// Метод проверки
+
 	// Структуры
 	struct stgParams
 	{
-		int iProject;	// Проверка проекта: 0 - 930М, 1 - кпрно35
-		int iMethod;	// Метод проверки: 0 - шаблонная, 1 - быстрая
-		bool bNumPK;	// Установить номер подкадра при генерации txt
-		bool bGenTxt;	// Генерация txt в любом случае
+		int iProject = p930m;	// Проверка проекта: 0 - 930М, 1 - кпрно35
+		int iMethod = kprno35;	// Метод проверки: 0 - шаблонная, 1 - быстрая
+		bool bNumPK = false;	// Установить номер подкадра при генерации txt
+		bool bGenTxt = false;	// Генерация txt в любом случае
 	};
-
-	// Объединения 
-	const enum project { p930m, kprno35 };
-	const enum method { patterned, fasted };
 
 	// Класс настроек
 	class PIV_DECLARE CSettings
@@ -30,6 +33,9 @@ namespace stgdll
 			static CSettings stg;
 			return stg;
 		}
+		// Папки артефактов
+		const std::vector<CString> folders = { L"\\Artefacts", L"\\Text", L"\\Project", L"\\Other", L"\\Error",
+			L"\\Error\\Syntax", L"Error\\Simantic", L"\\Warning" };
 
 		// Получение параметров настройки
 		stgParams GetParameters();
@@ -40,7 +46,6 @@ namespace stgdll
 
 		CString* GetRefPath();	// Ссылка на текущий путь проекта
 		CString GetPath();		// Текущий путь
-	
 	private:
 		CSettings();
 		~CSettings();
