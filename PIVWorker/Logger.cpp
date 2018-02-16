@@ -10,6 +10,8 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
+using namespace logdll;
+
 CLogger::CLogger()
 {
 	InitializeCriticalSection(&cs);
@@ -51,6 +53,18 @@ void CLogger::WriteError(const CString& message)
 	Write(message, true, false);
 }
 
+CLogger& CLogger::operator<<(const CString& message)
+{
+	Write(message, false);
+	return *this;
+}
+
+CLogger& CLogger::operator>>(const CString& message)
+{
+	Write(message, false, true);
+	return *this;
+}
+
 void CLogger::Write(const CString& message, const bool& error, const bool& iter)
 {
 	error ? status = L"Что-то пошло не так (см. в log.txt)" : status = message;
@@ -63,7 +77,7 @@ void CLogger::Write(const CString& message, const bool& error, const bool& iter)
 		str = message;
 
 	CString logPath;
-	logPath.Format(L"%s\\%s", *path, LOG_FILE_NAME);
+	logPath.Format(L"%s\\log.txt", *path);
 	std::ofstream logStream(logPath, std::ios::out | std::ios::app);
 	logStream << CT2A(str);
 	logStream.close();

@@ -59,6 +59,7 @@ public:
 private:
 	HANDLE primary;		// Основной поток
 	stgdll::CSettings& settings = stgdll::CSettings::Instance();	// Указатель на настройки
+	logdll::CLogger& logger = logdll::CLogger::Instance();	// Указатель на логирование
 
 	pivData project;	// Данные проекта
 	pivData other;		// Данные остальных протоколов

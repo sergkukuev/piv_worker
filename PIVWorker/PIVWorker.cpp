@@ -72,7 +72,7 @@ bool CPIV::IsUpdate() { return logger.IsRead(); }
 
 CString CPIV::GetStatus() { return logger.GetStatus(); }
 
-void CPIV::WriteLog(const CString& msg) { logger.Write(msg); }
+void CPIV::WriteLog(const CString& msg) { logger << msg; }
 
 // Получение путей параметров
 CString CPIV::GetPath() { return settings.GetPath(); }
@@ -95,7 +95,7 @@ CString CPIV::GetProjectPath()
 void CPIV::SetPathToSave(const CString& pathToReport)
 {
 	settings.SetStgPath(pathToReport);
-	logger.Write(L"Изменено расположение папки отчетов");
+	logger << L"Изменено расположение папки отчетов";
 }
 
 void CPIV::SetSettings(const stgParams& parameters) 
@@ -103,7 +103,7 @@ void CPIV::SetSettings(const stgParams& parameters)
 	while (!GetStatusThread(primary))
 		Sleep(100);
 	settings.parameters = parameters;
-	logger.Write(L"Изменены настройки приложения");
+	logger << L"Изменены настройки приложения";
 }
 
 stgParams CPIV::GetSettings() { return settings.GetParameters(); }
@@ -143,7 +143,7 @@ void CPIV::OpenExcel()
 {
 	try 
 	{
-		logger.Write(L"Идет открытие протоколов...", true);
+		logger << L"Идет открытие протоколов...";
 		CReaderExcel reader;
 		for (size_t i = 0; i < buffer.size(); i++)
 			project.books.push_back(reader.GetBook(buffer[i]));
@@ -156,7 +156,7 @@ void CPIV::OpenExcel()
 		report.GetReport(project, true);		// true -  проект, false - отдельные протоколы
 		report.GetTxt(project.books);
 		CloseThread(primary);
-		logger.Write(L"Открытие протоколов завершено");	// Логирование
+		logger << L"Открытие протоколов завершено";	// Логирование
 	}
 	catch (MyException& exc)
 	{
@@ -198,7 +198,7 @@ void CPIV::AddExcel()
 {
 	try 
 	{
-		logger.Write(L"Идет добавление протоколов...", true);
+		logger >> L"Идет добавление протоколов...";
 		CReport report;
 		for (size_t i = 0; i < buffer.size(); i++) 
 		{
@@ -218,7 +218,7 @@ void CPIV::AddExcel()
 		report.GetReport(other, false);	// true -  проект, false - отдельные протоколы
 		CloseThread(primary);
 		
-		logger.Write(L"Добавление протоколов завершено");	// Логирование
+		logger << L"Добавление протоколов завершено";	// Логирование
 	}
 	catch (MyException& exc) 
 	{
@@ -258,7 +258,7 @@ void CPIV::RefreshExcel()
 {
 	try 
 	{
-		logger.Write(L"Идет обновление выбранных протоколов...", true);
+		logger >> L"Идет обновление выбранных протоколов...";
 		CReport report;
 		bool flag = true;
 		for (size_t i = 0; i < buffer.size(); i++)
@@ -294,7 +294,7 @@ void CPIV::RefreshExcel()
 	
 		CloseThread(primary);
 		
-		logger.Write(L"Обновление протоколов завершено");	// Логирование
+		logger << L"Обновление протоколов завершено";	// Логирование
 	}
 	catch (MyException& exc) 
 	{
@@ -309,10 +309,10 @@ void CPIV::Close()
 {
 	if (!other.books.empty() || !other.db.empty())
 	{
-		logger.Write(L"Идет закрытие всех протоколов...", true);
+		logger >> L"Идет закрытие всех протоколов...";
 		other.books.clear();
 		other.db.clear();
-		logger.Write(L"Закрытие протоколов завершено");	// Логирование
+		logger << L"Закрытие протоколов завершено";	// Логирование
 	}
 }
 
@@ -348,16 +348,16 @@ void CPIV::CloseProject()
 {
 	if (!project.books.empty() || !project.db.empty())
 	{
-		logger.Write(L"Идет закрытие проекта...", true);
+		logger >> L"Идет закрытие проекта...";
 		project.books.clear();
 		project.db.clear();
-		logger.Write(L"Закрытие проекта завершено");	// Логирование
+		logger << L"Закрытие проекта завершено";	// Логирование
 	}
 }
 
 void CPIV::CloseExcel() 
 {
-	logger.Write(L"Идет закрытие выбранных протоколов...", true);
+	logger >> L"Идет закрытие выбранных протоколов...";
 	for (size_t i = 0; i < buffer.size(); i++) 
 	{
 		for (list <errorData>::iterator it = other.db.begin(); it != other.db.end();)
@@ -366,7 +366,7 @@ void CPIV::CloseExcel()
 			it->name.Compare(NameFromPath(buffer[i])) == 0 ? other.books.erase(it++) : it++;
 	}
 	CloseThread(primary);
-	logger.Write(L"Закрытие протоколов завершено");	// Логирование
+	logger << L"Закрытие протоколов завершено";	// Логирование
 }
 #pragma endregion
 
@@ -444,7 +444,7 @@ void Thread(CPIV& piv)
 		piv.CloseExcel();
 		break;
 	default:
-		logger.WriteError(L"Ошибка: неопознанная команда");
+		piv.logger.WriteError(L"Ошибка: неопознанная команда");
 		break;
 	}
 }
