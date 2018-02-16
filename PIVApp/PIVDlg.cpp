@@ -154,16 +154,10 @@ BOOL CPIVDlg::OnInitDialog()
 	m_Cmb->AddString(L"Отдельные ПИВ");
 	m_Cmb->SetCurSel(1);
 
-	piv.WriteLog(L"Приложение запущено");
-
 	// Добавить путь отчетов
-	CString reports;
-	GetModuleFileName(NULL, reports.GetBuffer(_MAX_PATH), _MAX_PATH);
-	reports.ReleaseBuffer();
-	reports.Delete(reports.ReverseFind(L'\\'), reports.GetLength());
+	piv.WriteLog(L"Приложение запущено");
 	CEdit* m_Edt = (CEdit*)GetDlgItem(IDC_EDIT_PATH);
-	piv.SetPathToSave(reports);
-	m_Edt->SetWindowTextW(reports);
+	m_Edt->SetWindowTextW(piv.GetPath());
 	
 	// Установка иконок на кнопочки
 	CButton* m_Btn = (CButton*)GetDlgItem(IDC_BTN_HOME);
@@ -346,7 +340,7 @@ void CPIVDlg::OnChangeFolder()
 	if (!folder.IsEmpty())
 	{
 		piv.SetPathToSave(folder);
-		m_Edit->SetWindowTextW(folder);
+		m_Edit->SetWindowTextW(piv.GetPath());
 	}
 	else
 		piv.WriteLog(L"Папка для сохранения артефактов не изменена");

@@ -8,7 +8,13 @@ CSettings::CSettings()
 	parameters.iProject = project::p930m;
 	parameters.iMethod = method::patterned;
 	parameters.bNumPK = false;
-	parameters.bGenTxt = false;
+	parameters.bGenTxt = false; 
+
+	GetModuleFileName(NULL, path.GetBuffer(_MAX_PATH), _MAX_PATH);
+	path.ReleaseBuffer();
+	path.Delete(path.ReverseFind(L'\\'), path.GetLength());
+	path.Format(L"%s%s", path, BASE_FOLDER);	// Установка пути хранения артефактов
+	CreateDirectory(path, NULL);
 }
 
 CSettings::~CSettings() {	}
