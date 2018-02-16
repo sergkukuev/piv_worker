@@ -4,6 +4,7 @@
 #include <cerrno>
 
 #include "StructPIV.h"
+#include "Settings.h"
 #include "WorkExcel.h"
 #include "MyException.h"
 
@@ -22,12 +23,10 @@ class PIV_DECLARE CReaderExcel
 {
 public:
 	CReaderExcel();		// Конструктор
-	CReaderExcel(CSettings*);
 	~CReaderExcel();	// Деструктор
 
 	bookData GetBook(const CString& pathToExcel);	// Чтение протокола
 private:
-	CSettings* stg;
 	vector <CString> extension;	// Допустимые расширения файлов
 	CWorkExcel work;			// Работа пространство excel файла
 	Header header;				// Информация о заголовках

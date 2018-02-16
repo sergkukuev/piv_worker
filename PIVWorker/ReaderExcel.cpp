@@ -13,12 +13,6 @@ CReaderExcel::CReaderExcel()
 	Initialize();
 }
 
-CReaderExcel::CReaderExcel(CSettings* setting)
-{
-	Initialize();
-	this->stg = setting;
-}
-
 void CReaderExcel::Initialize()
 {
 	// Установка набора заголовков
@@ -155,7 +149,7 @@ void CReaderExcel::GetSignals(vector <signalData>& signals, const bool& bArinc)
 	}
 
 	// Поиск двойных слов в КПРНО35
-	if (stg->GetProject() == stg->project::kprno35)
+	if (stgdll::settings.GetProject() == stgdll::project::kprno35)
 		ConcatDW(signals);
 }
 
