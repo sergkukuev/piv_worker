@@ -5,7 +5,6 @@
 #include <vector>
 
 #include "Defines.h"
-#include "Settings.h"
 
 using namespace std;
 
