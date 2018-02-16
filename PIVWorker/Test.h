@@ -9,6 +9,8 @@
 
 #define MAX_BITS 32
 
+using namespace stgdll;
+
 // Повторения номеров слов(адресов) и битов
 typedef struct
 {
@@ -49,6 +51,7 @@ public:
 	list <errorData> Start(list <bookData>& books);
 
 private:
+	CSettings& settings = CSettings::Instance();	// Указатель на настройки
 	bookData* book = nullptr;	// Указатель на текущую книгу
 	sheetData* sheet = nullptr;	// Указатель на текущий лист
 	exceptTitle exception;		// Множество исключений (задается в конструкторе)

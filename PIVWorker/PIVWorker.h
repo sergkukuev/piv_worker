@@ -7,8 +7,7 @@
 #error "включить stdafx.h до включения этого файла в PCH"
 #endif
 
-#include "resource.h"
-#include "StructPIV.h"		// Основные структуры и макросы		
+#include "resource.h"	
 #include "Logger.h"			// логирование
 #include "Settings.h"		// Настройки
 #include "ReaderExcel.h"	// чтение протоколов
@@ -59,6 +58,7 @@ public:
 	friend void Thread(CPIV& piv);	// Запуск операций DLL в потоке
 private:
 	HANDLE primary;		// Основной поток
+	stgdll::CSettings& settings = stgdll::CSettings::Instance();	// Указатель на настройки
 
 	pivData project;	// Данные проекта
 	pivData other;		// Данные остальных протоколов

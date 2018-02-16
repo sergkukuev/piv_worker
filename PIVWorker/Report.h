@@ -6,6 +6,8 @@
 #include "Settings.h"
 #include "MyException.h"
 
+using namespace stgdll;
+
 // Информация о количестве наборов данных
 struct amountInfo	
 {
@@ -42,6 +44,7 @@ public:
 	void GetTxt(const bookData& book);		// один файл
 
 private:
+	CSettings& settings = CSettings::Instance();	// Указатель на настройки
 	bool isProject;		// Метка о создании отчета проекта или отдельных ПИВ (true - проект, false - отдельные протоколы)
 
 	// GENERATE_REPORT

@@ -27,6 +27,7 @@ public:
 
 	bookData GetBook(const CString& pathToExcel);	// Чтение протокола
 private:
+	stgdll::CSettings& settings = stgdll::CSettings::Instance();	// Указатель на настройки
 	vector <CString> extension;	// Допустимые расширения файлов
 	CWorkExcel work;			// Работа пространство excel файла
 	Header header;				// Информация о заголовках

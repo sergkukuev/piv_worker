@@ -149,7 +149,7 @@ void CReaderExcel::GetSignals(vector <signalData>& signals, const bool& bArinc)
 	}
 
 	// Поиск двойных слов в КПРНО35
-	if (stgdll::settings.GetProject() == stgdll::project::kprno35)
+	if (settings.GetProject() == stgdll::project::kprno35)
 		ConcatDW(signals);
 }
 
