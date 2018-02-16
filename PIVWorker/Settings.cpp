@@ -13,14 +13,8 @@ CSettings::CSettings()
 
 CSettings::~CSettings() {	}
 
-// Установка параметров
-void CSettings::SetParameters(const stgParams& params)
-{
-	this->parameters = params;
-}
-
 // Установка пути
-void CSettings::SetPath(const CString& pathToArtefact)
+void CSettings::SetStgPath(const CString& pathToSave)
 {
 	if (!path.IsEmpty())
 	{
@@ -32,7 +26,7 @@ void CSettings::SetPath(const CString& pathToArtefact)
 		path.AppendChar(0);		// '\0' чтобы закрыть строку
 		path.AppendChar(0);		// '\0' чтобы закрыть набор
 
-		CString to = pathToArtefact;	// Формируется аналогично path
+		CString to = pathToSave;	// Формируется аналогично path
 		to.AppendChar(0);	// для строки
 		to.AppendChar(0);	// для всего набора
 
@@ -43,9 +37,8 @@ void CSettings::SetPath(const CString& pathToArtefact)
 		SHFileOperation(&fos);
 	}
 
-	path.Format(L"%s%s", pathToArtefact, BASE_FOLDER);	// Установка пути хранения артефактов
+	path.Format(L"%s%s", pathToSave, BASE_FOLDER);	// Установка пути хранения артефактов
 	CreateDirectory(path, NULL);
-	this->path = path;
 }
 
 // Получение параметров настройки

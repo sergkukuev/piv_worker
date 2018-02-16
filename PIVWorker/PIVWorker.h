@@ -10,6 +10,7 @@
 #include "resource.h"
 #include "StructPIV.h"		// Основные структуры и макросы		
 #include "Logger.h"			// логирование
+#include "Settings.h"		// Настройки
 #include "ReaderExcel.h"	// чтение протоколов
 #include "Test.h"			// проверка на ошибки протоколов
 #include "Report.h"			// создание отчетов об ошибках
@@ -50,16 +51,13 @@ public:
 	CString GetProjectPath();
 	CString GetOtherPath();
 	CString GetPath();
+	
+	stgdll::stgParams GetSettings();						// Получение текущих настроек
+	void SetPathToSave(const CString& pathToReport);// Установка пути хранения артефактов
+	void SetSettings(const stgdll::stgParams& parameters);	// Установка настроек DLL
 
-	void SetPathToSave(const CString& pathToReport);		// Установка пути хранения артефактов
-	pivParams GetSettings();	// Получение текущих настроек
-	void SetSettings(const pivParams& parameters);	// Установка настроек DLL
-
-protected:
 	friend void Thread(CPIV& piv);	// Запуск операций DLL в потоке
-
 private:
-	CSettings setting;
 	HANDLE primary;		// Основной поток
 
 	pivData project;	// Данные проекта

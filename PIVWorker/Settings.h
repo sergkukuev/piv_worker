@@ -3,16 +3,18 @@
 #include <cstring>
 #include "Defines.h"
 
+class PIV_DECLARE CPIV;	// Объявление существующего класса
+
 namespace stgdll
 {
 	// Структуры
-	typedef struct
+	struct stgParams
 	{
 		int iProject;	// Проверка проекта: 0 - 930М, 1 - кпрно35
 		int iMethod;	// Метод проверки: 0 - шаблонная, 1 - быстрая
 		bool bNumPK;	// Установить номер подкадра при генерации txt
 		bool bGenTxt;	// Генерация txt в любом случае
-	} stgParams;
+	};
 
 	// Объединения 
 	const enum project { p930m, kprno35 };
@@ -21,6 +23,7 @@ namespace stgdll
 	// Класс настроек
 	class PIV_DECLARE CSettings
 	{
+		friend class CPIV;
 	public:
 		CSettings();
 		~CSettings();
@@ -34,11 +37,10 @@ namespace stgdll
 
 		CString* GetRefPath();	// Ссылка на текущий путь проекта
 		CString GetPath();		// Текущий путь
-	protected:
-		// Установка параметров (устанавливается в классе CPIVWorker)
-		void SetParameters(const stgParams& params);
-		void SetPath(const CString& path);
+	
 	private:
+		void SetStgPath(const CString&);	// Установка пути артефактов
+
 		stgParams parameters;	// Основные параметры
 		CString path = L"";		// Основной путь папки с артефактами
 	};

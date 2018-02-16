@@ -94,7 +94,7 @@ CString CPIV::GetProjectPath()
 // Установка пути хранения артефактов
 void CPIV::SetPathToSave(const CString& pathToReport)
 {
-	SetStgPath(pathToReport);
+	settings.SetStgPath(pathToReport);
 	logger.Write(L"Изменено расположение папки отчетов");
 }
 
@@ -102,7 +102,7 @@ void CPIV::SetSettings(const stgParams& parameters)
 { 
 	while (!GetStatusThread(primary))
 		Sleep(100);
-	SetStgParams(parameters);
+	settings.parameters = parameters;
 	logger.Write(L"Изменены настройки приложения");
 }
 
@@ -114,7 +114,7 @@ stgParams CPIV::GetSettings() { return settings.GetParameters(); }
 void CPIV::Open(const vector<CString> pathToExcel, const CString pathToReport) 
 {
 	buffer = pathToExcel;
-	SetStgPath(pathToReport);
+	settings.SetStgPath(pathToReport);
 	StartOpen();
 }
 
