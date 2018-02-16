@@ -144,15 +144,15 @@ void CPIV::OpenExcel()
 	try 
 	{
 		logger.Write(L"Идет открытие протоколов...", true);
-		CReaderExcel reader(&settings);
+		CReaderExcel reader;
 		for (size_t i = 0; i < buffer.size(); i++)
 			project.books.push_back(reader.GetBook(buffer[i]));
 
-		CTest tester(&settings);
+		CTest tester;
 		project.db = tester.Start(project.books);
 
 		// Генерация артефактов
-		CReport report(&settings);
+		CReport report;
 		report.GetReport(project, true);		// true -  проект, false - отдельные протоколы
 		report.GetTxt(project.books);
 		CloseThread(primary);
@@ -199,15 +199,15 @@ void CPIV::AddExcel()
 	try 
 	{
 		logger.Write(L"Идет добавление протоколов...", true);
-		CReport report(&settings);
+		CReport report;
 		for (size_t i = 0; i < buffer.size(); i++) 
 		{
 			bool contain = IsContain(other, buffer[i]);
-			CReaderExcel reader(&settings);
+			CReaderExcel reader;
 			bookData book = reader.GetBook(buffer[i]);
 			contain ? Refresh(other, book) : other.books.push_back(book);
 			
-			CTest tester(&settings);
+			CTest tester;
 			list <bookData>::iterator pBook = GetBook(other, buffer[i]);
 			errorData error = tester.Start(*pBook);
 			contain ? Refresh(other, error) : other.db.push_back(error);
@@ -259,15 +259,15 @@ void CPIV::RefreshExcel()
 	try 
 	{
 		logger.Write(L"Идет обновление выбранных протоколов...", true);
-		CReport report(&settings);
+		CReport report;
 		bool flag = true;
 		for (size_t i = 0; i < buffer.size(); i++)
 		{
-			CReaderExcel reader(&settings);
+			CReaderExcel reader;
 			bookData book = reader.GetBook(buffer[i]);
 			list <bookData>::iterator pBook;
 
-			CTest tester(&settings);
+			CTest tester;
 			if (IsContain(project, buffer[i])) 
 			{
 				flag = true;
