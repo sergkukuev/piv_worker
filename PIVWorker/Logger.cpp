@@ -1,3 +1,5 @@
+#pragma once
+
 #include "stdafx.h"
 #include "Logger.h"
 #include "Settings.h"
@@ -11,7 +13,8 @@ static char THIS_FILE[] = __FILE__;
 CLogger::CLogger()
 {
 	InitializeCriticalSection(&cs);
-	SetPath(stgdll::settings.GetRefPath());	// Привязка ссылки пути
+	stgdll::CSettings& stg = stgdll::CSettings::Instance();
+	SetPath(stg.GetRefPath());	// Привязка ссылки пути
 }
 
 CLogger::~CLogger()	
