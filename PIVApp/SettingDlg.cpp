@@ -21,20 +21,18 @@ CSettingDlg::CSettingDlg(CWnd* pParent /*=NULL*/)
 	EnableActiveAccessibility();
 #endif	
 	CPIVDlg* dlgParent = (CPIVDlg*) pParent;
-	ASSERT(dlgParent != NULL);
-
+	// Установка параметров
 	if (dlgParent != NULL)
 	{
-		this->settings = &dlgParent->settings;
-		bNumPk = settings->bNumPK;
-		bGenTxt = settings->bGenTxt;
-		iProject = settings->iProject;
-		iMethod = settings->iMethod;
+		this->pSettings = &dlgParent->settings;
+		bNumPk = pSettings->bNumPK;
+		bGenTxt = pSettings->bGenTxt;
+		iProject = pSettings->iProject;
+		iMethod = pSettings->iMethod;
 	}
 	else
 	{
 		AfxMessageBox(L"Не удалось получить текущие настройки DLL. Установлены настройки по умолчанию.");
-		// Установка параметра
 		bNumPk = TRUE;
 		bGenTxt = FALSE;
 		iProject = project::p930m;
@@ -89,11 +87,11 @@ BOOL CSettingDlg::OnInitDialog()
 
 void CSettingDlg::SetParameters()
 {
-	settings->bNumPK = (bool)bNumPk;
-	settings->bGenTxt = (bool)bGenTxt;
+	pSettings->bNumPK = (bool)bNumPk;
+	pSettings->bGenTxt = (bool)bGenTxt;
 
-	settings->iProject = iProject;
-	settings->iMethod = iMethod;
+	pSettings->iProject = iProject;
+	pSettings->iMethod = iMethod;
 }
 
 void CSettingDlg::OnEnableBtnSave()

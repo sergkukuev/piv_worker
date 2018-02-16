@@ -66,7 +66,8 @@ private:
 	void UpdateMenu();		// Обновление меню
 	void BrowserNavigate();	// Установка пути отчета для встроенного браузера
 public:
-	pivParams settings;
+	stgParams settings;	// Структура настроек
+
 	// Обработчики событий
 	afx_msg void OnOpenProj();			// Открытие проекта
 	afx_msg void OnRefreshPiv();		// Обновление выбранных файлов
@@ -82,14 +83,11 @@ public:
 	afx_msg void OnMouseMove(UINT nFlags, CPoint point);
 
 	afx_msg LRESULT OnReceiveMessage(WPARAM, LPARAM lParam);	// Отображение статуса DLL
-	afx_msg LRESULT OnSaveSettings(WPARAM, LPARAM lParam);		// Сохранение настроек
 
 	//	Работа с браузером
 	afx_msg void OnBnClickedBtnHome();
 	afx_msg void OnBnClickedBtnPrev();
 	afx_msg void OnBnClickedBtnNext();
 	afx_msg void OnBnClickedBtnRefresh();
-
-	//pivParams settings;
 	afx_msg void OnClose();
 };
