@@ -3,6 +3,7 @@
 #include <fstream>
 
 #include "StructPIV.h"
+#include "Settings.h"
 #include "MyException.h"
 
 // Информация о количестве наборов данных
@@ -33,7 +34,6 @@ class PIV_DECLARE CReport
 {
 public:
 	CReport();	// Конструктор
-	CReport(CSettings*);
 	~CReport();	// Деструктор
 
 	void GetReport(pivData& data, const bool& isProj);			// Генерация отчета об ошибках
@@ -42,7 +42,6 @@ public:
 	void GetTxt(const bookData& book);		// один файл
 
 private:
-	CSettings* stg;
 	bool isProject;		// Метка о создании отчета проекта или отдельных ПИВ (true - проект, false - отдельные протоколы)
 
 	// GENERATE_REPORT

@@ -7,10 +7,10 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
+using namespace stgdll;
+
 // Конструктор
 CReport::CReport()	{	}
-
-CReport::CReport(CSettings* setting) { this->stg = setting; }
 
 // Деструктор
 CReport::~CReport()	{	}
@@ -19,7 +19,7 @@ CReport::~CReport()	{	}
 // Генерация отчета об ошибках
 void CReport::GetReport(pivData& data, const bool& isProj) 
 {
-	if (stg->GetPath().IsEmpty())
+	if (settings.GetPath().IsEmpty())
 		throw EmptyPathException();
 
 	this->isProject = isProj;
@@ -27,7 +27,7 @@ void CReport::GetReport(pivData& data, const bool& isProj)
 	CString tPath;	// Путь к текущему файлу
 
 	// Создание и открытие файла
-	isProject ? tPath.Format(L"%s%s", stg->GetPath(), PROJECT_FOLDER) : tPath.Format(L"%s%s", stg->GetPath(), OTHER_FOLDER);
+	isProject ? tPath.Format(L"%s%s", settings.GetPath(), PROJECT_FOLDER) : tPath.Format(L"%s%s", settings.GetPath(), OTHER_FOLDER);
 	CreateDirectory(tPath, NULL);
 	CreateMainFile(data, tPath);
 }
@@ -180,7 +180,7 @@ void CReport::WriteBook(CStdioFile& file, list <errorData>::iterator& it)
 CString CReport::WriteSheets(sheetData* sheet, const vector <errorSignal>& db, const CString& folder, const CString& bookName) 
 {
 	CString pathFile;
-	isProject ? pathFile.Format(L"%s%s%s\\%s", stg->GetPath(), PROJECT_FOLDER, folder, bookName) : pathFile.Format(L"%s%s%s\\%s", stg->GetPath(), OTHER_FOLDER, folder, bookName);
+	isProject ? pathFile.Format(L"%s%s%s\\%s", settings.GetPath(), PROJECT_FOLDER, folder, bookName) : pathFile.Format(L"%s%s%s\\%s", settings.GetPath(), OTHER_FOLDER, folder, bookName);
 	CreateDirectory(pathFile, NULL);
 	
 	CString result;	// Результирующая строка для записи ссылки в главный файл
@@ -190,7 +190,7 @@ CString CReport::WriteSheets(sheetData* sheet, const vector <errorSignal>& db, c
 	{
 		pathFile.Format(L"%s\\%s.html", pathFile, sheet->name);
 		CString relativePath = pathFile;
-		relativePath.Delete(0, stg->GetPath().GetLength());
+		relativePath.Delete(0, settings.GetPath().GetLength());
 		isProject ? relativePath.Delete(0, PROJECT_SIZE) : relativePath.Delete(0, OTHER_SIZE);
 		relativePath.Insert(0, L".");
 		result.Format(L"\t\t\t\t\t\t<dt><a href=\"%s\">%d</a></dt>\n", relativePath, count);	// Формирование результирующей строки (ссылки)
@@ -371,11 +371,11 @@ amountInfo CReport::SetAmount(pivData& data)
 // одного 
 void CReport::GetTxt(const bookData& book)
 {
-	if (stg->GetPath().IsEmpty())
+	if (settings.GetPath().IsEmpty())
 		throw EmptyPathException();
 	
 	CString path;
-	path.Format(L"%s%s", stg->GetPath(), TEXT_FOLDER);
+	path.Format(L"%s%s", settings.GetPath(), TEXT_FOLDER);
 	CreateDirectory(path, NULL);
 
 	Generate(book);
@@ -384,11 +384,11 @@ void CReport::GetTxt(const bookData& book)
 // нескольких
 void CReport::GetTxt(list <bookData>& books) 
 {
-	if (stg->GetPath().IsEmpty())
+	if (settings.GetPath().IsEmpty())
 		throw EmptyPathException();
 
 	CString path;
-	path.Format(L"%s%s", stg->GetPath(), TEXT_FOLDER);
+	path.Format(L"%s%s", settings.GetPath(), TEXT_FOLDER);
 	CreateDirectory(path, NULL);
 
 	// Обход по книгам
@@ -399,11 +399,11 @@ void CReport::GetTxt(list <bookData>& books)
 // Генерация txt протоколов
 void CReport::Generate(const bookData& book) 
 {
-	CString tPath = stg->GetPath();
+	CString tPath = settings.GetPath();
 	tPath.Format(L"%s\\%s", tPath, book.name);
 	CreateDirectory(tPath, NULL);
 
-	CString filePath = stg->GetPath();
+	CString filePath = settings.GetPath();
 	filePath.Format(L"%s\\_ProtocolMain.txt", tPath);
 
 	// Открытие главного файла для записи
@@ -415,7 +415,7 @@ void CReport::Generate(const bookData& book)
 	for (size_t i = 0; i < book.sheets.size(); i++, cNP++, cNumWord = 1) 
 	{
 		// Если нет на странице ошибок
-		if (!book.sheets[i].error || stg->GetGenTxt()) 
+		if (!book.sheets[i].error || settings.GetGenTxt()) 
 		{ 
 			CString name;
 			sheetInfo info;
@@ -423,7 +423,7 @@ void CReport::Generate(const bookData& book)
 			info.arinc = book.sheets[i].arinc;
 			info.arinc ? info.np = cNP : info.np = book.sheets[i].np;
 			info.pk = book.sheets[i].pk;
-			info.bPK = stg->GetNumPk();
+			info.bPK = settings.GetNumPk();
 
 			// Создание txt файла для записи
 			name.Format(L"NP_%d_%s.txt", info.np, book.sheets[i].name);
@@ -454,7 +454,7 @@ void CReport::WriteTxtParam(ofstream& file, const signalData& signal, const shee
 {
 	CString buffer = signal.title[0];
 
-	if (buffer.Find(RESERVE_SIGNAL) != -1 || (stg->GetProject() == stg->project::kprno35 && dwPart::checkLow(buffer)))
+	if (buffer.Find(RESERVE_SIGNAL) != -1 || (settings.GetProject() == project::kprno35 && dwPart::checkLow(buffer)))
 		return;
 
 	buffer = signal.title[1];
@@ -466,7 +466,7 @@ void CReport::WriteTxtParam(ofstream& file, const signalData& signal, const shee
 
 	buffer = signal.title[0];
 	bool dwKprno = false;
-	if (stg->GetProject() == stg->project::kprno35)
+	if (settings.GetProject() == project::kprno35)
 		dwKprno = dwPart::deleleHight(buffer);
 	buffer.Replace(L"\"", L"\\\"");
 	buffer.Format(L"\tNAME=\"%s\"\n", buffer); // Наименования сигнала
