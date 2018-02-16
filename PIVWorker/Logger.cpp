@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "Logger.h"
+#include "Settings.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -10,11 +11,13 @@ static char THIS_FILE[] = __FILE__;
 CLogger::CLogger()
 {
 	InitializeCriticalSection(&cs);
+	SetPath(stgdll::settings.GetRefPath());	// Привязка ссылки пути
 }
 
 CLogger::~CLogger()	
 {
 	DeleteCriticalSection(&cs);
+	this->path = nullptr;
 }
 
 void CLogger::SetPath(CString* path) 

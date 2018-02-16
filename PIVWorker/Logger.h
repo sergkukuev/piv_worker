@@ -30,3 +30,5 @@ private:
 	void Write(const CString& message, const bool& error, const bool& iter);	// flag (true - запись ошибки, false - запись операций DLL)
 };
 
+CLogger logger;
+

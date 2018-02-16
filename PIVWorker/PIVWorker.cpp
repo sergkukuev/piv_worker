@@ -10,8 +10,6 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
-CLogger logger;
-
 //
 // TODO: Важно! Перейдите по ссылке, чтобы увидеть подробности.
 //	 	 Если эта библиотека DLL динамически связана с библиотеками DLL MFC,
@@ -38,6 +36,7 @@ CLogger logger;
 //		 подробные сведения.
 //
 
+using namespace stgdll;	// Пространство имен настроек
 struct ThreadData
 {
 	CPIV* object;
@@ -59,10 +58,7 @@ DWORD WINAPI PrimaryThread(LPVOID lpParam)
 }
 
 // Конструктор
-CPIV::CPIV() 
-{
-	logger.SetPath(setting.GetRefPath());
-}
+CPIV::CPIV() {	}
 
 // Деструктор
 CPIV::~CPIV() 
@@ -102,7 +98,7 @@ void CPIV::SetPathToSave(const CString& pathToReport)
 	logger.Write(L"Изменено расположение папки отчетов");
 }
 
-void CPIV::SetSettings(const pivParams& parameters) 
+void CPIV::SetSettings(const stgParams& parameters) 
 { 
 	while (!GetStatusThread(primary))
 		Sleep(100);
@@ -110,7 +106,7 @@ void CPIV::SetSettings(const pivParams& parameters)
 	logger.Write(L"Изменены настройки приложения");
 }
 
-pivParams CPIV::GetSettings() { return setting.GetParameters(); }
+stgParams CPIV::GetSettings() { return setting.GetParameters(); }
 #pragma endregion
 
 #pragma region OPEN_PROJECT
