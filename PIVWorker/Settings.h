@@ -35,7 +35,7 @@ namespace stgdll
 		}
 		// Папки артефактов
 		const std::vector<CString> folders = { L"\\Artefacts", L"\\Text", L"\\Project", L"\\Other", L"\\Error",
-			L"\\Error\\Syntax", L"Error\\Simantic", L"\\Warning" };
+			L"\\Error\\Syntax", L"\\Error\\Simantic", L"\\Warning" };
 
 		// Получение параметров настройки
 		stgParams GetParameters();
