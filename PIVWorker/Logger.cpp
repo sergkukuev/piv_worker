@@ -20,13 +20,13 @@ CLogger::CLogger()
 	stgdll::CSettings& stg = stgdll::CSettings::Instance();	// Настройки DLL
 	this->path = stg.GetRefPath();	// Привязка указателя пути
 	WriteInFile(lgSlash);
-	WriteInFile(L"Начало работы DLL");
+	WriteInFile(stDLL[start]);
 }
 
 // Деструктор
 CLogger::~CLogger()	
 {
-	WriteInFile(L"Конец работы DLL");
+	WriteInFile(stDLL[end]);
 	DeleteCriticalSection(&csFile);
 	DeleteCriticalSection(&csStat);
 	this->path = nullptr;
