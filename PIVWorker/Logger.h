@@ -30,7 +30,7 @@ namespace logdll
 		CLogger& operator>> (const CString& msg);	// Запись в лог без изменения статуса DLL (оператор)
 
 		// Запись с изменением состояния DLL
-		void Write(const CString& msg);	// Запись текущей операции
+		void Write(const CString& msg);				// Запись текущей операции
 		void WriteError(const CString& msg);		// Запись ошибки
 
 		bool IsRead();			// Установка флага считывания статуса приложением, использующим DLL
