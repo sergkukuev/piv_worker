@@ -23,7 +23,7 @@ public:
 	virtual CString GetMsg() 
 	{
 		CString result;
-		result.Format(L"Ошибка: Неверное расширение файла \"%s\"!", book);
+		result.Format(L"Неверное расширение файла \"%s\"!", book);
 		return result;
 	};
 };
@@ -35,7 +35,7 @@ public:
 	virtual CString GetMsg() 
 	{
 		CString result;
-		result.Format(L"Ошибка: В протоколе \"%s\" на листе \"%s\" не удалось прочесть данные.\n", book, sheet);
+		result.Format(L"В протоколе \"%s\" на листе \"%s\" не удалось прочесть данные.", book, sheet);
 		return result;
 	}
 };
@@ -43,7 +43,7 @@ public:
 class AccessExcelException : public MyException 
 {
 public:
-	virtual CString GetMsg() { return L"Ошибка: Запустить приложение Excel не удалось!"; };
+	virtual CString GetMsg() { return L"Запустить Excel-приложение не удалось!"; };
 };
 
 class ReadBookException: public MyException 
@@ -53,7 +53,7 @@ public:
 	virtual CString GetMsg() 
 	{
 		CString result;
-		result.Format(L"Ошибка: Открыть протокол \"%s\" для чтения не удалось!", book);
+		result.Format(L"Не удалось открыть протокол \"%s\" для чтения!", book);
 		return result;
 	};
 };
@@ -65,7 +65,7 @@ public:
 	virtual CString GetMsg() 
 	{ 
 		CString result;
-		result.Format(L"Ошибка: Не удалось найти все заголовки на листе \"%s\" в протоколе \"%s\"!", sheet, book);
+		result.Format(L"Не удалось найти все заголовки на листе \"%s\" в протоколе \"%s\"!", sheet, book);
 		return result;
 	};
 };
@@ -83,8 +83,8 @@ public:
 
 	virtual CString GetMsg() 
 	{
-		CString result = L"Ошибка: Параметр сигнала с неизвестной ошибкой!\n";
-		result.Format(L"%s\n Протокол: %s;\nИмя листа: %s;\n Параметр: %s.", result, book, sheet, param);
+		CString result = L"Ошибка: Параметр сигнала с неизвестной ошибкой!";
+		result.Format(L"%s (Протокол: %s; Имя листа: %s; Параметр: %s)", result, book, sheet, param);
 		return result; 
 	};
 private:
@@ -98,7 +98,7 @@ public:
 	virtual CString GetMsg() 
 	{
 		CString result;
-		result.Format(L"Ошибка: Протокол \"%s\" в памяти отсутствует!", book);
+		result.Format(L"Протокол \"%s\" в памяти отсутствует!", book);
 		return result;
 	};
 };
@@ -107,5 +107,5 @@ public:
 class EmptyPathException : public MyException 
 {
 public:
-	virtual CString GetMsg() { return L"Ошибка: Путь для хранения отчета и txt не задан!"; };
+	virtual CString GetMsg() { return L"Путь для хранения отчета и txt не задан!"; };
 };
