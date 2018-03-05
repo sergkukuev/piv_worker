@@ -76,7 +76,16 @@ void CTest::Initialize()
 }
 
 // Деструктор
-CTest::~CTest() {	}
+CTest::~CTest() 
+{	
+	for (size_t i = 0; i < base.size(); i++)
+	{
+		base[i].incorrect.clear();
+		base[i].incorrect.shrink_to_fit();
+	}
+	base.clear();
+	base.shrink_to_fit();
+}
 
 // Запуск проверки на ошибки
 errorData CTest::Start(bookData& book) 
