@@ -65,14 +65,13 @@ CPIV::~CPIV()
 {
 	Close();
 	CloseProject();
-	logger.Write(LOG_SLASH);
 }
 
 bool CPIV::IsUpdate() { return logger.IsRead(); }
 
 CString CPIV::GetStatus() { return logger.GetStatus(); }
 
-void CPIV::WriteLog(const CString& msg) { logger << msg; }
+void CPIV::WriteLog(const CString& msg) { logger.Write(msg); }
 
 // Получение путей параметров
 CString CPIV::GetPath() { return settings.GetPath(); }
@@ -95,7 +94,7 @@ CString CPIV::GetProjectPath()
 void CPIV::SetPathToSave(const CString& pathToReport)
 {
 	settings.SetStgPath(pathToReport);
-	logger << L"Изменено расположение папки отчетов";
+	logger.Write(L"Изменено расположение папки отчетов");
 }
 
 void CPIV::SetSettings(const stgParams& parameters) 
@@ -103,7 +102,7 @@ void CPIV::SetSettings(const stgParams& parameters)
 	while (!GetStatusThread(primary))
 		Sleep(100);
 	settings.parameters = parameters;
-	logger << L"Изменены настройки приложения";
+	logger.Write(L"Изменены настройки приложения");
 }
 
 stgParams CPIV::GetSettings() { return settings.GetParameters(); }
@@ -136,14 +135,14 @@ void CPIV::StartOpen()
 		primary = CreateThread(NULL, 0, PrimaryThread, &mData, 0, 0);
 	}
 	else
-		AfxMessageBox(LOG_THREAD_BUSY, MB_ICONINFORMATION);
+		AfxMessageBox(L"Подождите окончания выполнения операции, а затем повторите попытку", MB_ICONINFORMATION);
 }
 
 void CPIV::OpenExcel() 
 {
 	try 
 	{
-		logger << L"Идет открытие протоколов...";
+		logger.Write(L"Идет открытие протоколов...");
 		CReaderExcel reader;
 		for (size_t i = 0; i < buffer.size(); i++)
 			project.books.push_back(reader.GetBook(buffer[i]));
@@ -156,7 +155,7 @@ void CPIV::OpenExcel()
 		report.GetReport(project, true);		// true -  проект, false - отдельные протоколы
 		report.GetTxt(project.books);
 		CloseThread(primary);
-		logger << L"Открытие протоколов завершено";	// Логирование
+		logger.Write(L"Открытие протоколов завершено");	// Логирование
 	}
 	catch (MyException& exc)
 	{
@@ -191,14 +190,14 @@ void CPIV::StartAdd()
 		primary = CreateThread(NULL, 0, PrimaryThread, &mData, 0, 0);
 	}
 	else
-		AfxMessageBox(LOG_THREAD_BUSY, MB_ICONINFORMATION);
+		AfxMessageBox(L"Подождите окончания выполнения операции, а затем повторите попытку", MB_ICONINFORMATION);
 }
 
 void CPIV::AddExcel() 
 {
 	try 
 	{
-		logger >> L"Идет добавление протоколов...";
+		logger.Write(L"Идет добавление протоколов...");
 		CReport report;
 		for (size_t i = 0; i < buffer.size(); i++) 
 		{
@@ -218,7 +217,7 @@ void CPIV::AddExcel()
 		report.GetReport(other, false);	// true -  проект, false - отдельные протоколы
 		CloseThread(primary);
 		
-		logger << L"Добавление протоколов завершено";	// Логирование
+		logger.Write(L"Добавление протоколов завершено");	// Логирование
 	}
 	catch (MyException& exc) 
 	{
@@ -251,14 +250,14 @@ void CPIV::StartRefresh()
 		primary = CreateThread(NULL, 0, PrimaryThread, &mData, 0, 0);
 	}
 	else
-		AfxMessageBox(LOG_THREAD_BUSY, MB_ICONINFORMATION);
+		AfxMessageBox(L"Подождите окончания выполнения операции, а затем повторите попытку", MB_ICONINFORMATION);
 }
 
 void CPIV::RefreshExcel() 
 {
 	try 
 	{
-		logger >> L"Идет обновление выбранных протоколов...";
+		logger.Write(L"Идет обновление выбранных протоколов...");
 		CReport report;
 		bool flag = true;
 		for (size_t i = 0; i < buffer.size(); i++)
@@ -294,7 +293,7 @@ void CPIV::RefreshExcel()
 	
 		CloseThread(primary);
 		
-		logger << L"Обновление протоколов завершено";	// Логирование
+		logger.Write(L"Обновление протоколов завершено");	// Логирование
 	}
 	catch (MyException& exc) 
 	{
@@ -309,10 +308,10 @@ void CPIV::Close()
 {
 	if (!other.books.empty() || !other.db.empty())
 	{
-		logger >> L"Идет закрытие всех протоколов...";
+		logger.Write(L"Идет закрытие всех протоколов...");
 		other.books.clear();
 		other.db.clear();
-		logger << L"Закрытие протоколов завершено";	// Логирование
+		logger.Write(L"Закрытие протоколов завершено");	// Логирование
 	}
 }
 
@@ -340,7 +339,7 @@ void CPIV::StartClose()
 		primary = CreateThread(NULL, 0, PrimaryThread, &mData, 0, 0);
 	}
 	else
-		AfxMessageBox(LOG_THREAD_BUSY, MB_ICONINFORMATION);
+		AfxMessageBox(L"Подождите окончания выполнения операции, а затем повторите попытку", MB_ICONINFORMATION);
 }
 
 // Закрытие проекта
@@ -348,16 +347,16 @@ void CPIV::CloseProject()
 {
 	if (!project.books.empty() || !project.db.empty())
 	{
-		logger >> L"Идет закрытие проекта...";
+		logger.Write(L"Идет закрытие проекта...");
 		project.books.clear();
 		project.db.clear();
-		logger << L"Закрытие проекта завершено";	// Логирование
+		logger.Write(L"Закрытие проекта завершено");	// Логирование
 	}
 }
 
 void CPIV::CloseExcel() 
 {
-	logger >> L"Идет закрытие выбранных протоколов...";
+	logger.Write(L"Идет закрытие выбранных протоколов...");
 	for (size_t i = 0; i < buffer.size(); i++) 
 	{
 		for (list <errorData>::iterator it = other.db.begin(); it != other.db.end();)
@@ -366,7 +365,7 @@ void CPIV::CloseExcel()
 			it->name.Compare(NameFromPath(buffer[i])) == 0 ? other.books.erase(it++) : it++;
 	}
 	CloseThread(primary);
-	logger << L"Закрытие протоколов завершено";	// Логирование
+	logger.Write(L"Закрытие протоколов завершено");	// Логирование
 }
 #pragma endregion
 
@@ -444,7 +443,7 @@ void Thread(CPIV& piv)
 		piv.CloseExcel();
 		break;
 	default:
-		piv.logger.WriteError(L"Ошибка: неопознанная команда");
+		piv.logger.WriteError(L"Использована неопознанная команда для выполнения DLL операции в потоке");
 		break;
 	}
 }
@@ -474,6 +473,6 @@ void CPIV::CloseThread(HANDLE& h)
 		h = NULL;
 	}
 	else
-		logger.WriteError(L"Ошибка: Не удалось закрыть поток");
+		logger.WriteError(L"Произошла ошибка закрытия основного потока DLL");
 }
 #pragma endregion

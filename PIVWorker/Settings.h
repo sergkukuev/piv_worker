@@ -19,8 +19,8 @@ namespace stgdll
 	{
 		int iProject = p930m;		// Проверка проекта: 0 - 930М, 1 - кпрно35
 		int iMethod = patterned;	// Метод проверки: 0 - шаблонная, 1 - быстрая
-		bool bNumPK = false;	// Установить номер подкадра при генерации txt
-		bool bGenTxt = false;	// Генерация txt в любом случае
+		bool bNumPK = false;		// Установить номер подкадра при генерации txt
+		bool bGenTxt = false;		// Генерация txt в любом случае
 	};
 
 	// Класс настроек
