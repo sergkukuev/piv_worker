@@ -2,6 +2,7 @@
 
 #include "StructPIV.h"
 #include "Settings.h"
+#include "Logger.h"
 #include "MyException.h"
 
 #include <regex>
@@ -52,6 +53,7 @@ public:
 
 private:
 	CSettings& settings = CSettings::Instance();	// ”казатель на настройки
+	logdll::CLogger& logger = logdll::CLogger::Instance();	// Ћогирование
 	bookData* book = nullptr;	// ”казатель на текущую книгу
 	sheetData* sheet = nullptr;	// ”казатель на текущий лист
 	exceptTitle exception;		// ћножество исключений (задаетс€ в конструкторе)
