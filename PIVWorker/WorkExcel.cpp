@@ -142,9 +142,20 @@ int CWorkExcel::PkValue(const Header& head)
 	CString item = CellValue(head.adress[head.iRow] - 1, head.adress[head.iComment]);
 	if (!item.IsEmpty())
 	{
-		int pos = item.ReverseFind(PK_FIELD);
+		int pos = item.Find(PK_FIELD);
 		item.Delete(0, pos + 1);
 		item.Trim();
+		
+		// Вдруг дальше пробел
+		pos = item.Find(L' ');
+		if (pos != -1)
+			item.Delete(pos, item.GetLength());
+		
+		// А вдруг перечисление через запятую (протоколы не поймешь)
+		pos = item.Find(L',');
+		if (pos != -1)
+			item.Delete(pos, item.GetLength());
+
 		return _wtoi(item);
 	}
 	return 0;
