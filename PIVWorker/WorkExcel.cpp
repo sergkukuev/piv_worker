@@ -139,30 +139,36 @@ int CWorkExcel::PkValue(const Header& head)
 	if (head.adress[head.iRow] - 1 < first.row || head.adress[head.iComment] > last.column)
 		return 0;
 
-	CString item = CellValue(head.adress[head.iRow] - 1, head.adress[head.iComment]);
-	if (!item.IsEmpty())
+	// Костыль (цикл) для прохода по таблице вправо, для поиска номера подкадра
+	for (long i = head.adress[head.iComment]; i <= last.column; i++)
 	{
-		int pos = item.Find(PK_FIELD);
-		item.Delete(0, pos + 1);
-		item.Trim();
-		
-		// Вдруг дальше пробел
-		pos = item.Find(L' ');
-		if (pos != -1)
-			item.Delete(pos, item.GetLength());
-		
-		// А вдруг перечисление через запятую (протоколы не поймешь)
-		pos = item.Find(L',');
-		if (pos != -1)
-			item.Delete(pos, item.GetLength());
+		CString item = CellValue(head.adress[head.iRow] - 1, i);
+		if (!item.IsEmpty())
+		{
+			int pos = item.Find(PK_FIELD);
+			if (pos == -1)         
+				continue;
+			item.Delete(0, pos + 1);
+			item.Trim();
 
-		int result = _wtoi(item);
-		if (result == 0)
-			result = -2;
-		
-		return result;
+			// Вдруг дальше пробел
+			pos = item.Find(L' ');
+			if (pos != -1)
+				item.Delete(pos, item.GetLength());
+
+			// А вдруг перечисление через запятую (протоколы не поймешь)
+			pos = item.Find(L',');
+			if (pos != -1)
+				item.Delete(pos, item.GetLength());
+
+			int result = _wtoi(item);
+			if (result == 0)	
+				result = -2;	// Значение подкадра не удалось считать
+
+			return result;
+		}
 	}
-	return -1;
+	return -1;	// Значение подкадра отсутствует
 }
 
 // Получение значения ячейки
