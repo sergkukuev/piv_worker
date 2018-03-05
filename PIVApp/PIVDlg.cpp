@@ -21,7 +21,6 @@ struct ThreadData
 	HWND hWnd;
 };
 
-#define APP_END L"Приложение завершило работу"
 static UINT BASED_CODE indicators[] =
 {
 	ID_INDICATOR_DLL,
@@ -55,8 +54,8 @@ void CPIVDlg::ReceiveMessage(HWND hWnd)
 	while (1)
 	{
 		CString temp = piv.GetStatus();
-		
-		if (temp.Compare(APP_END) == 0)
+
+		if (temp.Compare(logdll::stApp[logdll::end]) == 0)
 			break;
 
 		::SendMessage(hWnd, WM_EXCHANGE_DLL, 0, reinterpret_cast<LPARAM>(&temp));
@@ -122,7 +121,7 @@ BOOL CPIVDlg::OnInitDialog()
 {
 	//_crtBreakAlloc = /*587*/879627;
 	CDialogEx::OnInitDialog();
-
+	piv.WriteLog(logdll::stApp[logdll::start]);
 	// TODO: Добавление пункта "О программе..." в системное меню.
 	// IDM_ABOUTBOX должен быть в пределах системной команды.
 	/*ASSERT((IDM_ABOUTBOX & 0xFFF0) == IDM_ABOUTBOX);
@@ -155,7 +154,6 @@ BOOL CPIVDlg::OnInitDialog()
 	m_Cmb->SetCurSel(1);
 
 	// Добавить путь отчетов
-	piv.WriteLog(L"Приложение запущено");
 	CEdit* m_Edt = (CEdit*)GetDlgItem(IDC_EDIT_PATH);
 	m_Edt->SetWindowTextW(piv.GetPath());
 	
@@ -628,7 +626,7 @@ void CPIVDlg::UpdateMenu()
 // Закрытие окна
 void CPIVDlg::OnClose()
 {
-	piv.WriteLog(APP_END);
+	piv.WriteLog(logdll::stApp[logdll::end]);
 	WaitForSingleObject(hWait, INFINITE);
 
 	hWait != 0 ? CloseHandle(hWait) : AfxMessageBox(L"Поток логирования закрылся где-то раньше");
