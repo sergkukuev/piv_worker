@@ -83,7 +83,7 @@ public:
 
 	virtual CString GetMsg() 
 	{
-		CString result = L"Ошибка: Параметр сигнала с неизвестной ошибкой!";
+		CString result = L"Одно из значений параметра с неизвестной ошибкой!";
 		result.Format(L"%s (Протокол: %s; Имя листа: %s; Параметр: %s)", result, book, sheet, param);
 		return result; 
 	};
