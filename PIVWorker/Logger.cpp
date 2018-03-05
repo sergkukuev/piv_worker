@@ -12,78 +12,89 @@ static char THIS_FILE[] = __FILE__;
 
 using namespace logdll;
 
+// Конструктор
 CLogger::CLogger()
 {
-	InitializeCriticalSection(&cs);
-	stgdll::CSettings& stg = stgdll::CSettings::Instance();
-	SetPath(stg.GetRefPath());	// Привязка ссылки пути
+	InitializeCriticalSection(&csFile);
+	InitializeCriticalSection(&csStat);
+	stgdll::CSettings& stg = stgdll::CSettings::Instance();	// Настройки DLL
+	this->path = stg.GetRefPath();	// Привязка указателя пути
+	WriteInFile(lgSlash);
+	WriteInFile(L"Начало работы DLL");
 }
 
+// Деструктор
 CLogger::~CLogger()	
 {
-	DeleteCriticalSection(&cs);
+	WriteInFile(L"Конец работы DLL");
+	DeleteCriticalSection(&csFile);
+	DeleteCriticalSection(&csStat);
 	this->path = nullptr;
 }
 
-void CLogger::SetPath(CString* path) 
-{ 
-	EnterCriticalSection(&cs);
-	this->path = path; 
-	LeaveCriticalSection(&cs);
-}
-
+// Получение статуса DLL
 CString CLogger::GetStatus() { return status; }
 
+// Установка флага считывания статуса приложением, использующим DLL
 bool CLogger::IsRead() 
 {
 	bool temp = state;
-	EnterCriticalSection(&cs);
+	EnterCriticalSection(&csStat);
 	state = true;
-	LeaveCriticalSection(&cs);
+	LeaveCriticalSection(&csStat);
 	return temp; 
 }
 
-void CLogger::Write(const CString& message, const bool& iter)
-{
-	Write(message, false, iter);
-}
-
-void CLogger::WriteError(const CString& message)
-{
-	Write(message, true, false);
-}
-
-CLogger& CLogger::operator<<(const CString& message)
+// Запись текущей операции
+void CLogger::Write(const CString& message)
 {
 	Write(message, false);
-	return *this;
 }
 
+// Запись ошибки
+void CLogger::WriteError(const CString& message)
+{
+	Write(message, true);
+}
+
+// Запись в лог файл без изменения статуса
+void CLogger::WriteInfo(const CString& message)
+{
+	WriteInFile(message);
+}
+
+// Запись в лог файл без изменения статуса
 CLogger& CLogger::operator>>(const CString& message)
 {
-	Write(message, false, true);
+	WriteInFile(message);
 	return *this;
 }
 
-void CLogger::Write(const CString& message, const bool& error, const bool& iter)
+// Запись в файл логов с изменением статуса DLL
+void CLogger::Write(const CString& msg, const bool& bErr)
 {
-	error ? status = L"Что-то пошло не так (см. в log.txt)" : status = message;
+	WriteInFile(msg);
+	EnterCriticalSection(&csStat);
+	bErr ? status = L"При операции произошла ошибка (подробнее в log.txt)" : status = msg;
+	if (msg.Find(L"...") != -1)
+		state = false;
+	LeaveCriticalSection(&csStat);
+}
 
+// Запись в файл логов без изменения статуса DLL
+void CLogger::WriteInFile(CString message)
+{
 	SYSTEMTIME st;
-	CString str;
 	GetLocalTime(&st);
-	message.CompareNoCase(LOG_SLASH) != 0 ?
-		str.Format(L"%02d:%02d:%02d %02d/%02d/%d:\t%s\n", st.wHour, st.wMinute, st.wSecond, st.wDay, st.wMonth, st.wYear, message) :
-		str = message;
+	if (message.CompareNoCase(lgSlash) != 0)
+		message.Format(L"%02d:%02d:%02d %02d/%02d/%d:\t%s\n", st.wHour, st.wMinute, st.wSecond, st.wDay, st.wMonth, st.wYear, message);
 
 	CString logPath;
 	logPath.Format(L"%s\\log.txt", *path);
-	std::ofstream logStream(logPath, std::ios::out | std::ios::app);
-	logStream << CT2A(str);
-	logStream.close();
 
-	EnterCriticalSection(&cs);
-	if (!iter)
-		state = false;
-	LeaveCriticalSection(&cs);
+	EnterCriticalSection(&csFile);
+	std::ofstream logStream(logPath, std::ios::out | std::ios::app);
+	logStream << CT2A(message);
+	logStream.close();
+	LeaveCriticalSection(&csFile);
 }
