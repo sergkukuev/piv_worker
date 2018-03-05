@@ -137,7 +137,7 @@ int CWorkExcel::NpValue(const Header& head)
 int CWorkExcel::PkValue(const Header& head) 
 {
 	if (head.adress[head.iRow] - 1 < first.row || head.adress[head.iComment] > last.column)
-		return -1;
+		return 0;
 
 	CString item = CellValue(head.adress[head.iRow] - 1, head.adress[head.iComment]);
 	if (!item.IsEmpty())
@@ -156,9 +156,13 @@ int CWorkExcel::PkValue(const Header& head)
 		if (pos != -1)
 			item.Delete(pos, item.GetLength());
 
-		return _wtoi(item);
+		int result = _wtoi(item);
+		if (result == 0)
+			result = -2;
+		
+		return result;
 	}
-	return 0;
+	return -1;
 }
 
 // Получение значения ячейки

@@ -5,6 +5,7 @@
 
 #include "StructPIV.h"
 #include "Settings.h"
+#include "Logger.h"
 #include "WorkExcel.h"
 #include "MyException.h"
 
@@ -28,6 +29,7 @@ public:
 	bookData GetBook(const CString& pathToExcel);	// Чтение протокола
 private:
 	stgdll::CSettings& settings = stgdll::CSettings::Instance();	// Указатель на настройки
+	logdll::CLogger& logger = logdll::CLogger::Instance();	// Логирование
 	vector <CString> extension;	// Допустимые расширения файлов
 	CWorkExcel work;			// Работа пространство excel файла
 	Header header;				// Информация о заголовках

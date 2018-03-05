@@ -53,7 +53,10 @@ bookData CReaderExcel::GetBook(const CString& pathToExcel)
 		throw ReadBookException(work.BookName(pathToExcel));
 
 	book.name = work.BookName();
+	// logger.Write(L"Добавление протокола \"" + book.name + L"\"...");	Если будем показывать в строке состояния
+	logger >> L"Добавление протокола \"" + book.name + L"\"...";
 	GetSheets(book.sheets);
+	logger >> L"Добавление протокола \"" + book.name + L"\" завершено";
 
 	return book;
 }
@@ -73,10 +76,21 @@ void CReaderExcel::GetSheets(vector <sheetData>& sheets)
 		sheets[i - 1].arinc = work.IsArinc();
 		sheets[i - 1].pk = work.PkValue(header);
 
+		if (sheets[i - 1].pk < 0)
+		{
+			CString msg;
+			sheets[i - 1].pk == -1 ? msg = L"Номер подкадра отсутствует" : L"Не удалось считать номер подкадра";
+			msg.Format(L"%s на листе \"%s\"", msg, sheets[i - 1].name);
+			logger >> msg;
+		}
+
 		header.adress[header.iRow]++;
 
 		GetSignals(sheets[i - 1].signals, sheets[i - 1].arinc);
 		sheets[i - 1].arinc ? sheets[i - 1].np = -1 : sheets[i - 1].np = work.NpValue(sheets[i - 1].signals[0].comment);
+
+		if (sheets[i - 1].np == 0)
+			logger >> L"Не удалось считать номер набора параметров на листе \"" + sheets[i - 1].name + L"\"";
 	}
 }
 
