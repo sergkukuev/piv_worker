@@ -76,7 +76,7 @@ void CLogger::Write(const CString& msg, const bool& bErr)
 	WriteInFile(msg);
 	EnterCriticalSection(&csStat);
 	bErr ? status = L"При операции произошла ошибка (подробнее в log.txt)" : status = msg;
-	if (msg.Find(L"...") != -1)
+	if (msg.Find(L"...") == -1)
 		state = false;
 	LeaveCriticalSection(&csStat);
 }
