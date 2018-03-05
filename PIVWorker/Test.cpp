@@ -20,7 +20,8 @@ void CTest::Initialize()
 	exception.arinc.insert(L"ID_BPV1");	// Идентификатор блока 1
 	exception.arinc.insert(L"ID_BPV2");	// Идентификатор блока 2
 	// Для MKIO 
-	// Пусто
+	exception.mkio.insert(L"NP");		// Набор параметров
+	exception.mkio.insert(L"NP_DUBL");	// Дубляж
 
 	// Создание базы для проверки на ошибки с помощью регулярных выражений
 	// TODO: Добавить регулярные выражения для адреса (ARINC)
@@ -371,12 +372,11 @@ bool CTest::TitleRepitTest(errorSignal& signal, const int& index)
 		end = exception.mkio.end();
 	}
 
-	// Если идентификатор не найден в множестве исключений
-	if (current == end)
-		for (size_t i = index + 1; i < sheet->signals.size() && !result; i++)
-			if (TITLE(i, 1).Compare(title) == 0 && TITLE(i, 0).Find(RESERVE_SIGNAL) != -1)
-				result = WriteError(signal, L"Сигнал с таким <b>условным обозначением</b> присутствует на этом листе.", check::title);
-
+	// Если идентификатор не найден в множестве исключений (current == end)
+	for (size_t i = index + 1; i < sheet->signals.size() && !result && current == end; i++)
+		if (TITLE(i, 1).Compare(title) == 0 && TITLE(i, 0).Find(RESERVE_SIGNAL) == -1)
+			result = WriteError(signal, L"Сигнал с таким <b>условным обозначением</b> присутствует на этом листе.", check::title);
+		
 	return result;
 }
 
@@ -559,8 +559,20 @@ void CTest::FindRepiteTitleInBook(errorSignal& signal, const int& index)
 {
 	vector <CString> repitSheet;
 	CString title = sheet->signals[index].title[1];
+	std::set<CString>::iterator current, end;
 
-	for (size_t i = 0; i < book->sheets.size(); i++)
+	if (sheet->arinc)
+	{
+		current = exception.arinc.find(title);
+		end = exception.arinc.end();
+	}
+	else
+	{
+		current = exception.mkio.find(title);
+		end = exception.mkio.end();
+	}
+
+	for (size_t i = 0; i < book->sheets.size() && end == current; i++)
 	{
 		int start;
 		book->sheets[i].name.Compare(sheet->name) == 0 ? start = index + 1 : start = 0;

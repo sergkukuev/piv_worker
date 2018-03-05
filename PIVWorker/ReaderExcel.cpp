@@ -142,6 +142,8 @@ void CReaderExcel::GetSignals(vector <signalData>& signals, const bool& bArinc)
 
 		if (!bEmpty && !bRemark)
 			signals.push_back(signal);
+		else if (bRemark)
+			break;
 
 		// TODO: Исправление костыля (обход повторений в случае конца таблицы)
 		if (work.CountRows() == row + merge - 1 && !arinc.flag && arinc.amount != arinc.current)
