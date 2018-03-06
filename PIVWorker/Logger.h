@@ -8,6 +8,7 @@
 
 namespace logdll
 {
+	const CString lgBr = L"\n\t\t\t\t\t\t";	// Перенос строки в лог файле
 	const CString lgSlash = L"================================================================\n";
 	
 	const enum stIndex {start, end};	// Индексы для статусов основного приложения и dll
