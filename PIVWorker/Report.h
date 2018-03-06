@@ -4,11 +4,14 @@
 
 #include "StructPIV.h"
 #include "Settings.h"
+#include "Logger.h"
 #include "MyException.h"
 
 using namespace stgdll;
 
 #define REPORT_NAME L"Отчет.html"
+#define PK_EMPTY -1			// Номер подкадра отсутствует
+#define PK_FAILED -2		// Номер подкадра не удалось считать
 
 // Информация о количестве наборов данных
 struct amountInfo	
@@ -27,7 +30,14 @@ struct sheetInfo
 	int np;		
 	int pk;		
 	bool arinc;	// ARINC || MKIO
-	bool bPK;
+};
+
+// Дополнительная информация о адресе текущего параметра
+struct paramInfo
+{
+	int arincNum;	// Если ARINC, то текущий номер параметра
+	bool arinc;		// ARINC || MKIO
+	bool dwKprno;	// Двойное слово проекта КПРНО-35
 };
 
 // Класс генерации тестовых артефактов
@@ -47,6 +57,7 @@ public:
 
 private:
 	CSettings& settings = CSettings::Instance();	// Указатель на настройки
+	logdll::CLogger& logger = logdll::CLogger::Instance(); // Логирование
 	bool isProject;		// Метка о создании отчета проекта или отдельных ПИВ (true - проект, false - отдельные протоколы)
 
 	// GENERATE_REPORT
@@ -69,6 +80,8 @@ private:
 	// GENERATE_TXT
 	void Generate(const bookData& book);	// Генерация txt протокола
 	void WriteTxtParam(ofstream& file, const signalData& signal, const sheetInfo& info, const int& arincNum);	// Запись одного набора данных из таблицы в txt файл
+	bool WriteParamTitle(ofstream& file, const signalData& signal, const sheetInfo& info);	// Запись наименования параметра
+	void WriteParamAdr(ofstream& file, const signalData& signal, const paramInfo& par);		// Запись адреса параметра
 	bool IsInt(const double& numeric);	// Проверка на int значение
 };
 
