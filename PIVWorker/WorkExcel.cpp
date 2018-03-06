@@ -145,7 +145,7 @@ int CWorkExcel::PkValue(const Header& head)
 		CString item = CellValue(head.adress[head.iRow] - 1, i);
 		if (!item.IsEmpty())
 		{
-			int pos = item.Find(PK_FIELD);
+			int pos = item.ReverseFind(PK_FIELD);
 			if (pos == -1)         
 				continue;
 			item.Delete(0, pos + 1);
