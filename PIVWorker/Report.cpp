@@ -465,7 +465,6 @@ void CReport::WriteTxtParam(ofstream& file, const signalData& signal, const shee
 		return;
 
 	bool dwKprno = WriteParamTitle(file, signal, info);
-
 	if (!signal.dimension.IsEmpty()) 
 	{
 		buffer.Format(L"\tUNIT=\"%s\"\n", signal.dimension);	// Размерности
@@ -487,13 +486,11 @@ void CReport::WriteTxtParam(ofstream& file, const signalData& signal, const shee
 	if (!signal.comment.IsEmpty()) 
 	{	
 		file << "\tCOMMENT\n";
-
 		buffer = signal.comment;
 		buffer.Replace(L"\"", L"");
 		buffer.Replace(L"\n", L"\"\n\t\t\"");
 		buffer.Insert(0, L"\t\t\"");
 		buffer.Insert(buffer.GetLength(), L"\"\n");
-
 		file << CT2A(buffer);
 		file << "\tEND_COMMENT\n";
 	}
@@ -543,7 +540,6 @@ void CReport::WriteParamAdr(ofstream& file, const signalData& signal, const para
 		file << "\tMERGE\n";
 		buffer.Format(L"\t\tWDADDR = %d,%d,%d\n", signal.numWord.value[0], signal.bit.value[0], max);
 		file << CT2A(buffer);
-
 		max = (signal.bit.value[3] == -1) ? signal.bit.value[2] : signal.bit.value[3];
 		buffer.Format(L"\t\tWDADDR = %d,%d,%d\n", signal.numWord.value[1], signal.bit.value[2], max);
 		file << CT2A(buffer);
@@ -572,16 +568,12 @@ void CReport::WriteParamAdr(ofstream& file, const signalData& signal, const para
 	{
 		file << "\tVALDESCR\n";
 		signal.bitSign ? file << "\t\tSIGNED\n" : file << "\t\tUNSIGNED\n";
-
 		IsInt(signal.min.value) ? buffer.Format(L"\t\tMIN = %.0lf\n", signal.min.value) : buffer.Format(L"\t\tMIN = %lf\n", signal.min.value);
 		file << CT2A(buffer);
-
 		IsInt(signal.max.value) ? buffer.Format(L"\t\tMAX = %.0lf\n", signal.max.value) : buffer.Format(L"\t\tMAX = %lf\n", signal.max.value);
 		file << CT2A(buffer);
-
 		IsInt(signal.csr.value) ? buffer.Format(L"\t\tMSB = %.0lf\n", signal.csr.value) : buffer.Format(L"\t\tMSB = %lf\n", signal.csr.value);
 		file << CT2A(buffer);
-
 		file << "\tEND_VALDESCR\n";
 	}
 }
