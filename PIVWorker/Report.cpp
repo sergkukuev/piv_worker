@@ -507,7 +507,7 @@ bool CReport::WriteParamTitle(ofstream& file, const signalData& signal, const sh
 		CString pk;
 		pk.Format(L"%d", info.pk);
 		if (info.pk == PK_EMPTY || info.pk == PK_FAILED)
-			logger >> L"Параметр " + signal.title[1] + L" в протоколе не является уникальным, не удалось добавить подкадр (PK = " + pk + L")";
+			logger >> L"Параметр " + signal.title[1] + L" в протоколе не является уникальным, добавить подкадр к ID не удалось (PK = " + pk + L")";
 		else
 		{
 			buffer.Format(L"%s_%d", buffer, info.pk);
