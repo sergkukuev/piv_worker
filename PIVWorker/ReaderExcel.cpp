@@ -79,7 +79,7 @@ void CReaderExcel::GetSheets(vector <sheetData>& sheets)
 		if (sheets[i - 1].pk < 0)
 		{
 			CString msg;
-			sheets[i - 1].pk == -1 ? msg = L"Номер подкадра отсутствует" : L"Не удалось считать номер подкадра";
+			sheets[i - 1].pk == PK_EMPTY ? msg = L"Номер подкадра отсутствует" : L"Не удалось считать номер подкадра";
 			msg.Format(L"%s на листе \"%s\"", msg, sheets[i - 1].name);
 			logger >> msg;
 		}

@@ -22,6 +22,8 @@
 const vector<CString> SIGN_FIELD = { L"Зн-", L"зн.", L"Зн.", L"зн-" };	// Наличие отрицательного символа
 #define NP_FIELD L"NP="		// Значение номера набора
 #define PK_FIELD L'№'		// Номер подкадра
+#define PK_EMPTY -1			// Номер подкадра отсутствует
+#define PK_FAILED -2		// Номер подкадра не удалось считать
 
 // Специальные обозначения для ARINC
 #define ARINC_REMARK L"*Примечание:"

@@ -163,12 +163,12 @@ int CWorkExcel::PkValue(const Header& head)
 
 			int result = _wtoi(item);
 			if (result == 0)	
-				result = -2;	// Значение подкадра не удалось считать
+				result = PK_FAILED;	
 
 			return result;
 		}
 	}
-	return -1;	// Значение подкадра отсутствует
+	return PK_EMPTY;	
 }
 
 // Получение значения ячейки
