@@ -20,6 +20,7 @@ void CReport::GetReport(pivData& data, const bool& isProj)
 	if (settings.GetPath().IsEmpty())
 		throw EmptyPathException();
 
+	logger >> L"Создание отчета о полученных ошибках...";
 	this->isProject = isProj;
 
 	CString tPath;	// Путь к текущему файлу
@@ -29,11 +30,13 @@ void CReport::GetReport(pivData& data, const bool& isProj)
 		tPath.Format(L"%s%s", settings.GetPath(), settings.folders[other]);
 	CreateDirectory(tPath, NULL);
 	CreateMainFile(data, tPath);
+	logger >> L"Создание отчета о полученных ошибках завершено";
 }
 
 // Создание основного файла
 void CReport::CreateMainFile(pivData& data, CString path)
 {
+	logger >> L"Создание главного отчет-файла...";
 	CreateFolders(path);
 	path.Format(L"%s\\%s", path, REPORT_NAME);
 	CStdioFile file(path, CFile::modeCreate | CFile::modeWrite | CFile::typeUnicode);	// Поток записи в файл
@@ -90,8 +93,8 @@ void CReport::MainTable(CStdioFile& file, list <errorData>& db)
 		file.WriteString(L"</td>\n"
 			"\t\t\t\t<td align=\"center\">\n"
 			"\t\t\t\t\t<dl>\n");
-
 		WriteBook(file, it);	// Запись листов
+		logger >> L"Создан отчет по протоколу \"" + it->book->name + L"\"";
 		file.WriteString(L"\t\t\t</tr>\n");
 	}
 	file.WriteString(L"\t\t</table>\n");

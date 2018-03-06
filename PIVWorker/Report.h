@@ -84,4 +84,3 @@ private:
 	void WriteParamAdr(ofstream& file, const signalData& signal, const paramInfo& par);		// Запись адреса параметра
 	bool IsInt(const double& numeric);	// Проверка на int значение
 };
-
