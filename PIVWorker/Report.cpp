@@ -430,6 +430,7 @@ void CReport::Generate(const bookData& book)
 			info.arinc = book.sheets[i].arinc;
 			info.arinc ? info.np = cNP : info.np = book.sheets[i].np;
 			info.pk = book.sheets[i].pk;
+			info.name = book.sheets[i].name;
 
 			// Создание txt файла для записи
 			name.Format(L"NP_%d_%s.txt", info.np, book.sheets[i].name);
@@ -507,11 +508,11 @@ bool CReport::WriteParamTitle(ofstream& file, const signalData& signal, const sh
 		CString pk;
 		pk.Format(L"%d", info.pk);
 		if (info.pk == PK_EMPTY || info.pk == PK_FAILED)
-			logger >> L"Параметр " + signal.title[1] + L" в протоколе не является уникальным, добавить подкадр к ID не удалось (PK = " + pk + L")";
+			logger >> L"Параметр " + signal.title[1] + L" (лист \"" + info.name + L"\") в протоколе  не является уникальным, добавить подкадр к ID не удалось (PK = " + pk + L")";
 		else
 		{
 			buffer.Format(L"%s_%d", buffer, info.pk);
-			logger >> L"Параметр " + signal.title[1] + L" в протоколе не является уникальным (PK = " + pk + L")";
+			logger >> L"Параметр " + signal.title[1] + L" (лист \"" + info.name + L"\") в протоколе не является уникальным (PK = " + pk + L")";
 		}
 	}
 
