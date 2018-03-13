@@ -65,6 +65,7 @@ private:
 	void CreateFolders(const CString& path);	// Создание структуры отчета (создание папочек)
 	void MainTable(CStdioFile& file, list <errorData>& db); // Создание таблицы с проверенными протоколами
 	void InfoTable(CStdioFile& file, const amountInfo& amount);	// Таблица общей информации о наборах данных
+	void CssStyle(CStdioFile& file);	// Запись CSS стиля
 	void WriteBook(CStdioFile& file, list <errorData>::iterator& it);	// Запись листов текущего протокола
 	
 	void SheetTableHeader(CStdioFile& file, const CString& book, const CString& sheet, bool arinc);	// Шапка таблицы с ошибками листа
@@ -73,6 +74,7 @@ private:
 	CString FormValue(CString field, const bool& color, const int& width);	// Формирование строки, для записи, одного параметра из набора
 
 	CString IntToCString(const int& number);		// Преобразование int в CString
+	//string ToUtf8(const CString& text);		// Преобразование текста к формату
 
 	int CountError(const vector<errorSignal>& set);	// Количество ошибок в текущей таблице
 	amountInfo SetAmount(pivData& data);			// Подсчет количества данных( всего, с ошибками и без ошибок), ошибок и предупреждений
