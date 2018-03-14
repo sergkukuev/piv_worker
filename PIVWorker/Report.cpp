@@ -89,7 +89,7 @@ void CReport::MainTable(CStdioFile& file, list <errorData>& db)
 	{
 		file.WriteString(L"\t\t\t<tr>\n"
 			"\t\t\t\t<td>" + it->book->name + L"</td>\n"
-			"\t\t\t\t<td align=\"center\">\n"
+			"\t\t\t\t<td>\n"
 			"\t\t\t\t\t<dl>\n");
 		WriteBook(file, it);	// Запись листов
 		logger >> L"Создан отчет по протоколу \"" + it->book->name + L"\"";
@@ -105,23 +105,23 @@ void CReport::InfoTable(CStdioFile& file, const amountInfo& amount)
 		"\t\t<table border=\"1\"cellspacing=\"0\">\n"
 		"\t\t\t<tr>\n"
 		"\t\t\t\t<th align=\"left\">Количество листов всего</th>\n"
-		"\t\t\t\t<td align=\"center\">" + IntToCString(amount.all) + L"</td>\n"
+		"\t\t\t\t<td>" + IntToCString(amount.all) + L"</td>\n"
 		"\t\t\t</tr>\n"
 		"\t\t\t<tr>\n"
 		"\t\t\t\t<th align=\"left\">Количество листов с ошибками</th>\n"
-		"\t\t\t\t<td align=\"center\">" + IntToCString(amount.withError) + L"</td> \n"
+		"\t\t\t\t<td>" + IntToCString(amount.withError) + L"</td> \n"
 		"\t\t\t</tr>\n"
 		"\t\t\t<tr>\n"
 		"\t\t\t\t<th align=\"left\">Количество листов без ошибок</th>\n"
-		"\t\t\t\t<td align=\"center\">" + IntToCString(amount.withoutError) + L"</td>\n"
+		"\t\t\t\t<td>" + IntToCString(amount.withoutError) + L"</td>\n"
 		"\t\t\t</tr>\n"
 		"\t\t\t<tr>\n"
 		"\t\t\t\t<th align=\"left\">Всего ошибок</th>\n"
-		"\t\t\t\t<td align=\"center\">" + IntToCString(amount.error) + L"</td>\n"
+		"\t\t\t\t<td>" + IntToCString(amount.error) + L"</td>\n"
 		"\t\t\t</tr>\n"
 		"\t\t\t<tr>\n"
 		"\t\t\t\t<th align=\"left\">Всего предупреждений</th>\n"
-		"\t\t\t\t<td align=\"center\">" + IntToCString(amount.warning) + L"</td>\n"
+		"\t\t\t\t<td>" + IntToCString(amount.warning) + L"</td>\n"
 		"\t\t\t</tr>\n"
 		"\t\t</table>\n"
 		"\t\t<br/>\n");
@@ -139,7 +139,7 @@ void CReport::WriteBook(CStdioFile& file, list <errorData>::iterator& it)
 		"\t\t\t\t</td>\n");
 	
 	// Запись синтаксических ошибок
-	file.WriteString(L"\t\t\t\t<td align=\"center\">\n"
+	file.WriteString(L"\t\t\t\t<td>\n"
 		"\t\t\t\t\t<dl>\n"); 
 	for (size_t i = 0; i < it->set.size(); i++)
 		file.WriteString(WriteSheets(it->set[i].data, it->set[i].syntax, settings.folders[syntax], it->book->name));
@@ -147,7 +147,7 @@ void CReport::WriteBook(CStdioFile& file, list <errorData>::iterator& it)
 	file.WriteString(L"\t\t\t\t\t</dl>\n"
 		"\t\t\t\t</td>\n");
 	// Запись семантических ошибок
-	file.WriteString(L"\t\t\t\t<td align=\"center\">\n"
+	file.WriteString(L"\t\t\t\t<td>\n"
 		"\t\t\t\t\t<dl>\n");
 	for (size_t i = 0; i < it->set.size(); i++)
 		file.WriteString(WriteSheets(it->set[i].data, it->set[i].simantic, settings.folders[simantic], it->book->name));
@@ -155,7 +155,7 @@ void CReport::WriteBook(CStdioFile& file, list <errorData>::iterator& it)
 	file.WriteString(L"\t\t\t\t\t</dl>\n"
 		"\t\t\t\t</td>\n");
 	// Запись замечаний
-	file.WriteString(L"\t\t\t\t<td colspan=\"3\" align=\"center\">\n"
+	file.WriteString(L"\t\t\t\t<td colspan=\"3\">\n"
 		"\t\t\t\t\t<dl>\n");
 	for (size_t i = 0; i < it->set.size(); i++)
 		file.WriteString(WriteSheets(it->set[i].data, it->set[i].warning, settings.folders[warning], it->book->name));
@@ -187,7 +187,7 @@ CString CReport::WriteSheets(sheetData* sheet, const vector <errorSignal>& db, c
 		CStdioFile file(pathFile, CFile::modeCreate | CFile::modeWrite | CFile::typeUnicode);
 		// Шапочка
 		file.WriteString(L"<!DOCTYPE html>\n"
-			"<html>\n"
+			"<html lang=\"ru\">\n"
 			"<head>\n"
 			"\t<meta charset=\"UTF-8\">\n"
 			"\t<title>Замечания по книге \"" + bookName + L"\"</title>\n");
@@ -203,7 +203,7 @@ CString CReport::WriteSheets(sheetData* sheet, const vector <errorSignal>& db, c
 		{
 			// Индекс ошибки
 			file.WriteString(L"\t\t\t<tr>\n"
-				"\t\t\t\t<th rowspan=\"2\"> &nbsp " + IntToCString((int)i + 1) + L"</th>\n");
+				"\t\t\t\t<th rowspan=\"2\" class=width5>" + IntToCString((int)i + 1) + L"</th>\n");
 			WriteSignal(file, db[i]);
 		}
 
@@ -225,16 +225,16 @@ void CReport::SheetTableHeader(CStdioFile& file, const CString& book, const CStr
 		"\t<table>\n"
 		"\t\t<thead>\n"
 		"\t\t<tr>\n"
-		"\t\t\t<th style=\"width: 5%\">№ Замечания</th>\n");
-	arinc ? file.WriteString(L"\t\t\t<th style=\"width: 5%\">Адрес</th>\n") : file.WriteString(L"\t\t\t<th style=\"width: 5%\">№Слова</th>\n");
-	file.WriteString(L"\t\t\t<th style=\"width: 15%\">Наименование сигнала</th>\n"
-		"\t\t\t<th style=\"width: 10%\">Условное обозначение параметра / сигнала</th>\n"
-		"\t\t\t<th style=\"width: 5%\">Единица измерения</th>\n"
-		"\t\t\t<th style=\"width: 5%\">Минимальное значение</th>\n"
-		"\t\t\t<th style=\"width: 5%\">Максимальное значение</th>\n"
-		"\t\t\t<th style=\"width: 5%\">Цена старшего разряда</th>\n"
-		"\t\t\t<th style=\"width: 10%\">Используемые разряды</th>\n"
-		"\t\t\t<th style=\"width: 30%\">Примечание</th>\n"
+		"\t\t\t<th class=width5>№ з-я</th>\n");
+	arinc ? file.WriteString(L"\t\t\t<th class=width5>Адрес</th>\n") : file.WriteString(L"\t\t\t<th class=width5>№ Сл-а</th>\n");
+	file.WriteString(L"\t\t\t<th class=width15>Наименование</th>\n"
+		"\t\t\t<th class=width10>Идентификатор</th>\n"
+		"\t\t\t<th class=width5>Ед. изм.</th>\n"
+		"\t\t\t<th class=width5>Мин. зн.</th>\n"
+		"\t\t\t<th class=width5>Макс. зн.</th>\n"
+		"\t\t\t<th class=width5>ЦСР</th>\n"
+		"\t\t\t<th class=width10>Использованные разряды</th>\n"
+		"\t\t\t<th width=\"31%%\">Примечание</th>\n"
 		"\t\t</tr>\n"
 		"\t\t</thead>\n");
 }
@@ -247,32 +247,40 @@ void CReport::CssStyle(CStdioFile& file)
 		"\t\ttable {\n"
 		"\t\t\twidth: 100%;\n"
 		"\t\t\tborder-collapse: collapse;\n"
+		"\t\t\tmin-width: 960px;\n"
+		"\t\t\tmax-width: 2135px;\n"
+		"\t\t\tword-break: break-all;\n"
+		"\t\t\tborder-bottom: 1px double grey;\n"
+		"\t\t\tborder-left: 1px double grey;\n"
 		"\t\t}\n"
 
 		"\t\tthead {\n"
 		"\t\t\tdisplay: block;\n"
-		"\t\t\twidth: 100%;\n"
+		//"\t\t\twidth: 100%;\n"
 		"\t\t\toverflow: auto;\n"
-		"\t\t\tcolor: #fff;\n"
-		"\t\t\tbackground: #000;\n"
+		"\t\t\tcolor: #ffffff;\n"
+		"\t\t\tbackground: #000066;\n"
 		"\t\t}\n"
 
 		"\t\ttbody {\n"
 		"\t\t\tdisplay: block;\n"
-		"\t\t\twidth: 100%;\n"
-		"\t\t\theight: 200px;\n"
-		"\t\t\tborder: 1px;\n"
-		"\t\t\tborder-color: grey;\n"
-		"\t\t\tbackground: white;\n"
+		"\t\t\theight: 100%;\n"
+		"\t\t\tmin-height: 200px;\n"
+		"\t\t\tmax-height: 800px;\n"
+		"\t\t\tbackground: #fff;\n"
 		"\t\t\toverflow: auto;\n"
 		"\t\t}\n"
 
 		"\t\tth, td {\n"
 		"\t\t\tpadding: .5em 1em;\n"
-		"\t\t\ttext-align: left;\n"
-		"\t\t\tvertical-align: top;\n"
-		"\t\t\tborder-left: 1px solid #fff;\n"
+		"\t\t\talign: center;\n"
+		"\t\t\tvertical-align: center;\n"
+		"\t\t\tborder: 2px double grey;\n"
 		"\t\t}\n"
+		"\t\t.width5 { width: 5% }\n"
+		"\t\t.width10 { width: 10% }\n"
+		"\t\t.width15 { width: 15% }\n"
+		"\t\t.width30 { width: 30% }\n"
 		"\t</style>\n"
 	);
 }
@@ -281,18 +289,12 @@ void CReport::CssStyle(CStdioFile& file)
 void CReport::WriteSignal(CStdioFile& file, const errorSignal& signal) 
 {
 	file.WriteString(FormValue(signal.data->numWord.field, signal.check[check::numword], 5));
-	CString buffer;
-	buffer.Format(L"\t\t\t\t<td align=\"center\" style=\"width: 15%%\"> &nbsp %s</td>\n", signal.data->title[0]);
-	file.WriteString(buffer);
-
+	file.WriteString(FormValue(signal.data->title[0], false, 15));
 	file.WriteString(FormValue(signal.data->title[1], signal.check[check::title], 10));
-	buffer.Format(L"\t\t\t\t<td align=\"center\" style=\"width: 5%%\"> &nbsp %s</td>\n", signal.data->dimension);
-	file.WriteString(buffer);
-
+	file.WriteString(FormValue(signal.data->dimension, false, 5));
 	file.WriteString(FormValue(signal.data->min.field, signal.check[check::min], 5));
 	file.WriteString(FormValue(signal.data->max.field, signal.check[check::max], 5));
 	file.WriteString(FormValue(signal.data->csr.field, signal.check[check::csr], 5));
-
 	file.WriteString(FormValue(signal.data->bit.field, signal.check[check::bits], 10));
 	file.WriteString(FormValue(signal.data->comment, signal.check[check::comment], 30));
 
@@ -303,13 +305,14 @@ void CReport::WriteSignal(CStdioFile& file, const errorSignal& signal)
 	file.WriteString(L"\t\t\t\t<td style=\"padding-left: 20; padding-top: 0; padding-bottom: 15\" colspan=\"10\" bgcolor = \"#FDFCD0\">\n");
 	for (size_t j = 0; j < signal.error.size(); j++) 
 	{
+		CString buffer;
 		buffer.Format(L"\t\t\t\t\t\t<p style=\"margin-left: 20px\"> – %s</p>\n", signal.error[j]);
 		file.WriteString(buffer);
 	}
 	file.WriteString(L"\t\t\t\t</td>\n"
 		"\t\t\t</tr>\n"
 		"\t\t\t<tr>\n"
-		"\t\t\t\t<td colspan=\"10\"> &nbsp </td>\n"
+		//"\t\t\t\t<td colspan=\"10\"> &nbsp </td>\n"
 		"\t\t\t</tr>\n");
 }
 
@@ -318,8 +321,9 @@ CString CReport::FormValue(CString field, const bool& color, const int& width)
 {
 	CString result;
 	field.Replace(L"\n", L" <br> ");
-	color ? result = L"bgcolor = \"#FDFCD0\"" : result = L"";
-	result.Format(L"\t\t\t\t<td align=\"center\" %s style=\"width: %d%%\"> %s</td>\n", result, width, field);
+	color ? result = L" bgcolor = \"#FDFCD0\"" : result = L"";
+	result.Format(L"\t\t\t\t<td %s class=width%d> %s</td>\n", result, width, field);
+	//result.Format(L"\t\t\t\t<td %s> %s</td>\n", result, field);
 	return result;
 }
 
