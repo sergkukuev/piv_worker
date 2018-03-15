@@ -73,6 +73,7 @@ private:
 	CString FormValue(CString field, const bool& color, const int& width);	// Формирование строки, для записи, одного параметра из набора
 
 	// CSS_STYLES (функции для формирования html файла)
+	void ScriptMain(CStdioFile& file);	// Скрипт для скрытия статистики в главном файле отчета
 	void CssStyle(CStdioFile& file, const bool& isMain = false); // Запись CSS стиля
 	CString CssTable();		// Стиль таблицы
 	CString CssTh();		// Стиль хедера таблицы

@@ -1,4 +1,4 @@
-#include "stdafx.h"
+п»ї#include "stdafx.h"
 #include "Report.h"
 
 #ifdef _DEBUG
@@ -7,32 +7,32 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
-// Конструктор
+// РљРѕРЅСЃС‚СЂСѓРєС‚РѕСЂ
 CReport::CReport()	{	}
 
-// Деструктор
+// Р”РµСЃС‚СЂСѓРєС‚РѕСЂ
 CReport::~CReport()	{	}
 
-// Генерация отчета об ошибках
+// Р“РµРЅРµСЂР°С†РёСЏ РѕС‚С‡РµС‚Р° РѕР± РѕС€РёР±РєР°С…
 void CReport::GetReport(pivData& data, const bool& isProj) 
 {
 	if (settings.GetPath().IsEmpty())
 		throw EmptyPathException();
 
-	logger >> L"Создание отчета о полученных ошибках...";
+	logger >> L"РЎРѕР·РґР°РЅРёРµ РѕС‚С‡РµС‚Р° Рѕ РїРѕР»СѓС‡РµРЅРЅС‹С… РѕС€РёР±РєР°С…...";
 	this->isProject = isProj;
 
-	CString tPath;	// Путь к текущему файлу
+	CString tPath;	// РџСѓС‚СЊ Рє С‚РµРєСѓС‰РµРјСѓ С„Р°Р№Р»Сѓ
 
-	// Создание и открытие файла
+	// РЎРѕР·РґР°РЅРёРµ Рё РѕС‚РєСЂС‹С‚РёРµ С„Р°Р№Р»Р°
 	isProject ? tPath.Format(L"%s%s", settings.GetPath(), settings.folders[project]) :
 		tPath.Format(L"%s%s", settings.GetPath(), settings.folders[other]);
 	CreateDirectory(tPath, NULL);
 	CreateMainFile(data, tPath);
-	logger >> L"Создание отчета о полученных ошибках завершено";
+	logger >> L"РЎРѕР·РґР°РЅРёРµ РѕС‚С‡РµС‚Р° Рѕ РїРѕР»СѓС‡РµРЅРЅС‹С… РѕС€РёР±РєР°С… Р·Р°РІРµСЂС€РµРЅРѕ";
 }
 
-// Создание директорий для отчета
+// РЎРѕР·РґР°РЅРёРµ РґРёСЂРµРєС‚РѕСЂРёР№ РґР»СЏ РѕС‚С‡РµС‚Р°
 void CReport::CreateFolders(const CString& path)
 {
 	CString folder = path;
@@ -47,112 +47,124 @@ void CReport::CreateFolders(const CString& path)
 }
 
 #pragma region MAIN_FILE
-// Создание основного файла
+// РЎРѕР·РґР°РЅРёРµ РѕСЃРЅРѕРІРЅРѕРіРѕ С„Р°Р№Р»Р°
 void CReport::CreateMainFile(pivData& data, CString path)
 {
-	logger >> L"Создание главного отчет-файла...";
+	logger >> L"РЎРѕР·РґР°РЅРёРµ РіР»Р°РІРЅРѕРіРѕ РѕС‚С‡РµС‚-С„Р°Р№Р»Р°...";
 	CreateFolders(path);
 	path.Format(L"%s\\%s", path, REPORT_NAME);
-	CStdioFile file(path, CFile::modeCreate | CFile::modeWrite | CFile::typeUnicode);	// Поток записи в файл
+	CStdioFile file(path, CFile::modeCreate | CFile::modeWrite | CFile::typeUnicode);	// РџРѕС‚РѕРє Р·Р°РїРёСЃРё РІ С„Р°Р№Р»
 	file.WriteString(L"<!DOCTYPE html>\n"
 		"<html lang=\"ru\">\n"
 		"<head>\n"
 		+ T(1) + L"<meta charset=\"UTF-8\">\n"
-		+ T(1) + L"<title>Замечания</title>\n");
+		+ T(1) + L"<title>Р—Р°РјРµС‡Р°РЅРёСЏ</title>\n");
 	CssStyle(file, true);
 	file.WriteString(L"</head>\n"
 		L"<body>\n");
-	InfoTable(file, SetAmount(data));
 	MainTable(file, data.db);
-	file.WriteString(L"</body>\n"
-		"</html>\n");
+	InfoTable(file, SetAmount(data));
+	file.WriteString(L"</body>\n");
+	ScriptMain(file);
+	file.WriteString(L"</html>\n");
 	file.Close();
 }
 
-// Начало записи замечаний
+// РќР°С‡Р°Р»Рѕ Р·Р°РїРёСЃРё Р·Р°РјРµС‡Р°РЅРёР№
 void CReport::MainTable(CStdioFile& file, list <errorData>& db) 
 {
-	// Генерация шапки
+	// Р“РµРЅРµСЂР°С†РёСЏ С€Р°РїРєРё
 	file.WriteString(T(1) + L"<table>\n"
-		+ T(2) + L"<caption>Отчет</caption>\n"
+		+ T(2) + L"<caption>РћС‚С‡РµС‚</caption>\n"
 		+ T(2) + L"<thead>\n"
 		+ T(2) + L"<tr>\n"
-		+ T(3) + L"<th rowspan=\"2\" width=\"250px\">Название протокола</th>\n"
-		+ T(3) + L"<th rowspan=\"2\" width=\"160px\">Название листа</th>\n"
-		+ T(3) + L"<th colspan=\"3\">Ошибки и замечания</th>\n"
+		+ T(3) + L"<th rowspan=\"2\" width=\"250px\">РќР°Р·РІР°РЅРёРµ РїСЂРѕС‚РѕРєРѕР»Р°</th>\n"
+		+ T(3) + L"<th rowspan=\"2\" width=\"160px\">РќР°Р·РІР°РЅРёРµ Р»РёСЃС‚Р°</th>\n"
+		+ T(3) + L"<th colspan=\"3\">РћС€РёР±РєРё Рё Р·Р°РјРµС‡Р°РЅРёСЏ</th>\n"
 		+ T(2) + L"</tr>\n"
 		+ T(2) + L"<tr>\n"
-		+ T(3) + L"<th>Синтаксические</th>\n"
-		+ T(3) + L"<th>Семантические</th>\n"
-		+ T(3) + L"<th>Предупреждения</th>\n"
+		+ T(3) + L"<th>РЎРёРЅС‚Р°РєСЃРёС‡РµСЃРєРёРµ</th>\n"
+		+ T(3) + L"<th>РЎРµРјР°РЅС‚РёС‡РµСЃРєРёРµ</th>\n"
+		+ T(3) + L"<th>РџСЂРµРґСѓРїСЂРµР¶РґРµРЅРёСЏ</th>\n"
 		+ T(2) + L"</tr>\n"
 		+ T(2) + L"</thead>\n"
 		+ T(2) + L"<tbody>\n");
 
-	// Обход по книгам
+	// РћР±С…РѕРґ РїРѕ РєРЅРёРіР°Рј
 	for (list <errorData>::iterator it = db.begin(); it != db.end(); it++) 
 	{
 		file.WriteString(T(2) + L"<tr>\n"
 			+ T(3) + L"<td class=cbooks>" + it->book->name + L"</td>\n");
-		WriteBook(file, it);	// Запись листов
-		logger >> L"Создан отчет по протоколу \"" + it->book->name + L"\"";
+		WriteBook(file, it);	// Р—Р°РїРёСЃСЊ Р»РёСЃС‚РѕРІ
+		logger >> L"РЎРѕР·РґР°РЅ РѕС‚С‡РµС‚ РїРѕ РїСЂРѕС‚РѕРєРѕР»Сѓ \"" + it->book->name + L"\"";
 		file.WriteString(T(2) + L"</tr>\n");
 	}
 	file.WriteString(T(2) + L"</tbody>\n"
 		+ T(1) + L"</table>\n");
 }
 
-// Таблица общей информации о наборах данных
+// РўР°Р±Р»РёС†Р° РѕР±С‰РµР№ РёРЅС„РѕСЂРјР°С†РёРё Рѕ РЅР°Р±РѕСЂР°С… РґР°РЅРЅС‹С…
 void CReport::InfoTable(CStdioFile& file, const amountInfo& amount)
 {
-	file.WriteString(T(1) + L"<table>\n"
-		+ T(2) + L"<caption>Статистика</caption>\n"
-		+ T(2) + L"<tr>\n"
-		+ T(3) + L"<th>Количество листов всего</th>\n"
-		+ T(4) + L"<td>" + IntToCString(amount.all) + L"</td>\n"
-		+ T(2) + L"</tr>\n"
-		+ T(2) + L"<tr>\n"
-		+ T(3) + L"<th>Количество листов с ошибками</th>\n"
-		+ T(3) + L"<td>" + IntToCString(amount.withError) + L"</td>\n"
-		+ T(2) + L"</tr>\n"
-		+ T(2) + L"<tr>\n"
-		+ T(3) + L"<th>Количество листов без ошибок</th>\n"
-		+ T(3) + L"<td>" + IntToCString(amount.withoutError) + L"</td>\n"
-		+ T(2) + L"</tr>\n"
-		+ T(2) + L"<tr>\n"
-		+ T(3) + L"<th>Всего ошибок</th>\n"
-		+ T(3) + L"<td>" + IntToCString(amount.error) + L"</td>\n"
-		+ T(2) + L"</tr>\n"
-		+ T(2) + L"<tr>\n"
-		+ T(3) + L"<th>Всего предупреждений</th>\n"
-		+ T(3) + L"<td>" + IntToCString(amount.warning) + L"</td>\n"
-		+ T(2) + L"</tr>\n"
-		+ T(1) + L"</table>\n"
-		+ T(1) + L"<br/>\n");
+	file.WriteString(T(1) + L"<div style=\"text-align: center; margin-top: 10px\">\n"
+		+ T(2) + L"<a class=\"center\" href=\"javascript:sh()\">РЎС‚Р°С‚РёСЃС‚РёРєР°</a></br>\n"
+		/*+ T(2) + L"<div class=\"center\" id = \"info\" style = \"padding-top: 15px;\">\n"
+		+ T(3) + L"<p>РљРѕР»-РІРѕ Р»РёСЃС‚РѕРІ РІСЃРµРіРѕ: " + IntToCString(amount.all) + L"</p>\n"
+		+ T(3) + L"<p>РљРѕР»-РІРѕ Р»РёСЃС‚РѕРІ СЃ РѕС€РёР±РєР°РјРё: " + IntToCString(amount.withError) + L"</p>\n"
+		+ T(3) + L"<p>РљРѕР»РёС‡РµСЃС‚РІРѕ Р»РёСЃС‚РѕРІ Р±РµР· РѕС€РёР±РѕРє: " + IntToCString(amount.withoutError) + L"</p>\n"
+		+ T(3) + L"<p>Р’СЃРµРіРѕ РѕС€РёР±РѕРє: " + IntToCString(amount.error) + L"</p>\n"
+		+ T(3) + L"<p>Р’СЃРµРіРѕ РїСЂРµРґСѓРїСЂРµР¶РґРµРЅРёР№: " + IntToCString(amount.warning) + L"</p>\n"*/
+		+ T(2) + L"<div class=\"center\" id = \"info\" style = \"padding-top: 15px;\">\n"
+		+ T(3) + L"<table class=info>\n"
+		+ T(4) + L"<thead>\n"
+		+ T(4) + L"<tr>\n"
+		+ T(5) + L"<th>РљРѕР»-РІРѕ Р»РёСЃС‚РѕРІ РІСЃРµРіРѕ</th>\n"
+		+ T(5) + L"<td>" + IntToCString(amount.all) + L"</td>\n"
+		+ T(4) + L"</tr>\n"
+		+ T(4) + L"<tr>\n"
+		+ T(5) + L"<th>РљРѕР»-РІРѕ Р»РёСЃС‚РѕРІ СЃ РѕС€РёР±РєР°РјРё</th>\n"
+		+ T(5) + L"<td>" + IntToCString(amount.withError) + L"</td>\n"
+		+ T(4) + L"</tr>\n"
+		+ T(4) + L"<tr>\n"
+		+ T(5) + L"<th>РљРѕР»-РІРѕ Р»РёСЃС‚РѕРІ Р±РµР· РѕС€РёР±РѕРє</th>\n"
+		+ T(5) + L"<td>" + IntToCString(amount.withoutError) + L"</td>\n"
+		+ T(4) + L"</tr>\n"
+		+ T(4) + L"<tr>\n"
+		+ T(5) + L"<th>Р’СЃРµРіРѕ РѕС€РёР±РѕРє</th>\n"
+		+ T(5) + L"<td>" + IntToCString(amount.error) + L"</td>\n"
+		+ T(4) + L"</tr>\n"
+		+ T(4) + L"<tr>\n"
+		+ T(5) + L"<th>Р’СЃРµРіРѕ РїСЂРµРґСѓРїСЂРµР¶РґРµРЅРёР№</th>\n"
+		+ T(5) + L"<td>" + IntToCString(amount.warning) + L"</td>\n"
+		+ T(4) + L"</tr>\n"
+		+ T(4) + L"</thead>\n"
+		+ T(3) + L"</table>\n"
+		+ T(2) + L"</div>\n"
+		+ T(1) + L"</div>\n");
 }
 
-// Запись листов текущего протокола
+// Р—Р°РїРёСЃСЊ Р»РёСЃС‚РѕРІ С‚РµРєСѓС‰РµРіРѕ РїСЂРѕС‚РѕРєРѕР»Р°
 void CReport::WriteBook(CStdioFile& file, list <errorData>::iterator& it) 
 {
-	// Формирование шапки таблицы
+	// Р¤РѕСЂРјРёСЂРѕРІР°РЅРёРµ С€Р°РїРєРё С‚Р°Р±Р»РёС†С‹
 	file.WriteString(T(3) + L"<td class=csheets>\n");
 	for (size_t i = 0; i < it->set.size(); i++)
 		file.WriteString(T(4) + L"<dt>" + it->set[i].data->name + L"</dt>\n");
 	file.WriteString(T(3) + L"</td>\n");
 
-	// Запись синтаксических ошибок
+	// Р—Р°РїРёСЃСЊ СЃРёРЅС‚Р°РєСЃРёС‡РµСЃРєРёС… РѕС€РёР±РѕРє
 	file.WriteString(T(3) + L"<td class=csyntax>\n"); 
 	for (size_t i = 0; i < it->set.size(); i++)
 		file.WriteString(WriteSheets(it->set[i].data, it->set[i].syntax, settings.folders[syntax], it->book->name));
 	file.WriteString(T(3) + L"</td>\n");
 
-	// Запись семантических ошибок
+	// Р—Р°РїРёСЃСЊ СЃРµРјР°РЅС‚РёС‡РµСЃРєРёС… РѕС€РёР±РѕРє
 	file.WriteString(T(3) + L"<td class=csimantic>\n");
 	for (size_t i = 0; i < it->set.size(); i++)
 		file.WriteString(WriteSheets(it->set[i].data, it->set[i].simantic, settings.folders[simantic], it->book->name));
 	file.WriteString(T(3) + L"</td>\n");
 
-	// Запись замечаний
+	// Р—Р°РїРёСЃСЊ Р·Р°РјРµС‡Р°РЅРёР№
 	file.WriteString(T(3) + L"<td class=cwarning>\n");
 	for (size_t i = 0; i < it->set.size(); i++)
 		file.WriteString(WriteSheets(it->set[i].data, it->set[i].warning, settings.folders[warning], it->book->name));
@@ -161,7 +173,7 @@ void CReport::WriteBook(CStdioFile& file, list <errorData>::iterator& it)
 #pragma endregion
 
 #pragma region OTHER_FILES
-// Запись таблицы с листа
+// Р—Р°РїРёСЃСЊ С‚Р°Р±Р»РёС†С‹ СЃ Р»РёСЃС‚Р°
 CString CReport::WriteSheets(sheetData* sheet, const vector <errorSignal>& db, const CString& folder, const CString& bookName) 
 {
 	CString pathFile;
@@ -169,7 +181,7 @@ CString CReport::WriteSheets(sheetData* sheet, const vector <errorSignal>& db, c
 		pathFile.Format(L"%s%s%s\\%s", settings.GetPath(), settings.folders[other], folder, bookName);
 	CreateDirectory(pathFile, NULL);
 	
-	CString result;	// Результирующая строка для записи ссылки в главный файл
+	CString result;	// Р РµР·СѓР»СЊС‚РёСЂСѓСЋС‰Р°СЏ СЃС‚СЂРѕРєР° РґР»СЏ Р·Р°РїРёСЃРё СЃСЃС‹Р»РєРё РІ РіР»Р°РІРЅС‹Р№ С„Р°Р№Р»
 	int count = CountError(db);
 
 	if (count > 0) 
@@ -179,15 +191,15 @@ CString CReport::WriteSheets(sheetData* sheet, const vector <errorSignal>& db, c
 		relativePath.Delete(0, settings.GetPath().GetLength());
 		isProject ? relativePath.Delete(0, settings.folders[project].GetLength()) : relativePath.Delete(0, settings.folders[other].GetLength());
 		relativePath.Insert(0, L".");
-		result.Format(L"%s<dt><a href=\"%s\">%d</a></dt>\n", T(4), relativePath, count);	// Формирование результирующей строки (ссылки)
+		result.Format(L"%s<dt><a href=\"%s\">%d</a></dt>\n", T(4), relativePath, count);	// Р¤РѕСЂРјРёСЂРѕРІР°РЅРёРµ СЂРµР·СѓР»СЊС‚РёСЂСѓСЋС‰РµР№ СЃС‚СЂРѕРєРё (СЃСЃС‹Р»РєРё)
 		
 		CStdioFile file(pathFile, CFile::modeCreate | CFile::modeWrite | CFile::typeUnicode);
-		// Шапочка
+		// РЁР°РїРѕС‡РєР°
 		file.WriteString(L"<!DOCTYPE html>\n"
 			"<html lang=\"ru\">\n"
 			"<head>\n"
 			+ T(1) + L"<meta charset=\"UTF-8\">\n"
-			+ T(1) + L"<title>Замечания по книге \"" + bookName + L"\"</title>\n");
+			+ T(1) + L"<title>Р—Р°РјРµС‡Р°РЅРёСЏ РїРѕ РєРЅРёРіРµ \"" + bookName + L"\"</title>\n");
 		CssStyle(file);
 		file.WriteString(L"</head>\n"
 			"<body>\n"
@@ -195,10 +207,10 @@ CString CReport::WriteSheets(sheetData* sheet, const vector <errorSignal>& db, c
 
 		SheetTableHeader(file, bookName, sheet->name, sheet->arinc);
 		file.WriteString(T(2) + L"<tbody>\n");
-		// Запись наборов данных
+		// Р—Р°РїРёСЃСЊ РЅР°Р±РѕСЂРѕРІ РґР°РЅРЅС‹С…
 		for (size_t i = 0; i < db.size(); i++)
 		{
-			// Индекс ошибки
+			// РРЅРґРµРєСЃ РѕС€РёР±РєРё
 			file.WriteString(T(3) + L"<tr>\n"
 				+ T(4) + L"<th rowspan=\"2\" class=cnum-remark>" + IntToCString((int)i + 1) + L"</th>\n");
 			WriteSignal(file, db[i]);
@@ -211,32 +223,32 @@ CString CReport::WriteSheets(sheetData* sheet, const vector <errorSignal>& db, c
 		file.Close();
 	}
 	else
-		result.Format(L"%s<dt>-</dt>\n", T(4)); // Формирование результирующей строки
+		result.Format(L"%s<dt>-</dt>\n", T(4)); // Р¤РѕСЂРјРёСЂРѕРІР°РЅРёРµ СЂРµР·СѓР»СЊС‚РёСЂСѓСЋС‰РµР№ СЃС‚СЂРѕРєРё
 	return result;
 }
 
-// Шапка таблицы с ошибками листа
+// РЁР°РїРєР° С‚Р°Р±Р»РёС†С‹ СЃ РѕС€РёР±РєР°РјРё Р»РёСЃС‚Р°
 void CReport::SheetTableHeader(CStdioFile& file, const CString& book, const CString& sheet, bool arinc)
 {
 	file.WriteString(T(1) + L"<table>\n"
-		+ T(2) + L"<caption> Замечания. Книга \"" + book + L"\". Лист \"" + sheet + L"\". </caption>"
+		+ T(2) + L"<caption> Р—Р°РјРµС‡Р°РЅРёСЏ. РљРЅРёРіР° \"" + book + L"\". Р›РёСЃС‚ \"" + sheet + L"\". </caption>"
 		+ T(2) + L"<thead>\n"
 		+ T(2) + L"<tr>\n"
-		+ T(3) + L"<th width=\"20px\">№ з-я</th>\n");
-	arinc ? file.WriteString(T(3) + L"<th width=\"40px\">Адрес</th>\n") : file.WriteString(T(3) + L"<th width=\"40px\">№ Сл-а</th>\n");
-	file.WriteString(T(3) + L"<th width=\"180px\">Наименование</th>\n"
-		+ T(3) + L"<th width=\"150px\">Идентификатор</th>\n"
-		+ T(3) + L"<th width=\"60px\">Ед. изм.</th>\n"
-		+ T(3) + L"<th width=\"60px\">Мин. зн.</th>\n"
-		+ T(3) + L"<th width=\"60px\">Макс. зн.</th>\n"
-		+ T(3) + L"<th width=\"60px\">ЦСР</th>\n"
-		+ T(3) + L"<th width=\"100px\">Исполь-ные разряды</th>\n"
-		+ T(3) + L"<th width=\"260px\">Примечание</th>\n"
+		+ T(3) + L"<th width=\"20px\">в„– Р·-СЏ</th>\n");
+	arinc ? file.WriteString(T(3) + L"<th width=\"40px\">РђРґСЂРµСЃ</th>\n") : file.WriteString(T(3) + L"<th width=\"40px\">в„– РЎР»-Р°</th>\n");
+	file.WriteString(T(3) + L"<th width=\"180px\">РќР°РёРјРµРЅРѕРІР°РЅРёРµ</th>\n"
+		+ T(3) + L"<th width=\"150px\">РРґРµРЅС‚РёС„РёРєР°С‚РѕСЂ</th>\n"
+		+ T(3) + L"<th width=\"60px\">Р•Рґ. РёР·Рј.</th>\n"
+		+ T(3) + L"<th width=\"60px\">РњРёРЅ. Р·РЅ.</th>\n"
+		+ T(3) + L"<th width=\"60px\">РњР°РєСЃ. Р·РЅ.</th>\n"
+		+ T(3) + L"<th width=\"60px\">Р¦РЎР </th>\n"
+		+ T(3) + L"<th width=\"100px\">РСЃРїРѕР»СЊ-РЅС‹Рµ СЂР°Р·СЂСЏРґС‹</th>\n"
+		+ T(3) + L"<th width=\"260px\">РџСЂРёРјРµС‡Р°РЅРёРµ</th>\n"
 		+ T(2) + L"</tr>\n"
 		+ T(2) + L"</thead>\n");
 }
 
-// Запись одного набора параметров таблицы
+// Р—Р°РїРёСЃСЊ РѕРґРЅРѕРіРѕ РЅР°Р±РѕСЂР° РїР°СЂР°РјРµС‚СЂРѕРІ С‚Р°Р±Р»РёС†С‹
 void CReport::WriteSignal(CStdioFile& file, const errorSignal& signal) 
 {
 	file.WriteString(FormValue(signal.data->numWord.field, signal.check[check::numword], 1));
@@ -252,12 +264,12 @@ void CReport::WriteSignal(CStdioFile& file, const errorSignal& signal)
 	file.WriteString(T(3) + L"</tr>\n"
 		+ T(3) + L"<tr>\n");
 
-	// Запись всех ошибок
+	// Р—Р°РїРёСЃСЊ РІСЃРµС… РѕС€РёР±РѕРє
 	file.WriteString(T(4) + L"<td style=\"padding-left: 20; padding-top: 0; padding-bottom: 15\" colspan=\"10\" bgcolor = \"#FDFCD0\">\n");
 	for (size_t j = 0; j < signal.error.size(); j++) 
 	{
 		CString buffer;
-		buffer.Format(L"%s<p class=remarks> – %s</p>\n", T(5), signal.error[j]);
+		buffer.Format(L"%s<p class=remarks> вЂ“ %s</p>\n", T(5), signal.error[j]);
 		file.WriteString(buffer);
 	}
 	file.WriteString(T(4) + L"</td>\n"
@@ -267,7 +279,7 @@ void CReport::WriteSignal(CStdioFile& file, const errorSignal& signal)
 		+ T(3) + L"</tr>\n");
 }
 
-// Формирование строки параметра из сигнала
+// Р¤РѕСЂРјРёСЂРѕРІР°РЅРёРµ СЃС‚СЂРѕРєРё РїР°СЂР°РјРµС‚СЂР° РёР· СЃРёРіРЅР°Р»Р°
 CString CReport::FormValue(CString field, const bool& color, const int& width)
 {
 	CString result;
@@ -280,7 +292,7 @@ CString CReport::FormValue(CString field, const bool& color, const int& width)
 #pragma endregion
 
 #pragma region CSS_STYLES
-// Табуляция
+// РўР°Р±СѓР»СЏС†РёСЏ
 CString CReport::T(int n)
 {
 	CString res = L"";
@@ -289,10 +301,10 @@ CString CReport::T(int n)
 	return res;
 }
 
-// Запись CSS стиля
+// Р—Р°РїРёСЃСЊ CSS СЃС‚РёР»СЏ
 void CReport::CssStyle(CStdioFile& file, const bool& isMain)
 {
-	// TODO: Закончить работу с плавующей шапкой
+	// TODO: Р—Р°РєРѕРЅС‡РёС‚СЊ СЂР°Р±РѕС‚Сѓ СЃ РїР»Р°РІСѓСЋС‰РµР№ С€Р°РїРєРѕР№
 	file.WriteString(T(1) + L"<style type=\"text/css\">\n"
 		+ CssCaption() +
 		CssTable() +
@@ -302,7 +314,7 @@ void CReport::CssStyle(CStdioFile& file, const bool& isMain)
 	file.WriteString(T(1) + L"</style>\n");
 }
 
-// Стиль таблицы
+// РЎС‚РёР»СЊ С‚Р°Р±Р»РёС†С‹
 CString CReport::CssTable()
 {
 	return T(2) + L"table {\n"
@@ -338,7 +350,7 @@ CString CReport::CssTable()
 		+ T(2) + L"}\n";
 }
 
-// Стиль имени таблицы
+// РЎС‚РёР»СЊ РёРјРµРЅРё С‚Р°Р±Р»РёС†С‹
 CString CReport::CssCaption()
 {
 	return T(2) + L"caption {\n"
@@ -349,7 +361,7 @@ CString CReport::CssCaption()
 		+ T(2) + L"}\n";
 }
 
-// Стиль хедера таблицы
+// РЎС‚РёР»СЊ С…РµРґРµСЂР° С‚Р°Р±Р»РёС†С‹
 CString CReport::CssTh()
 {
 	return T(2) + L"th {\n"
@@ -380,7 +392,7 @@ CString CReport::CssTh()
 		+ T(2) + L"}\n";
 }
 
-// Стиль внутренних блоков таблицы
+// РЎС‚РёР»СЊ РІРЅСѓС‚СЂРµРЅРЅРёС… Р±Р»РѕРєРѕРІ С‚Р°Р±Р»РёС†С‹
 CString CReport::CssTrTd()
 {
 	return T(2) + L"tr {\n"
@@ -418,7 +430,7 @@ CString CReport::CssTrTd()
 		+ T(2) + L"}\n";
 }
 
-// Стилизация ссылок
+// РЎС‚РёР»РёР·Р°С†РёСЏ СЃСЃС‹Р»РѕРє
 CString CReport::CssLinks()
 {
 	return T(2) + L"a:link {\n"
@@ -439,10 +451,13 @@ CString CReport::CssLinks()
 		+ T(2) + L"}\n";
 }
 
-// Особенности ячеек основной таблицы отчета
+// РћСЃРѕР±РµРЅРЅРѕСЃС‚Рё СЏС‡РµРµРє РѕСЃРЅРѕРІРЅРѕР№ С‚Р°Р±Р»РёС†С‹ РѕС‚С‡РµС‚Р°
 CString CReport::CssClasses1()
 {
-	return T(2) + L"td:hover{ background: #fafafa; }\n"
+	return T(2) + L".info thead{ width: 800px; overflow: hidden; }\n"
+		+ T(2) + L".info th{ width: 400px; }\n"
+		+ T(2) + L".info td{ width: 400px; background: #fff; }\n"
+		+ T(2) + L"td:hover{ background: #fafafa; }\n"
 		+ T(2) + L".cbooks { border-bottom: 1px solid #e0e0e0; width: 235px; }\n"
 		+ T(2) + L".csheets { padding: 0px 0px 0px 0px; width: 180px; }\n"
 		+ T(2) + L".csyntax { padding: 0px 0px 0px 0px; width: 105px; }\n"
@@ -450,7 +465,7 @@ CString CReport::CssClasses1()
 		+ T(2) + L".cwarning { padding: 0px 0px 0px 0px; width: 110px; }\n";
 }
 
-// Особености ячеек таблицы ошибок
+// РћСЃРѕР±РµРЅРѕСЃС‚Рё СЏС‡РµРµРє С‚Р°Р±Р»РёС†С‹ РѕС€РёР±РѕРє
 CString CReport::CssClasses2()
 {
 	return T(2) + L".remarks { margin-left: 20px; }\n"
@@ -462,10 +477,23 @@ CString CReport::CssClasses2()
 		+ T(2) + L".c5 { width: 120px; }\n"
 		+ T(2) + L".c6 { padding-left: 10px; text-align: left; width: 255px; }\n";
 }
+
+// РЎРєСЂРёРїС‚ РґР»СЏ СЃРєСЂС‹С‚РёСЏ СЃС‚Р°С‚РёСЃС‚РёРєРё РІ РіР»Р°РІРЅРѕРј С„Р°Р№Р»Рµ РѕС‚С‡РµС‚Р°
+void CReport::ScriptMain(CStdioFile& file)
+{
+	file.WriteString(L"<script type = \"text/javascript\">\n"
+		+ T(1) + L"sh();\n"
+		+ T(1) + L"function sh() {\n"
+		+ T(1) + L"obj = document.getElementById(\"info\");\n"
+		+ T(1) + L"if (obj.style.display == \"none\") { obj.style.display = \"block\"; }\n"
+		+ T(1) + L"else { obj.style.display = \"none\"; }\n"
+		+ T(1) + L"}\n"
+		L"</script>\n");
+}
 #pragma endregion
 
 
-// Преобразование int to CString
+// РџСЂРµРѕР±СЂР°Р·РѕРІР°РЅРёРµ int to CString
 CString CReport::IntToCString(const int& number)
 {
 	CString result;
@@ -473,7 +501,7 @@ CString CReport::IntToCString(const int& number)
 	return result;
 }
 
-// Преобразование текста к utf8
+// РџСЂРµРѕР±СЂР°Р·РѕРІР°РЅРёРµ С‚РµРєСЃС‚Р° Рє utf8
 /*string CReport::ToUtf8(const CString& text)
 {
 int nChars = ::WideCharToMultiByte(CP_UTF8, 0, text, (int)text.GetLength(), NULL, 0, NULL, NULL);
@@ -486,7 +514,7 @@ result.resize(nChars);
 return result;
 }*/
 
-// Количество ошибок в текущей таблице
+// РљРѕР»РёС‡РµСЃС‚РІРѕ РѕС€РёР±РѕРє РІ С‚РµРєСѓС‰РµР№ С‚Р°Р±Р»РёС†Рµ
 int CReport::CountError(const vector<errorSignal>& signal)
 {
 	int result = 0;
@@ -495,7 +523,7 @@ int CReport::CountError(const vector<errorSignal>& signal)
 	return result;
 }
 
-// Подсчет количества данных( всего, с ошибками и без ошибок), ошибок и предупреждений
+// РџРѕРґСЃС‡РµС‚ РєРѕР»РёС‡РµСЃС‚РІР° РґР°РЅРЅС‹С…( РІСЃРµРіРѕ, СЃ РѕС€РёР±РєР°РјРё Рё Р±РµР· РѕС€РёР±РѕРє), РѕС€РёР±РѕРє Рё РїСЂРµРґСѓРїСЂРµР¶РґРµРЅРёР№
 amountInfo CReport::SetAmount(pivData& data)
 {
 	amountInfo result;
