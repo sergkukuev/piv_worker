@@ -221,8 +221,8 @@ CString CReport::WriteSheets(sheetData* sheet, const vector <errorSignal>& db, c
 // Шапка таблицы с ошибками листа
 void CReport::SheetTableHeader(CStdioFile& file, const CString& book, const CString& sheet, bool arinc)
 {
-	file.WriteString(L"\t<h1> Замечания. Книга \"" + book + L"\". Лист \"" + sheet + L"\". </h1>\n"
-		"\t<table>\n"
+	file.WriteString(L"\t<table>\n"
+		"\t\t<caption> Замечания. Книга \"" + book + L"\". Лист \"" + sheet + L"\". </caption>"
 		"\t\t<thead>\n"
 		"\t\t<tr>\n"
 		"\t\t\t<th width=\"20px\">№ з-я</th>\n");
@@ -244,13 +244,20 @@ void CReport::CssStyle(CStdioFile& file)
 {
 	// TODO: Закончить работу с плавующей шапкой
 	file.WriteString(L"\t<style type=\"text/css\">\n"
+		"\t\tcaption {\n"
+		"\t\t\tfont-family: Arial, Helvetica, sans-serif;\n"
+		"\t\t\tfont-size: 15px;\n"
+		"\t\t\tfont-weight: bold;\n"
+		"\t\t\tpadding-bottom: 10px;\n"
+		"\t\t}\n"
+
 		"\t\ttable {\n"
 		"\t\t\tfont-family: Arial, Helvetica, sans-serif;\n"
 		"\t\t\tcolor: #666;\n"
 		"\t\t\tfont-size: 12px;\n"
 		"\t\t\ttext-shadow: 1px 1px 0px #fff;\n"
 		"\t\t\tbackground: #eaebec;\n"
-		"\t\t\tmargin: 20px;\n"
+		"\t\t\tmargin: auto;\n"
 		"\t\t\tborder: #ccc 1px solid;\n"
 		"\t\t\tborder-collapse: separate;\n"
 		"\t\t\t-moz-border-radius: 3px;\n"
