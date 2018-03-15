@@ -56,30 +56,41 @@ public:
 	void GetTxt(const bookData& book);		// один файл
 
 private:
-	CSettings& settings = CSettings::Instance();	// Указатель на настройки
+	CSettings& settings = CSettings::Instance();			// Указатель на настройки
 	logdll::CLogger& logger = logdll::CLogger::Instance(); // Логирование
 	bool isProject;		// Метка о создании отчета проекта или отдельных ПИВ (true - проект, false - отдельные протоколы)
 
-	// GENERATE_REPORT
+	// Report.cpp
 	void CreateMainFile(pivData& data, CString path);	// Создание основного файла
-	void CreateFolders(const CString& path);	// Создание структуры отчета (создание папочек)
-	void MainTable(CStdioFile& file, list <errorData>& db); // Создание таблицы с проверенными протоколами
-	void InfoTable(CStdioFile& file, const amountInfo& amount);	// Таблица общей информации о наборах данных
-	void CssStyle(CStdioFile& file);	// Запись CSS стиля
+	void CreateFolders(const CString& path);			// Создание структуры отчета (создание папочек)
+	void MainTable(CStdioFile& file, list <errorData>& db);				// Создание таблицы с проверенными протоколами
+	void InfoTable(CStdioFile& file, const amountInfo& amount);			// Таблица общей информации о наборах данных
 	void WriteBook(CStdioFile& file, list <errorData>::iterator& it);	// Запись листов текущего протокола
 	
 	void SheetTableHeader(CStdioFile& file, const CString& book, const CString& sheet, bool arinc);	// Шапка таблицы с ошибками листа
 	CString WriteSheets(sheetData* sheet, const vector <errorSignal>& errors, const CString& folder, const CString& bookName);	// Запись таблицы текущего листа
-	void WriteSignal(CStdioFile& file, const errorSignal& set);			// Запись одного набора параметров таблицы
+	void WriteSignal(CStdioFile& file, const errorSignal& set);				// Запись одного набора параметров таблицы
 	CString FormValue(CString field, const bool& color, const int& width);	// Формирование строки, для записи, одного параметра из набора
 
-	CString IntToCString(const int& number);		// Преобразование int в CString
+	// CSS_STYLES (функции для формирования html файла)
+	void CssStyle(CStdioFile& file, const bool& isMain = false); // Запись CSS стиля
+	CString CssTable();		// Стиль таблицы
+	CString CssTh();		// Стиль хедера таблицы
+	CString CssTrTd();		// Стиль внутренних блоков таблицы
+	CString CssCaption();	// Стиль имени таблицы
+	CString CssLinks();		// Стиль ссылок
+	CString CssClasses1();	// Особенности ячеек основной таблицы отчета
+	CString CssClasses2();	// Особености ячеек таблицы ошибок
+	CString T(int n);		// Табуляция (для лучшего чтения html файлов)
+
+
+	CString IntToCString(const int& number);	// Преобразование int в CString
 	//string ToUtf8(const CString& text);		// Преобразование текста к формату
 
 	int CountError(const vector<errorSignal>& set);	// Количество ошибок в текущей таблице
 	amountInfo SetAmount(pivData& data);			// Подсчет количества данных( всего, с ошибками и без ошибок), ошибок и предупреждений
 
-	// GENERATE_TXT
+	// TxtGenerate.cpp
 	void Generate(const bookData& book);	// Генерация txt протокола
 	void WriteTxtParam(ofstream& file, const signalData& signal, const sheetInfo& info, const int& arincNum);	// Запись одного набора данных из таблицы в txt файл
 	bool WriteParamTitle(ofstream& file, const signalData& signal, const sheetInfo& info);	// Запись наименования параметра

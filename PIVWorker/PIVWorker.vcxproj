@@ -291,6 +291,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='SVN|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="Test.cpp" />
+    <ClCompile Include="TxtGenerate.cpp" />
     <ClCompile Include="WorkExcel.cpp" />
   </ItemGroup>
   <ItemGroup>
