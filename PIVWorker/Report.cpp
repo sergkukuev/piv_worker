@@ -307,7 +307,7 @@ void CReport::CssStyle(CStdioFile& file, const bool& isMain)
 	// TODO: Закончить работу с плавующей шапкой
 	file.WriteString(T(1) + L"<style type=\"text/css\">\n"
 		+ CssCaption() +
-		CssTable() +
+		CssTable(isMain) +
 		CssTh() +
 		CssTrTd());
 	isMain ? file.WriteString(CssLinks() + CssClasses1()) : file.WriteString(CssClasses2());
@@ -315,9 +315,11 @@ void CReport::CssStyle(CStdioFile& file, const bool& isMain)
 }
 
 // Стиль таблицы
-CString CReport::CssTable()
+CString CReport::CssTable(const bool& isMain)
 {
-	return T(2) + L"table {\n"
+	CString width = L"";
+	isMain ? width.Format(L"width: 800px;") : width.Format(L"width: 1200px;");
+	CString res = T(2) + L"table {\n"
 		+ T(3) + L"font-family: Arial, Helvetica, sans-serif;\n"
 		+ T(3) + L"color: #666;\n"
 		+ T(3) + L"font-size: 12px;\n"
@@ -336,18 +338,19 @@ CString CReport::CssTable()
 
 		+ T(2) + L"thead {\n"
 		+ T(3) + L"display: block;\n"
-		//+ T(3) + L"width: 1200px;\n"
 		+ T(3) + L"overflow: hidden;\n"
 		+ T(2) + L"}\n"
 
 		+ T(2) + L"tbody {\n"
 		+ T(3) + L"display: block;\n"
-		//+ T(3) + L"width: 1200px;\n"
 		+ T(3) + L"height: 100%;\n"
 		+ T(3) + L"max-height: 700px;\n"
 		+ T(3) + L"background: #fff;\n"
 		+ T(3) + L"overflow-y: scroll;\n"
 		+ T(2) + L"}\n";
+
+	res.Format(L"%s%sthead tbody { %s }\n", res, T(2), width);
+	return res;
 }
 
 // Стиль имени таблицы

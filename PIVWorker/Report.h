@@ -75,7 +75,7 @@ private:
 	// CSS_STYLES (функции для формирования html файла)
 	void ScriptMain(CStdioFile& file);	// Скрипт для скрытия статистики в главном файле отчета
 	void CssStyle(CStdioFile& file, const bool& isMain = false); // Запись CSS стиля
-	CString CssTable();		// Стиль таблицы
+	CString CssTable(const bool& isMain);	// Стиль таблицы
 	CString CssTh();		// Стиль хедера таблицы
 	CString CssTrTd();		// Стиль внутренних блоков таблицы
 	CString CssCaption();	// Стиль имени таблицы
