@@ -203,7 +203,7 @@ CString CReport::WriteSheets(sheetData* sheet, const vector <errorSignal>& db, c
 		{
 			// Индекс ошибки
 			file.WriteString(L"\t\t\t<tr>\n"
-				"\t\t\t\t<th rowspan=\"2\" class=width5>" + IntToCString((int)i + 1) + L"</th>\n");
+				"\t\t\t\t<th rowspan=\"2\" class=width1>" + IntToCString((int)i + 1) + L"</th>\n");
 			WriteSignal(file, db[i]);
 		}
 
@@ -225,16 +225,16 @@ void CReport::SheetTableHeader(CStdioFile& file, const CString& book, const CStr
 		"\t<table>\n"
 		"\t\t<thead>\n"
 		"\t\t<tr>\n"
-		"\t\t\t<th class=width5>№ з-я</th>\n");
-	arinc ? file.WriteString(L"\t\t\t<th class=width5>Адрес</th>\n") : file.WriteString(L"\t\t\t<th class=width5>№ Сл-а</th>\n");
-	file.WriteString(L"\t\t\t<th class=width15>Наименование</th>\n"
-		"\t\t\t<th class=width10>Идентификатор</th>\n"
-		"\t\t\t<th class=width5>Ед. изм.</th>\n"
-		"\t\t\t<th class=width5>Мин. зн.</th>\n"
-		"\t\t\t<th class=width5>Макс. зн.</th>\n"
-		"\t\t\t<th class=width5>ЦСР</th>\n"
-		"\t\t\t<th class=width10>Использованные разряды</th>\n"
-		"\t\t\t<th width=\"31%%\">Примечание</th>\n"
+		"\t\t\t<th width=\"20px\">№ з-я</th>\n");
+	arinc ? file.WriteString(L"\t\t\t<th width=\"40px\">Адрес</th>\n") : file.WriteString(L"\t\t\t<th width=\"40px\">№ Сл-а</th>\n");
+	file.WriteString(L"\t\t\t<th width=\"180px\">Наименование</th>\n"
+		"\t\t\t<th width=\"150px\">Идентификатор</th>\n"
+		"\t\t\t<th width=\"60px\">Ед. изм.</th>\n"
+		"\t\t\t<th width=\"60px\">Мин. зн.</th>\n"
+		"\t\t\t<th width=\"60px\">Макс. зн.</th>\n"
+		"\t\t\t<th width=\"60px\">ЦСР</th>\n"
+		"\t\t\t<th width=\"100px\">Исполь-ные разряды</th>\n"
+		"\t\t\t<th width=\"260px\">Примечание</th>\n"
 		"\t\t</tr>\n"
 		"\t\t</thead>\n");
 }
@@ -245,42 +245,105 @@ void CReport::CssStyle(CStdioFile& file)
 	// TODO: Закончить работу с плавующей шапкой
 	file.WriteString(L"\t<style type=\"text/css\">\n"
 		"\t\ttable {\n"
-		"\t\t\twidth: 100%;\n"
-		"\t\t\tborder-collapse: collapse;\n"
-		"\t\t\tmin-width: 960px;\n"
-		"\t\t\tmax-width: 2135px;\n"
-		"\t\t\tword-break: break-all;\n"
-		"\t\t\tborder-bottom: 1px double grey;\n"
-		"\t\t\tborder-left: 1px double grey;\n"
+		"\t\t\tfont-family: Arial, Helvetica, sans-serif;\n"
+		"\t\t\tcolor: #666;\n"
+		"\t\t\tfont-size: 12px;\n"
+		"\t\t\ttext-shadow: 1px 1px 0px #fff;\n"
+		"\t\t\tbackground: #eaebec;\n"
+		"\t\t\tmargin: 20px;\n"
+		"\t\t\tborder: #ccc 1px solid;\n"
+		"\t\t\tborder-collapse: separate;\n"
+		"\t\t\t-moz-border-radius: 3px;\n"
+		"\t\t\t-webkit-border-radius: 3px;\n"
+		"\t\t\tborder-radius: 3px;\n"
+		"\t\t\t-moz-box-shadow: 0 1px 2px #d1d1d1;\n"
+		"\t\t\t-webkit-box-shadow: 0 1px 2px #d1d1d1;\n"
+		"\t\t\tbox-shadow: 0 1px 2px #d1d1d1;\n"
 		"\t\t}\n"
 
 		"\t\tthead {\n"
 		"\t\t\tdisplay: block;\n"
-		//"\t\t\twidth: 100%;\n"
-		"\t\t\toverflow: auto;\n"
-		"\t\t\tcolor: #ffffff;\n"
-		"\t\t\tbackground: #000066;\n"
+		"\t\t\twidth: 1200px ;\n"
+		"\t\t\toverflow: hidden;\n"
 		"\t\t}\n"
-
+		
 		"\t\ttbody {\n"
 		"\t\t\tdisplay: block;\n"
+		"\t\t\twidth: 1200px;\n"
 		"\t\t\theight: 100%;\n"
-		"\t\t\tmin-height: 200px;\n"
-		"\t\t\tmax-height: 800px;\n"
+		"\t\t\tmax-height: 700px;\n"
 		"\t\t\tbackground: #fff;\n"
-		"\t\t\toverflow: auto;\n"
+		"\t\t\toverflow-y: scroll;\n"
+		"\t\t}\n"
+			
+		"\t\tth {\n"
+		"\t\t\tfont-weight: bold;\n"
+		"\t\t\tpadding: 15px 10px 15px 10px;\n"
+		"\t\t\tborder-top: 1px solid #fafafa;\n"
+		"\t\t\tborder-bottom:1px solid #e0e0e0;\n"
+		"\t\t\tbackground: #ededed;\n"
+		"\t\t\tbackground: -webkit-gradient(linear, left top, left bottom, from(#ededed), to(#ebebeb));\n"
+		"\t\t\tbackground: -moz-linear-gradient(top,  #ededed,  #ebebeb);\n"
 		"\t\t}\n"
 
-		"\t\tth, td {\n"
-		"\t\t\tpadding: .5em 1em;\n"
-		"\t\t\talign: center;\n"
-		"\t\t\tvertical-align: center;\n"
-		"\t\t\tborder: 2px double grey;\n"
+		"\t\tth:first-child {\n"
+		"\t\t\ttext-align: right;\n"
+		"\t\t\tpadding-left: 0px;\n"
 		"\t\t}\n"
-		"\t\t.width5 { width: 5% }\n"
-		"\t\t.width10 { width: 10% }\n"
-		"\t\t.width15 { width: 15% }\n"
-		"\t\t.width30 { width: 30% }\n"
+		
+		"\t\ttr:first-child th:first-child {\n"
+		"\t\t\t-moz-border-radius-top-left: 3px;\n"
+		"\t\t\t-webkit-border-top-left-radius: 3px;\n"
+		"\t\t\tborder-top-left-radius: 3px;\n"
+		"\t\t}\n"
+
+		"\t\ttr:first-child th:last-child {\n"
+		"\t\t\t-moz-border-radius-top-right: 3px;\n"
+		"\t\t\t-webkit-border-top-right-radius: 3px;\n"
+		"\t\t\tborder-top-right-radius: 3px;\n"
+		"\t\t}\n"
+
+		"\t\ttr {\n"
+		"\t\t\ttext-align: center;\n"
+		"\t\t\tpadding-left: 0px;\n"
+		"\t\t}\n"
+
+		"\t\ttr td:first-child{\n"
+		"\t\t\ttext-align: left;\n"
+		"\t\t\tpadding-left: 20px;\n"
+		"\t\t\tborder-left: 0;\n"
+		"\t\t}\n"
+
+		"\t\ttr td{\n"
+		"\t\t\tpadding: 10px 0px 10px 0px;\n"
+		"\t\t\tborder-top: 1px solid #ffffff;\n"
+		"\t\t\tborder-bottom: 1px solid #e0e0e0;\n"
+		"\t\t\tborder-left: 1px solid #e0e0e0;\n"
+		"\t\t}\n"
+
+		"\t\ttr:last-child td{\n"
+		"\t\t\tborder-bottom: 0;\n"
+		"\t\t}\n"
+		
+		"\t\ttr:last-child td:first-child{\n"
+		"\t\t\t-moz-border-radius-bottom-left: 3px;\n"
+		"\t\t\t-webkit-border-bottom-left-radius: 3px;\n"
+		"\t\t\tborder-bottom-left-radius: 3px;\n"
+		"\t\t}\n"
+
+		"\t\ttr:last-child td:last-child{\n"
+		"\t\t\t-moz-border-radius-bottom-right: 3px;\n"
+		"\t\t\t-webkit-border-bottom-right-radius: 3px;\n"
+		"\t\t\tborder-bottom-right-radius: 3px;\n"
+		"\t\t}\n"
+
+		"\t\t.width1 { width: 18px; }\n"
+		"\t\t.width2 { width: 60px; }\n"
+		"\t\t.width3 { width: 168px; }\n"
+		"\t\t.width4 { padding-left: 10px; text-align: left; width: 189px; }\n"
+		"\t\t.width5 { width: 79px; }\n"
+		"\t\t.width6 { width: 120px; }\n"
+		"\t\t.width7 { padding-left: 10px; text-align: left; width: 255px; }\n"
 		"\t</style>\n"
 	);
 }
@@ -288,15 +351,15 @@ void CReport::CssStyle(CStdioFile& file)
 // Запись одного набора параметров таблицы
 void CReport::WriteSignal(CStdioFile& file, const errorSignal& signal) 
 {
-	file.WriteString(FormValue(signal.data->numWord.field, signal.check[check::numword], 5));
-	file.WriteString(FormValue(signal.data->title[0], false, 15));
-	file.WriteString(FormValue(signal.data->title[1], signal.check[check::title], 10));
+	file.WriteString(FormValue(signal.data->numWord.field, signal.check[check::numword], 2));
+	file.WriteString(FormValue(signal.data->title[0], false, 4));
+	file.WriteString(FormValue(signal.data->title[1], signal.check[check::title], 3));
 	file.WriteString(FormValue(signal.data->dimension, false, 5));
 	file.WriteString(FormValue(signal.data->min.field, signal.check[check::min], 5));
 	file.WriteString(FormValue(signal.data->max.field, signal.check[check::max], 5));
 	file.WriteString(FormValue(signal.data->csr.field, signal.check[check::csr], 5));
-	file.WriteString(FormValue(signal.data->bit.field, signal.check[check::bits], 10));
-	file.WriteString(FormValue(signal.data->comment, signal.check[check::comment], 30));
+	file.WriteString(FormValue(signal.data->bit.field, signal.check[check::bits], 6));
+	file.WriteString(FormValue(signal.data->comment, signal.check[check::comment], 7));
 
 	file.WriteString(L"\t\t\t</tr>\n"
 		"\t\t\t<tr>\n");
