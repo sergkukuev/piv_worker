@@ -317,8 +317,6 @@ void CReport::CssStyle(CStdioFile& file, const bool& isMain)
 // Стиль таблицы
 CString CReport::CssTable(const bool& isMain)
 {
-	CString width = L"";
-	isMain ? width.Format(L"width: 800px;") : width.Format(L"width: 1200px;");
 	CString res = T(2) + L"table {\n"
 		+ T(3) + L"font-family: Arial, Helvetica, sans-serif;\n"
 		+ T(3) + L"color: #666;\n"
@@ -344,12 +342,12 @@ CString CReport::CssTable(const bool& isMain)
 		+ T(2) + L"tbody {\n"
 		+ T(3) + L"display: block;\n"
 		+ T(3) + L"height: 100%;\n"
-		+ T(3) + L"max-height: 700px;\n"
 		+ T(3) + L"background: #fff;\n"
 		+ T(3) + L"overflow-y: scroll;\n"
 		+ T(2) + L"}\n";
 
-	res.Format(L"%s%sthead tbody { %s }\n", res, T(2), width);
+	isMain ? res.Format(L"%s%sthead tbody { width: %dpx; }\n%stbody { max-height: %dpx; }\n", res, T(2), 800, T(2), 500) :
+		res.Format(L"%s%sthead tbody { width: %dpx; }\n%stbody { max-height: %dpx; }\n", res, T(2), 1200, T(2), 700);
 	return res;
 }
 
