@@ -10,6 +10,7 @@ namespace logdll
 {
 	const CString lgBr = L"\n\t\t\t\t\t\t";	// Перенос строки в лог файле
 	const CString lgSlash = L"================================================================\n";
+	const CString lgName = L"log.txt";	// Имя файла для логов
 	
 	const enum stIndex {start, end};	// Индексы для статусов основного приложения и dll
 	const std::vector <CString> stApp = {L"Приложение запущено", L"Приложение завершено"}; // Основные статусы приложения

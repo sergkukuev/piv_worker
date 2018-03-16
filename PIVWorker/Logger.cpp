@@ -90,7 +90,7 @@ void CLogger::WriteInFile(CString message)
 		message.Format(L"%02d:%02d:%02d %02d/%02d/%d:\t%s\n", st.wHour, st.wMinute, st.wSecond, st.wDay, st.wMonth, st.wYear, message);
 
 	CString logPath;
-	logPath.Format(L"%s\\log.txt", *path);
+	logPath.Format(L"%s\\%s", *path, lgName);
 
 	EnterCriticalSection(&csFile);
 	std::ofstream logStream(logPath, std::ios::out | std::ios::app);
