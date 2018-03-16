@@ -58,6 +58,7 @@ BEGIN_MESSAGE_MAP(CSettingDlg, CDialog)
 	ON_BN_CLICKED(IDC_TEMPLATE, &CSettingDlg::OnEnableBtnSave)
 	ON_BN_CLICKED(IDC_930M, &CSettingDlg::OnEnableBtnSave)
 	ON_BN_CLICKED(IDC_KPRNO35, &CSettingDlg::OnEnableBtnSave)
+	ON_BN_CLICKED(IDC_OPEN_LOG, &CSettingDlg::OnBnClickedOpenLog)
 END_MESSAGE_MAP()
 
 
@@ -98,4 +99,12 @@ void CSettingDlg::OnEnableBtnSave()
 {
 	CButton* m_btnSave = (CButton*)GetDlgItem(IDOK);
 	m_btnSave->EnableWindow(TRUE);
+}
+
+void CSettingDlg::OnBnClickedOpenLog()
+{
+	stgdll::CSettings &stg = stgdll::CSettings::Instance();
+	CString path = stg.GetPath();
+	path.Format(L"%s\\%s", path, logdll::lgName);
+	ShellExecute(0, L"Open", path, NULL, NULL, SW_NORMAL);
 }

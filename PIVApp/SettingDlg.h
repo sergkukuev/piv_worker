@@ -28,4 +28,5 @@ private:
 public:
 	void SetParameters();
 	afx_msg void OnEnableBtnSave();
+	afx_msg void OnBnClickedOpenLog();
 };
