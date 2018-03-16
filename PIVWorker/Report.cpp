@@ -455,7 +455,7 @@ CString CReport::CssLinks()
 		+ T(2) + L"}\n"
 
 		+ T(2) + L"a:visited {\n"
-		+ T(3) + L"color: #999999;\n"
+		//+ T(3) + L"color: #999999;\n"
 		+ T(3) + L"font-weight: bold;\n"
 		+ T(3) + L"text-decoration: none;\n"
 		+ T(2) + L"}\n"
