@@ -61,11 +61,25 @@ void CReport::CreateMainFile(pivData& data, CString path)
 		+ T(1) + L"<title>Замечания</title>\n");
 	CssStyle(file, true);
 	WriteFile(file, L"</head>\n"
-		L"<body>\n");
+		L"<body>\n"
+		+ T(1) + L"<div class=\"tabs\">\n"
+		+ T(2) + L"<![if gt IE 9]>\n"
+		+ T(3) + L"<input id=\"tab1\" type=\"radio\" name=\"tabs\" checked>\n"
+		+ T(3) + L"<label for=\"tab1\">Отчет</label>\n"
+		+ T(3) + L"<input id=\"tab2\" type=\"radio\" name=\"tabs\">\n"
+		+ T(3) + L"<label for=\"tab2\">Статистика</label>\n"
+		+ T(2) + L"<![endif]>\n"
+		+ T(2) + L"<section id=\"content-tab1\">\n");
 	MainTable(file, data.db);
+	WriteFile(file, T(2) + L"</section>\n"
+		+ T(2) + L"<![if gt IE 9]>\n"
+		+ T(2) + L"<section id=\"content-tab2\">\n");
 	InfoTable(file, SetAmount(data));
+	WriteFile(file, T(2) + L"</section>\n"
+		+ T(2) + L"<![endif]>\n"
+		+ T(1) + L"</div>\n");
 	WriteFile(file, L"</body>\n");
-	ScriptMain(file);
+	//ScriptMain(file);
 	WriteFile(file, L"</html>\n");
 	file.Close();
 }
@@ -74,39 +88,39 @@ void CReport::CreateMainFile(pivData& data, CString path)
 void CReport::MainTable(CStdioFile& file, list <errorData>& db) 
 {
 	// Генерация шапки
-	WriteFile(file, T(1) + L"<table>\n"
-		+ T(2) + L"<caption>Отчет</caption>\n"
-		+ T(2) + L"<thead>\n"
-		+ T(2) + L"<tr>\n"
-		+ T(3) + L"<th rowspan=\"2\" width=\"250px\">Название протокола</th>\n"
-		+ T(3) + L"<th rowspan=\"2\" width=\"160px\">Название листа</th>\n"
-		+ T(3) + L"<th colspan=\"3\">Ошибки и замечания</th>\n"
-		+ T(2) + L"</tr>\n"
-		+ T(2) + L"<tr>\n"
-		+ T(3) + L"<th>Синтаксические</th>\n"
-		+ T(3) + L"<th>Семантические</th>\n"
-		+ T(3) + L"<th>Предупреждения</th>\n"
-		+ T(2) + L"</tr>\n"
-		+ T(2) + L"</thead>\n"
-		+ T(2) + L"<tbody>\n");
+	WriteFile(file, T(3) + L"<table>\n"
+		+ T(4) + L"<caption>Отчет</caption>\n"
+		+ T(4) + L"<thead>\n"
+		+ T(4) + L"<tr>\n"
+		+ T(5) + L"<th rowspan=\"2\" width=\"250px\">Название протокола</th>\n"
+		+ T(5) + L"<th rowspan=\"2\" width=\"160px\">Название листа</th>\n"
+		+ T(5) + L"<th colspan=\"3\">Ошибки и замечания</th>\n"
+		+ T(4) + L"</tr>\n"
+		+ T(4) + L"<tr>\n"
+		+ T(5) + L"<th>Синтаксические</th>\n"
+		+ T(5) + L"<th>Семантические</th>\n"
+		+ T(5) + L"<th>Предупреждения</th>\n"
+		+ T(4) + L"</tr>\n"
+		+ T(4) + L"</thead>\n"
+		+ T(4) + L"<tbody>\n");
 
 	// Обход по книгам
 	for (list <errorData>::iterator it = db.begin(); it != db.end(); it++) 
 	{
-		WriteFile(file, T(2) + L"<tr>\n"
-			+ T(3) + L"<td class=cbooks>" + it->book->name + L"</td>\n");
+		WriteFile(file, T(4) + L"<tr>\n"
+			+ T(5) + L"<td class=cbooks>" + it->book->name + L"</td>\n");
 		WriteBook(file, it);	// Запись листов
 		logger >> L"Создан отчет по протоколу \"" + it->book->name + L"\"";
-		WriteFile(file, T(2) + L"</tr>\n");
+		WriteFile(file, T(4) + L"</tr>\n");
 	}
-	WriteFile(file, T(2) + L"</tbody>\n"
-		+ T(1) + L"</table>\n");
+	WriteFile(file, T(4) + L"</tbody>\n"
+		+ T(3) + L"</table>\n");
 }
 
 // Таблица общей информации о наборах данных
 void CReport::InfoTable(CStdioFile& file, const amountInfo& amount)
 {
-	WriteFile(file, T(1) + L"<div style=\"text-align: center; margin-top: 10px\">\n"
+	WriteFile(file, /*T(1) + L"<div style=\"text-align: center; margin-top: 10px\">\n"
 		+ T(2) + L"<a class=\"center\" href=\"javascript:sh()\">Статистика</a></br>\n"
 		/*+ T(2) + L"<div class=\"center\" id = \"info\" style = \"padding-top: 15px;\">\n"
 		+ T(3) + L"<p>Кол-во листов всего: " + IntToCString(amount.all) + L"</p>\n"
@@ -114,8 +128,8 @@ void CReport::InfoTable(CStdioFile& file, const amountInfo& amount)
 		+ T(3) + L"<p>Количество листов без ошибок: " + IntToCString(amount.withoutError) + L"</p>\n"
 		+ T(3) + L"<p>Всего ошибок: " + IntToCString(amount.error) + L"</p>\n"
 		+ T(3) + L"<p>Всего предупреждений: " + IntToCString(amount.warning) + L"</p>\n"*/
-		+ T(2) + L"<div class=\"center\" id = \"info\" style = \"padding-top: 15px;\">\n"
-		+ T(3) + L"<table class=info>\n"
+		//+ T(2) + L"<div class=\"center\" id = \"info\" style = \"padding-top: 15px;\">\n"
+		T(3) + L"<table class=info>\n"
 		+ T(4) + L"<thead>\n"
 		+ T(4) + L"<tr>\n"
 		+ T(5) + L"<th>Кол-во листов всего</th>\n"
@@ -139,36 +153,36 @@ void CReport::InfoTable(CStdioFile& file, const amountInfo& amount)
 		+ T(4) + L"</tr>\n"
 		+ T(4) + L"</thead>\n"
 		+ T(3) + L"</table>\n"
-		+ T(2) + L"</div>\n"
-		+ T(1) + L"</div>\n");
+		/*+ T(2) + L"</div>\n"
+		+ T(1) + L"</div>\n"*/);
 }
 
 // Запись листов текущего протокола
 void CReport::WriteBook(CStdioFile& file, list <errorData>::iterator& it) 
 {
 	// Формирование шапки таблицы
-	WriteFile(file, T(3) + L"<td class=csheets>\n");
+	WriteFile(file, T(5) + L"<td class=csheets>\n");
 	for (size_t i = 0; i < it->set.size(); i++)
-		WriteFile(file, T(4) + L"<dt>" + it->set[i].data->name + L"</dt>\n");
-	WriteFile(file, T(3) + L"</td>\n");
+		WriteFile(file, T(6) + L"<dt>" + it->set[i].data->name + L"</dt>\n");
+	WriteFile(file, T(5) + L"</td>\n");
 
 	// Запись синтаксических ошибок
-	WriteFile(file, T(3) + L"<td class=csyntax>\n"); 
+	WriteFile(file, T(5) + L"<td class=csyntax>\n"); 
 	for (size_t i = 0; i < it->set.size(); i++)
 		WriteFile(file, WriteSheets(it->set[i].data, it->set[i].syntax, settings.folders[syntax], it->book->name));
-	WriteFile(file, T(3) + L"</td>\n");
+	WriteFile(file, T(5) + L"</td>\n");
 
 	// Запись семантических ошибок
-	WriteFile(file, T(3) + L"<td class=csimantic>\n");
+	WriteFile(file, T(5) + L"<td class=csimantic>\n");
 	for (size_t i = 0; i < it->set.size(); i++)
 		WriteFile(file, WriteSheets(it->set[i].data, it->set[i].simantic, settings.folders[simantic], it->book->name));
-	WriteFile(file, T(3) + L"</td>\n");
+	WriteFile(file, T(5) + L"</td>\n");
 
 	// Запись замечаний
-	WriteFile(file, T(3) + L"<td class=cwarning>\n");
+	WriteFile(file, T(5) + L"<td class=cwarning>\n");
 	for (size_t i = 0; i < it->set.size(); i++)
 		WriteFile(file, WriteSheets(it->set[i].data, it->set[i].warning, settings.folders[warning], it->book->name));
-	WriteFile(file, T(3) + L"</td>\n");
+	WriteFile(file, T(5) + L"</td>\n");
 }
 #pragma endregion
 
@@ -191,7 +205,7 @@ CString CReport::WriteSheets(sheetData* sheet, const vector <errorSignal>& db, c
 		relativePath.Delete(0, settings.GetPath().GetLength());
 		isProject ? relativePath.Delete(0, settings.folders[project].GetLength()) : relativePath.Delete(0, settings.folders[other].GetLength());
 		relativePath.Insert(0, L".");
-		result.Format(L"%s<dt><a href=\"%s\">%d</a></dt>\n", T(4), relativePath, count);	// Формирование результирующей строки (ссылки)
+		result.Format(L"%s<dt><a href=\"%s\">%d</a></dt>\n", T(6), relativePath, count);	// Формирование результирующей строки (ссылки)
 		
 		CStdioFile file(pathFile, CFile::modeCreate | CFile::modeWrite | CFile::typeUnicode);
 		// Шапочка
@@ -223,7 +237,7 @@ CString CReport::WriteSheets(sheetData* sheet, const vector <errorSignal>& db, c
 		file.Close();
 	}
 	else
-		result.Format(L"%s<dt>-</dt>\n", T(4)); // Формирование результирующей строки
+		result.Format(L"%s<dt>-</dt>\n", T(6)); // Формирование результирующей строки
 	return result;
 }
 
@@ -231,7 +245,7 @@ CString CReport::WriteSheets(sheetData* sheet, const vector <errorSignal>& db, c
 void CReport::SheetTableHeader(CStdioFile& file, const CString& book, const CString& sheet, bool arinc)
 {
 	WriteFile(file, T(1) + L"<table>\n"
-		+ T(2) + L"<caption> Замечания. Книга \"" + book + L"\". Лист \"" + sheet + L"\". </caption>"
+		+ T(2) + L"<caption> Замечания. Книга \"" + book + L"\". Лист \"" + sheet + L"\". </caption>\n"
 		+ T(2) + L"<thead>\n"
 		+ T(2) + L"<tr>\n"
 		+ T(3) + L"<th width=\"20px\">№ з-я</th>\n");
@@ -310,7 +324,7 @@ void CReport::CssStyle(CStdioFile& file, const bool& isMain)
 		CssTable(isMain) +
 		CssTh() +
 		CssTrTd());
-	isMain ? WriteFile(file, CssLinks() + CssClasses1()) : WriteFile(file, CssClasses2());
+	isMain ? WriteFile(file, CssLinks() + CssTabs() + CssClasses1()) : WriteFile(file, CssClasses2());
 	WriteFile(file, T(1) + L"</style>\n");
 }
 
@@ -346,8 +360,8 @@ CString CReport::CssTable(const bool& isMain)
 		+ T(3) + L"overflow-y: scroll;\n"
 		+ T(2) + L"}\n";
 
-	isMain ? res.Format(L"%s%sthead tbody { width: %dpx; }\n%stbody { max-height: %dpx; }\n", res, T(2), 800, T(2), 500) :
-		res.Format(L"%s%sthead tbody { width: %dpx; }\n%stbody { max-height: %dpx; }\n", res, T(2), 1200, T(2), 700);
+	isMain ? res.Format(L"%s%sthead, tbody { width: %dpx; }\n%stbody { max-height: %dpx; }\n", res, T(2), 800, T(2), 500) :
+		res.Format(L"%s%sthead, tbody { width: %dpx; }\n%stbody { max-height: %dpx; }\n", res, T(2), 1200, T(2), 700);
 	return res;
 }
 
@@ -449,6 +463,79 @@ CString CReport::CssLinks()
 		+ T(2) + L"a:active, a:hover { \n"
 		+ T(3) + L"color: #bd5a35;\n"
 		+ T(3) + L"text-decoration: underline;\n"
+		+ T(2) + L"}\n";
+}
+
+// Стиль вкладов
+CString CReport::CssTabs()
+{
+	return T(2) + L".tabs{\n"
+		+ T(3) + L"min-width: 320px;\n"
+		+ T(3) + L"max-width: 900px;\n"
+		+ T(3) + L"padding: 0px;\n"
+		+ T(3) + L"margin: 0 auto;\n"
+		+ T(2) + L"}\n"
+		/* Стили секций с содержанием */
+		+ T(2) + L".tabs>section {\n"
+		+ T(3) + L"display: none;\n"
+		+ T(3) + L"padding: 15px;\n"
+		+ T(3) + L"background: #fff;\n"
+		+ T(3) + L"border: 1px solid #ddd;\n"
+		+ T(2) + L"}\n"
+		+ T(2) + L".tabs>section>p {\n"
+		+ T(3) + L"margin: 0 0 5px;\n"
+		+ T(3) + L"line-height: 1.5;\n"
+		+ T(3) + L"color: #383838;\n"
+		/* прикрутим анимацию */
+		+ T(3) + L"-webkit-animation-duration: 1s;\n"
+		+ T(3) + L"animation-duration: 1s;\n"
+		+ T(3) + L"-webkit-animation-fill-mode: both;\n"
+		+ T(3) + L"animation-fill-mode: both;\n"
+		+ T(3) + L"-webkit-animation-name: fadeIn;\n"
+		+ T(3) + L"animation-name: fadeIn;\n"
+		+ T(2) + L"}\n"
+		/* Описываем анимацию свойства opacity */
+		+ T(2) + L"@-webkit-keyframes fadeIn {\n"
+		+ T(3) + L"from { opacity : 0}\n"
+		+ T(3) + L"to { opacity: 1; }\n"
+		+ T(2) + L"}\n"
+		+ T(2) + L"@keyframes fadeIn {\n"
+		+ T(3) + L"from { opacity: 0; }\n"
+		+ T(3) + L"to { opacity: 1; }\n"
+		+ T(2) + L"}\n"
+		/* Прячем чекбоксы */
+		+ T(2) + L".tabs>input {\n"
+		+ T(3) + L"display: none;\n"
+		+ T(3) + L"position: absolute;\n"
+		+ T(2) + L"}\n"
+		/* Стили переключателей вкладок (табов) */
+		+ T(2) + L".tabs>label {\n"
+		+ T(3) + L"display: inline-block;\n"
+		+ T(3) + L"margin: 0 0 -1px;\n"
+		+ T(3) + L"padding: 15px 25px;\n"
+		+ T(3) + L"font-weight: 600;\n"
+		+ T(3) + L"text-align: center;\n"
+		+ T(3) + L"color: #aaa;\n"
+		+ T(3) + L"border: 0px solid #ddd;\n"
+		+ T(3) + L"border-width: 1px 1px 1px 1px;\n"
+		+ T(3) + L"background: #f1f1f1;\n"
+		+ T(3) + L"border-radius: 3px 3px 0 0;\n"
+		+ T(2) + L"}\n"
+		/* Изменения стиля переключателей вкладок при наведении */
+		+ T(2) + L".tabs>label:hover {\n"
+		+ T(3) + L"color: #888;\n"
+		+ T(3) + L"cursor: pointer;\n"
+		+ T(2) + L"}\n"
+		/* Стили для активной вкладки */
+		+ T(2) + L".tabs>input:checked+label {\n"
+		+ T(3) + L"color: #555;\n"
+		+ T(3) + L"border-top: 1px solid #009933;\n"
+		+ T(3) + L"border-bottom: 1px solid #fff;\n"
+		+ T(3) + L"background: #fff;\n"
+		+ T(2) + L"}\n"
+		/* Активация секций с помощью псевдокласса :checked */
+		+ T(2) + L"#tab1:checked~#content-tab1, #tab2:checked~#content-tab2 {\n"
+		+ T(3) + L"display: block;\n"
 		+ T(2) + L"}\n";
 }
 

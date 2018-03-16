@@ -80,6 +80,7 @@ private:
 	CString CssTrTd();		// Стиль внутренних блоков таблицы
 	CString CssCaption();	// Стиль имени таблицы
 	CString CssLinks();		// Стиль ссылок
+	CString CssTabs();		// Стиль вкладок
 	CString CssClasses1();	// Особенности ячеек основной таблицы отчета
 	CString CssClasses2();	// Особености ячеек таблицы ошибок
 	CString T(int n);		// Табуляция (для лучшего чтения html файлов)
