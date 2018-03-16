@@ -506,7 +506,7 @@ CString CReport::IntToCString(const int& number)
 void CReport::WriteFile(CStdioFile& file, const CString& text)
 {
 	CT2CA res(text, CP_UTF8);
-	file.Write(res, ::strlen(res));
+	file.Write(res, (UINT)::strlen(res));
 }
 
 // Количество ошибок в текущей таблице
