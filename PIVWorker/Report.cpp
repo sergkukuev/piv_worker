@@ -25,8 +25,8 @@ void CReport::GetReport(pivData& data, const bool& isProj)
 	CString tPath;	// Путь к текущему файлу
 
 	// Создание и открытие файла
-	isProject ? tPath.Format(L"%s%s", settings.GetPath(), settings.folders[project]) :
-		tPath.Format(L"%s%s", settings.GetPath(), settings.folders[other]);
+	isProject ? tPath.Format(_T("%s%s"), settings.GetPath(), settings.folders[project]) :
+		tPath.Format(_T("%s%s"), settings.GetPath(), settings.folders[other]);
 	CreateDirectory(tPath, NULL);
 	CreateMainFile(data, tPath);
 	logger >> L"Создание отчета о полученных ошибках завершено";
@@ -54,19 +54,19 @@ void CReport::CreateMainFile(pivData& data, CString path)
 	CreateFolders(path);
 	path.Format(L"%s\\%s", path, REPORT_NAME);
 	CStdioFile file(path, CFile::modeCreate | CFile::modeWrite | CFile::typeUnicode);	// Поток записи в файл
-	file.WriteString(L"<!DOCTYPE html>\n"
+	WriteFile(file, L"<!DOCTYPE html>\n"
 		"<html lang=\"ru\">\n"
 		"<head>\n"
 		+ T(1) + L"<meta charset=\"UTF-8\">\n"
 		+ T(1) + L"<title>Замечания</title>\n");
 	CssStyle(file, true);
-	file.WriteString(L"</head>\n"
+	WriteFile(file, L"</head>\n"
 		L"<body>\n");
 	MainTable(file, data.db);
 	InfoTable(file, SetAmount(data));
-	file.WriteString(L"</body>\n");
+	WriteFile(file, L"</body>\n");
 	ScriptMain(file);
-	file.WriteString(L"</html>\n");
+	WriteFile(file, L"</html>\n");
 	file.Close();
 }
 
@@ -74,7 +74,7 @@ void CReport::CreateMainFile(pivData& data, CString path)
 void CReport::MainTable(CStdioFile& file, list <errorData>& db) 
 {
 	// Генерация шапки
-	file.WriteString(T(1) + L"<table>\n"
+	WriteFile(file, T(1) + L"<table>\n"
 		+ T(2) + L"<caption>Отчет</caption>\n"
 		+ T(2) + L"<thead>\n"
 		+ T(2) + L"<tr>\n"
@@ -93,20 +93,20 @@ void CReport::MainTable(CStdioFile& file, list <errorData>& db)
 	// Обход по книгам
 	for (list <errorData>::iterator it = db.begin(); it != db.end(); it++) 
 	{
-		file.WriteString(T(2) + L"<tr>\n"
+		WriteFile(file, T(2) + L"<tr>\n"
 			+ T(3) + L"<td class=cbooks>" + it->book->name + L"</td>\n");
 		WriteBook(file, it);	// Запись листов
 		logger >> L"Создан отчет по протоколу \"" + it->book->name + L"\"";
-		file.WriteString(T(2) + L"</tr>\n");
+		WriteFile(file, T(2) + L"</tr>\n");
 	}
-	file.WriteString(T(2) + L"</tbody>\n"
+	WriteFile(file, T(2) + L"</tbody>\n"
 		+ T(1) + L"</table>\n");
 }
 
 // Таблица общей информации о наборах данных
 void CReport::InfoTable(CStdioFile& file, const amountInfo& amount)
 {
-	file.WriteString(T(1) + L"<div style=\"text-align: center; margin-top: 10px\">\n"
+	WriteFile(file, T(1) + L"<div style=\"text-align: center; margin-top: 10px\">\n"
 		+ T(2) + L"<a class=\"center\" href=\"javascript:sh()\">Статистика</a></br>\n"
 		/*+ T(2) + L"<div class=\"center\" id = \"info\" style = \"padding-top: 15px;\">\n"
 		+ T(3) + L"<p>Кол-во листов всего: " + IntToCString(amount.all) + L"</p>\n"
@@ -147,28 +147,28 @@ void CReport::InfoTable(CStdioFile& file, const amountInfo& amount)
 void CReport::WriteBook(CStdioFile& file, list <errorData>::iterator& it) 
 {
 	// Формирование шапки таблицы
-	file.WriteString(T(3) + L"<td class=csheets>\n");
+	WriteFile(file, T(3) + L"<td class=csheets>\n");
 	for (size_t i = 0; i < it->set.size(); i++)
-		file.WriteString(T(4) + L"<dt>" + it->set[i].data->name + L"</dt>\n");
-	file.WriteString(T(3) + L"</td>\n");
+		WriteFile(file, T(4) + L"<dt>" + it->set[i].data->name + L"</dt>\n");
+	WriteFile(file, T(3) + L"</td>\n");
 
 	// Запись синтаксических ошибок
-	file.WriteString(T(3) + L"<td class=csyntax>\n"); 
+	WriteFile(file, T(3) + L"<td class=csyntax>\n"); 
 	for (size_t i = 0; i < it->set.size(); i++)
-		file.WriteString(WriteSheets(it->set[i].data, it->set[i].syntax, settings.folders[syntax], it->book->name));
-	file.WriteString(T(3) + L"</td>\n");
+		WriteFile(file, WriteSheets(it->set[i].data, it->set[i].syntax, settings.folders[syntax], it->book->name));
+	WriteFile(file, T(3) + L"</td>\n");
 
 	// Запись семантических ошибок
-	file.WriteString(T(3) + L"<td class=csimantic>\n");
+	WriteFile(file, T(3) + L"<td class=csimantic>\n");
 	for (size_t i = 0; i < it->set.size(); i++)
-		file.WriteString(WriteSheets(it->set[i].data, it->set[i].simantic, settings.folders[simantic], it->book->name));
-	file.WriteString(T(3) + L"</td>\n");
+		WriteFile(file, WriteSheets(it->set[i].data, it->set[i].simantic, settings.folders[simantic], it->book->name));
+	WriteFile(file, T(3) + L"</td>\n");
 
 	// Запись замечаний
-	file.WriteString(T(3) + L"<td class=cwarning>\n");
+	WriteFile(file, T(3) + L"<td class=cwarning>\n");
 	for (size_t i = 0; i < it->set.size(); i++)
-		file.WriteString(WriteSheets(it->set[i].data, it->set[i].warning, settings.folders[warning], it->book->name));
-	file.WriteString(T(3) + L"</td>\n");
+		WriteFile(file, WriteSheets(it->set[i].data, it->set[i].warning, settings.folders[warning], it->book->name));
+	WriteFile(file, T(3) + L"</td>\n");
 }
 #pragma endregion
 
@@ -186,7 +186,7 @@ CString CReport::WriteSheets(sheetData* sheet, const vector <errorSignal>& db, c
 
 	if (count > 0) 
 	{
-		pathFile.Format(L"%s\\%s.html", pathFile, sheet->name);
+		pathFile.Format(_T("%s\\%s.html"), pathFile, sheet->name);
 		CString relativePath = pathFile;
 		relativePath.Delete(0, settings.GetPath().GetLength());
 		isProject ? relativePath.Delete(0, settings.folders[project].GetLength()) : relativePath.Delete(0, settings.folders[other].GetLength());
@@ -195,28 +195,28 @@ CString CReport::WriteSheets(sheetData* sheet, const vector <errorSignal>& db, c
 		
 		CStdioFile file(pathFile, CFile::modeCreate | CFile::modeWrite | CFile::typeUnicode);
 		// Шапочка
-		file.WriteString(L"<!DOCTYPE html>\n"
+		WriteFile(file, L"<!DOCTYPE html>\n"
 			"<html lang=\"ru\">\n"
 			"<head>\n"
 			+ T(1) + L"<meta charset=\"UTF-8\">\n"
 			+ T(1) + L"<title>Замечания по книге \"" + bookName + L"\"</title>\n");
 		CssStyle(file);
-		file.WriteString(L"</head>\n"
+		WriteFile(file, L"</head>\n"
 			"<body>\n"
 		);
 
 		SheetTableHeader(file, bookName, sheet->name, sheet->arinc);
-		file.WriteString(T(2) + L"<tbody>\n");
+		WriteFile(file, T(2) + L"<tbody>\n");
 		// Запись наборов данных
 		for (size_t i = 0; i < db.size(); i++)
 		{
 			// Индекс ошибки
-			file.WriteString(T(3) + L"<tr>\n"
+			WriteFile(file, T(3) + L"<tr>\n"
 				+ T(4) + L"<th rowspan=\"2\" class=cnum-remark>" + IntToCString((int)i + 1) + L"</th>\n");
 			WriteSignal(file, db[i]);
 		}
 
-		file.WriteString(T(2) + L"</tbody>\n"
+		WriteFile(file, T(2) + L"</tbody>\n"
 			+ T(1) + L"</table>\n"
 			"</body>\n"
 			"</html>");
@@ -230,13 +230,13 @@ CString CReport::WriteSheets(sheetData* sheet, const vector <errorSignal>& db, c
 // Шапка таблицы с ошибками листа
 void CReport::SheetTableHeader(CStdioFile& file, const CString& book, const CString& sheet, bool arinc)
 {
-	file.WriteString(T(1) + L"<table>\n"
+	WriteFile(file, T(1) + L"<table>\n"
 		+ T(2) + L"<caption> Замечания. Книга \"" + book + L"\". Лист \"" + sheet + L"\". </caption>"
 		+ T(2) + L"<thead>\n"
 		+ T(2) + L"<tr>\n"
 		+ T(3) + L"<th width=\"20px\">№ з-я</th>\n");
-	arinc ? file.WriteString(T(3) + L"<th width=\"40px\">Адрес</th>\n") : file.WriteString(T(3) + L"<th width=\"40px\">№ Сл-а</th>\n");
-	file.WriteString(T(3) + L"<th width=\"180px\">Наименование</th>\n"
+	arinc ? WriteFile(file, T(3) + L"<th width=\"40px\">Адрес</th>\n") : WriteFile(file, T(3) + L"<th width=\"40px\">№ Сл-а</th>\n");
+	WriteFile(file, T(3) + L"<th width=\"180px\">Наименование</th>\n"
 		+ T(3) + L"<th width=\"150px\">Идентификатор</th>\n"
 		+ T(3) + L"<th width=\"60px\">Ед. изм.</th>\n"
 		+ T(3) + L"<th width=\"60px\">Мин. зн.</th>\n"
@@ -251,28 +251,28 @@ void CReport::SheetTableHeader(CStdioFile& file, const CString& book, const CStr
 // Запись одного набора параметров таблицы
 void CReport::WriteSignal(CStdioFile& file, const errorSignal& signal) 
 {
-	file.WriteString(FormValue(signal.data->numWord.field, signal.check[check::numword], 1));
-	file.WriteString(FormValue(signal.data->title[0], false, 2));
-	file.WriteString(FormValue(signal.data->title[1], signal.check[check::title], 3));
-	file.WriteString(FormValue(signal.data->dimension, false, 4));
-	file.WriteString(FormValue(signal.data->min.field, signal.check[check::min], 4));
-	file.WriteString(FormValue(signal.data->max.field, signal.check[check::max], 4));
-	file.WriteString(FormValue(signal.data->csr.field, signal.check[check::csr], 4));
-	file.WriteString(FormValue(signal.data->bit.field, signal.check[check::bits], 5));
-	file.WriteString(FormValue(signal.data->comment, signal.check[check::comment], 6));
+	WriteFile(file, FormValue(signal.data->numWord.field, signal.check[check::numword], 1));
+	WriteFile(file, FormValue(signal.data->title[0], false, 2));
+	WriteFile(file, FormValue(signal.data->title[1], signal.check[check::title], 3));
+	WriteFile(file, FormValue(signal.data->dimension, false, 4));
+	WriteFile(file, FormValue(signal.data->min.field, signal.check[check::min], 4));
+	WriteFile(file, FormValue(signal.data->max.field, signal.check[check::max], 4));
+	WriteFile(file, FormValue(signal.data->csr.field, signal.check[check::csr], 4));
+	WriteFile(file, FormValue(signal.data->bit.field, signal.check[check::bits], 5));
+	WriteFile(file, FormValue(signal.data->comment, signal.check[check::comment], 6));
 
-	file.WriteString(T(3) + L"</tr>\n"
+	WriteFile(file, T(3) + L"</tr>\n"
 		+ T(3) + L"<tr>\n");
 
 	// Запись всех ошибок
-	file.WriteString(T(4) + L"<td style=\"padding-left: 20; padding-top: 0; padding-bottom: 15\" colspan=\"10\" bgcolor = \"#FDFCD0\">\n");
+	WriteFile(file, T(4) + L"<td style=\"padding-left: 20; padding-top: 0; padding-bottom: 15\" colspan=\"10\" bgcolor = \"#FDFCD0\">\n");
 	for (size_t j = 0; j < signal.error.size(); j++) 
 	{
 		CString buffer;
 		buffer.Format(L"%s<p class=remarks> – %s</p>\n", T(5), signal.error[j]);
-		file.WriteString(buffer);
+		WriteFile(file, buffer);
 	}
-	file.WriteString(T(4) + L"</td>\n"
+	WriteFile(file, T(4) + L"</td>\n"
 		+ T(3) + L"</tr>\n"
 		+ T(3) + L"<tr>\n"
 		//+ T(4) + L"<td colspan=\"10\"> &nbsp </td>\n"
@@ -305,13 +305,13 @@ CString CReport::T(int n)
 void CReport::CssStyle(CStdioFile& file, const bool& isMain)
 {
 	// TODO: Закончить работу с плавующей шапкой
-	file.WriteString(T(1) + L"<style type=\"text/css\">\n"
+	WriteFile(file, T(1) + L"<style type=\"text/css\">\n"
 		+ CssCaption() +
 		CssTable(isMain) +
 		CssTh() +
 		CssTrTd());
-	isMain ? file.WriteString(CssLinks() + CssClasses1()) : file.WriteString(CssClasses2());
-	file.WriteString(T(1) + L"</style>\n");
+	isMain ? WriteFile(file, CssLinks() + CssClasses1()) : WriteFile(file, CssClasses2());
+	WriteFile(file, T(1) + L"</style>\n");
 }
 
 // Стиль таблицы
@@ -482,7 +482,7 @@ CString CReport::CssClasses2()
 // Скрипт для скрытия статистики в главном файле отчета
 void CReport::ScriptMain(CStdioFile& file)
 {
-	file.WriteString(L"<script type = \"text/javascript\">\n"
+	WriteFile(file, L"<script type = \"text/javascript\">\n"
 		+ T(1) + L"sh();\n"
 		+ T(1) + L"function sh() {\n"
 		+ T(1) + L"obj = document.getElementById(\"info\");\n"
@@ -502,18 +502,12 @@ CString CReport::IntToCString(const int& number)
 	return result;
 }
 
-// Преобразование текста к utf8
-/*string CReport::ToUtf8(const CString& text)
+// Преобразование текста к формату CW2A и запись в файл
+void CReport::WriteFile(CStdioFile& file, const CString& text)
 {
-int nChars = ::WideCharToMultiByte(CP_UTF8, 0, text, (int)text.GetLength(), NULL, 0, NULL, NULL);
-if (nChars == 0)
-return "";
-string result;
-result.resize(nChars);
-::WideCharToMultiByte(CP_UTF8, 0, text, (int)text.GetLength(), const_cast< char* >(result.c_str()), nChars, NULL, NULL);
-
-return result;
-}*/
+	CT2CA res(text, CP_UTF8);
+	file.Write(res, ::strlen(res));
+}
 
 // Количество ошибок в текущей таблице
 int CReport::CountError(const vector<errorSignal>& signal)

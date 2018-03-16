@@ -84,10 +84,8 @@ private:
 	CString CssClasses2();	// Особености ячеек таблицы ошибок
 	CString T(int n);		// Табуляция (для лучшего чтения html файлов)
 
-
-	CString IntToCString(const int& number);	// Преобразование int в CString
-	//string ToUtf8(const CString& text);		// Преобразование текста к формату
-
+	CString IntToCString(const int& number);		// Преобразование int в CString
+	void WriteFile(CStdioFile&, const CString&);	// Запись текста в файл в формате utf-8
 	int CountError(const vector<errorSignal>& set);	// Количество ошибок в текущей таблице
 	amountInfo SetAmount(pivData& data);			// Подсчет количества данных( всего, с ошибками и без ошибок), ошибок и предупреждений
 
