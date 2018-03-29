@@ -347,9 +347,9 @@ bool CTest::ValueTest(errorSignal& signal)
 		(VAL(bit).size() == 4) ? nBit = (VAL(bit)[1] - VAL(bit)[0]) + (VAL(bit)[3] - VAL(bit)[2]) + 2 :
 			nBit = (VAL(bit)[1] - VAL(bit)[0]) + 1;
 
-		// Выделение бита под знак, если он присутствует
-		if (signal.data->bitSign) 
-			nBit--;
+		// Выделение бита под знак, если он присутствует (только под 930М)
+		if (signal.data->bitSign && !settings.GetProject() == project::kprno35)
+				nBit--;
 
 		double nMin = signal.data->csr.value;
 		for (int i = 1; i <= nBit; i++)
@@ -363,9 +363,15 @@ bool CTest::ValueTest(errorSignal& signal)
 			result = WriteError(signal, L"Нельзя упаковать <b>минимальное значение</b>", check::min);
 
 		if ((VAL(min) < 0) && !signal.data->bitSign && !sheet->arinc)
+		{
 			result = WriteError(signal, L"<b>Минимальное значение</b> не может быть отрицательным числом или не верно задан знаковый бит в поле \"Примечание\"", check::min);
+			signal.data->bitSign = true;	// Ставим знак (для принудительной генерации)
+		}
 		else if ((VAL(min) >= 0) && signal.data->bitSign && !sheet->arinc)
+		{
 			result = WriteError(signal, L"<b>Минимальное значение</b> должно быть отрицательным числом или не верно задан знаковый бит в поле \"Примечание\"", check::min);
+			signal.data->bitSign = false;	// Снимаем знак (для принудительной генерации)
+		}
 	}
 	return result;
 }
@@ -448,8 +454,8 @@ bool CTest::BitsTest(errorSignal& signal)
 			VAL(numWord).size() == 2 ? 
 				bReplase = CheckReplace(signal.data->title[0], RepSigByIndex(1)) || CheckReplace(signal.data->title[0], RepSigByIndex(0)) :
 				bReplase = CheckReplace(signal.data->title[0], RepSigByIndex(0));
-			
-			vector<int> bits = CrossBits(VAL(bit), VAL(numWord));
+
+			vector<int> bits = CrossBits(VAL(bit), VAL(numWord), signal.data->bitSign);
 			if (bits.size() != 0 && !bReplase)
 			{
 				CString msg = L"Следующие <b>используемые разряды</b> перекрываются: ";
@@ -466,9 +472,18 @@ bool CTest::BitsTest(errorSignal& signal)
 }
 
 // Проверка на перекрытие битов
-vector<int> CTest::CrossBits(const vector <int>& bits, const vector <int>& numWord) 
+vector<int> CTest::CrossBits(vector <int>& bits, const vector <int>& numWord, const bool& sign) 
 {
 	vector<int> result;
+
+	// В кпрно не указывается в протоколе в исп. разрядах знаковый бит (вот тут указываем)
+	if (settings.GetProject == project::kprno35 && sign)
+	{
+		bits[0] = bits[0] - 1;
+		if (bits[2] != -1)
+			bits[2] = bits[2] - 1;
+	}
+
 	for (size_t j = 0, i = 0; i < numWord.size(); j += 2, i++)
 	{
 		int end, start = bits[j];

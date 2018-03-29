@@ -80,7 +80,7 @@ private:
 	bool PartTest(errorSignal& signal);	// Проверка двойного слова (КПРНО35)
 	bool BitsTest(errorSignal& signal);	// Проверка используемых разрядов
 	bool CheckReplace(CString title, const vector <signalData*> signals);	// Проверка слов, которые выборочно кладутся в одно слово 
-	vector<int> CrossBits(const vector <int>& bits, const vector <int>& numWord);		// Проверка перекрытия битов
+	vector<int> CrossBits(vector <int>& bits, const vector <int>& numWord, const bool& sign);		// Проверка перекрытия битов
 	
 	// Repiter
 	void InitRepiter();		// Инициализация репитера для проверки перекрытия битов
