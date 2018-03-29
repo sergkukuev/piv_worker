@@ -123,7 +123,7 @@ void CReport::WriteTxtParam(ofstream& file, const signalData& signal, const shee
 	WriteParamAdr(file, signal, par);
 
 	// Запись комментариев
-	if (!signal.comment.IsEmpty())
+	if (!signal.comment.IsEmpty() && settings.GetProject() != project::kprno35)
 	{
 		file << "\tCOMMENT\n";
 		buffer = signal.comment;
