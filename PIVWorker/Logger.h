@@ -13,8 +13,8 @@ namespace logdll
 	const CString lgFolder = L"log";
 	
 	const enum stIndex {start, end};	// Индексы для статусов основного приложения и dll
-	const std::vector <CString> stApp = {L"Приложение запущено", L"Приложение завершено"}; // Основные статусы приложения
-	const std::vector <CString> stDLL = { L"Начало работы DLL", L"Конец работы DLL\n" };		// Основные статусы DLL
+	const std::vector <CString> stApp = {L"Диалоговое окно успешно запустилось", L"Диалоговое окно успешно закрылось"}; // Основные статусы приложения
+	const std::vector <CString> stDLL = { L"Запуск DLL прошел успешно", L"Закрытие DLL прошло успешно\n" };		// Основные статусы DLL
 
 	// Класс логирования
 	// Кроме записи в лог файл класс содержит строку вывода в диалоговое окно о состоянии
