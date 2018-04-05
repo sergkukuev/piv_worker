@@ -47,7 +47,13 @@ bool CWorkExcel::OpenBook(const CString& path)
 }
 
 // Получение имени книги
-CString CWorkExcel::BookName() { return book.get_Name(); }
+CString CWorkExcel::BookName() 
+{
+	CString result = book.get_Name();
+	int startPos = result.ReverseFind(L'.');
+	result.Delete(startPos, result.GetLength() - startPos);
+	return result;
+}
 
 // Получение имени книги из пути
 CString CWorkExcel::BookName(const CString& path) 

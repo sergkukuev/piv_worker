@@ -410,7 +410,10 @@ list<bookData>::iterator CPIV::GetBook(pivData& data, const CString& path)
 CString CPIV::NameFromPath(const CString& path) 
 {
 	int startPos = path.ReverseFind(L'\\') + 1;
-	return path.Mid(startPos, path.GetLength());
+	CString result = path.Mid(startPos, path.GetLength() - startPos);
+	startPos = result.ReverseFind(L'.');
+	result.Delete(startPos, result.GetLength() - startPos);
+	return result;
 }
 
 // ѕроверка наличи€ данных требуемого протокола

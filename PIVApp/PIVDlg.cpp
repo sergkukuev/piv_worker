@@ -496,7 +496,10 @@ void CPIVDlg::ReadPath(const CFileDialog& dlg, vector <CString>& path)
 CString CPIVDlg::NameFromPath(const CString& path)
 {
 	int startPos = path.ReverseFind(L'\\') + 1;
-	return path.Mid(startPos, path.GetLength());
+	CString result = path.Mid(startPos, path.GetLength());
+	startPos = result.ReverseFind(L'.');
+	result.Delete(startPos, result.GetLength() - startPos);
+	return result;
 }
 #pragma endregion
 
