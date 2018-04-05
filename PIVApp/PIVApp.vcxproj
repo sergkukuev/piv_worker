@@ -121,7 +121,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='SVN|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <OutDir>d:\WorkProject\930M\02_MINI_TOOLS\PIVWorker\</OutDir>
+    <OutDir>D:\\03_DEVELOP\EXE\PIVWorker\</OutDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -256,14 +256,16 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>_WINDOWS;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>D:\MyProject\PIVWorker\PIVWorker;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>D:\03_DEVELOP\PIVWorker\PIVWorker;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <ObjectFileName>$(IntDir)</ObjectFileName>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <OutputFile>d:\WorkProject\930M\02_MINI_TOOLS\PIVWorker\$(TargetName)$(TargetExt)</OutputFile>
+      <OutputFile>d:\03_DEVELOP\EXE\PIVWorker\$(TargetName)$(TargetExt)</OutputFile>
+      <Version>
+      </Version>
     </Link>
     <Midl>
       <MkTypLibCompatible>false</MkTypLibCompatible>
