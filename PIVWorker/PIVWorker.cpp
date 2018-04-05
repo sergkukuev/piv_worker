@@ -306,13 +306,12 @@ void CPIV::RefreshExcel()
 // Закрытие всех протоколов
 void CPIV::Close() 
 {
-	if (!other.books.empty() || !other.db.empty())
-	{
-		logger.Write(L"Идет закрытие всех протоколов...");
+	logger.Write(L"Идет закрытие всех протоколов...");
+	if (!other.books.empty())
 		other.books.clear();
+	if (!other.db.empty())
 		other.db.clear();
-		logger.Write(L"Закрытие протоколов завершено");	// Логирование
-	}
+	logger.Write(L"Закрытие протоколов завершено");	// Логирование
 }
 
 // одного
