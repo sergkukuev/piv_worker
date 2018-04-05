@@ -476,7 +476,7 @@ vector<int> CTest::CrossBits(vector <int>& bits, const vector <int>& numWord, co
 {
 	vector<int> result;
 
-	// TODO: В кпрно не указывается в протоколе в исп. разрядах знаковый бит (вот тут указываем)
+	// KPRNO: Установка знакового бита в используемых разрядах для МФИ, МФПИ и КАИ-35
 	if (settings.GetProject() == project::kprno35 && sign)
 	{
 		bits[0] = bits[0] - 1;

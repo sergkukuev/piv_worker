@@ -89,7 +89,7 @@ void CReaderExcel::GetSheets(vector <sheetData>& sheets)
 		GetSignals(sheets[i - 1].signals, sheets[i - 1].arinc);
 		sheets[i - 1].arinc ? sheets[i - 1].np = -1 : sheets[i - 1].np = work.NpValue(sheets[i - 1].signals[0].comment);
 
-		// TODO: Костыль для Яны с НП в МФПИ35
+		// KPRNO: Установка номера набора параметра из листа (костыль для Яны с НП в МФПИ35)
 		if (settings.GetProject() == stgdll::project::kprno35 && sheets[i - 1].np == -1)
 			sheets[i - 1].np = work.NpValue(sheets[i - 1].name);
 
