@@ -18,7 +18,9 @@ CLogger::CLogger()
 	InitializeCriticalSection(&csFile);
 	InitializeCriticalSection(&csStat);
 	stgdll::CSettings& stg = stgdll::CSettings::Instance();	// Настройки DLL
-	this->path = stg.GetRefPath();	// Привязка указателя пути
+	path = stg.GetDefaultPath();
+	path.Format(L"%s\\%s", path, lgFolder);
+	CreateDirectory(path, NULL);
 	WriteInFile(lgSlash);
 	WriteInFile(stDLL[start]);
 }
@@ -29,7 +31,6 @@ CLogger::~CLogger()
 	WriteInFile(stDLL[end]);
 	DeleteCriticalSection(&csFile);
 	DeleteCriticalSection(&csStat);
-	this->path = nullptr;
 }
 
 // Получение статуса DLL
@@ -87,10 +88,10 @@ void CLogger::WriteInFile(CString message)
 	SYSTEMTIME st;
 	GetLocalTime(&st);
 	if (message.CompareNoCase(lgSlash) != 0)
-		message.Format(L"%02d:%02d:%02d %02d/%02d/%d:\t%s\n", st.wHour, st.wMinute, st.wSecond, st.wDay, st.wMonth, st.wYear, message);
+		message.Format(L"%02d:%02d:%02d:\t%s\n", st.wHour, st.wMinute, st.wSecond, message);
 
 	CString logPath;
-	logPath.Format(L"%s\\%s", *path, lgName);
+	logPath.Format(L"%s\\%02d_%02d_%d.txt", path, st.wDay, st.wMonth, st.wYear);
 
 	EnterCriticalSection(&csFile);
 	std::ofstream logStream(logPath, std::ios::out | std::ios::app);

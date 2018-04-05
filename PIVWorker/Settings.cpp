@@ -5,10 +5,7 @@ using namespace stgdll;
 
 CSettings::CSettings()
 {
-	GetModuleFileName(NULL, path.GetBuffer(_MAX_PATH), _MAX_PATH);
-	path.ReleaseBuffer();
-	path.Delete(path.ReverseFind(L'\\'), path.GetLength());
-	path.Format(L"%s%s", path, folders[base]);	// Установка пути хранения артефактов
+	path.Format(L"%s%s", GetDefaultPath(), folders[base]);	// Установка пути хранения артефактов
 	CreateDirectory(path, NULL);
 }
 
@@ -42,12 +39,26 @@ void CSettings::SetStgPath(const CString& pathToSave)
 	CreateDirectory(path, NULL);
 }
 
+// Сохранение параметров
+void CSettings::Save(const stgParams& par)
+{
+	parameters = par;
+}
+
+// Получить путь папки с exe файлом
+CString CSettings::GetDefaultPath()
+{
+	CString result;
+	GetModuleFileName(NULL, result.GetBuffer(_MAX_PATH), _MAX_PATH);
+	result.ReleaseBuffer();
+	result.Delete(result.ReverseFind(L'\\'), result.GetLength());
+	return result;
+}
+
 // Получение параметров настройки
 stgParams CSettings::GetParameters() { return this->parameters; }
 
 CString CSettings::GetPath() { return this->path; }
-
-CString* CSettings::GetRefPath() { return &path; }
 
 // Основные параметры
 int CSettings::GetProject() { return this->parameters.iProject; }

@@ -9,12 +9,12 @@
 namespace logdll
 {
 	const CString lgBr = L"\n\t\t\t\t\t\t";	// Перенос строки в лог файле
-	const CString lgSlash = L"================================================================\n";
-	const CString lgName = L"log.txt";	// Имя файла для логов
+	const CString lgSlash = L"-----------------------------------------------------------------------------------------------------------------------------------\n\n";
+	const CString lgFolder = L"log";
 	
 	const enum stIndex {start, end};	// Индексы для статусов основного приложения и dll
 	const std::vector <CString> stApp = {L"Приложение запущено", L"Приложение завершено"}; // Основные статусы приложения
-	const std::vector <CString> stDLL = { L"Начало работы DLL", L"Конец работы DLL" };		// Основные статусы DLL
+	const std::vector <CString> stDLL = { L"Начало работы DLL", L"Конец работы DLL\n" };		// Основные статусы DLL
 
 	// Класс логирования
 	// Кроме записи в лог файл класс содержит строку вывода в диалоговое окно о состоянии
@@ -42,7 +42,7 @@ namespace logdll
 		~CLogger();	// Деструктор
 
 		CRITICAL_SECTION csStat, csFile;	// Критические секции для чтения статуса и записи в файл
-		CString* path;	// Указатель на путь файла с логами
+		CString path;	// Путь к лог файлам
 
 		CString status;		// Статус
 		bool state = false;	// Статус считывания

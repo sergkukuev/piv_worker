@@ -104,7 +104,7 @@ void CSettingDlg::OnEnableBtnSave()
 void CSettingDlg::OnBnClickedOpenLog()
 {
 	stgdll::CSettings &stg = stgdll::CSettings::Instance();
-	CString path = stg.GetPath();
-	path.Format(L"%s\\%s", path, logdll::lgName);
-	ShellExecute(0, L"Open", path, NULL, NULL, SW_NORMAL);
+	CString path = stg.GetDefaultPath();
+	path.Format(L"%s\\%s", path, logdll::lgFolder);
+	ShellExecute(0, L"Explore", path, NULL, NULL, SW_NORMAL);
 }

@@ -43,9 +43,9 @@ namespace stgdll
 		int GetMethod();	// Метод проверки
 		bool GetNumPk();	// Флаг установки номера подкадра при генерации txt
 		bool GetGenTxt();	// Флаг принудительной генерации txt
-
-		CString* GetRefPath();	// Ссылка на текущий путь проекта
-		CString GetPath();		// Текущий путь
+		
+		CString GetDefaultPath();	// Путь папки с exe
+		CString GetPath();			// Текущий путь
 	private:
 		CSettings();
 		~CSettings();
@@ -54,6 +54,7 @@ namespace stgdll
 		CSettings& operator= (CSettings const&) = delete;	// И присваивания тоже
 
 		void SetStgPath(const CString&);	// Установка пути артефактов
+		void Save(const stgParams& par);	// Сохранение параметров в файл
 
 		stgParams parameters;	// Основные параметры
 		CString path = L"";		// Основной путь папки с артефактами

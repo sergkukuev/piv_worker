@@ -101,7 +101,7 @@ void CPIV::SetSettings(const stgParams& parameters)
 { 
 	while (!GetStatusThread(primary))
 		Sleep(100);
-	settings.parameters = parameters;
+	settings.Save(parameters);
 	logger.Write(L"Изменены настройки приложения");
 }
 
