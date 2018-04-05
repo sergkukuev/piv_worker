@@ -3,13 +3,36 @@
 
 using namespace stgdll;
 
+// Конструктор
 CSettings::CSettings()
 {
-	path.Format(L"%s%s", GetDefaultPath(), folders[base]);	// Установка пути хранения артефактов
+	// Чтение настроек из реестра
+	path = AfxGetApp()->GetProfileStringW(L"Settings", L"Path", L"");
+	if (path.IsEmpty())
+		path.Format(L"%s%s", GetDefaultPath(), folders[base]); // Установка пути хранения артефактов
 	CreateDirectory(path, NULL);
+
+	parameters.iProject = AfxGetApp()->GetProfileIntW(L"Settings", L"Project", project::p930m);
+	parameters.iMethod = AfxGetApp()->GetProfileIntW(L"Settings", L"Method", method::patterned);
+	parameters.bNumPK = AfxGetApp()->GetProfileIntW(L"Settings", L"NumPK", false);
+	parameters.bGenTxt = AfxGetApp()->GetProfileIntW(L"Settings", L"GenTXT", false);
 }
 
-CSettings::~CSettings() {	}
+// Деструктор
+CSettings::~CSettings() 
+{
+	WriteRegKeys();
+}
+
+// Запись ключей в реестр
+void CSettings::WriteRegKeys()
+{
+	AfxGetApp()->WriteProfileStringW(L"Settings", L"Path", path);
+	AfxGetApp()->WriteProfileInt(L"Settings", L"Project", parameters.iProject);
+	AfxGetApp()->WriteProfileInt(L"Settings", L"Method", parameters.iMethod);
+	AfxGetApp()->WriteProfileInt(L"Settings", L"NumPK", parameters.bNumPK);
+	AfxGetApp()->WriteProfileInt(L"Settings", L"GenTXT", parameters.bGenTxt);
+}
 
 // Установка пути
 void CSettings::SetStgPath(const CString& pathToSave)
@@ -36,13 +59,16 @@ void CSettings::SetStgPath(const CString& pathToSave)
 	}
 
 	path.Format(L"%s%s", pathToSave, folders[base]);	// Установка пути хранения артефактов
+	AfxGetApp()->WriteProfileStringW(L"Settings", L"Path", path);	// Запись пути в реестр
 	CreateDirectory(path, NULL);
+	
 }
 
 // Сохранение параметров
 void CSettings::Save(const stgParams& par)
 {
 	parameters = par;
+	WriteRegKeys();
 }
 
 // Получить путь папки с exe файлом

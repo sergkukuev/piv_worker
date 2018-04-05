@@ -541,8 +541,8 @@ void CPIVDlg::BrowserNavigate()
 // Открыть окно настроек
 void CPIVDlg::OnBnClickedSetting()
 {
-	CSettingDlg stgDlg(this);
 	settings = piv.GetSettings();
+	CSettingDlg stgDlg(this);
 
 	if (stgDlg.DoModal() == IDOK)
 	{

@@ -47,12 +47,13 @@ namespace stgdll
 		CString GetDefaultPath();	// Путь папки с exe
 		CString GetPath();			// Текущий путь
 	private:
-		CSettings();
-		~CSettings();
+		CSettings();	// Конструктор	
+		~CSettings();	// Деструктор
 
 		CSettings(CSettings const&) = delete;	// Удаляем конструктор копирования
 		CSettings& operator= (CSettings const&) = delete;	// И присваивания тоже
 
+		void WriteRegKeys();	// Запись ключей в реестр
 		void SetStgPath(const CString&);	// Установка пути артефактов
 		void Save(const stgParams& par);	// Сохранение параметров в файл
 
