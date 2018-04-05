@@ -109,6 +109,8 @@ int CWorkExcel::NpValue(const CString& comment)
 	if (!item.IsEmpty())
 	{
 		int pos = item.Find(NP_FIELD);
+		if (pos == -1)	// Поле не найдено
+			return -1;
 		item.Delete(0, pos + 3);
 		item.Trim();
 		return _wtoi(item);

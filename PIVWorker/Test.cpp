@@ -251,7 +251,7 @@ bool CTest::NpTest(vector <errorSignal>& signals)
 	#define FL(x) signal.data->x.flag
 	#define VAL(x) signal.data->x.value
 
-	if (sheet->np == 0)
+	if (sheet->np <= 0)
 		result = WriteError(signal, L"Отсутствует значение набора параметров.", check::comment);
 	else if ((!FL(max) && !FL(min)) && (VAL(min) > sheet->np || sheet->np > VAL(max)))
 		result = WriteError(signal, L"Набор параметров не соответствует указанному интервалу значений.", check::comment);
@@ -476,12 +476,13 @@ vector<int> CTest::CrossBits(vector <int>& bits, const vector <int>& numWord, co
 {
 	vector<int> result;
 
-	// В кпрно не указывается в протоколе в исп. разрядах знаковый бит (вот тут указываем)
-	if (settings.GetProject == project::kprno35 && sign)
+	// TODO: В кпрно не указывается в протоколе в исп. разрядах знаковый бит (вот тут указываем)
+	if (settings.GetProject() == project::kprno35 && sign)
 	{
 		bits[0] = bits[0] - 1;
-		if (bits[2] != -1)
-			bits[2] = bits[2] - 1;
+		if (bits.size() > 2)
+			if (bits[2] != -1)
+				bits[2] = bits[2] - 1;
 	}
 
 	for (size_t j = 0, i = 0; i < numWord.size(); j += 2, i++)
