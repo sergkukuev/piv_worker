@@ -81,11 +81,23 @@ void CWorkExcel::ReadNpBase()
 				result = result.substr(pos + 1, result.size());
 				pos = result.find_first_of("\t");
 				np.name = ParseFrameName(result.substr(0, pos));
-				npBase.push_back(np);
+				AddToNpBase(np);
 			}
 		} while (bOper);
 		file.Close();
 	}
+}
+
+// Добавление в базу наборов параметров
+// TODO: Добавить логирование при работе с базой наборов
+void CWorkExcel::AddToNpBase(const np_s& np)
+{
+	bool find = false;
+	for (size_t i = 0; i < npBase.size() && !find; i++)
+		if (npBase[i].name.Compare(np.name) == 0)
+			find = true;
+	if (!find)
+		npBase.push_back(np);
 }
 
 // Парсинг номера набора

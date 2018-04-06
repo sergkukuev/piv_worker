@@ -114,6 +114,7 @@ private:
 	// NP_BASE
 	vector <np_s> npBase;		// База номеров наборов
 	void ReadNpBase();	// Чтение базы наборов параметров
+	void AddToNpBase(const np_s&);	// Добавление в базу наборов параметров
 	void DeleteSymbol(CString&, const CString&); // Удаление символа из строки
 	int ParseNp(string value, bool& flag);	// Парсинг номера набора
 	CString ParseFrameName(string value);	// Парсинг имени кадра
