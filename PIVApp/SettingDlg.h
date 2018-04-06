@@ -23,7 +23,7 @@ protected:
 	DECLARE_MESSAGE_MAP()
 private:
 	stgParams* pSettings;
-	BOOL bNumPk, bGenTxt;
+	BOOL bNumPk, bGenTxt, bNpBase;
 	int iProject = -1, iMethod = -1;
 public:
 	void SetParameters();

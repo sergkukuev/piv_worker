@@ -42,6 +42,8 @@
 #define IDC_KPRNO35                     1050
 #define IDC_FAST                        1051
 #define IDC_TEMPLATE                    1052
+#define IDC_CHECK_NUMPK2                1053
+#define IDC_CHECK_NPBASE                1053
 #define IDC_RADIO_PROJ                  1055
 #define IDC_RADIO_TEST                  1056
 #define IDC_REPORT_TABLE                1057
