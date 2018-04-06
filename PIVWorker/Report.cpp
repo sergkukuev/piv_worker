@@ -53,6 +53,7 @@ void CReport::CreateMainFile(pivData& data, CString path)
 	logger >> L"Создание главного отчет-файла...";
 	CreateFolders(path);
 	path.Format(L"%s\\%s", path, REPORT_NAME);
+	// TODO: Проверить корректность всех путей перед созданием
 	CStdioFile file(path, CFile::modeCreate | CFile::modeWrite | CFile::typeUnicode);	// Поток записи в файл
 	WriteFile(file, L"<!DOCTYPE html>\n"
 		"<html lang=\"ru\">\n"
