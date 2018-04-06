@@ -16,6 +16,8 @@ CWorkExcel::CWorkExcel(void)
 	app.put_UserControl(FALSE);
 	books.AttachDispatch(app.get_Workbooks());
 	cells = NULL;
+	// TODO: Создать в настройках флаг учета чтения базы номеров наборов
+	ReadNpBase();
 }
 
 // Деструктор
@@ -29,6 +31,123 @@ CWorkExcel::~CWorkExcel(void)
 	app.ReleaseDispatch();
 	delete cells;
 }
+#pragma region NP_BASE
+// Чтение номеров наборов из папки odb
+void CWorkExcel::ReadNpBase()
+{
+	vector<CString> fileNames;	// Найденные имена файлов
+	// Поиск всех файлов в папке 
+	WIN32_FIND_DATA findFiles;
+	HANDLE h;
+	CString folder = settings.GetDefaultPath() + L"\\odb\\*";
+	h = FindFirstFile(folder, &findFiles);
+	if (h != INVALID_HANDLE_VALUE)
+	{
+		do
+		{
+			fileNames.push_back(findFiles.cFileName);
+		} while (FindNextFile(h, &findFiles) != 0);
+		FindClose(h);
+	}
+	folder.Delete(folder.GetLength() - 1);	// Удаление звездочки из пути 
+	// Чтение файлов 
+	for (size_t i = 0; i < fileNames.size(); i++)
+	{
+		// Проверка разрешения
+		int posDot = fileNames[i].ReverseFind(L'.');
+		CString temp = fileNames[i].Mid(posDot, fileNames[i].GetLength() - posDot);
+		if (temp.Compare(L".np") != 0)
+			continue;
+
+		// Построчная работа с файлом
+		temp.Format(L"%s\\%s", folder, fileNames[i]);
+		CStdioFile file;
+		BOOL bOper = file.Open(temp, CFile::modeRead | CFile::typeText);
+		do
+		{
+			bOper = file.ReadString(temp);
+			// Смена кодировки с 1252 -> 1251
+			int nChar = ::WideCharToMultiByte(CP_UTF8, 0, temp, (int)temp.GetLength(), NULL, 0, NULL, NULL);
+			string result;
+			result.resize(nChar);
+			::WideCharToMultiByte(1252, 0, temp, (int)temp.GetLength(), const_cast<char*>(result.c_str()), nChar, NULL, NULL);
+			// Парсинг
+			np_s np;
+			bool error = false;
+			size_t pos = result.find_first_of("\t");
+			np.number = ParseNp(result.substr(0, pos), error);
+			if (!error)
+			{
+				result = result.substr(pos + 1, result.size());
+				pos = result.find_first_of("\t");
+				np.name = ParseFrameName(result.substr(0, pos));
+				npBase.push_back(np);
+			}
+		} while (bOper);
+		file.Close();
+	}
+}
+
+// Парсинг номера набора
+int CWorkExcel::ParseNp(string value, bool& flag)
+{
+	int result = -1;
+	if (!value.empty())
+	{
+		char* end;
+		errno = 0;
+		result = strtol(value.c_str(), &end, 10);
+		(*end != '\0' || errno != 0) ? flag = true : flag = flag;
+	}
+	else
+		flag = true;
+	return result;
+}
+
+// Парсинг имени кадра
+CString CWorkExcel::ParseFrameName(string value)
+{
+	CString res(value.c_str());
+	int pos1, pos2;
+	// Удаление ИК обозначения
+	do
+	{
+		pos1 = res.Find(L"ИК \"");
+		pos2 = res.Find(L"ИК\"");
+		if (pos1 != -1)
+			res.Delete(pos1, 2);
+		if (pos2 != -1)
+			res.Delete(pos2, 2);
+	} while (pos1 != -1 || pos2 != -1);
+
+	// Удаление вхождений всех кавычек
+	DeleteSymbol(res, L"\"");
+	DeleteSymbol(res, L"«");
+	DeleteSymbol(res, L"»");
+	do // Удаление скобок и их содержимых
+	{
+		pos1 = res.Find(L'(');
+		pos2 = res.Find(L')');
+		int a = res.GetLength();
+		if (pos1 != -1 && pos2 != -1 && pos1 < pos2)
+			res.Delete(pos1, pos2 - pos1 + 1);
+	} while (pos1 < pos2);
+	res.Trim();
+	return res;
+}
+
+// Удаление символа из строки
+void CWorkExcel::DeleteSymbol(CString& field, const CString& sym)
+{
+	int pos;
+	do
+	{
+		pos = field.Find(sym);
+		if (pos != -1)
+			field.Delete(pos);
+	} while (pos != -1);
+}
+#pragma endregion
 
 // Открытие книги
 bool CWorkExcel::OpenBook(const CString& path) 
@@ -75,6 +194,7 @@ bool CWorkExcel::OpenSheet(const long& index)
 	range.AttachDispatch(Lp);
 
 	VARIANT items = range.get_Value2();
+	// TODO: Вылетает ошибка, когда подаешь пустой excel
 	if (cells != NULL)
 		delete cells;
 
@@ -112,6 +232,7 @@ bool CWorkExcel::IsArinc()
 int CWorkExcel::NpValue(const CString& comment) 
 {
 	CString item = comment;
+
 	if (!item.IsEmpty())
 	{
 		int pos = item.Find(NP_FIELD);

@@ -12,6 +12,7 @@
 #include "excel\CWorksheets.h"
 
 #include "MyException.h"
+#include "Settings.h"
 
 // Обозначения способов передачи данных
 #define LINE_FIELD L"Линия"	// Ячейка записи линии передачи данных
@@ -30,6 +31,12 @@ const vector<CString> SIGN_FIELD = { L"Зн-", L"зн.", L"Зн.", L"зн-" };	// Наличи
 
 // Примечания в конце таблицы
 const vector<CString> REMARK = { L"Примечания:", L"Примечание:" };
+
+// Структура для базы номеров наборов 
+struct np_s {
+	int number = 0;
+	CString name = L"";
+};
 
 // Хранение заголовков таблицы протоколов
 struct Header 
@@ -96,11 +103,19 @@ private:
 	CWorksheets sheets;	
 	CWorksheet sheet;	
 
+	stgdll::CSettings& settings = stgdll::CSettings::Instance();
 	COleSafeArray* cells;	// Данные текущего листа
 	Cell first, last;		// Значения первой и последней ячейки текущего листа
 
 	bool FindCell(const CString& field, Cell& cell);	// Поиск ячейки по содержимому, в противном cell(-1,-1)
 	CString LongToChar(const long& column);						// Преобразование long к char
 	void StepLongToChar(const long& column, CString& result);	// Доп функция: Если в обозначении ячейки уже больше одной буквы
+	
+	// NP_BASE
+	vector <np_s> npBase;		// База номеров наборов
+	void ReadNpBase();	// Чтение базы наборов параметров
+	void DeleteSymbol(CString&, const CString&); // Удаление символа из строки
+	int ParseNp(string value, bool& flag);	// Парсинг номера набора
+	CString ParseFrameName(string value);	// Парсинг имени кадра
 };
 
