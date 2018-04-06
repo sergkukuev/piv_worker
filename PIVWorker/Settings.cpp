@@ -16,6 +16,7 @@ CSettings::CSettings()
 	parameters.iMethod = AfxGetApp()->GetProfileIntW(L"Settings", L"Method", method::patterned);
 	parameters.bNumPK = AfxGetApp()->GetProfileIntW(L"Settings", L"NumPK", false);
 	parameters.bGenTxt = AfxGetApp()->GetProfileIntW(L"Settings", L"GenTXT", false);
+	parameters.bNpBase = AfxGetApp()->GetProfileIntW(L"Settings", L"NpBase", false);
 }
 
 // Деструктор
@@ -32,6 +33,7 @@ void CSettings::WriteRegKeys()
 	AfxGetApp()->WriteProfileInt(L"Settings", L"Method", parameters.iMethod);
 	AfxGetApp()->WriteProfileInt(L"Settings", L"NumPK", parameters.bNumPK);
 	AfxGetApp()->WriteProfileInt(L"Settings", L"GenTXT", parameters.bGenTxt);
+	AfxGetApp()->WriteProfileInt(L"Settings", L"NpBase", parameters.bNpBase);
 }
 
 // Установка пути
@@ -94,3 +96,5 @@ int CSettings::GetMethod() { return this->parameters.iMethod; }
 bool CSettings::GetNumPk() { return this->parameters.bNumPK; }
 
 bool CSettings::GetGenTxt() { return this->parameters.bGenTxt; }
+
+bool CSettings::GetNpBase() { return this->parameters.bNpBase; }

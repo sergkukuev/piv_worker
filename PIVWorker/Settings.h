@@ -21,6 +21,7 @@ namespace stgdll
 		int iMethod = patterned;	// Метод проверки: 0 - шаблонная, 1 - быстрая
 		bool bNumPK = false;		// Установить номер подкадра при генерации txt
 		bool bGenTxt = false;		// Генерация txt в любом случае
+		bool bNpBase = false;		// Использование базы с номерами наборов
 	};
 
 	// Класс настроек
@@ -43,6 +44,7 @@ namespace stgdll
 		int GetMethod();	// Метод проверки
 		bool GetNumPk();	// Флаг установки номера подкадра при генерации txt
 		bool GetGenTxt();	// Флаг принудительной генерации txt
+		bool GetNpBase();	// Флаг использования базы номеров наборов
 		
 		CString GetDefaultPath();	// Путь папки с exe
 		CString GetPath();			// Текущий путь
