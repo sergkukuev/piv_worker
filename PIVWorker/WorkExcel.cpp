@@ -118,7 +118,7 @@ Cell CWorkExcel::Boundary() { return last; }
 long CWorkExcel::CountRows() { return last.row; }
 
 // Поиск заголовков на текущем листе
-bool CWorkExcel::FindHeader(Header& header, const bool& arinc) 
+bool CWorkExcel::FindHeader(Header& header, const bool& bArinc) 
 {
 	for (size_t i = 0; i < header.list.size(); i++) 
 	{
@@ -128,19 +128,19 @@ bool CWorkExcel::FindHeader(Header& header, const bool& arinc)
 		
 		for (it; !bFind; it++) 
 		{
-			if (!arinc && i + 1 == header.iAdress)
+			if (!bArinc && i + 1 == iAdress)
 				break;
 			if ((it == header.list[i].end()) && !bFind)
 				return false;
 			bFind = FindCell(*it, cell);
 		}
-		if (!arinc && i + 1 == header.iAdress) 
+		if (!bArinc && i + 1 == iAdress) 
 		{
 			header.adress[i + 1] = -1;
 			continue;
 		}
 			
-		header.adress[header.iRow] = cell.row;
+		header.adress[iRow] = cell.row;
 		header.adress[i + 1] = cell.column;
 	}
 	return true;

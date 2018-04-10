@@ -13,33 +13,39 @@
 
 #include "MyException.h"
 
-// Хранение заголовков таблицы протоколов
-struct Header 
+namespace exceldll
 {
-	vector <vector<CString>> list;	// Список допустимых заголовков 
-	static const int size = 11;		// Количество заголовков
-	long adress[size];				// Адреса заголовков
+	// Индексы заголовков в массиве адресов
+	const enum index {
+		iRow = 0,	// Текущая строка 
+		iNumWord,	// Номер слова
+		iName,		// Наименование сигнала 
+		iSignal,	// Идентификатор сигнала
+		iDimension,	// Размерность
+		iMin,		// Мин.знач.
+		iMax,		// Макс.знач.
+		iCSR,		// Цср 
+		iBits,		// Используемые разряды
+		iComment,	// Примечание
+		iAdress,	// Адрес (для arinc)
+	};
+	// Хранение заголовков таблицы протоколов
+	struct Header
+	{
+		vector <vector<CString>> list;	// Список допустимых заголовков 
+		static const int size = 11;		// Количество заголовков
+		long adress[size];				// Адреса заголовков
+	};
 
-	// Индексы заголовков в массиве адресов:
-	const int iRow = 0;			// Текущая строка 
-	const int iNumWord = 1;		// Номер слова
-	const int iName = 2;		// Наименование сигнала 
-	const int iSignal = 3;		// Идентификатор сигнала
-	const int iDimension = 4;	// Размерность
-	const int iMin = 5;			// Мин.знач.
-	const int iMax = 6;			// Макс.знач.
-	const int iCSR = 7;			// Цср 
-	const int iBits = 8;		// Используемые разряды
-	const int iComment = 9;		// Примечание
-	const int iAdress = 10;		// Адрес (для arinc)
-};
+	// Ячейка в таблице Excel
+	struct Cell
+	{
+		long row;		// Строка
+		long column;	// Столбец
+	};
+}
 
-// Ячейка в таблице Excel
-struct Cell 
-{
-	long row;		// Строка
-	long column;	// Столбец
-};
+using namespace exceldll;
 
 // Класс чтения данных из таблицы Excel 
 class PIV_DECLARE CWorkExcel 

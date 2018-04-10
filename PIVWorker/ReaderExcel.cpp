@@ -87,7 +87,7 @@ void CReaderExcel::GetSheets(vector <sheetData>& sheets)
 			logger >> msg;
 		}
 
-		header.adress[header.iRow]++;
+		header.adress[iRow]++;
 
 		GetSignals(sheets[i - 1].signals, sheets[i - 1].arinc);
 		sheets[i - 1].arinc ? sheets[i - 1].np = -1 : sheets[i - 1].np = GetNp(sheets[i - 1].signals);
@@ -101,7 +101,7 @@ void CReaderExcel::GetSheets(vector <sheetData>& sheets)
 void CReaderExcel::GetSignals(vector <signalData>& signals, const bool& bArinc)
 {
 	arincData arinc;
-	for (long merge = 1, row = header.adress[header.iRow], column; row <= work.CountRows(); row += merge, merge = 1)
+	for (long merge = 1, row = header.adress[iRow], column; row <= work.CountRows(); row += merge, merge = 1)
 	{
 		signalData signal;
 		// Надстройка для arinc
@@ -114,23 +114,23 @@ void CReaderExcel::GetSignals(vector <signalData>& signals, const bool& bArinc)
 		// Чтение параметров одного сигнала. Адрес (для ARINC) записывается вместо номера слова
 		if (!bArinc)
 		{
-			column = header.adress[header.iNumWord];
+			column = header.adress[iNumWord];
 			int range = work.CPrevEmpty(row, column);
 			signal.numWord = GetNumWord(work.CellValue(row - range, column));
 		}
 		else
 		{
-			column = header.adress[header.iAdress];
+			column = header.adress[iAdress];
 			int range = work.CPrevEmpty(row, column);
 			signal.numWord = GetAdress(work.CellValue(row - range, column), arinc.current);
 		}
 
-		column = header.adress[header.iName];
+		column = header.adress[iName];
 		int range = work.CPrevEmpty(row, column);
 		signal.title[0] = work.CellValue(row - range, column);
 		range = work.CNextEmpty(row, column);
 
-		column = header.adress[header.iSignal];
+		column = header.adress[iSignal];
 		merge = work.CNextEmpty(row, column);
 		signal.title[1] = work.CellValue(row, column);
 
@@ -147,10 +147,10 @@ void CReaderExcel::GetSignals(vector <signalData>& signals, const bool& bArinc)
 			signal.title[1].Replace(arinc.symbol, tmp);
 		}
 
-		column = header.adress[header.iDimension];
+		column = header.adress[iDimension];
 		signal.dimension = work.CellValue(row, column);
 		GetMinMaxCsr(signal, row);
-		column = header.adress[header.iBits];
+		column = header.adress[iBits];
 		signal.bit = GetBits(work.CellValue(row, column), (int)signal.numWord.value.size());
 		signal.comment = GetComment(row, merge, signal.bitSign);
 
@@ -630,9 +630,9 @@ void CWorkExcel::DeleteSymbol(CString& field, const CString& sym)
 int CReaderExcel::GetPk()
 {
 	// CRUTCH: Цикл для прохода по таблице вправо, чтобы найти номер подкадра
-	for (long i = header.adress[header.iComment]; i <= work.Boundary().column; i++)
+	for (long i = header.adress[iComment]; i <= work.Boundary().column; i++)
 	{
-		CString item = work.CellValue(header.adress[header.iRow] - 1, i);
+		CString item = work.CellValue(header.adress[iRow] - 1, i);
 		if (!item.IsEmpty())
 		{
 			int pos = item.ReverseFind(PK_FIELD);
@@ -689,15 +689,15 @@ intData CReaderExcel::GetNumWord(CString numeric)
 // Чтение минимального, максимального и цср
 void CReaderExcel::GetMinMaxCsr(signalData& signal, const long& row)
 {
-	long column = header.adress[header.iMin];
+	long column = header.adress[iMin];
 	signal.min.field = work.CellValue(row, column);
 	signal.min.value = GetDouble(signal.min.field, signal.min.flag);
 
-	column = header.adress[header.iMax];
+	column = header.adress[iMax];
 	signal.max.field = work.CellValue(row, column);
 	signal.max.value = GetDouble(signal.max.field, signal.max.flag);
 
-	column = header.adress[header.iCSR];
+	column = header.adress[iCSR];
 	signal.csr.field = work.CellValue(row, column);
 	signal.csr.value = GetDouble(signal.csr.field, signal.csr.flag);
 
@@ -773,7 +773,7 @@ vector <int> CReaderExcel::StepBits(CString numeric, bool& flag)
 // Чтение примечания
 CString CReaderExcel::GetComment(long row, const int& size, bool& flag)
 {
-	long column = header.adress[header.iComment];
+	long column = header.adress[iComment];
 	int merge = work.GetMerge(row, column);
 	CString result;
 

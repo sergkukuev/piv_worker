@@ -13,15 +13,20 @@
 #define ARINC L"РТМ"	// Линия передачи arinc
 #define MKIO L"МКИО"	// Линия передачи 
 
-// Информация о повторения в ARINC протоколах
-struct arincData
+namespace readdll
 {
-	CString symbol;		// Символ замены в идентификаторе
-	int current = 0;	// Текущее повторение
-	int amount = 0;		// Всего повторений
-	int startRow;		// Начало блока повторения
-	bool flag = true;	// Флаг отсутствия повторения
-};
+	// Информация о повторения в ARINC протоколах
+	struct arincData
+	{
+		CString symbol;		// Символ замены в идентификаторе
+		int current = 0;	// Текущее повторение
+		int amount = 0;		// Всего повторений
+		int startRow;		// Начало блока повторения
+		bool flag = true;	// Флаг отсутствия повторения
+	};
+}
+
+using namespace readdll;
 
 // Класс для чтения протоколов из Excel
 class PIV_DECLARE CReaderExcel
