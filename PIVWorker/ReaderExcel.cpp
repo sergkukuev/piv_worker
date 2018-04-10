@@ -87,11 +87,14 @@ void CReaderExcel::GetSheets(vector <sheetData>& sheets)
 		header.adress[header.iRow]++;
 
 		GetSignals(sheets[i - 1].signals, sheets[i - 1].arinc);
-		sheets[i - 1].arinc ? sheets[i - 1].np = -1 : sheets[i - 1].np = work.NpValue(sheets[i - 1].signals[0].comment);
+		if (settings.GetProject() == stgdll::project::p930m)
+			sheets[i - 1].arinc ? sheets[i - 1].np = -1 : sheets[i - 1].np = work.NpValue(sheets[i - 1].signals[0].comment);
+		if (settings.GetProject() == stgdll::project::kprno35)
+			sheets[i - 1].np = work.NpValue(header);
 
 		// KPRNO: Установка номера набора параметра из листа (костыль для Яны с НП в МФПИ35)
-		if (settings.GetProject() == stgdll::project::kprno35 && sheets[i - 1].np == -1)
-			sheets[i - 1].np = work.NpValue(sheets[i - 1].name);
+		//if (settings.GetProject() == stgdll::project::kprno35 && sheets[i - 1].np == -1)
+			//sheets[i - 1].np = work.NpValue(sheets[i - 1].name);
 
 		if (sheets[i - 1].np == 0)
 			logger >> L"Не удалось считать номер набора параметров на листе \"" + sheets[i - 1].name + L"\"";
