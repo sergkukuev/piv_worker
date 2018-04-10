@@ -26,8 +26,6 @@ namespace readdll
 	};
 }
 
-using namespace readdll;
-
 // Класс для чтения протоколов из Excel
 class PIV_DECLARE CReaderExcel
 {
@@ -41,7 +39,7 @@ private:
 	logdll::CLogger& logger = logdll::CLogger::Instance();			// Логирование
 	vector <CString> extension;	// Допустимые расширения файлов
 	CWorkExcel work;			// Работа пространство excel файла
-	Header header;				// Информация о заголовках
+	exceldll::Header header;				// Информация о заголовках
 
 	// Константные значения, требуемые для чтения ПИВ
 	const enum pkStats {failed = -2 /* неудача */, empty /* отсутствие */};	// Статусы чтение номера подкадра
@@ -61,8 +59,8 @@ private:
 	void findDW(vector<signalData>& signals, size_t start, CString old, vector <CString> revert);	// Поиск второй части двойного слова
 
 	// Arinc (Работа с параметрами при линии передачи arinc)
-	void ArincChecker(arincData& arinc, long& row);	//  Поиск повторяющихся блоков
-	void GetArinc(arincData& arinc, const long& row, CString field);	// Чтение циклов повторений в ARINC протоколе (порядковый номер в кадре)
+	void ArincChecker(readdll::arincData& arinc, long& row);	//  Поиск повторяющихся блоков
+	void GetArinc(readdll::arincData& arinc, const long& row, CString field);	// Чтение циклов повторений в ARINC протоколе (порядковый номер в кадре)
 	intData GetAdress(CString field, int current);	// Чтение адреса
 	int GetSubIndex(CString& numeric);				// Получение подстрочного индекса адреса и удаление его из строки
 	vector <int> StepAdress(CString adress, bool& flag);	// Парсинг поля адреса и преобразование его значений в int

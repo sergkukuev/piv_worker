@@ -45,8 +45,6 @@ namespace exceldll
 	};
 }
 
-using namespace exceldll;
-
 // Класс чтения данных из таблицы Excel 
 class PIV_DECLARE CWorkExcel 
 {
@@ -66,15 +64,15 @@ public:
 
 	// Получение значения ячейки 
 	CString CellValue(const long& row, const long& column);	
-	CString CellValue(const Cell& cell);
-	Cell Boundary();	// Получение границы страницы excel листа
+	CString CellValue(const exceldll::Cell& cell);
+	exceldll::Cell Boundary();	// Получение границы страницы excel листа
 
 	// Работа с excel
 	long CPrevEmpty(const long& row, const long& column);	// Количество пустых ячеек до
 	long CNextEmpty(const long& row, const long& column);	// Количество пустых ячеек после 
 	long GetMerge(long& row, const long& column);			// Кол-во слитых ячеек
-	bool FindCell(const CString& field, Cell& cell);		// Поиск ячейки по содержимому, в противном cell(-1,-1)
-	bool FindHeader(Header& header, const bool& arinc);		// Поиск заголовков на текущем листе
+	bool FindCell(const CString& field, exceldll::Cell& cell);		// Поиск ячейки по содержимому, в противном cell(-1,-1)
+	bool FindHeader(exceldll::Header& header, const bool& arinc);	// Поиск заголовков на текущем листе
 private:
 	CApplication app;	
 	CWorkbooks books;	
@@ -83,7 +81,7 @@ private:
 	CWorksheet sheet;	
 
 	COleSafeArray* cells;	// Данные текущего листа
-	Cell first, last;		// Значения первой и последней ячейки текущего листа
+	exceldll::Cell first, last;		// Значения первой и последней ячейки текущего листа
 	CString LongToChar(const long& column);						// Преобразование long к char
 	void StepLongToChar(const long& column, CString& result);	// Доп функция: Если в обозначении ячейки уже больше одной буквы
 };

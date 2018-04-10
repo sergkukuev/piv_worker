@@ -7,6 +7,9 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
+using namespace readdll;
+using namespace exceldll;
+
 // Конструктор
 CReaderExcel::CReaderExcel()
 {

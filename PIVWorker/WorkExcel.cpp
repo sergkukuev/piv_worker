@@ -7,6 +7,8 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
+using namespace exceldll;
+
 // Конструктор
 CWorkExcel::CWorkExcel(void) 
 {
