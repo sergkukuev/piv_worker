@@ -13,6 +13,7 @@ CReaderExcel::CReaderExcel()
 	Initialize();
 }
 
+// Инициализация
 void CReaderExcel::Initialize()
 {
 	// Установка набора заголовков
@@ -27,8 +28,9 @@ void CReaderExcel::Initialize()
 	header.list.push_back(vector<CString>{ L"Примечание" });														// Комментарии (пояснения)
 	header.list.push_back(vector<CString>{ L"Адрес"});																// Адрес (для ARINC)
 
-																													// Поддерживаемые расширения Excel файлов
+	// Поддерживаемые расширения Excel файлов
 	extension.push_back(L"xlsx");	// Текущий основной формат
+	extension.push_back(L"xlsb");
 	extension.push_back(L"xls");	// Основной формат до 2003 года
 }
 
@@ -53,7 +55,8 @@ bookData CReaderExcel::GetBook(const CString& pathToExcel)
 		throw ReadBookException(work.BookName(pathToExcel));
 
 	book.name = work.BookName();
-	// logger.Write(L"Добавление протокола \"" + book.name + L"\"...");	Если будем показывать в строке состояния
+	// UNDONE: Отображение чтения в строке состояния
+	// logger.Write(L"Добавление протокола \"" + book.name + L"\"...");
 	logger >> L"Добавление протокола \"" + book.name + L"\"...";
 	GetSheets(book.sheets);
 	logger >> L"Добавление протокола \"" + book.name + L"\" завершено";
@@ -69,17 +72,17 @@ void CReaderExcel::GetSheets(vector <sheetData>& sheets)
 	{
 		work.OpenSheet(i);
 		sheets[i - 1].name = work.SheetName();
+		sheets[i - 1].arinc = IsArinc();
 
-		if (!work.FindHeader(header)) // Поиск заголовков таблицы
+		if (!work.FindHeader(header, sheets[i - 1].arinc))	// Поиск заголовков таблицы
 			throw NotAllHeaderException(work.BookName(), sheets[i - 1].name);
 
-		sheets[i - 1].arinc = work.IsArinc();
-		sheets[i - 1].pk = work.PkValue(header);
+		sheets[i - 1].pk = GetPk();
 
 		if (sheets[i - 1].pk < 0)
 		{
 			CString msg;
-			sheets[i - 1].pk == PK_EMPTY ? msg = L"Номер подкадра отсутствует" : L"Не удалось считать номер подкадра";
+			sheets[i - 1].pk == pkStats::empty ? msg = L"Номер подкадра отсутствует" : L"Не удалось считать номер подкадра";
 			msg.Format(L"%s на листе \"%s\"", msg, sheets[i - 1].name);
 			logger >> msg;
 		}
@@ -87,14 +90,7 @@ void CReaderExcel::GetSheets(vector <sheetData>& sheets)
 		header.adress[header.iRow]++;
 
 		GetSignals(sheets[i - 1].signals, sheets[i - 1].arinc);
-		if (settings.GetProject() == stgdll::project::p930m)
-			sheets[i - 1].arinc ? sheets[i - 1].np = -1 : sheets[i - 1].np = work.NpValue(sheets[i - 1].signals[0].comment);
-		if (settings.GetProject() == stgdll::project::kprno35)
-			sheets[i - 1].np = work.NpValue(header);
-
-		// KPRNO: Установка номера набора параметра из листа (костыль для Яны с НП в МФПИ35)
-		//if (settings.GetProject() == stgdll::project::kprno35 && sheets[i - 1].np == -1)
-			//sheets[i - 1].np = work.NpValue(sheets[i - 1].name);
+		sheets[i - 1].arinc ? sheets[i - 1].np = -1 : sheets[i - 1].np = GetNp(sheets[i - 1].signals);
 
 		if (sheets[i - 1].np == 0)
 			logger >> L"Не удалось считать номер набора параметров на листе \"" + sheets[i - 1].name + L"\"";
@@ -145,7 +141,7 @@ void CReaderExcel::GetSignals(vector <signalData>& signals, const bool& bArinc)
 		if (!arinc.flag)
 		{
 			CString tmp;
-			// TODO: Сделать соответствие латинских и кириллицу (потому что хитрецы пишут разными буковками)
+			// TODO: Сделать соответствие латинских и кириллицу, хитрецы пишут разными буковками
 			tmp.Format(L"%d", arinc.current);
 			int pos = signal.title[1].Find(arinc.symbol);
 			signal.title[1].Replace(arinc.symbol, tmp);
@@ -160,22 +156,23 @@ void CReaderExcel::GetSignals(vector <signalData>& signals, const bool& bArinc)
 
 		bool bEmpty = IsEmpty(row);
 		bool bRemark = IsRemark(row);
-
+		// TODO: Записать информацию под таблицей для дальнейшей расшифровки
 		if (!bEmpty && !bRemark)
 			signals.push_back(signal);
 		else if (bRemark)
 			break;
 
-		// TODO: Исправление костыля (обход повторений в случае конца таблицы)
+		// CRUTCH: Обход повторений в случае конца таблицы (arinc)
 		if (work.CountRows() == row + merge - 1 && !arinc.flag && arinc.amount != arinc.current)
 			row = arinc.startRow - merge;
 	}
 
-	// Поиск двойных слов в КПРНО35
+	// Поиск двойных слов
 	if (settings.GetProject() == stgdll::project::kprno35)
 		ConcatDW(signals);
 }
 
+#pragma region DoubleWord
 // Объединение двойных слов (установка указателя)
 void CReaderExcel::ConcatDW(vector <signalData>& signals)
 {
@@ -226,16 +223,17 @@ void CReaderExcel::findDW(vector <signalData>& signals, size_t start, CString ol
 		}
 	}
 }
+#pragma endregion
 
-#pragma region ARINC
+#pragma region Arinc
 //  Поиск повторяющихся блоков
 void CReaderExcel::ArincChecker(arincData& arinc, long& row)
 {
 	//	Поиск повторений
 	CString field = work.CellValue(row - 1, 1);
-	if (field.Find(ARINC_REMARK) != -1 && arinc.flag && arinc.startRow != row)	// Опачки, появилось
+	if (field.Find(arincRemark) != -1 && arinc.flag && arinc.startRow != row)	// Опачки, появилось
 		GetArinc(arinc, row, field);
-	else if ((field.Find(ARINC_REMARK) != -1 || IsTitle(row - 1)) && !arinc.flag)
+	else if ((field.Find(arincRemark) != -1 || IsTitle(row - 1)) && !arinc.flag)
 	{
 		if (arinc.current == arinc.amount)
 			GetArinc(arinc, row, field);
@@ -279,10 +277,8 @@ void CReaderExcel::GetArinc(arincData& arinc, const long& row, CString numeric)
 		arinc.current = 0;
 	}
 }
-#pragma endregion
 
-#pragma region Read_params
-// Адреса (ARINC)
+// Чтение адреса
 intData CReaderExcel::GetAdress(CString numeric, int current)
 {
 	intData result;
@@ -330,7 +326,7 @@ vector <int> CReaderExcel::StepAdress(CString numeric, bool& flag)
 	vector <int> result = { -1, -1 };
 	int indxDel = numeric.Find(L'.') == -1 ? numeric.Find(L'…') : numeric.Find(L'.');	// Поиск индекса разделителей
 
-	// Разделителей нет, используется один разряд
+																						// Разделителей нет, используется один разряд
 	if (indxDel == -1)
 	{
 		result[1] = GetSubIndex(numeric);
@@ -359,7 +355,7 @@ vector <int> CReaderExcel::StepAdress(CString numeric, bool& flag)
 
 // Получение подстрочного индекса и удаление его из строки
 // Подстрочные сиволы с кодом(8320 - 8329)
-// TODO: Исправление костыля (в случае смены системы счисления, отличной от 8-ой, может перестать работать) 
+// TODO: В случае изменения системы счисления (СС), отличной от 8-ой, может выдавать некорректный результат
 int CReaderExcel::GetSubIndex(CString& numeric)
 {
 	CString sub;
@@ -384,7 +380,287 @@ int CReaderExcel::GetSubIndex(CString& numeric)
 	flag ? result = -1 : result = result;
 	return result;
 }
+#pragma endregion
 
+#pragma region SheetInfo
+// Поиск сигнала по идентификатору
+int CReaderExcel::FindSignalById(const vector<signalData>& signals, const CString& id)
+{
+	int index = -1;
+	for (size_t i = 0; i < signals.size(); i++)
+		if (signals[i].title[1].Find(id) == 0)
+		{
+			index = (int)i;
+			break;
+		}
+	return index;
+}
+
+// Получение значение номера набора
+int CReaderExcel::GetNp(const vector<signalData>& signals) 
+{
+	int index = -1, iNp = -1;
+	for (size_t i = 0; i < npId.size(); i++)	// Находим индекс идентификатора с номером набора
+	{
+		index = FindSignalById(signals, npId[i]);
+		if (index != -1)
+		{
+			iNp = (int)i;
+			break;
+		}
+	}
+
+	CString comment = signals[index].comment;
+	if (!comment.IsEmpty())
+	{
+		int pos = comment.Find(npId[iNp]);
+		if (pos == -1)	// Поле не найдено
+			return -1;
+		comment.Remove(L' ');	// Удаляем все пробелы для удобного выделения номера кадра
+		bool result = true;
+		index = GetInt(comment.Mid(pos + npId[iNp].GetLength() + 1), result);	// Длина идентификатора + символ "="
+	}
+	return index;
+}
+
+/*
+// Получение номера набора (с чтением НП из базы)
+int CWorkExcel::NpValue(const Header& head)
+{
+	if (head.adress[head.iRow] + 1 > last.row || head.adress[head.iComment] > last.column)
+		return -1;
+
+	int np;
+	settings.GetNpBase() ? np = CmpWithNpBase(GetSheetInfo(head)) : np = -1; // Поиск номера набора в базе
+
+	if (np == -1)	// В базе не найден, ищем стандартным путем в поле номера набора
+		return NpValue(CellValue(head.adress[head.iRow] + 1, head.adress[head.iComment]));
+	else
+		return np;
+}
+*/
+
+/* #pragma region NP_BASE
+// Чтение номеров наборов из папки odb
+void CWorkExcel::ReadNpBase()
+{
+	vector<CString> fileNames;	// Найденные имена файлов
+								// Поиск всех файлов в папке 
+	WIN32_FIND_DATA findFiles;
+	HANDLE h;
+	CString folder = settings.GetDefaultPath() + L"\\odb\\*";
+	h = FindFirstFile(folder, &findFiles);
+	if (h != INVALID_HANDLE_VALUE)
+	{
+		do
+		{
+			fileNames.push_back(findFiles.cFileName);
+		} while (FindNextFile(h, &findFiles) != 0);
+		FindClose(h);
+	}
+	folder.Delete(folder.GetLength() - 1);	// Удаление звездочки из пути 
+											// Чтение файлов 
+	for (size_t i = 0; i < fileNames.size(); i++)
+	{
+		// Проверка разрешения
+		int posDot = fileNames[i].ReverseFind(L'.');
+		CString temp = fileNames[i].Mid(posDot, fileNames[i].GetLength() - posDot);
+		if (temp.Compare(L".np") != 0)
+			continue;
+
+		// Построчная работа с файлом
+		temp.Format(L"%s\\%s", folder, fileNames[i]);
+		CStdioFile file;
+		BOOL bOper = file.Open(temp, CFile::modeRead | CFile::typeText);
+		do
+		{
+			bOper = file.ReadString(temp);
+			// Смена кодировки с 1252 -> 1251
+			int nChar = ::WideCharToMultiByte(CP_UTF8, 0, temp, (int)temp.GetLength(), NULL, 0, NULL, NULL);
+			string result;
+			result.resize(nChar);
+			::WideCharToMultiByte(1252, 0, temp, (int)temp.GetLength(), const_cast<char*>(result.c_str()), nChar, NULL, NULL);
+			// Парсинг
+			np_s np;
+			bool error = false;
+			size_t pos = result.find_first_of("\t");
+			np.number = ParseNp(result.substr(0, pos), error);
+			if (!error)
+			{
+				result = result.substr(pos + 1, result.size());
+				pos = result.find_first_of("\t");
+				np.name = ParseFrameName(result.substr(0, pos));
+				AddToNpBase(np);
+			}
+		} while (bOper);
+		file.Close();
+	}
+}
+
+// Добавление в базу наборов параметров
+void CWorkExcel::AddToNpBase(const np_s& np)
+{
+	bool find = false;
+	for (size_t i = 0; i < npBase.size() && !find; i++)
+		if (npBase[i].name.Compare(np.name) == 0)
+			find = true;
+	if (!find)
+		npBase.push_back(np);
+}
+
+// Поиск номера набора в базе  (-1 в случае не найденого номера)
+int CWorkExcel::CmpWithNpBase(const vector<CString>& sheetInfo)
+{
+	set <CString> prepos = { L"о", L"об", L"по", L"под", L"от", L"около", L"за", L"над", L"на",  L"с",  L"к",  L"из",  L"в",  L"без" };	// Предлоги
+	typedef struct {
+		int numeric = 0;	// Количество совпадающих токенов
+		int all = 0;		// Количество всех токенов
+	} words;
+
+	CString separate = L" ";
+	int index = -1, result = -1, idxEmp = -1; // idxEmp - индекс пустого индикационного кадра
+	words res;
+
+	for (size_t i = 0; i < npBase.size(); i++)
+	{
+		if (npBase[i].name.CompareNoCase(L"Пустой"))
+			idxEmp = (int)i;
+		int pos = 0;
+		words tmp;
+		CString token = npBase[i].name.Tokenize(separate, pos);
+		while (!token.IsEmpty() && prepos.find(token) == prepos.end())
+		{
+			tmp.all++;
+			for (size_t j = 0; j < sheetInfo.size(); j++)
+				if (sheetInfo[j].Find(token) != -1)
+					tmp.numeric++;
+
+			token = npBase[i].name.Tokenize(separate, pos);
+		}
+		if (res.numeric < tmp.numeric || (res.numeric == tmp.numeric && res.all > tmp.all))
+		{
+			res = tmp;
+			index = (int)i;
+		}
+	}
+	if (index != -1)
+		result = npBase[index].number;
+
+	return result;
+}
+
+// Просмотр информации над шапкой для поиска имени таблицы
+vector<CString> CWorkExcel::GetSheetInfo(const Header& header)
+{
+	vector <CString> result;
+	Cell res;
+	FindCell(LINE_FIELD, res);
+	if (res.row == -1 || res.column == -1)
+		return result;
+
+	for (long i = 1; i < header.adress[header.iRow] - 1; i++)
+		for (long j = res.column + 2; j < last.column; j++)	// Смещение от определения Линии на два значения
+			if (!CellValue(i, j).IsEmpty())
+				result.push_back(CellValue(i, j));
+	return result;
+}
+
+// Парсинг номера набора
+int CWorkExcel::ParseNp(string value, bool& flag)
+{
+	int result = -1;
+	if (!value.empty())
+	{
+		char* end;
+		errno = 0;
+		result = strtol(value.c_str(), &end, 10);
+		(*end != '\0' || errno != 0) ? flag = true : flag = flag;
+	}
+	else
+		flag = true;
+	return result;
+}
+
+// Парсинг имени кадра
+CString CWorkExcel::ParseFrameName(string value)
+{
+	CString res(value.c_str());
+	int pos1, pos2;
+	// Удаление ИК обозначения
+	do
+	{
+		pos1 = res.Find(L"ИК \"");
+		pos2 = res.Find(L"ИК\"");
+		if (pos1 != -1)
+			res.Delete(pos1, 2);
+		if (pos2 != -1)
+			res.Delete(pos2, 2);
+	} while (pos1 != -1 || pos2 != -1);
+
+	// Удаление вхождений всех кавычек
+	DeleteSymbol(res, L"\"");
+	DeleteSymbol(res, L"«");
+	DeleteSymbol(res, L"»");
+	do // Удаление скобок и их содержимых
+	{
+		pos1 = res.Find(L'(');
+		pos2 = res.Find(L')');
+		int a = res.GetLength();
+		if (pos1 != -1 && pos2 != -1 && pos1 < pos2)
+			res.Delete(pos1, pos2 - pos1 + 1);
+	} while (pos1 < pos2);
+	res.Trim();
+	return res;
+}
+
+// Удаление символа из строки
+void CWorkExcel::DeleteSymbol(CString& field, const CString& sym)
+{
+	int pos;
+	do
+	{
+		pos = field.Find(sym);
+		if (pos != -1)
+			field.Delete(pos);
+	} while (pos != -1);
+}
+#pragma endregion */
+
+// Получение значения номера подкадра
+int CReaderExcel::GetPk()
+{
+	// CRUTCH: Цикл для прохода по таблице вправо, чтобы найти номер подкадра
+	for (long i = header.adress[header.iComment]; i <= work.Boundary().column; i++)
+	{
+		CString item = work.CellValue(header.adress[header.iRow] - 1, i);
+		if (!item.IsEmpty())
+		{
+			int pos = item.ReverseFind(PK_FIELD);
+			if (pos == -1)
+				continue;
+			item.Delete(0, pos + 1);
+			item.Trim();
+			// Вдруг дальше пробел
+			pos = item.Find(L' ');
+			if (pos != -1)
+				item.Delete(pos, item.GetLength());
+			// А вдруг перечисление через запятую (протоколы не поймешь)
+			pos = item.Find(L',');
+			if (pos != -1)
+				item.Delete(pos, item.GetLength());
+
+			int result = _wtoi(item);
+			if (result == 0)
+				result = pkStats::failed;
+
+			return result;
+		}
+	}
+	return pkStats::empty;
+}
+#pragma endregion
+
+#pragma region ReadParameters
 // Чтение номера слова
 intData CReaderExcel::GetNumWord(CString numeric)
 {
@@ -507,8 +783,8 @@ CString CReaderExcel::GetComment(long row, const int& size, bool& flag)
 		CString tmp = work.CellValue(row + i, column);
 		if (!tmp.IsEmpty())
 		{
-			for (size_t j = 0; j < SIGN_FIELD.size(); j++)
-				tmp.Find(SIGN_FIELD[j]) != -1 ? flag = true : flag = flag;
+			for (size_t j = 0; j < sign.size(); j++)
+				tmp.Find(sign[j]) != -1 ? flag = true : flag = flag;
 			result.IsEmpty() ? result = tmp : result += L'\n' + tmp;
 		}
 	}
@@ -601,10 +877,22 @@ bool CReaderExcel::IsRemark(const long& row)
 		if (header.adress[i] != -1)
 		{
 			CString tmp = work.CellValue(row, column);
-			for (size_t j = 0; j < REMARK.size(); j++)
-				result = tmp.Find(REMARK[j]) > -1 ? true : result;
+			for (size_t j = 0; j < remark.size(); j++)
+				result = tmp.Find(remark[j]) > -1 ? true : result;
 		}
 	}
+	return result;
+}
+
+// Проверка линии передачи
+bool CReaderExcel::IsArinc()
+{
+	CString line;	// Строка линии передачи
+	Cell cell;		// Ячейка
+	bool result;
+	if (work.FindCell(line, cell))
+		line = work.CellValue(cell.row, cell.column + 1);
+	line.Find(ARINC) != -1 ? result = true : result = false;
 	return result;
 }
 
@@ -621,5 +909,4 @@ bool CReaderExcel::ExtensionChecker(const CString& path)
 
 	return result;
 }
-
 #pragma endregion

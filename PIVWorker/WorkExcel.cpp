@@ -16,8 +16,6 @@ CWorkExcel::CWorkExcel(void)
 	app.put_UserControl(FALSE);
 	books.AttachDispatch(app.get_Workbooks());
 	cells = NULL;
-	if (settings.GetNpBase())
-		ReadNpBase();
 }
 
 // Деструктор
@@ -31,157 +29,6 @@ CWorkExcel::~CWorkExcel(void)
 	app.ReleaseDispatch();
 	delete cells;
 }
-#pragma region NP_BASE
-// Чтение номеров наборов из папки odb
-void CWorkExcel::ReadNpBase()
-{
-	vector<CString> fileNames;	// Найденные имена файлов
-	// Поиск всех файлов в папке 
-	WIN32_FIND_DATA findFiles;
-	HANDLE h;
-	CString folder = settings.GetDefaultPath() + L"\\odb\\*";
-	h = FindFirstFile(folder, &findFiles);
-	if (h != INVALID_HANDLE_VALUE)
-	{
-		do
-		{
-			fileNames.push_back(findFiles.cFileName);
-		} while (FindNextFile(h, &findFiles) != 0);
-		FindClose(h);
-	}
-	folder.Delete(folder.GetLength() - 1);	// Удаление звездочки из пути 
-	// Чтение файлов 
-	for (size_t i = 0; i < fileNames.size(); i++)
-	{
-		// Проверка разрешения
-		int posDot = fileNames[i].ReverseFind(L'.');
-		CString temp = fileNames[i].Mid(posDot, fileNames[i].GetLength() - posDot);
-		if (temp.Compare(L".np") != 0)
-			continue;
-
-		// Построчная работа с файлом
-		temp.Format(L"%s\\%s", folder, fileNames[i]);
-		CStdioFile file;
-		BOOL bOper = file.Open(temp, CFile::modeRead | CFile::typeText);
-		do
-		{
-			bOper = file.ReadString(temp);
-			// Смена кодировки с 1252 -> 1251
-			int nChar = ::WideCharToMultiByte(CP_UTF8, 0, temp, (int)temp.GetLength(), NULL, 0, NULL, NULL);
-			string result;
-			result.resize(nChar);
-			::WideCharToMultiByte(1252, 0, temp, (int)temp.GetLength(), const_cast<char*>(result.c_str()), nChar, NULL, NULL);
-			// Парсинг
-			np_s np;
-			bool error = false;
-			size_t pos = result.find_first_of("\t");
-			np.number = ParseNp(result.substr(0, pos), error);
-			if (!error)
-			{
-				result = result.substr(pos + 1, result.size());
-				pos = result.find_first_of("\t");
-				np.name = ParseFrameName(result.substr(0, pos));
-				AddToNpBase(np);
-			}
-		} while (bOper);
-		file.Close();
-	}
-}
-
-// Добавление в базу наборов параметров
-// TODO: Добавить логирование при работе с базой наборов
-void CWorkExcel::AddToNpBase(const np_s& np)
-{
-	bool find = false;
-	for (size_t i = 0; i < npBase.size() && !find; i++)
-		if (npBase[i].name.Compare(np.name) == 0)
-			find = true;
-	if (!find)
-		npBase.push_back(np);
-}
-
-// Поиск номера набора в базе  (-1 в случае не найденого номера)
-int CWorkExcel::CmpWithNpBase(const vector<CString>& sheetInfo)
-{
-
-}
-
-// Просмотр информации над шапкой для поиска имени таблицы
-vector<CString> CWorkExcel::GetSheetInfo(const Header& header)
-{
-	vector <CString> result;
-	Cell res;
-	FindCell(LINE_FIELD, res);
-	if (res.row == -1 || res.column == -1)
-		return result;
-
-	for (long i = 1; i < header.adress[header.iRow] - 1; i++)
-		for (long j = res.column + 2; j < last.column; j++)	// Смещение от определения Линии на два значения
-			if (!CellValue(i, j).IsEmpty())
-				result.push_back(CellValue(i, j));
-	return result;
-}
-
-// Парсинг номера набора
-int CWorkExcel::ParseNp(string value, bool& flag)
-{
-	int result = -1;
-	if (!value.empty())
-	{
-		char* end;
-		errno = 0;
-		result = strtol(value.c_str(), &end, 10);
-		(*end != '\0' || errno != 0) ? flag = true : flag = flag;
-	}
-	else
-		flag = true;
-	return result;
-}
-
-// Парсинг имени кадра
-CString CWorkExcel::ParseFrameName(string value)
-{
-	CString res(value.c_str());
-	int pos1, pos2;
-	// Удаление ИК обозначения
-	do
-	{
-		pos1 = res.Find(L"ИК \"");
-		pos2 = res.Find(L"ИК\"");
-		if (pos1 != -1)
-			res.Delete(pos1, 2);
-		if (pos2 != -1)
-			res.Delete(pos2, 2);
-	} while (pos1 != -1 || pos2 != -1);
-
-	// Удаление вхождений всех кавычек
-	DeleteSymbol(res, L"\"");
-	DeleteSymbol(res, L"«");
-	DeleteSymbol(res, L"»");
-	do // Удаление скобок и их содержимых
-	{
-		pos1 = res.Find(L'(');
-		pos2 = res.Find(L')');
-		int a = res.GetLength();
-		if (pos1 != -1 && pos2 != -1 && pos1 < pos2)
-			res.Delete(pos1, pos2 - pos1 + 1);
-	} while (pos1 < pos2);
-	res.Trim();
-	return res;
-}
-
-// Удаление символа из строки
-void CWorkExcel::DeleteSymbol(CString& field, const CString& sym)
-{
-	int pos;
-	do
-	{
-		pos = field.Find(sym);
-		if (pos != -1)
-			field.Delete(pos);
-	} while (pos != -1);
-}
-#pragma endregion
 
 // Открытие книги
 bool CWorkExcel::OpenBook(const CString& path) 
@@ -228,7 +75,7 @@ bool CWorkExcel::OpenSheet(const long& index)
 	range.AttachDispatch(Lp);
 
 	VARIANT items = range.get_Value2();
-	// TODO: Вылетает ошибка, когда подаешь пустой excel
+	// CRASH: Вылет приложения при подачи пустого excel файла
 	if (cells != NULL)
 		delete cells;
 
@@ -248,107 +95,14 @@ CString CWorkExcel::SheetName()	{ return sheet.get_Name(); }
 // Получение количества листов в книге
 long CWorkExcel::CountSheets()	{ return sheets.get_Count(); }
 
-// Получение значения линии передачи
-bool CWorkExcel::IsArinc() 
-{
-	CString line;
-	Cell cell;
-	bool result;
-
-	if (FindCell(LINE_FIELD, cell))
-		line = CellValue(cell.row, cell.column + 1);
-
-	line.Find(ARINC) != -1 ? result = true : result = false;
-	return result;
-}
-
-// Получение номера набора (без чтения НП из базы)
-int CWorkExcel::NpValue(const CString& comment) 
-{
-	CString item = comment;
-
-	if (!item.IsEmpty())
-	{
-		int pos = item.Find(NP_FIELD);
-		if (pos == -1)	// Поле не найдено
-			return -1;
-		item.Delete(0, pos + 3);
-		item.Trim();
-		return _wtoi(item);
-	}
-	return -1;
-}
-
-// Получение номера набора (с чтением НП из базы)
-int CWorkExcel::NpValue(const Header& head)
-{
-	if (head.adress[head.iRow] + 1 > last.row || head.adress[head.iComment] > last.column)
-		return -1;
-
-	int np;
-	settings.GetNpBase() ? np = CmpWithNpBase(GetSheetInfo(head)) : np = -1; // Поиск номера набора в базе
-	
-	if (np == -1)	// В базе не найден, ищем стандартным путем в поле номера набора
-		return NpValue(CellValue(head.adress[head.iRow] + 1, head.adress[head.iComment]));
-	else
-		return np;
-}
-
-// Получение значения номера подкадра
-int CWorkExcel::PkValue(const Header& head) 
-{
-	if (head.adress[head.iRow] - 1 < first.row || head.adress[head.iComment] > last.column)
-		return 0;
-
-	// Костыль (цикл) для прохода по таблице вправо, для поиска номера подкадра
-	for (long i = head.adress[head.iComment]; i <= last.column; i++)
-	{
-		CString item = CellValue(head.adress[head.iRow] - 1, i);
-		if (!item.IsEmpty())
-		{
-			int pos = item.ReverseFind(PK_FIELD);
-			if (pos == -1)         
-				continue;
-			item.Delete(0, pos + 1);
-			item.Trim();
-
-			// Вдруг дальше пробел
-			pos = item.Find(L' ');
-			if (pos != -1)
-				item.Delete(pos, item.GetLength());
-
-			// А вдруг перечисление через запятую (протоколы не поймешь)
-			pos = item.Find(L',');
-			if (pos != -1)
-				item.Delete(pos, item.GetLength());
-
-			int result = _wtoi(item);
-			if (result == 0)	
-				result = PK_FAILED;	
-
-			return result;
-		}
-	}
-	return PK_EMPTY;	
-}
+// Получение значения ячейки
+CString CWorkExcel::CellValue(const Cell& cell) { return CellValue(cell.row, cell.column); }
 
 // Получение значения ячейки
-CString CWorkExcel::CellValue(const Cell& cell) 
-{
-	VARIANT item;
-	if (cell.row > last.row || cell.column > last.column)
-		throw ExcelOverflow(BookName(), SheetName());
-	long index[2] = { cell.row, cell.column };
-	cells->GetElement(index, &item);
-	CString result(item);
-	result.Trim();
-	return result;
-}
-
 CString CWorkExcel::CellValue(const long& row, const long& column) 
 {
 	VARIANT item;
-	if (row > last.row || column > last.column || row < 1 || column < 1)
+	if (row > last.row || column > last.column || row < first.row || column < first.row)
 		throw ExcelOverflow(BookName(), SheetName());
 	long index[2] = { row, column };
 	cells->GetElement(index, &item);
@@ -357,11 +111,14 @@ CString CWorkExcel::CellValue(const long& row, const long& column)
 	return result;
 }
 
+// Получение границы страницы excel листа
+Cell CWorkExcel::Boundary() { return last; }
+
 // Получение количества строк в листе
 long CWorkExcel::CountRows() { return last.row; }
 
 // Поиск заголовков на текущем листе
-bool CWorkExcel::FindHeader(Header& header) 
+bool CWorkExcel::FindHeader(Header& header, const bool& arinc) 
 {
 	for (size_t i = 0; i < header.list.size(); i++) 
 	{
@@ -371,13 +128,13 @@ bool CWorkExcel::FindHeader(Header& header)
 		
 		for (it; !bFind; it++) 
 		{
-			if (!IsArinc() && i + 1 == header.iAdress)
+			if (!arinc && i + 1 == header.iAdress)
 				break;
 			if ((it == header.list[i].end()) && !bFind)
 				return false;
 			bFind = FindCell(*it, cell);
 		}
-		if (!IsArinc() && i + 1 == header.iAdress) 
+		if (!arinc && i + 1 == header.iAdress) 
 		{
 			header.adress[i + 1] = -1;
 			continue;

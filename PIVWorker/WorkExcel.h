@@ -12,31 +12,6 @@
 #include "excel\CWorksheets.h"
 
 #include "MyException.h"
-#include "Settings.h"
-
-// Обозначения способов передачи данных
-#define LINE_FIELD L"Линия"	// Ячейка записи линии передачи данных
-#define ARINC L"РТМ"	
-#define MKIO L"МКИО"
-
-// Специальные обозначения для MKIO
-const vector<CString> SIGN_FIELD = { L"Зн-", L"зн.", L"Зн.", L"зн-" };	// Наличие отрицательного символа
-#define NP_FIELD L"NP="		// Значение номера набора
-#define PK_FIELD L'№'		// Номер подкадра
-#define PK_EMPTY -1			// Номер подкадра отсутствует
-#define PK_FAILED -2		// Номер подкадра не удалось считать
-
-// Специальные обозначения для ARINC
-#define ARINC_REMARK L"*Примечание:"
-
-// Примечания в конце таблицы
-const vector<CString> REMARK = { L"Примечания:", L"Примечание:" };
-
-// Структура для базы номеров наборов 
-struct np_s {
-	int number = 0;
-	CString name = L"";
-};
 
 // Хранение заголовков таблицы протоколов
 struct Header 
@@ -81,20 +56,19 @@ public:
 	bool OpenSheet(const long& index);	// Открытие листа
 	CString SheetName();		// Получение имени текущего листа
 	long CountSheets();			// Получение количества листов в книге
-	long CountRows();			// Получение количества строк на текущем листе
+	long CountRows();			// Получение количества строк на текущем листе	
 
-	bool IsArinc();							// Значение линии передачи (arinc или mkio)
-	int NpValue(const CString& comment);	// Значение номера набора без поиска из базы
-	int NpValue(const Header& head);		// Номер набора с поиском из базы
-	int PkValue(const Header& head);		// Значение номера подкадра			
+	// Получение значения ячейки 
+	CString CellValue(const long& row, const long& column);	
+	CString CellValue(const Cell& cell);
+	Cell Boundary();	// Получение границы страницы excel листа
 
-	CString CellValue(const long& row, const long& column);		// Значение ячейки
-	CString CellValue(const Cell& cell);					
-
-	long CPrevEmpty(const long& row, const long& column);		// Количество пустых ячеек до
-	long CNextEmpty(const long& row, const long& column);		// Количество пустых ячеек после 
-	long GetMerge(long& row, const long& column);				// Кол-во слитых ячеек
-	bool FindHeader(Header& header);							// Поиск заголовков на текущем листе
+	// Работа с excel
+	long CPrevEmpty(const long& row, const long& column);	// Количество пустых ячеек до
+	long CNextEmpty(const long& row, const long& column);	// Количество пустых ячеек после 
+	long GetMerge(long& row, const long& column);			// Кол-во слитых ячеек
+	bool FindCell(const CString& field, Cell& cell);		// Поиск ячейки по содержимому, в противном cell(-1,-1)
+	bool FindHeader(Header& header, const bool& arinc);		// Поиск заголовков на текущем листе
 private:
 	CApplication app;	
 	CWorkbooks books;	
@@ -102,22 +76,9 @@ private:
 	CWorksheets sheets;	
 	CWorksheet sheet;	
 
-	stgdll::CSettings& settings = stgdll::CSettings::Instance();
 	COleSafeArray* cells;	// Данные текущего листа
 	Cell first, last;		// Значения первой и последней ячейки текущего листа
-	vector <np_s> npBase;	// База номеров наборов
-
-	bool FindCell(const CString& field, Cell& cell);	// Поиск ячейки по содержимому, в противном cell(-1,-1)
 	CString LongToChar(const long& column);						// Преобразование long к char
 	void StepLongToChar(const long& column, CString& result);	// Доп функция: Если в обозначении ячейки уже больше одной буквы
-	
-	// NP_BASE
-	void ReadNpBase();		// Чтение базы наборов параметров
-	void AddToNpBase(const np_s&);	// Добавление в базу наборов параметров
-	int CmpWithNpBase(const vector<CString>& sheetInfo);	// Поиск номера набора в базе  (-1 в случае не найденого номера)
-	vector <CString> GetSheetInfo(const Header& header);	// Просмотр информации над шапкой для поиска имени таблицы
-	void DeleteSymbol(CString&, const CString&);	// Удаление символа из строки
-	int ParseNp(string value, bool& flag);	// Парсинг номера набора
-	CString ParseFrameName(string value);	// Парсинг имени кадра
 };
 

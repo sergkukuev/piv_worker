@@ -9,6 +9,10 @@
 #include "WorkExcel.h"
 #include "MyException.h"
 
+#define PK_FIELD L'№'	// Символ номера подкадра
+#define ARINC L"РТМ"	// Линия передачи arinc
+#define MKIO L"МКИО"	// Линия передачи 
+
 // Информация о повторения в ARINC протоколах
 struct arincData
 {
@@ -28,41 +32,56 @@ public:
 
 	bookData GetBook(const CString& pathToExcel);	// Чтение протокола
 private:
-	stgdll::CSettings& settings = stgdll::CSettings::Instance();	// Указатель на настройки
-	logdll::CLogger& logger = logdll::CLogger::Instance();	// Логирование
+	stgdll::CSettings& settings = stgdll::CSettings::Instance();	// Настройки
+	logdll::CLogger& logger = logdll::CLogger::Instance();			// Логирование
 	vector <CString> extension;	// Допустимые расширения файлов
 	CWorkExcel work;			// Работа пространство excel файла
 	Header header;				// Информация о заголовках
 
-	void Initialize();
+	// Константные значения, требуемые для чтения ПИВ
+	const enum pkStats {failed = -2 /* неудача */, empty /* отсутствие */};	// Статусы чтение номера подкадра
+	const CString line = L"Линия";	// Обозначение линии передачи данных
+	const CString arincRemark = L"*Примечание:";	// Обозначение примечания в ARINC
+	const vector<CString> remark = { L"Примечания:", L"Примечание:" };	// Примечания в конце таблицы
+	const vector <CString> npId = { L"NP", L"IK_MFPI" };	// Идентификаторы, в которых зашиты номера наборов в ПИВ
+	const vector<CString> sign = { L"Зн-", L"зн.", L"Зн.", L"зн-" };	// Наличие отрицательного символа
+
+	// Основные методы
+	void Initialize();	// Инициализация
 	void GetSheets(vector <sheetData>& sheets);	// Чтение таблиц протоколов (листов)
 	void GetSignals(vector <signalData>& signals, const bool& bArinc);	// Чтение параметров на листе
 
+	// DoubleWord (Обработка двойных слов)
 	void ConcatDW(vector <signalData>& signals);	// Объединение двойных слов (установка указателя)
 	void findDW(vector<signalData>& signals, size_t start, CString old, vector <CString> revert);	// Поиск второй части двойного слова
 
-	// ARINC
+	// Arinc (Работа с параметрами при линии передачи arinc)
 	void ArincChecker(arincData& arinc, long& row);	//  Поиск повторяющихся блоков
 	void GetArinc(arincData& arinc, const long& row, CString field);	// Чтение циклов повторений в ARINC протоколе (порядковый номер в кадре)
-
-	// Read_params
-	// Чтение параметров
-	intData GetNumWord(CString field);	// Номера слова
-	intData GetAdress(CString field, int current);	// Адреса
+	intData GetAdress(CString field, int current);	// Чтение адреса
 	int GetSubIndex(CString& numeric);				// Получение подстрочного индекса адреса и удаление его из строки
-	vector <int> StepAdress(CString adress, bool& flag);		// Парсинг поля адреса и преобразование его значений в int
+	vector <int> StepAdress(CString adress, bool& flag);	// Парсинг поля адреса и преобразование его значений в int
+
+	// SheetInfo (Обработка доп параметров текущего листа)
+	int FindSignalById(const vector<signalData>& signals, const CString& id);	// Поиск сигнала по идентификатору
+	int GetNp(const vector<signalData>& signals);	// Значение номера набора параметров
+	int GetPk();	// Значение номера подкадра
+
+	// ReadParameters (Чтение параметров)
+	intData GetNumWord(CString field);	// Номера слова
 	void GetMinMaxCsr(signalData& signal, const long& row);		// Мин, макс и цср
 	intData GetBits(CString field, const int& size);			// Используемых разрядов
 	vector <int> StepBits(CString bits, bool& flag);			// Парсинг поля разрядов и преобразование в int
 	CString GetComment(long row, const int& size, bool& flag);	// Примечания
 	
-	// Converters
+	// Converters (Конвертирование строк в другие форматы)
 	int GetInt(CString field, bool& flag);		// Конвертер int значения
 	double GetDouble(CString field, bool& flag);	// Конвертер double значения
 
-	// Checkers
+	// Checkers (Различные проверки)
 	bool IsTitle(const long& row);	// Проверка строки на заголовок
 	bool IsEmpty(const long& row);	// Проверка строки на пустоту
 	bool IsRemark(const long& row);	// Проверка строки на примечание
+	bool IsArinc();					// Проверка линии передачи
 	bool ExtensionChecker(const CString& path); // Проверка расширения файла
 };
