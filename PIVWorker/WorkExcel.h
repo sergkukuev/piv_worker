@@ -84,8 +84,8 @@ public:
 	long CountRows();			// Получение количества строк на текущем листе
 
 	bool IsArinc();							// Значение линии передачи (arinc или mkio)
-	int NpValue(const CString& comment);	// Значение номера набора
-	int NpValue(const Header& head);		
+	int NpValue(const CString& comment);	// Значение номера набора без поиска из базы
+	int NpValue(const Header& head);		// Номер набора с поиском из базы
 	int PkValue(const Header& head);		// Значение номера подкадра			
 
 	CString CellValue(const long& row, const long& column);		// Значение ячейки
@@ -95,7 +95,6 @@ public:
 	long CNextEmpty(const long& row, const long& column);		// Количество пустых ячеек после 
 	long GetMerge(long& row, const long& column);				// Кол-во слитых ячеек
 	bool FindHeader(Header& header);							// Поиск заголовков на текущем листе
-
 private:
 	CApplication app;	
 	CWorkbooks books;	
@@ -106,16 +105,18 @@ private:
 	stgdll::CSettings& settings = stgdll::CSettings::Instance();
 	COleSafeArray* cells;	// Данные текущего листа
 	Cell first, last;		// Значения первой и последней ячейки текущего листа
+	vector <np_s> npBase;	// База номеров наборов
 
 	bool FindCell(const CString& field, Cell& cell);	// Поиск ячейки по содержимому, в противном cell(-1,-1)
 	CString LongToChar(const long& column);						// Преобразование long к char
 	void StepLongToChar(const long& column, CString& result);	// Доп функция: Если в обозначении ячейки уже больше одной буквы
 	
 	// NP_BASE
-	vector <np_s> npBase;		// База номеров наборов
-	void ReadNpBase();	// Чтение базы наборов параметров
+	void ReadNpBase();		// Чтение базы наборов параметров
 	void AddToNpBase(const np_s&);	// Добавление в базу наборов параметров
-	void DeleteSymbol(CString&, const CString&); // Удаление символа из строки
+	int CmpWithNpBase(const vector<CString>& sheetInfo);	// Поиск номера набора в базе  (-1 в случае не найденого номера)
+	vector <CString> GetSheetInfo(const Header& header);	// Просмотр информации над шапкой для поиска имени таблицы
+	void DeleteSymbol(CString&, const CString&);	// Удаление символа из строки
 	int ParseNp(string value, bool& flag);	// Парсинг номера набора
 	CString ParseFrameName(string value);	// Парсинг имени кадра
 };

@@ -16,8 +16,8 @@ CWorkExcel::CWorkExcel(void)
 	app.put_UserControl(FALSE);
 	books.AttachDispatch(app.get_Workbooks());
 	cells = NULL;
-	// TODO: Создать в настройках флаг учета чтения базы номеров наборов
-	ReadNpBase();
+	if (settings.GetNpBase())
+		ReadNpBase();
 }
 
 // Деструктор
@@ -98,6 +98,28 @@ void CWorkExcel::AddToNpBase(const np_s& np)
 			find = true;
 	if (!find)
 		npBase.push_back(np);
+}
+
+// Поиск номера набора в базе  (-1 в случае не найденого номера)
+int CWorkExcel::CmpWithNpBase(const vector<CString>& sheetInfo)
+{
+
+}
+
+// Просмотр информации над шапкой для поиска имени таблицы
+vector<CString> CWorkExcel::GetSheetInfo(const Header& header)
+{
+	vector <CString> result;
+	Cell res;
+	FindCell(LINE_FIELD, res);
+	if (res.row == -1 || res.column == -1)
+		return result;
+
+	for (long i = 1; i < header.adress[header.iRow] - 1; i++)
+		for (long j = res.column + 2; j < last.column; j++)	// Смещение от определения Линии на два значения
+			if (!CellValue(i, j).IsEmpty())
+				result.push_back(CellValue(i, j));
+	return result;
 }
 
 // Парсинг номера набора
@@ -240,7 +262,7 @@ bool CWorkExcel::IsArinc()
 	return result;
 }
 
-// Получение номера набора
+// Получение номера набора (без чтения НП из базы)
 int CWorkExcel::NpValue(const CString& comment) 
 {
 	CString item = comment;
@@ -257,21 +279,19 @@ int CWorkExcel::NpValue(const CString& comment)
 	return -1;
 }
 
-// Получение номера набора
+// Получение номера набора (с чтением НП из базы)
 int CWorkExcel::NpValue(const Header& head)
 {
 	if (head.adress[head.iRow] + 1 > last.row || head.adress[head.iComment] > last.column)
 		return -1;
 
-	CString item = CellValue(head.adress[head.iRow] + 1, head.adress[head.iComment]);
-	if (!item.IsEmpty())
-	{
-		int pos = item.Find(NP_FIELD);
-		item.Delete(0, pos + 3);
-		item.Trim();
-		return _wtoi(item);
-	}
-	return 0;
+	int np;
+	settings.GetNpBase() ? np = CmpWithNpBase(GetSheetInfo(head)) : np = -1; // Поиск номера набора в базе
+	
+	if (np == -1)	// В базе не найден, ищем стандартным путем в поле номера набора
+		return NpValue(CellValue(head.adress[head.iRow] + 1, head.adress[head.iComment]));
+	else
+		return np;
 }
 
 // Получение значения номера подкадра
@@ -328,7 +348,7 @@ CString CWorkExcel::CellValue(const Cell& cell)
 CString CWorkExcel::CellValue(const long& row, const long& column) 
 {
 	VARIANT item;
-	if (row > last.row || column > last.column)
+	if (row > last.row || column > last.column || row < 1 || column < 1)
 		throw ExcelOverflow(BookName(), SheetName());
 	long index[2] = { row, column };
 	cells->GetElement(index, &item);
