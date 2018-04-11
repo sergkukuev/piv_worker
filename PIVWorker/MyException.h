@@ -16,6 +16,7 @@ protected:
 };
 
 // Исключения класса CReaderExcel
+#pragma region ReaderExcel
 class BadTypeException: public MyException	
 {
 public:
@@ -23,27 +24,16 @@ public:
 	virtual CString GetMsg() 
 	{
 		CString result;
-		result.Format(L"Неверное расширение файла \"%s\"!", book);
+		result.Format(L"Неверное расширение файла \"%s\"", book);
 		return result;
 	};
 };
 
-class ExcelOverflow : public MyException 
-{
-public:
-	ExcelOverflow(const CString& book, const CString& sheet) { this->book = book; this->sheet = sheet; }
-	virtual CString GetMsg() 
-	{
-		CString result;
-		result.Format(L"В протоколе \"%s\" на листе \"%s\" не удалось прочесть данные.", book, sheet);
-		return result;
-	}
-};
-
+// Работа с открытием екселя
 class AccessExcelException : public MyException 
 {
 public:
-	virtual CString GetMsg() { return L"Запустить Excel-приложение не удалось!"; };
+	virtual CString GetMsg() { return L"Запустить Excel-приложение не удалось"; };
 };
 
 class ReadBookException: public MyException 
@@ -53,23 +43,50 @@ public:
 	virtual CString GetMsg() 
 	{
 		CString result;
-		result.Format(L"Не удалось открыть протокол \"%s\" для чтения!", book);
+		result.Format(L"Не удалось открыть протокол \"%s\" для чтения", book);
 		return result;
 	};
 };
 
+// Работа с листом екселя
 class NotAllHeaderException : public MyException 
 {
 public:
-	NotAllHeaderException(const CString& book, const CString& sheet) {	this->sheet = sheet;	this->book = book;	};
+	NotAllHeaderException(const CString& sheet) { this->sheet = sheet; };
 	virtual CString GetMsg() 
 	{ 
 		CString result;
-		result.Format(L"Не удалось найти все заголовки на листе \"%s\" в протоколе \"%s\"!", sheet, book);
+		result.Format(L"На листе \"%s\" не удалось найти все заголовки", sheet);
 		return result;
 	};
 };
 
+class ExcelOverflow : public MyException
+{
+public:
+	ExcelOverflow(const CString& sheet) { this->sheet = sheet; }
+	virtual CString GetMsg()
+	{
+		CString result;
+		result.Format(L"На листе \"%s\" произошел выход за границы таблицы", sheet);
+		return result;
+	}
+};
+
+class ReadSheetException : public MyException
+{
+public:
+	ReadSheetException(const CString& sheet) { this->sheet = sheet; }
+	virtual CString GetMsg()
+	{
+		CString result;
+		result.Format(L"На листе \"%s\ отсутствуют данные", sheet);
+		return result;
+	}
+};
+#pragma endregion
+
+#pragma region OTHER
 // Исключения для класса CTest
 class UndefinedError : public MyException 
 {
@@ -109,3 +126,4 @@ class EmptyPathException : public MyException
 public:
 	virtual CString GetMsg() { return L"Путь для хранения отчета и txt не задан!"; };
 };
+#pragma endregion

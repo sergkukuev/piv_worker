@@ -77,10 +77,13 @@ bool CWorkExcel::OpenSheet(const long& index)
 	range.AttachDispatch(Lp);
 
 	VARIANT items = range.get_Value2();
-	// CRASH: Вылет приложения при подачи пустого excel файла
 	if (cells != NULL)
 		delete cells;
 
+	// Пустой лист, с ним делать нечего
+	if (items.vt == VT_EMPTY || items.vt == VT_NULL)
+		return false;
+	
 	// Получение границ листа
 	cells = new COleSafeArray(items);
 	cells->GetLBound(1, &first.row);
@@ -105,7 +108,7 @@ CString CWorkExcel::CellValue(const long& row, const long& column)
 {
 	VARIANT item;
 	if (row > last.row || column > last.column || row < first.row || column < first.row)
-		throw ExcelOverflow(BookName(), SheetName());
+		throw ExcelOverflow(SheetName());
 	long index[2] = { row, column };
 	cells->GetElement(index, &item);
 	CString result(item);

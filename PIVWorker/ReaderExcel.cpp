@@ -62,7 +62,7 @@ bookData CReaderExcel::GetBook(const CString& pathToExcel)
 	// logger.Write(L"Добавление протокола \"" + book.name + L"\"...");
 	logger >> L"Добавление протокола \"" + book.name + L"\"...";
 	GetSheets(book.sheets);
-	logger >> L"Добавление протокола \"" + book.name + L"\" завершено";
+	//logger >> L"Добавление протокола \"" + book.name + L"\" завершено";
 
 	return book;
 }
@@ -73,28 +73,34 @@ void CReaderExcel::GetSheets(vector <sheetData>& sheets)
 	sheets.resize(work.CountSheets());
 	for (long i = 1; i < work.CountSheets() + 1; i++)
 	{
-		work.OpenSheet(i);
-		sheets[i - 1].name = work.SheetName();
-		sheets[i - 1].arinc = IsArinc();
-
-		if (!work.FindHeader(header, sheets[i - 1].arinc))	// Поиск заголовков таблицы
-			throw NotAllHeaderException(work.BookName(), sheets[i - 1].name);
-
-		header.adress[iRow]++;
-		GetSignals(sheets[i - 1].signals, sheets[i - 1].arinc);
-		settings.GetProject() == stgdll::project::kprno35 ? sheets[i - 1].pk = GetPuiPage(sheets[i - 1].signals) : sheets[i - 1].pk = GetPk();
-		sheets[i - 1].arinc ? sheets[i - 1].np = -1 : sheets[i - 1].np = GetNp(sheets[i - 1].signals);
-		
-		if (sheets[i - 1].pk < 0)	// Значение меньше нуля -> ошибка чтения
+		try
 		{
-			CString msg;
-			sheets[i - 1].pk == pkStats::empty ? msg = L"Номер подкадра отсутствует" : L"Не удалось считать номер подкадра";
-			msg.Format(L"%s на листе \"%s\"", msg, sheets[i - 1].name);
-			logger >> msg;
-		}
+			if (!work.OpenSheet(i))	// Лист пустой
+				throw ReadSheetException(work.SheetName());
 
-		if (sheets[i - 1].np < 0)	// Значение меньше нуля -> ошибка чтения
-			logger >> L"Не удалось считать номер набора параметров на листе \"" + sheets[i - 1].name + L"\"";
+			sheets[i - 1].name = work.SheetName();
+			sheets[i - 1].arinc = IsArinc();
+
+			if (!work.FindHeader(header, sheets[i - 1].arinc))	// Поиск заголовков таблицы
+				throw NotAllHeaderException(sheets[i - 1].name);
+
+			header.adress[iRow]++;
+			GetSignals(sheets[i - 1].signals, sheets[i - 1].arinc);
+			settings.GetProject() == stgdll::project::kprno35 ? sheets[i - 1].pk = GetPuiPage(sheets[i - 1].signals) : sheets[i - 1].pk = GetPk();
+			sheets[i - 1].arinc ? sheets[i - 1].np = -1 : sheets[i - 1].np = GetNp(sheets[i - 1].signals);
+
+			if (sheets[i - 1].pk < 0)	// Значение меньше нуля -> ошибка чтения
+				sheets[i - 1].pk == pkStats::empty ?
+					logger >> L"Номер подкадра отсутствует на листе \"" + sheets[i - 1].name + L"\"" :
+					logger >> L"Не удалось считать номер подкадра на листе \"" + sheets[i - 1].name + L"\"";
+
+			if (sheets[i - 1].np < 0)	// Значение меньше нуля -> ошибка чтения
+				logger >> L"Не удалось считать номер набора параметров на листе \"" + sheets[i - 1].name + L"\"";
+		}
+		catch (MyException& exc)
+		{
+			logger >> exc.GetMsg();
+		}
 	}
 }
 
