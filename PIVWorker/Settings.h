@@ -24,6 +24,19 @@ namespace stgdll
 		bool bNpBase = false;		// Использование базы с номерами наборов
 	};
 
+	// Рекурсивная функция, которая создает папку даже при отсутствии предыдущего пути
+	static bool CreateDir(CString path)
+	{
+		BOOL result = !PathIsDirectory(path);
+		while (CreateDirectory(path, NULL) == FALSE && result)
+		{
+			int pos = path.ReverseFind(L'\\');
+			CString str = path.Mid(0, pos);
+			str.ReverseFind(L'\\') != -1 ? result = CreateDir(str) : result = FALSE;
+		}
+		return result;
+	}
+
 	// Класс настроек
 	class PIV_DECLARE CSettings
 	{
