@@ -20,7 +20,6 @@ CLogger::CLogger()
 	stgdll::CSettings& stg = stgdll::CSettings::Instance();	// Настройки DLL
 	path = stg.GetDefaultPath();
 	path.Format(L"%s\\%s", path, lgFolder);
-	CreateDirectory(path, NULL);
 	WriteInFile(lgSlash);
 	WriteInFile(stDLL[start]);
 }
@@ -71,12 +70,12 @@ CLogger& CLogger::operator>>(const CString& message)
 	return *this;
 }
 
-// Запись в файл логов с изменением статуса DLL
+// Запись в файл логов с изменением статуса DLL ("..." чтобы не отображалось в статус баре)
 void CLogger::Write(const CString& msg, const bool& bErr)
 {
 	WriteInFile(msg);
 	EnterCriticalSection(&csStat);
-	bErr ? status = L"При операции произошла ошибка (подробнее в log.txt)" : status = msg;
+	bErr ? status = L"При выполнении операции произошла ошибка (см. лог-файлы)" : status = msg;
 	if (msg.Find(L"...") == -1)
 		state = false;
 	LeaveCriticalSection(&csStat);
@@ -88,14 +87,27 @@ void CLogger::WriteInFile(CString message)
 	SYSTEMTIME st;
 	GetLocalTime(&st);
 	if (message.CompareNoCase(lgSlash) != 0)
-		message.Format(L"%02d:%02d:%02d:\t%s\n", st.wHour, st.wMinute, st.wSecond, message);
+		message.Format(L"%02d:%02d:%02d:\t%s\r\n", st.wHour, st.wMinute, st.wSecond, message);
 
 	CString logPath;
+	stgdll::CreateDir(path);
 	logPath.Format(L"%s\\%02d_%02d_%d.txt", path, st.wDay, st.wMonth, st.wYear);
-
 	EnterCriticalSection(&csFile);
-	std::ofstream logStream(logPath, std::ios::out | std::ios::app);
-	logStream << CT2A(message);
-	logStream.close();
+	CStdioFile file;
+	BOOL bOper;
+	PathFileExists(logPath) ? bOper = file.Open(logPath, CFile::modeNoTruncate | CFile::modeWrite | CFile::typeUnicode) :	// Файл существует, открываем его
+		bOper = file.Open(logPath, CFile::modeCreate | CFile::modeWrite | CFile::typeUnicode);	// Файл не существует, создаем его
+
+	if (bOper)
+	{
+		file.SeekToEnd();
+		// Преобразование к utf-8
+		CT2CA res(message, CP_UTF8);
+		file.Write(res, (UINT)::strlen(res)); 
+		//file.WriteString(message);
+		file.Close();
+	}
+	else
+		AfxMessageBox(L"Ошибка записи данных в лог-файл", MB_ICONERROR);	// Ошибка создания лог файла
 	LeaveCriticalSection(&csFile);
 }

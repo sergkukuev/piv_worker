@@ -2,14 +2,12 @@
 
 #include <cstring>
 #include <vector>
-#include <fstream>
 
 #include "DllDeclare.h"
 
 namespace logdll
 {
-	const CString lgBr = L"\n\t\t\t\t\t\t";	// Перенос строки в лог файле
-	const CString lgSlash = L"-----------------------------------------------------------------------------------------------------------------------------------\n\n";
+	const CString lgSlash = L"-----------------------------------------------------------------------------------------------------------------------------------\r\n\r\n";
 	const CString lgFolder = L"log";
 	
 	const enum stIndex {start, end};	// Индексы для статусов основного приложения и dll
@@ -32,7 +30,7 @@ namespace logdll
 		CLogger& operator>> (const CString& msg);	// Запись в лог без изменения статуса DLL (оператор)
 
 		// Запись с изменением состояния DLL
-		void Write(const CString& msg);				// Запись текущей операции
+		void Write(const CString& msg);				// Запись текущей операции ("..." чтобы не отображалось в статус баре)
 		void WriteError(const CString& msg);		// Запись ошибки
 
 		bool IsRead();			// Установка флага считывания статуса приложением, использующим DLL
