@@ -144,15 +144,13 @@ bool CReport::WriteParamTitle(ofstream& file, const signalData& signal, const sh
 	buffer.Remove(L' ');
 	if (signal.repWord)	// ѕараметр повтор€етс€ в других листах, необходимо добавить в им€ номер подкадра
 	{
-		CString pk;
-		pk.Format(L"%d", info.pk);
+		CString msg;
+		msg.Format(L"ѕараметр %s (лист \"%s\") в протоколе  не €вл€етс€ уникальным", signal.title[1], info.name);
+		logger >> msg;
 		if (info.pk == PK_EMPTY || info.pk == PK_FAILED)
-			logger >> L"ѕараметр " + signal.title[1] + L" (лист \"" + info.name + L"\") в протоколе  не €вл€етс€ уникальным, добавить подкадр к ID не удалось (PK = " + pk + L")";
+			info.np > 0 ? buffer.Format(L"%s_%d", buffer, info.np) : buffer.Format(L"%s_1", buffer);
 		else
-		{
 			buffer.Format(L"%s_%d", buffer, info.pk);
-			logger >> L"ѕараметр " + signal.title[1] + L" (лист \"" + info.name + L"\") в протоколе не €вл€етс€ уникальным (PK = " + pk + L")";
-		}
 	}
 
 	buffer.Format(L"PAR=%s\n", buffer);	// «апись обозначени€ сигнала
@@ -190,7 +188,6 @@ void CReport::WriteParamAdr(ofstream& file, const signalData& signal, const para
 		file << "\tMERGE\n";
 		buffer.Format(L"\t\tWDADDR = %d,%d,%d\n", signal.numWord.value[0], signal.bit.value[0], max);
 		file << CT2A(buffer);
-
 		max = (signal.part->bit.value[1] == -1) ? signal.part->bit.value[0] : signal.part->bit.value[1];
 		buffer.Format(L"\t\tWDADDR = %d,%d,%d\n", signal.part->numWord.value[0], signal.part->bit.value[0], max);
 		file << CT2A(buffer);

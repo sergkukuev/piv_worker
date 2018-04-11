@@ -128,8 +128,8 @@ void CReport::InfoTable(CStdioFile& file, const amountInfo& amount)
 		+ T(3) + L"<p>Кол-во листов с ошибками: " + IntToCString(amount.withError) + L"</p>\n"
 		+ T(3) + L"<p>Количество листов без ошибок: " + IntToCString(amount.withoutError) + L"</p>\n"
 		+ T(3) + L"<p>Всего ошибок: " + IntToCString(amount.error) + L"</p>\n"
-		+ T(3) + L"<p>Всего предупреждений: " + IntToCString(amount.warning) + L"</p>\n"*/
-		//+ T(2) + L"<div class=\"center\" id = \"info\" style = \"padding-top: 15px;\">\n"
+		+ T(3) + L"<p>Всего предупреждений: " + IntToCString(amount.warning) + L"</p>\n"
+		+ T(2) + L"<div class=\"center\" id = \"info\" style = \"padding-top: 15px;\">\n"*/
 		T(3) + L"<table class=info>\n"
 		+ T(4) + L"<thead>\n"
 		+ T(4) + L"<tr>\n"
