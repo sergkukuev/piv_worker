@@ -80,9 +80,12 @@ void CReaderExcel::GetSheets(vector <sheetData>& sheets)
 		if (!work.FindHeader(header, sheets[i - 1].arinc))	// Поиск заголовков таблицы
 			throw NotAllHeaderException(work.BookName(), sheets[i - 1].name);
 
-		sheets[i - 1].pk = GetPk();
-
-		if (sheets[i - 1].pk < 0)
+		header.adress[iRow]++;
+		GetSignals(sheets[i - 1].signals, sheets[i - 1].arinc);
+		settings.GetProject() == stgdll::project::kprno35 ? sheets[i - 1].pk = GetPuiPage(sheets[i - 1].signals) : sheets[i - 1].pk = GetPk();
+		sheets[i - 1].arinc ? sheets[i - 1].np = -1 : sheets[i - 1].np = GetNp(sheets[i - 1].signals);
+		
+		if (sheets[i - 1].pk < 0)	// Значение меньше нуля -> ошибка чтения
 		{
 			CString msg;
 			sheets[i - 1].pk == pkStats::empty ? msg = L"Номер подкадра отсутствует" : L"Не удалось считать номер подкадра";
@@ -90,12 +93,7 @@ void CReaderExcel::GetSheets(vector <sheetData>& sheets)
 			logger >> msg;
 		}
 
-		header.adress[iRow]++;
-
-		GetSignals(sheets[i - 1].signals, sheets[i - 1].arinc);
-		sheets[i - 1].arinc ? sheets[i - 1].np = -1 : sheets[i - 1].np = GetNp(sheets[i - 1].signals);
-
-		if (sheets[i - 1].np == 0)
+		if (sheets[i - 1].np < 0)	// Значение меньше нуля -> ошибка чтения
 			logger >> L"Не удалось считать номер набора параметров на листе \"" + sheets[i - 1].name + L"\"";
 	}
 }
@@ -104,6 +102,7 @@ void CReaderExcel::GetSheets(vector <sheetData>& sheets)
 void CReaderExcel::GetSignals(vector <signalData>& signals, const bool& bArinc)
 {
 	arincData arinc;
+	// TODO: Расшифровать протокол вертушки 930м
 	for (long merge = 1, row = header.adress[iRow], column; row <= work.CountRows(); row += merge, merge = 1)
 	{
 		signalData signal;
@@ -402,48 +401,80 @@ int CReaderExcel::FindSignalById(const vector<signalData>& signals, const CStrin
 // Получение значение номера набора
 int CReaderExcel::GetNp(const vector<signalData>& signals) 
 {
-	int index = -1, iNp = -1;
-	for (size_t i = 0; i < npId.size(); i++)	// Находим индекс идентификатора с номером набора
+	return ParseValueById(signals, npId);
+}
+
+// Получение значения страницы ПУИ
+int CReaderExcel::GetPuiPage(const vector<signalData>& signals)
+{
+	return ParseValueById(signals, puiId);
+}
+
+// Выделение значения из комментария по идентификатору (для ПУИ и НП)
+int CReaderExcel::ParseValueById(const vector<signalData>& signals, const vector<CString>& id)
+{
+	int temp = -1, iId = -1;
+	for (size_t i = 0; i < id.size(); i++)	// Находим индекс идентификатора
 	{
-		index = FindSignalById(signals, npId[i]);
-		if (index != -1)
+		temp = FindSignalById(signals, id[i]);
+		if (temp != -1)
 		{
-			iNp = (int)i;
+			iId = (int)i;
 			break;
 		}
 	}
+	// Соответствующий идентификатор не найден
+	if (temp == -1)
+		return temp;
 
-	CString comment = signals[index].comment;
+	CString comment = signals[temp].comment;
 	if (!comment.IsEmpty())
 	{
-		int pos = comment.Find(npId[iNp]);
+		int pos = comment.Find(id[iId]);
 		if (pos == -1)	// Поле не найдено
 			return -1;
-		comment.Remove(L' ');	// Удаляем все пробелы для удобного выделения номера кадра
+		comment.Remove(L' ');	// Удаляем все пробелы для удобного выделения значения
 		bool result = true;
-		index = GetInt(comment.Mid(pos + npId[iNp].GetLength() + 1), result);	// Длина идентификатора + символ "="
+		temp = GetInt(comment.Mid(pos + id[iId].GetLength() + 1), result);	// Длина идентификатора + символ "="
 	}
-	return index;
+	return temp;
 }
 
-/*
-// Получение номера набора (с чтением НП из базы)
-int CWorkExcel::NpValue(const Header& head)
+// Получение значения номера подкадра
+int CReaderExcel::GetPk()
 {
-	if (head.adress[head.iRow] + 1 > last.row || head.adress[head.iComment] > last.column)
-		return -1;
+	// CRUTCH: Цикл для прохода по таблице вправо, чтобы найти номер подкадра
+	for (long i = header.adress[iComment]; i <= work.Boundary().column; i++)
+	{
+		CString item = work.CellValue(header.adress[iRow] - 1, i);
+		if (!item.IsEmpty())
+		{
+			int pos = item.ReverseFind(PK_FIELD);
+			if (pos == -1)
+				continue;
+			item.Delete(0, pos + 1);
+			item.Trim();
+			// Вдруг дальше пробел
+			pos = item.Find(L' ');
+			if (pos != -1)
+				item.Delete(pos, item.GetLength());
+			// А вдруг перечисление через запятую (протоколы не поймешь)
+			pos = item.Find(L',');
+			if (pos != -1)
+				item.Delete(pos, item.GetLength());
 
-	int np;
-	settings.GetNpBase() ? np = CmpWithNpBase(GetSheetInfo(head)) : np = -1; // Поиск номера набора в базе
+			int result = _wtoi(item);
+			if (result == 0)
+				result = pkStats::failed;
 
-	if (np == -1)	// В базе не найден, ищем стандартным путем в поле номера набора
-		return NpValue(CellValue(head.adress[head.iRow] + 1, head.adress[head.iComment]));
-	else
-		return np;
+			return result;
+		}
+	}
+	return pkStats::empty;
 }
-*/
-
-/* #pragma region NP_BASE
+// UNDONE: Наработки для работы с базой данных (определение номеров наборов и ПУИ страниц)
+/*
+#pragma region NP_BASE
 // Чтение номеров наборов из папки odb
 void CWorkExcel::ReadNpBase()
 {
@@ -627,40 +658,8 @@ void CWorkExcel::DeleteSymbol(CString& field, const CString& sym)
 			field.Delete(pos);
 	} while (pos != -1);
 }
-#pragma endregion */
-
-// Получение значения номера подкадра
-int CReaderExcel::GetPk()
-{
-	// CRUTCH: Цикл для прохода по таблице вправо, чтобы найти номер подкадра
-	for (long i = header.adress[iComment]; i <= work.Boundary().column; i++)
-	{
-		CString item = work.CellValue(header.adress[iRow] - 1, i);
-		if (!item.IsEmpty())
-		{
-			int pos = item.ReverseFind(PK_FIELD);
-			if (pos == -1)
-				continue;
-			item.Delete(0, pos + 1);
-			item.Trim();
-			// Вдруг дальше пробел
-			pos = item.Find(L' ');
-			if (pos != -1)
-				item.Delete(pos, item.GetLength());
-			// А вдруг перечисление через запятую (протоколы не поймешь)
-			pos = item.Find(L',');
-			if (pos != -1)
-				item.Delete(pos, item.GetLength());
-
-			int result = _wtoi(item);
-			if (result == 0)
-				result = pkStats::failed;
-
-			return result;
-		}
-	}
-	return pkStats::empty;
-}
+#pragma endregion 
+*/
 #pragma endregion
 
 #pragma region ReadParameters
@@ -751,7 +750,6 @@ intData CReaderExcel::GetBits(CString bits, const int& size)
 vector <int> CReaderExcel::StepBits(CString numeric, bool& flag)
 {
 	vector <int> result = { -1, -1 };
-
 	int indxDel = numeric.Find(L'.') == -1 ? numeric.Find(L'…') : numeric.Find(L'.');	// Поиск индекса разделителей
 
 	if (indxDel == -1)	// Разделителей нет, используется один разряд
@@ -776,14 +774,13 @@ vector <int> CReaderExcel::StepBits(CString numeric, bool& flag)
 // Чтение примечания
 CString CReaderExcel::GetComment(long row, const int& size, bool& flag)
 {
-	long column = header.adress[iComment];
-	int merge = work.GetMerge(row, column);
+	int merge = work.GetMerge(row, header.adress[iComment]);
 	CString result;
 
 	size > merge ? merge = size : merge = merge;
 	for (int i = 0; i < merge; i++)
 	{
-		CString tmp = work.CellValue(row + i, column);
+		CString tmp = work.CellValue(row + i, header.adress[iComment]);
 		if (!tmp.IsEmpty())
 		{
 			for (size_t j = 0; j < sign.size(); j++)
@@ -803,18 +800,24 @@ int CReaderExcel::GetInt(CString field, bool& flag)
 	CStringA tmp(field);
 	char* buffer = new char[tmp.GetLength() + 1];
 	strcpy_s(buffer, tmp.GetLength() + 1, tmp);
+	result = GetInt(buffer, flag);
+	delete[] buffer;
+	return result;
+}
 
-	if (!field.IsEmpty())
+// Перегрузка для string
+int CReaderExcel::GetInt(string value, bool& flag)
+{
+	int result = -1;
+	if (!value.empty())
 	{
 		char* end;
 		errno = 0;
-		result = strtol(buffer, &end, 10);
+		result = strtol(value.c_str(), &end, 10);
 		(*end != '\0' || errno != 0) ? flag = true : flag = flag;
 	}
 	else
 		flag = true;
-
-	delete[] buffer;
 	return result;
 }
 

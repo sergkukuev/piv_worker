@@ -7,7 +7,8 @@
 using namespace std;
 
 // Обозначения старшей и младшей частей в протоколах КПРНО35
-namespace dwPart {
+namespace dwPart 
+{
 	// Размеры массивов должны быть одинаковы
 	const vector <CString> low = { L"(мл.ч)", L"(мл.ч.)", L"(мл. ч)", L"(мл. ч.)" };
 	const vector <CString> hight = { L"(ст.ч)", L"(ст.ч.)", L"(ст. ч)", L"(ст. ч.)" };
@@ -99,8 +100,8 @@ struct sheetData
 
 	CString name;		// название листа в книге
 	CString line;		// линия передачи
-	int np = -1;		// номер набора параметров
-	int pk = -1;		// номер подкадра
+	int np = -1;		// 930м - номер набора параметров, кпрно - индикационный кадр
+	int pk = -1;		// 930м - номер подкадра, кпрно - страница пуи
 	bool error = false;	// наличие ошибки на листе
 	bool arinc = false;	// Тип линии передачи: Arinc(true), мкио(false)
 };

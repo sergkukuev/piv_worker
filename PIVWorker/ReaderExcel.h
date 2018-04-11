@@ -46,7 +46,8 @@ private:
 	const CString line = L"Линия";	// Обозначение линии передачи данных
 	const CString arincRemark = L"*Примечание:";	// Обозначение примечания в ARINC
 	const vector<CString> remark = { L"Примечания:", L"Примечание:" };	// Примечания в конце таблицы
-	const vector <CString> npId = { L"NP", L"IK_MFPI" };	// Идентификаторы, в которых зашиты номера наборов в ПИВ
+	const vector <CString> npId = { L"NP" /* все проекты, кроме МФПИ35 */, L"IK_MFPI" /* МФПИ35 */ };	// Идентификаторы, в которых зашиты номера наборов в ПИВ
+	const vector <CString> puiId = { L"PagePUI" };			// Идентификаторы, в которых зашиты номера страниц ПУИ (для КАИ 35)
 	const vector<CString> sign = { L"Зн-", L"зн.", L"Зн.", L"зн-" };	// Наличие отрицательного символа
 
 	// Основные методы
@@ -67,7 +68,9 @@ private:
 
 	// SheetInfo (Обработка доп параметров текущего листа)
 	int FindSignalById(const vector<signalData>& signals, const CString& id);	// Поиск сигнала по идентификатору
-	int GetNp(const vector<signalData>& signals);	// Значение номера набора параметров
+	int GetNp(const vector<signalData>& signals);		// Значение номера набора параметров
+	int GetPuiPage(const vector<signalData>& signals);	// Значение страницы ПУИ
+	int ParseValueById(const vector<signalData>&, const vector<CString>& id);	// Выделение значения из комментария по идентификатору (для ПУИ и НП)
 	int GetPk();	// Значение номера подкадра
 
 	// ReadParameters (Чтение параметров)
@@ -79,6 +82,7 @@ private:
 	
 	// Converters (Конвертирование строк в другие форматы)
 	int GetInt(CString field, bool& flag);		// Конвертер int значения
+	int GetInt(string value, bool& flag);		// Перегрузка для string
 	double GetDouble(CString field, bool& flag);	// Конвертер double значения
 
 	// Checkers (Различные проверки)
