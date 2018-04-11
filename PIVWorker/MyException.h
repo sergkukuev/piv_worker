@@ -80,7 +80,7 @@ public:
 	virtual CString GetMsg()
 	{
 		CString result;
-		result.Format(L"На листе \"%s\ отсутствуют данные", sheet);
+		result.Format(L"На листе \"%s\" отсутствуют данные", sheet);
 		return result;
 	}
 };
