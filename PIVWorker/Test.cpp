@@ -7,6 +7,9 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
+using namespace stgdll;
+using namespace testdll;
+
 // Конструктор
 CTest::CTest() 
 {	
@@ -22,6 +25,7 @@ void CTest::Initialize()
 	// Для MKIO 
 	exception.mkio.insert(L"NP");		// Набор параметров
 	exception.mkio.insert(L"NP_DUBL");	// Дубляж
+	// TODO: Добавить исключения для КПРНО-35
 
 	// Создание базы для проверки на ошибки с помощью регулярных выражений
 	// TODO: Добавить регулярные выражения для адреса (ARINC)
@@ -103,7 +107,8 @@ errorData CTest::Start(bookData& book)
 		GetWarnings(tmp.warning);
 		result.set.push_back(tmp);
 	}
-	logger >> L"Проверка протокола \"" + book.name + L"\" завершена";
+	WriteBookStats(result);
+	//logger >> L"Проверка протокола \"" + book.name + L"\" завершена";
 	return result;
 }
 
@@ -125,7 +130,8 @@ list <errorData> CTest::Start(list <bookData>& books)
 			GetWarnings(tmp.warning);
 			error.set.push_back(tmp);
 		}
-		logger >> L"Проверка протокола \"" + it->name + L"\" завершена";
+		WriteBookStats(error);
+		//logger >> L"Проверка протокола \"" + it->name + L"\" завершена";
 		result.push_back(error);
 	}
 	return result;
@@ -136,9 +142,8 @@ void CTest::GetErrors(vector <errorSignal>& syntax, vector <errorSignal>& simant
 {
 	if (!sheet->arinc)	// Если линия передачи не arinc, то необходимо проверять набор параметра 
 		sheet->error = NpTest(syntax);
-
+	
 	InitRepiter();
-
 	for (size_t i = 0; i < sheet->signals.size(); i++) 
 	{
 		if (sheet->signals[i].title[0].Find(RESERVE_SIGNAL) != -1)
@@ -163,12 +168,11 @@ void CTest::GetErrors(vector <errorSignal>& syntax, vector <errorSignal>& simant
 			signal.error.clear();
 		}
 	}
-
 	ClearRepiter();
 }
 
 // Проверка листа на незначительные ошибки (замечания) 
-// TODO: Сделать нормальный поиск по книге
+// TODO: Организовать поиск по книге
 void CTest::GetWarnings(vector <errorSignal>& warning) 
 {
 	if (settings.GetMethod() == method::fasted)
@@ -204,6 +208,26 @@ bool CTest::WriteError(errorSignal& signal, CString msg, const int& index)
 	return true;
 }
 
+// Запись статистики для системы логирования
+void CTest::WriteBookStats(const errorData& eData)
+{
+	int syn = 0, sim = 0, war = 0;
+	for (size_t i = 0; i < eData.set.size(); i++)
+	{
+		for (size_t j = 0; j < eData.set[i].syntax.size(); j++)
+			syn += (int)eData.set[i].syntax[j].error.size();
+		for (size_t j = 0; j < eData.set[i].simantic.size(); j++)
+			sim += (int)eData.set[i].simantic[j].error.size();
+		for (size_t j = 0; j < eData.set[i].warning.size(); j++)
+			war += (int)eData.set[i].warning[j].error.size();
+	}
+	CString msg;
+	int summary = syn + war + sim;
+	summary != 0 ? msg.Format(L"Общее количество ошибок и замечаний %d (syn: %d, sim: %d, war: %d)", summary, syn, sim, war) :
+		msg.Format(L"Ошибок и замечаний не найдено");
+	logger >> msg;
+}
+
 #pragma region Syntax
 // Проверка всех параметров сигнала на синтаксические ошибки
 void CTest::SyntaxChecker(errorSignal& signal, const int& i)
@@ -215,14 +239,13 @@ void CTest::SyntaxChecker(errorSignal& signal, const int& i)
 			WriteError(signal, L"Поле пустое или содержит недопустимые символы.", check::numword);	
 		try
 		{
-			// TODO: Добавить регулярные выражения для адреса (ARINC)
 			if (!sheet->arinc)
 				TemplateTest(sheet->signals[i].numWord.field, check::numword, index::numword, signal);
 
 			if (settings.GetProject() != project::kprno35 || !dwPart::checkLow(sheet->signals[i].title[0]))
 				TemplateTest(sheet->signals[i].title[1], check::title, index::title, signal);
 
-			// TODO: Исправить костыль (три пустые ячейки не считаются ошибкой)
+			// CRUTCH: Если ячейки мин, макс и цср - пустые, то это не ошибка
 			if (sheet->signals[i].min.flag || sheet->signals[i].max.flag || sheet->signals[i].csr.flag)
 			{
 				TemplateTest(sheet->signals[i].min.field, check::min, index::value, signal);

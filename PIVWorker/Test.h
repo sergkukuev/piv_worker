@@ -10,36 +10,37 @@
 
 #define MAX_BITS 32
 
-using namespace stgdll;
-
-// Повторения номеров слов(адресов) и битов
-typedef struct
+namespace testdll
 {
-	int adr;	// Номер слова (адрес)
-	vector <signalData*> signals;	// Указатели на сигналы с данным адресом
-	vector <bool> bits;	// 0...MAX_BITS - присутствие битов
-} repiter;
+	// Повторения номеров слов(адресов) и битов
+	typedef struct
+	{
+		int adr;	// Номер слова (адрес)
+		vector <signalData*> signals;	// Указатели на сигналы с данным адресом
+		vector <bool> bits;	// 0...MAX_BITS - присутствие битов
+	} repiter;
 
-// Некорректные регулярные выражения
-typedef struct
-{
-	string reg;		// Шаблон выражения
-	CString desc;	// Замечание (дескриптор)
-} regular;
+	// Некорректные регулярные выражения
+	typedef struct
+	{
+		string reg;		// Шаблон выражения
+		CString desc;	// Замечание (дескриптор)
+	} regular;
 
-// База регулярных выражений
-typedef struct
-{
-	string correct;
-	vector <regular> incorrect;
-} regBase;
+	// База регулярных выражений
+	typedef struct
+	{
+		string correct;
+		vector <regular> incorrect;
+	} regBase;
 
-// Исключения
-typedef struct
-{
-	set<CString> mkio;
-	set<CString> arinc;
-} exceptTitle;
+	// Исключения
+	typedef struct
+	{
+		set<CString> mkio;
+		set<CString> arinc;
+	} exceptTitle;
+}
 
 class PIV_DECLARE CTest 
 {
@@ -52,29 +53,30 @@ public:
 	list <errorData> Start(list <bookData>& books);
 
 private:
-	CSettings& settings = CSettings::Instance();	// Указатель на настройки
-	logdll::CLogger& logger = logdll::CLogger::Instance();	// Логирование
-	bookData* book = nullptr;	// Указатель на текущую книгу
-	sheetData* sheet = nullptr;	// Указатель на текущий лист
-	exceptTitle exception;		// Множество исключений (задается в конструкторе)
+	stgdll::CSettings& settings = stgdll::CSettings::Instance();	// Указатель на настройки
+	logdll::CLogger& logger = logdll::CLogger::Instance();			// Логирование
+	bookData* book = nullptr;			// Указатель на текущую книгу
+	sheetData* sheet = nullptr;			// Указатель на текущий лист
+	testdll::exceptTitle exception;		// Множество исключений (задается в конструкторе)
 
-	vector <repiter> repit;	// Сетка перекрытия битов (для одного листа)
-	vector <regBase> base;	// База регулярных выражений
+	vector <testdll::repiter> repit;	// Сетка перекрытия битов (для одного листа)
+	vector <testdll::regBase> base;	// База регулярных выражений
 	const enum index {numword, title, value, bits, /*adress, */size};	// Индексы параметров в базе регулярных выражений (value = min, max, csr в одном флаконе)
 
-	void Initialize();
+	void Initialize();	// Инициализация
 	void GetErrors(vector <errorSignal>& syntax, vector <errorSignal>& simantic);	// Проверка листа на синтаксические и семантические ошибки
 	void GetWarnings(vector <errorSignal>& warning);	// Проверка листа на незначительные ошибки (замечания) 
 	bool WriteError(errorSignal& signal, CString msg, const int& index);	// Запись ошибки 
-
-	// Syntax
+	void WriteBookStats(const errorData&);		// Запись статистики для системы логирования
+	
+											// Syntax
 	void SyntaxChecker(errorSignal& signal, const int& index);	// Проверка всех параметров сигнала на синтаксические ошибки
 	bool TemplateTest(const CString& field, const int& check, const int& index, errorSignal& signal); // Проверка шаблоном
 	bool NpTest(vector <errorSignal>& signals);	// Проверка номера набора параметров
 	bool SimpleTest(errorSignal& signal);		// Простая проверка флагов всех числовых параметров
 
 	// Simantic
-	void SimanticCheker(errorSignal& signal, const int& index, vector <repiter>& repit);	// Проверка всех параметров сигнала на семантические ошибки
+	void SimanticCheker(errorSignal& signal, const int& index, vector <testdll::repiter>& repit);	// Проверка всех параметров сигнала на семантические ошибки
 	bool ValueTest(errorSignal& signal);	// Проверка всех числовых параметров
 	bool TitleRepitTest(errorSignal& signal, const int& index);	// Поиск повторений идентификатора на листе
 	bool PartTest(errorSignal& signal);	// Проверка двойного слова (КПРНО35)
@@ -88,6 +90,6 @@ private:
 	void AddRepiter(const int& numWord, const int& index);	// Добавление нового номера слова (адреса) в сетку
 	int GetIndexRepiter(const int& numWord);	// Получить индекс сетки битов по номеру слова (в случае неудачи возвр. индекс, иначе -1)
 	
-	// Замечания
+	// Warning
 	void FindRepiteTitleInBook(errorSignal& signal, const int& index);	// Поиск повторений идентификатора в книге
 };
