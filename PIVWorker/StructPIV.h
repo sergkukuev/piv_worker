@@ -61,6 +61,7 @@ namespace dwPart
 
 // ќбъединени€
 const enum check {numword, title, min, max, csr, bits, comment, size}; // »ндексы €чеек в таблице
+const enum stats { empty = -2 /* отсутствие €чейки (параметра) */, failed /* неудалось прочесть */ };		// —татусы чтени€ параметров
 
 // ’ранение номера слова и битов
 struct intData 
