@@ -424,7 +424,7 @@ void  CPIVDlg::OpenFile(vector <CString>& path)
 {
 	CWnd* TheWindow = GetActiveWindow();
 	CFileDialog openDialog(true, NULL, NULL, OFN_ALLOWMULTISELECT + OFN_HIDEREADONLY, NULL, TheWindow);
-	openDialog.m_ofn.lpstrFilter = _T("Excel files(*.xls;*.xlsx)\0*.xls;*.xlsx\0All files(*.*)\0*.*\0\0");
+	openDialog.m_ofn.lpstrFilter = _T("Excel files(*.xls;*.xlsx;*.xlsb)\0*.xls;*.xlsx;*.xlsb\0All files(*.*)\0*.*\0\0");
 	openDialog.m_ofn.lpstrTitle = TEXT("Выберите протоколы для обработки");
 
 	CString folder;
