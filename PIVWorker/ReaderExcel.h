@@ -42,7 +42,6 @@ private:
 	exceldll::Header header;				// Информация о заголовках
 
 	// Константные значения, требуемые для чтения ПИВ
-	const enum pkStats {failed = -2 /* неудача */, empty /* отсутствие */};	// Статусы чтение номера подкадра
 	const CString line = L"Линия";	// Обозначение линии передачи данных
 	const CString arincRemark = L"*Примечание:";	// Обозначение примечания в ARINC
 	const vector<CString> remark = { L"Примечания:", L"Примечание:" };	// Примечания в конце таблицы

@@ -90,12 +90,14 @@ void CReaderExcel::GetSheets(vector <sheetData>& sheets)
 			sheets[i - 1].arinc ? sheets[i - 1].np = -1 : sheets[i - 1].np = GetNp(sheets[i - 1].signals);
 
 			if (sheets[i - 1].pk < 0)	// Значение меньше нуля -> ошибка чтения
-				sheets[i - 1].pk == pkStats::empty ?
+				sheets[i - 1].pk == stats::empty ?
 					logger >> L"Номер подкадра отсутствует на листе \"" + sheets[i - 1].name + L"\"" :
-					logger >> L"Не удалось считать номер подкадра на листе \"" + sheets[i - 1].name + L"\"";
+					logger >> L"Не удалось прочитать номер подкадра на листе \"" + sheets[i - 1].name + L"\"";
 
 			if (sheets[i - 1].np < 0)	// Значение меньше нуля -> ошибка чтения
-				logger >> L"Не удалось считать номер набора параметров на листе \"" + sheets[i - 1].name + L"\"";
+				sheets[i - 1].np == stats::empty ?
+					logger >> L"Номер набора параметров отсутствует на листе \"" + sheets[i - 1].name + L"\"" :
+					logger >> L"Не удалось прочитать номер набора параметров на листе \"" + sheets[i - 1].name + L"\"";
 		}
 		catch (MyException& exc)
 		{
@@ -431,7 +433,7 @@ int CReaderExcel::ParseValueById(const vector<signalData>& signals, const vector
 	}
 	// Соответствующий идентификатор не найден
 	if (temp == -1)
-		return temp;
+		return stats::empty;
 
 	CString comment = signals[temp].comment;
 	if (!comment.IsEmpty())
@@ -440,6 +442,7 @@ int CReaderExcel::ParseValueById(const vector<signalData>& signals, const vector
 		if (pos == -1)	// Поле не найдено
 			return -1;
 		comment.Remove(L' ');	// Удаляем все пробелы для удобного выделения значения
+		// TODO: Пропарсить на разделяющие знаки (, . ! \n \t и т.д.)
 		bool result = true;
 		temp = GetInt(comment.Mid(pos + id[iId].GetLength() + 1), result);	// Длина идентификатора + символ "="
 	}
@@ -469,14 +472,11 @@ int CReaderExcel::GetPk()
 			if (pos != -1)
 				item.Delete(pos, item.GetLength());
 
-			int result = _wtoi(item);
-			if (result == 0)
-				result = pkStats::failed;
-
-			return result;
+			bool flag = false;
+			return GetInt(item, flag);
 		}
 	}
-	return pkStats::empty;
+	return stats::empty;
 }
 // UNDONE: Наработки для работы с базой данных (определение номеров наборов и ПУИ страниц)
 /*
@@ -811,7 +811,7 @@ int CReaderExcel::GetInt(CString field, bool& flag)
 	return result;
 }
 
-// Перегрузка для string
+// Перегрузка для string (в случае неудачи, вернется значение -1)
 int CReaderExcel::GetInt(string value, bool& flag)
 {
 	int result = -1;
