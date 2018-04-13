@@ -97,18 +97,16 @@ errorData CTest::Start(bookData& book)
 	errorData result;
 	result.book = this->book = &book;
 	ASSERT(this->book != nullptr);
-	logger >> L"Проверка протокола \"" + book.name + L"\"...";
+	WriteInfoToLog();
 	for (size_t j = 0; j < book.sheets.size(); j++) 
 	{
-		errorSheet tmp;
-		tmp.data = this->sheet = &book.sheets[j];
+		errorSheet es;
+		es.data = this->sheet = &book.sheets[j];
 		ASSERT(this->sheet != nullptr);
-		GetErrors(tmp.syntax, tmp.simantic);
-		GetWarnings(tmp.warning);
-		result.set.push_back(tmp);
+		GetErrors(es);
+		result.set.push_back(es);
 	}
 	WriteBookStats(result);
-	//logger >> L"Проверка протокола \"" + book.name + L"\" завершена";
 	return result;
 }
 
@@ -120,29 +118,25 @@ list <errorData> CTest::Start(list <bookData>& books)
 		errorData error;
 		error.book = this->book = &*it;
 		ASSERT(this->book != nullptr);
-		logger >> L"Проверка протокола \"" + it->name + L"\"...";
+		WriteInfoToLog();
 		for (size_t j = 0; j < it->sheets.size(); j++) 
 		{
-			errorSheet tmp;
-			tmp.data = this->sheet = &it->sheets[j];
+			errorSheet es;
+			es.data = this->sheet = &it->sheets[j];
 			ASSERT(this->sheet != nullptr);
-			GetErrors(tmp.syntax, tmp.simantic);
-			GetWarnings(tmp.warning);
-			error.set.push_back(tmp);
+			GetErrors(es);
+			error.set.push_back(es);
 		}
 		WriteBookStats(error);
-		//logger >> L"Проверка протокола \"" + it->name + L"\" завершена";
 		result.push_back(error);
 	}
 	return result;
 }
 
 // Проверка листа на синтаксические и семантические ошибки
-void CTest::GetErrors(vector <errorSignal>& syntax, vector <errorSignal>& simantic) 
+void CTest::GetErrors(errorSheet& es) 
 {
-	if (!sheet->arinc)	// Если линия передачи не arinc, то необходимо проверять набор параметра 
-		sheet->error = NpTest(syntax);
-	
+	NpTest(es);
 	InitRepiter();
 	for (size_t i = 0; i < sheet->signals.size(); i++) 
 	{
@@ -151,46 +145,35 @@ void CTest::GetErrors(vector <errorSignal>& syntax, vector <errorSignal>& simant
 
 		errorSignal signal;
 		signal.data = &sheet->signals[i];
-
+		// Проверка синтасических ошибок
 		SyntaxChecker(signal, (int)i);
 		if (!signal.error.empty())
 		{
-			syntax.push_back(signal);
+			es.syntax.push_back(signal);
 			sheet->error = true;
 			signal.error.clear();
 		}
-
+		// Проверка семантических ошибок
 		SimanticCheker(signal, (int)i, repit);
 		if (!signal.error.empty())
 		{
-			simantic.push_back(signal);
+			es.simantic.push_back(signal);
 			sheet->error = true;
 			signal.error.clear();
 		}
+		if (settings.GetMethod() == method::patterned)	// Замечания не проверяются в случае быстрой проверки
+		{
+			// Проверка замечаний
+			WarningChecker(signal, (int)i);
+			if (!signal.error.empty())
+			{
+				es.warning.push_back(signal);
+				//sheet->error = true; 
+				signal.error.clear();
+			}
+		}
 	}
 	ClearRepiter();
-}
-
-// Проверка листа на незначительные ошибки (замечания) 
-// TODO: Организовать поиск по книге
-void CTest::GetWarnings(vector <errorSignal>& warning) 
-{
-	if (settings.GetMethod() == method::fasted)
-		return;
-
-	for (size_t i = 0; i < sheet->signals.size(); i++) 
-	{
-		if (sheet->signals[i].title[0].Find(RESERVE_SIGNAL) != -1)
-			continue;
-
-		errorSignal tmp;
-		tmp.data = &sheet->signals[i];
-
-		FindRepiteTitleInBook(tmp, (int)i);
-
-		if (!tmp.error.empty())
-			warning.push_back(tmp);
-	}
 }
 
 // Запись ошибки
@@ -206,6 +189,24 @@ bool CTest::WriteError(errorSignal& signal, CString msg, const int& index)
 	signal.error.push_back(msg);
 	signal.check[index] = true;
 	return true;
+}
+
+// Запись в лог-файл информации о проверке протокола
+void CTest::WriteInfoToLog()
+{
+	logger >> L"Проверка протокола \"" + book->name + L"\"...";
+	CString tmp;
+	if (settings.GetProject() == project::p930m)
+		tmp.Format(L"930M");
+	else if (settings.GetProject() == project::kprno35)
+		tmp.Format(L"КПрНО-35");
+	logger >> L"Объект проверки: " + tmp;
+
+	if (settings.GetMethod() == method::patterned)
+		tmp.Format(L"шаблонный");
+	else if (settings.GetMethod() == method::fasted)
+		tmp.Format(L"быстрый");
+	logger >> L"Метод проверки: " + tmp;
 }
 
 // Запись статистики для системы логирования
@@ -261,28 +262,6 @@ void CTest::SyntaxChecker(errorSignal& signal, const int& i)
 	}
 	else
 		SimpleTest(signal);
-}
-
-// Проверка номера набора параметров
-bool CTest::NpTest(vector <errorSignal>& signals) 
-{
-	bool result = false;	// true -  есть ошибка, false - нет ошибки
-	errorSignal signal;
-	signal.data = &sheet->signals[0];
-	ASSERT(signal.data != nullptr);
-
-	#define FL(x) signal.data->x.flag
-	#define VAL(x) signal.data->x.value
-
-	if (sheet->np <= 0)
-		result = WriteError(signal, L"Отсутствует значение набора параметров.", check::comment);
-	else if ((!FL(max) && !FL(min)) && (VAL(min) > sheet->np || sheet->np > VAL(max)))
-		result = WriteError(signal, L"Набор параметров не соответствует указанному интервалу значений.", check::comment);
-
-	if (!signal.error.empty()) 
-		signals.push_back(signal);
-
-	return result;
 }
 
 // Проверка всех числовых параметров
@@ -341,6 +320,43 @@ void CTest::SimanticCheker(errorSignal& signal, const int& i, vector <repiter>& 
 		PartTest(signal);
 	TitleRepitTest(signal, (int)i);
 	BitsTest(signal);
+}
+
+// Проверка номера набора параметров
+bool CTest::NpTest(errorSheet& es)
+{
+	bool result = false;	// true -  есть ошибка, false - нет ошибки
+	
+	// Если линия передачи arinc, значение набора не требуется и является опциональным (opt)
+	if (sheet->np.value == stats::opt)
+		return result;
+
+	if (sheet->np.index != stats::failed)	// Отсутствие индекса -  значение -1
+	{
+		errorSignal signal;
+		signal.data = &sheet->signals[sheet->np.index];
+
+		#define FL(x) signal.data->x.flag
+		#define VAL(x) signal.data->x.value
+
+		if (sheet->np.value == stats::failed)
+			result = WriteError(signal, L"Не удалось обработать значение <b>набора параметров</b>.", check::comment);
+		else if ((!FL(max) && !FL(min)) && (VAL(min) > sheet->np.value || sheet->np.value > VAL(max)))
+			result = WriteError(signal, L"<b>Набор параметров</b> не соответствует указанному интервалу значений.", check::comment);
+		
+		if (!signal.error.empty())	// Запись ошибки
+		{
+			sheet->error = true;
+			es.simantic.push_back(signal);
+		}
+			
+	}
+	else
+	{
+		sheet->error = true;
+		es.common.push_back(L"Отсутствует значение <b>набора параметров</b>. Возможные значения: NP, IK_MFPI (МФПИ-35)");
+	}
+	return result;
 }
 
 // Проверка всех числовых параметров
@@ -613,6 +629,12 @@ void CTest::ClearRepiter()
 #pragma endregion
 
 #pragma region Warning
+// Проверка листа на незначительные ошибки (замечания) 
+void CTest::WarningChecker(errorSignal& signal, const int& index)
+{
+	FindRepiteTitleInBook(signal, index);
+}
+
 // Поиск повторений идентификатора в книге
 void CTest::FindRepiteTitleInBook(errorSignal& signal, const int& index)
 {

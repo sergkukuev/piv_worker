@@ -64,26 +64,26 @@ private:
 	const enum index {numword, title, value, bits, /*adress, */size};	// Индексы параметров в базе регулярных выражений (value = min, max, csr в одном флаконе)
 
 	void Initialize();	// Инициализация
-	void GetErrors(vector <errorSignal>& syntax, vector <errorSignal>& simantic);	// Проверка листа на синтаксические и семантические ошибки
-	void GetWarnings(vector <errorSignal>& warning);	// Проверка листа на незначительные ошибки (замечания) 
+	void GetErrors(errorSheet&);	// Проверка листа на синтаксические и семантические ошибки
+	void WriteInfoToLog();	// Запись в лог-файл информации о проверке протокола
+	void WriteBookStats(const errorData&);	// Запись статистики для системы логирования
 	bool WriteError(errorSignal& signal, CString msg, const int& index);	// Запись ошибки 
-	void WriteBookStats(const errorData&);		// Запись статистики для системы логирования
 	
-											// Syntax
+	// Syntax
 	void SyntaxChecker(errorSignal& signal, const int& index);	// Проверка всех параметров сигнала на синтаксические ошибки
 	bool TemplateTest(const CString& field, const int& check, const int& index, errorSignal& signal); // Проверка шаблоном
-	bool NpTest(vector <errorSignal>& signals);	// Проверка номера набора параметров
 	bool SimpleTest(errorSignal& signal);		// Простая проверка флагов всех числовых параметров
 
 	// Simantic
 	void SimanticCheker(errorSignal& signal, const int& index, vector <testdll::repiter>& repit);	// Проверка всех параметров сигнала на семантические ошибки
+	bool NpTest(errorSheet&);	// Проверка номера набора параметров / индикационного кадра
 	bool ValueTest(errorSignal& signal);	// Проверка всех числовых параметров
 	bool TitleRepitTest(errorSignal& signal, const int& index);	// Поиск повторений идентификатора на листе
 	bool PartTest(errorSignal& signal);	// Проверка двойного слова (КПРНО35)
 	bool BitsTest(errorSignal& signal);	// Проверка используемых разрядов
 	bool CheckReplace(CString title, const vector <signalData*> signals);	// Проверка слов, которые выборочно кладутся в одно слово 
 	vector<int> CrossBits(vector <int>& bits, const vector <int>& numWord, const bool& sign);		// Проверка перекрытия битов
-	
+
 	// Repiter
 	void InitRepiter();		// Инициализация репитера для проверки перекрытия битов
 	void ClearRepiter();	// Очистка репитера
@@ -91,5 +91,6 @@ private:
 	int GetIndexRepiter(const int& numWord);	// Получить индекс сетки битов по номеру слова (в случае неудачи возвр. индекс, иначе -1)
 	
 	// Warning
+	void WarningChecker(errorSignal& signal, const int& index);	// Проверка на незначительные ошибки (замечания)
 	void FindRepiteTitleInBook(errorSignal& signal, const int& index);	// Поиск повторений идентификатора в книге
 };
