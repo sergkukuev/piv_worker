@@ -197,6 +197,7 @@ void CPIV::AddExcel()
 {
 	try 
 	{
+		// TODO: Сделать правильную обертку трай кетч
 		logger.Write(L"Идет добавление протоколов...");
 		CReport report;
 		for (size_t i = 0; i < buffer.size(); i++) 
