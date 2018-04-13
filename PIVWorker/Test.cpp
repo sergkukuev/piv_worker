@@ -161,16 +161,13 @@ void CTest::GetErrors(errorSheet& es)
 			sheet->error = true;
 			signal.error.clear();
 		}
-		if (settings.GetMethod() == method::patterned)	// Замечания не проверяются в случае быстрой проверки
+		// Проверка замечаний
+		WarningChecker(signal, (int)i);
+		if (!signal.error.empty())
 		{
-			// Проверка замечаний
-			WarningChecker(signal, (int)i);
-			if (!signal.error.empty())
-			{
-				es.warning.push_back(signal);
-				//sheet->error = true; 
-				signal.error.clear();
-			}
+			es.warning.push_back(signal);
+			//sheet->error = true; 
+			signal.error.clear();
 		}
 	}
 	ClearRepiter();
