@@ -10,26 +10,12 @@ static char THIS_FILE[] = __FILE__;
 // одного 
 void CReport::GetTxt(const bookData& book)
 {
-	if (settings.GetPath().IsEmpty())
-		throw EmptyPathException();
-
-	CString path;
-	path.Format(L"%s%s", settings.GetPath(), settings.folders[text]);
-	CreateDirectory(path, NULL);
-
 	Generate(book);
 }
 
 // нескольких
 void CReport::GetTxt(list <bookData>& books)
 {
-	if (settings.GetPath().IsEmpty())
-		throw EmptyPathException();
-
-	CString path;
-	path.Format(L"%s%s", settings.GetPath(), settings.folders[text]);
-	CreateDirectory(path, NULL);
-
 	// Обход по книгам
 	for (list <bookData>::iterator it = books.begin(); it != books.end(); it++)
 		Generate(*it);
@@ -39,25 +25,24 @@ void CReport::GetTxt(list <bookData>& books)
 void CReport::Generate(const bookData& book)
 {
 	logger >> L"Создание txt-файлов протокола \"" + book.name + L"\"...";
-	CString tPath = settings.GetPath();
-	tPath.Format(L"%s%s\\%s", tPath, settings.folders[text], book.name);
-	CreateDirectory(tPath, NULL);
-
-	CString filePath = settings.GetPath();
-	filePath.Format(L"%s\\_ProtocolMain.txt", tPath);
+	CString path = settings.GetPath();
+	path.Format(L"%s%s\\%s", path, settings.folders[text], book.name);
+	if (!CreateDir(path))
+		throw FolderNotCreated(path);
 
 	// Логирование настроек для генерации текстовых данных
-	settings.GetGenTxt() ? logger >> L"Создание txt-файлов при наличии ошибок на листе - включено" :
-		logger >> L"Создание txt-файлов при наличии ошибок на листе - отключено";
-	settings.GetNumPk() ? logger >> L"Установка номера подкадра для набора - включено" :
-		logger >> L"Установка номера подкадра для набора - отключено";
-
+	CString mode;
+	settings.GetGenTxt() ? mode = L"включено" : mode = L"отключено";
+	logger >> L"Создание txt-файлов при наличии ошибок на листе: " + mode;
+	settings.GetNumPk() ? mode = L"включено" : mode = L"отключено";
+	logger >> L"Подстановка номера подкадра в номер набора: " + mode;
 	// Открытие главного файла для записи
+	CString filePath;
+	filePath.Format(L"%s\\_ProtocolMain.txt", path);
 	ofstream mainFile;
 	mainFile.open(filePath);
-
 	// Обход по страницам
-	int cNP = 1, cNumWord = 1;	// Отдельные счетчики для arinc сигналов
+	int cNP = 1, cNumWord = 1;	// CRUTCH: Отдельные счетчики для arinc сигналов для подстановки в номер слова
 	for (size_t i = 0; i < book.sheets.size(); i++, cNP++, cNumWord = 1)
 	{
 		// Если нет на странице ошибок
@@ -65,7 +50,6 @@ void CReport::Generate(const bookData& book)
 		{
 			CString name;
 			sheetInfo info;
-
 			info.arinc = book.sheets[i].arinc;
 			info.arinc ? info.np = cNP : info.np = book.sheets[i].np.value;
 			info.pk = book.sheets[i].pk;
@@ -73,8 +57,7 @@ void CReport::Generate(const bookData& book)
 
 			// Создание txt файла для записи
 			name.Format(L"NP_%d_%s.txt", info.np, book.sheets[i].name);
-			filePath.Format(L"%s\\%s", tPath, name);
-
+			filePath.Format(L"%s\\%s", path, name);
 			ofstream tmpFile(filePath);
 			mainFile << "#include \"";
 			mainFile << CT2A(name);
@@ -82,7 +65,7 @@ void CReport::Generate(const bookData& book)
 
 			for (size_t j = 0; j < book.sheets[i].signals.size(); j++)
 			{
-				if (j != 0 && info.arinc)
+				if (j != 0 && info.arinc)	
 					if (book.sheets[i].signals[j].numWord.value[0] != book.sheets[i].signals[j - 1].numWord.value[0])
 						cNumWord++;
 				WriteTxtParam(tmpFile, book.sheets[i].signals[j], info, cNumWord);	// Запись параметра
@@ -90,10 +73,9 @@ void CReport::Generate(const bookData& book)
 			tmpFile.close();
 		}
 		else
-			logger >> L"Txt-файл листа \"" + book.sheets[i].name + L"\" не создан, на листе имеются ошибки";
+			logger >> L" На листе \"" + book.sheets[i].name + L"\" имеются ошибки, txt-файл не создан";
 	}
 	mainFile.close();
-	logger >> L"Создание txt-файлов протокола \"" + book.name + L"\" завершено";
 }
 
 // Запись одного набора данных из таблицы в txt файл
@@ -144,13 +126,16 @@ bool CReport::WriteParamTitle(ofstream& file, const signalData& signal, const sh
 	buffer.Remove(L' ');
 	if (signal.repWord)	// Параметр повторяется в других листах, необходимо добавить в имя номер подкадра
 	{
+		int index = 1;
+		if (info.pk != stats::empty && info.pk != stats::failed)
+			index = info.pk;
+		else if (info.np != stats::empty && info.np != stats::failed)
+			index = info.np;
+		buffer.Format(L"%s_%d", buffer, index);
+		// Запись операции
 		CString msg;
-		msg.Format(L"Параметр %s (лист \"%s\") в протоколе  не является уникальным", signal.title[1], info.name);
+		msg.Format(L"Параметр %s (лист \"%s\") не уникален, к значению добавлено \"_%d\"", signal.title[1], info.name, index);
 		logger >> msg;
-		if (info.pk == PK_EMPTY || info.pk == PK_FAILED)
-			info.np > 0 ? buffer.Format(L"%s_%d", buffer, info.np) : buffer.Format(L"%s_1", buffer);
-		else
-			buffer.Format(L"%s_%d", buffer, info.pk);
 	}
 
 	buffer.Format(L"PAR=%s\n", buffer);	// Запись обозначения сигнала

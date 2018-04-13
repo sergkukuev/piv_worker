@@ -24,17 +24,17 @@ namespace stgdll
 		bool bNpBase = false;		// Использование базы с номерами наборов
 	};
 
-	// Рекурсивная функция, которая создает папку даже при отсутствии предыдущего пути
+	// Рекурсивная функция, которая создает папку даже при отсутствии предыдущего пути (true - папка имеется или создалась, false - некорректный путь, к примеру ведущий на несуществующий диск)
 	static bool CreateDir(CString path)
 	{
-		BOOL result = !PathIsDirectory(path);
-		while (CreateDirectory(path, NULL) == FALSE && result)
+		BOOL bExit = PathFileExists(path);
+		while (CreateDirectory(path, NULL) == FALSE && !bExit)
 		{
 			int pos = path.ReverseFind(L'\\');
 			CString str = path.Mid(0, pos);
-			str.ReverseFind(L'\\') != -1 ? result = CreateDir(str) : result = FALSE;
+			str.ReverseFind(L'\\') != -1 ? bExit = CreateDir(str) : bExit = TRUE;
 		}
-		return result;
+		return PathFileExists(path);
 	}
 
 	// Класс настроек

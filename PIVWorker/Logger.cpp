@@ -3,6 +3,7 @@
 #include "stdafx.h"
 #include "Logger.h"
 #include "Settings.h"
+#include "MyException.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -90,7 +91,8 @@ void CLogger::WriteInFile(CString message)
 		message.Format(L"%02d:%02d:%02d:\t%s\r\n", st.wHour, st.wMinute, st.wSecond, message);
 
 	CString logPath;
-	stgdll::CreateDir(path);
+	if (!stgdll::CreateDir(path))
+		AfxMessageBox(L"Не удалось создать директорию под лог-файлы", MB_ICONERROR);
 	logPath.Format(L"%s\\%02d_%02d_%d.txt", path, st.wDay, st.wMonth, st.wYear);
 	EnterCriticalSection(&csFile);
 	CStdioFile file;
@@ -108,6 +110,6 @@ void CLogger::WriteInFile(CString message)
 		file.Close();
 	}
 	else
-		AfxMessageBox(L"Ошибка записи данных в лог-файл", MB_ICONERROR);	// Ошибка создания лог файла
+		AfxMessageBox(L"Не удалось записать данные в лог-файл", MB_ICONERROR);	// Ошибка создания лог файла
 	LeaveCriticalSection(&csFile);
 }

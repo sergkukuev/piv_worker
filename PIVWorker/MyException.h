@@ -121,6 +121,21 @@ public:
 };
 
 // Исключения для класса CReport
+class FolderNotCreated : public MyException
+{
+public:
+	FolderNotCreated(const CString& path) { this->path = path; }
+	virtual CString GetMsg()
+	{
+		CString result;
+		result.Format(L"Не удалось создать папку \"%s\"", path);
+		return result;
+	}
+private:
+	CString path = L"";
+};
+
+// TODO: Удалить все вхождения исключения
 class EmptyPathException : public MyException 
 {
 public:
