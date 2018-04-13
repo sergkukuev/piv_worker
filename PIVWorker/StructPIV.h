@@ -97,8 +97,8 @@ struct signalData
 // Данные о наборе параметров / индикационном кадре
 struct npData
 {
-	int value = -1;				// Значение
-	signalData* data = nullptr;	// Указатель на параметр
+	int value = -1;		// Значение
+	int index = -1;		// Индекс параметра
 };
 
 // Лист

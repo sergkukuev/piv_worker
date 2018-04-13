@@ -411,7 +411,7 @@ void CReaderExcel::GetNp(vector<signalData>& signals, npData& np)
 {
 	int2 result = ParseValueById(signals, npId);
 	np.value = result.value;
-	np.data = &signals[result.index];
+	np.index = result.index;
 }
 
 // Получение значения страницы ПУИ
