@@ -24,6 +24,13 @@ namespace readdll
 		int startRow;		// Начало блока повторения
 		bool flag = true;	// Флаг отсутствия повторения
 	};
+
+	// Структура для функции ParseValueById
+	struct int2
+	{
+		int value = -1;	// Полученное значение
+		int index = -1;	// Индекс элемента, из которого получено значение
+	};
 }
 
 // Класс для чтения протоколов из Excel
@@ -66,10 +73,10 @@ private:
 	vector <int> StepAdress(CString adress, bool& flag);	// Парсинг поля адреса и преобразование его значений в int
 
 	// SheetInfo (Обработка доп параметров текущего листа)
+	readdll::int2 ParseValueById(const vector<signalData>& signals, const vector<CString>& id);	// Выделение значения из комментария по идентификатору (для ПУИ и НП)
 	int FindSignalById(const vector<signalData>& signals, const CString& id);	// Поиск сигнала по идентификатору
-	int GetNp(const vector<signalData>& signals);		// Значение номера набора параметров
+	void GetNp(vector<signalData>& signals, npData& np);	// Значение номера набора параметров
 	int GetPuiPage(const vector<signalData>& signals);	// Значение страницы ПУИ
-	int ParseValueById(const vector<signalData>&, const vector<CString>& id);	// Выделение значения из комментария по идентификатору (для ПУИ и НП)
 	int GetPk();	// Значение номера подкадра
 
 	// ReadParameters (Чтение параметров)

@@ -87,15 +87,15 @@ void CReaderExcel::GetSheets(vector <sheetData>& sheets)
 			header.adress[iRow]++;
 			GetSignals(sheets[i - 1].signals, sheets[i - 1].arinc);
 			settings.GetProject() == stgdll::project::kprno35 ? sheets[i - 1].pk = GetPuiPage(sheets[i - 1].signals) : sheets[i - 1].pk = GetPk();
-			sheets[i - 1].arinc ? sheets[i - 1].np = -1 : sheets[i - 1].np = GetNp(sheets[i - 1].signals);
+			sheets[i - 1].arinc ? sheets[i - 1].np.value = stats::opt : GetNp(sheets[i - 1].signals, sheets[i - 1].np);
 
 			if (sheets[i - 1].pk < 0)	// Значение меньше нуля -> ошибка чтения
 				sheets[i - 1].pk == stats::empty ?
 					logger >> L"Номер подкадра отсутствует на листе \"" + sheets[i - 1].name + L"\"" :
 					logger >> L"Не удалось прочитать номер подкадра на листе \"" + sheets[i - 1].name + L"\"";
 
-			if (sheets[i - 1].np < 0)	// Значение меньше нуля -> ошибка чтения
-				sheets[i - 1].np == stats::empty ?
+			if (sheets[i - 1].np.value < 0)	// Значение меньше нуля -> ошибка чтения
+				sheets[i - 1].np.value == stats::empty ?
 					logger >> L"Номер набора параметров отсутствует на листе \"" + sheets[i - 1].name + L"\"" :
 					logger >> L"Не удалось прочитать номер набора параметров на листе \"" + sheets[i - 1].name + L"\"";
 		}
@@ -407,46 +407,54 @@ int CReaderExcel::FindSignalById(const vector<signalData>& signals, const CStrin
 }
 
 // Получение значение номера набора
-int CReaderExcel::GetNp(const vector<signalData>& signals) 
+void CReaderExcel::GetNp(vector<signalData>& signals, npData& np) 
 {
-	return ParseValueById(signals, npId);
+	int2 result = ParseValueById(signals, npId);
+	np.value = result.value;
+	np.data = &signals[result.index];
 }
 
 // Получение значения страницы ПУИ
 int CReaderExcel::GetPuiPage(const vector<signalData>& signals)
 {
-	return ParseValueById(signals, puiId);
+	return ParseValueById(signals, puiId).value;
 }
 
 // Выделение значения из комментария по идентификатору (для ПУИ и НП)
-int CReaderExcel::ParseValueById(const vector<signalData>& signals, const vector<CString>& id)
+int2 CReaderExcel::ParseValueById(const vector<signalData>& signals, const vector<CString>& id)
 {
-	int temp = -1, iId = -1;
+	int2 res;
+	int iId = -1;
 	for (size_t i = 0; i < id.size(); i++)	// Находим индекс идентификатора
 	{
-		temp = FindSignalById(signals, id[i]);
-		if (temp != -1)
+		res.index = FindSignalById(signals, id[i]);
+		if (res.index != -1)
 		{
 			iId = (int)i;
 			break;
 		}
 	}
 	// Соответствующий идентификатор не найден
-	if (temp == -1)
-		return stats::empty;
-
-	CString comment = signals[temp].comment;
+	if (res.index == -1)
+	{
+		res.value = stats::empty;
+		return res;
+	}
+	CString comment = signals[res.index].comment;
 	if (!comment.IsEmpty())
 	{
 		int pos = comment.Find(id[iId]);
 		if (pos == -1)	// Поле не найдено
-			return -1;
+		{
+			res.value = stats::failed;
+			return res;
+		}
 		comment.Remove(L' ');	// Удаляем все пробелы для удобного выделения значения
 		// TODO: Пропарсить на разделяющие знаки (, . ! \n \t и т.д.)
 		bool result = true;
-		temp = GetInt(comment.Mid(pos + id[iId].GetLength() + 1), result);	// Длина идентификатора + символ "="
+		res.value = GetInt(comment.Mid(pos + id[iId].GetLength() + 1), result);	// Длина идентификатора + символ "="
 	}
-	return temp;
+	return res;
 }
 
 // Получение значения номера подкадра

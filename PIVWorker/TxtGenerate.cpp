@@ -67,7 +67,7 @@ void CReport::Generate(const bookData& book)
 			sheetInfo info;
 
 			info.arinc = book.sheets[i].arinc;
-			info.arinc ? info.np = cNP : info.np = book.sheets[i].np;
+			info.arinc ? info.np = cNP : info.np = book.sheets[i].np.value;
 			info.pk = book.sheets[i].pk;
 			info.name = book.sheets[i].name;
 

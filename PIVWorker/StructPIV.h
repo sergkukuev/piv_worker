@@ -61,7 +61,7 @@ namespace dwPart
 
 // Объединения
 const enum check {numword, title, min, max, csr, bits, comment, size}; // Индексы ячеек в таблице
-const enum stats { empty = -2 /* отсутствие ячейки (параметра) */, failed /* неудалось прочесть */ };		// Статусы чтения параметров
+const enum stats { empty = -2 /* отсутствие ячейки (параметра) */, failed /* неудалось прочесть */, opt /* эл-т необязателен */ };		// Статусы чтения параметров
 
 // Хранение номера слова и битов
 struct intData 
@@ -94,6 +94,13 @@ struct signalData
 	signalData* part = nullptr;					// Указатель на старшую (младшую) часть в КПРНО35
 };
 
+// Данные о наборе параметров / индикационном кадре
+struct npData
+{
+	int value = -1;				// Значение
+	signalData* data = nullptr;	// Указатель на параметр
+};
+
 // Лист
 struct sheetData 
 {
@@ -101,7 +108,7 @@ struct sheetData
 
 	CString name;		// название листа в книге
 	CString line;		// линия передачи
-	int np = -1;		// 930м - номер набора параметров, кпрно - индикационный кадр
+	npData np;			// 930м - номер набора параметров, кпрно - индикационный кадр
 	int pk = -1;		// 930м - номер подкадра, кпрно - страница пуи
 	bool error = false;	// наличие ошибки на листе
 	bool arinc = false;	// Тип линии передачи: Arinc(true), мкио(false)
@@ -132,6 +139,7 @@ struct errorSheet
 	vector <errorSignal> syntax;	// Синтаксические ошибки
 	vector <errorSignal> simantic;	// Семантические ошибки
 	vector <errorSignal> warning;	// Предупреждения
+	vector <CString> common;		// Ошибки общего плана (без указателей на сигналы)
 };
 
 struct errorData 
