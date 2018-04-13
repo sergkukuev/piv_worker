@@ -10,8 +10,6 @@
 using namespace stgdll;
 
 #define REPORT_NAME L"Отчет.html"
-#define PK_EMPTY -1			// Номер подкадра отсутствует
-#define PK_FAILED -2		// Номер подкадра не удалось считать
 
 // Информация о количестве наборов данных
 struct amountInfo	
