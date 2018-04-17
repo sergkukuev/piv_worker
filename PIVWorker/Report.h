@@ -1,7 +1,5 @@
 #pragma once
 
-#include <fstream>
-
 #include "StructPIV.h"
 #include "Settings.h"
 #include "Logger.h"
@@ -60,7 +58,7 @@ private:
 
 	// Report.cpp
 	void CreateMainFile(pivData& data, CString path);	// Создание основного файла
-	void CreateFolders(const CString& path);			// Создание структуры отчета (создание папочек)
+	bool CreateFolders(const CString& path);			// Создание структуры отчета (создание папочек)
 	void MainTable(CStdioFile& file, list <errorData>& db);				// Создание таблицы с проверенными протоколами
 	void InfoTable(CStdioFile& file, const amountInfo& amount);			// Таблица общей информации о наборах данных
 	void WriteBook(CStdioFile& file, list <errorData>::iterator& it);	// Запись листов текущего протокола

@@ -1,4 +1,6 @@
 #include "stdafx.h"
+
+#include <fstream>
 #include "Report.h"
 
 #ifdef _DEBUG
