@@ -22,6 +22,7 @@ CLogger::CLogger()
 	path = stg.GetDefaultPath();
 	path.Format(L"%s\\%s", path, lgFolder);
 	WriteInFile(lgSlash);
+	WriteInFile(stThread[start]);
 }
 
 // Деструктор

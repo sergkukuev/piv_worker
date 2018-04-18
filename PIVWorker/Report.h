@@ -93,5 +93,6 @@ private:
 	void WriteTxtParam(ofstream& file, const signalData& signal, const sheetInfo& info, const int& arincNum);	// Запись одного набора данных из таблицы в txt файл
 	bool WriteParamTitle(ofstream& file, const signalData& signal, const sheetInfo& info);	// Запись наименования параметра
 	void WriteParamAdr(ofstream& file, const signalData& signal, const paramInfo& par);		// Запись адреса параметра
+	void WriteFile(ofstream& file, CString text, bool hide = false);	// Запись строки в файл
 	bool IsInt(const double& numeric);	// Проверка на int значение
 };

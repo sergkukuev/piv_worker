@@ -110,23 +110,19 @@ void CReport::WriteTxtParam(ofstream& file, const signalData& signal, const shee
 	}*/
 
 	bool dwKprno = WriteParamTitle(file, signal, info);
-	// Сигнал скрывается тогда, когда у него есть ошибка, и стоит флаг "скрывать ошибки"
-	bool bParHide = (signal.error && settings.GetParHide()) ? true : false;
+	bool bParHide = (signal.error && settings.GetParHide()) ? true : false; // Сигнал скрывается тогда, когда у него есть ошибка, и стоит флаг "скрывать ошибки"
+	// Размерности
 	if (!signal.dimension.IsEmpty())
 	{
 		buffer.Remove(L'\n');
 		buffer.Remove(L'\t');
-		buffer.Format(L"\tUNIT=\"%s\"\n", signal.dimension);	// Размерности
-		if (bParHide)
-			buffer.Insert(0, L"//");
-		file << CT2A(buffer);
+		buffer.Format(L"\tUNIT=\"%s\"", signal.dimension);	
+		WriteFile(file, buffer, bParHide);
 	}
 
 	// Установка набора
-	info.pk > 0 && settings.GetNumPk() ? buffer.Format(L"\tSET=%d:%d\n", info.pk, info.np) : buffer.Format(L"\tSET=%d\n", info.np);
-	if (bParHide)
-		buffer.Insert(0, L"//");
-	file << CT2A(buffer);
+	info.pk > 0 && settings.GetNumPk() ? buffer.Format(L"\tSET=%d:%d", info.pk, info.np) : buffer.Format(L"\tSET=%d", info.np);	// CRUTCH: Установка подкадра в номер набора
+	WriteFile(file, buffer, bParHide);
 
 	// Установка адреса параметра
 	paramInfo par;
@@ -135,20 +131,20 @@ void CReport::WriteTxtParam(ofstream& file, const signalData& signal, const shee
 	par.dwKprno = dwKprno;
 	WriteParamAdr(file, signal, par);
 
-	// Запись комментариев
+	// CRUTCH: Запись комментариев
 	if (!signal.comment.IsEmpty() && settings.GetProject() != project::kprno35)
 	{
 		bool bComHide = settings.GetComHide() || bParHide;
-		bComHide ? file << "//\tCOMMENT\n" : file << "\tCOMMENT\n";
+		WriteFile(file, L"\tCOMMENT", bComHide);
 		buffer = signal.comment;
-		buffer.Replace(L"\"", L"");
-		bComHide ? buffer.Replace(L"\n", L"\"\n//\t\t\"") : buffer.Replace(L"\n", L"\"\n\t\t\"");
-		bComHide ? buffer.Insert(0, L"//\t\t\"") : buffer.Insert(0, L"\t\t\"");
-		buffer.Insert(buffer.GetLength(), L"\"\n");
-		file << CT2A(buffer);
-		bComHide ? file << "//\tEND_COMMENT\n" : file << "\tEND_COMMENT\n";
+		buffer.Remove(L'\"');
+		buffer.Insert(0, L"\t\t\"");
+		buffer.Replace(L"\n", L"\"\n\t\t\"");	// Перенос строки и смещение на две табуляции
+		buffer.Insert(buffer.GetLength(), L"\"");
+		WriteFile(file, buffer, bComHide);
+		WriteFile(file, L"\tEND_COMMENT", bComHide);
 	}
-	bParHide ? file << "//END_PAR\n\n" : file << "END_PAR\n\n";
+	WriteFile(file, L"END_PAR\n", bParHide);
 }
 
 // Запись наименования параметра
@@ -169,15 +165,14 @@ bool CReport::WriteParamTitle(ofstream& file, const signalData& signal, const sh
 		msg.Format(L"Параметр %s (лист \"%s\") не уникален, к значению добавлено \"_%d\"", signal.title[1], info.name, index);
 		logger >> msg;
 	}
-
+	// Сигнал скрывается тогда, когда у него есть ошибка, и стоит флаг "скрывать ошибки"
 	bool bParHide = (signal.error && settings.GetParHide()) ? true : false;
 	// Запись обозначения сигнала
 	buffer.Remove(L'\n');
 	buffer.Remove(L'\t');
 	buffer.Remove(L' ');
-	bParHide ? buffer = L"//PAR=" + buffer + L"\n" : buffer = L"PAR=" + buffer + L"\n";
+	WriteFile(file, L"PAR=" + buffer, bParHide);	// TODO: Сделать преобразоватор кириллицы в латиницу
 	//buffer.Format(L"%s%s\n", L"PAR=", buffer);	// TODO: В некоторых случаях метод CString.Format() выдает некорректную строку
-	file << CT2A(buffer);
 
 	// Наименования сигнала
 	buffer = signal.title[0];
@@ -187,9 +182,8 @@ bool CReport::WriteParamTitle(ofstream& file, const signalData& signal, const sh
 	buffer.Replace(L"\"", L"\\\"");
 	buffer.Replace(L"\n", L" ");
 	buffer.Replace(L"\t", L" ");
-	bParHide ? buffer = L"//\tNAME=\"" + buffer + L"\"\n" : buffer = L"\tNAME=\"" + buffer + L"\"\n";
-	//buffer.Format(L"\tNAME=\"%s\"\n", buffer); 
-	file << CT2A(buffer);
+	//buffer.Format(L"\tNAME=\"%s\"\n", buffer);
+	WriteFile(file, L"\tNAME=\"" + buffer + L"\"", bParHide);
 	return dwKprno;
 }
 
@@ -197,66 +191,64 @@ bool CReport::WriteParamTitle(ofstream& file, const signalData& signal, const sh
 void CReport::WriteParamAdr(ofstream& file, const signalData& signal, const paramInfo& param)
 {
 	CString buffer;
-	bool bParHide = (signal.error && settings.GetParHide()) ? true : false;
+	bool bParHide = (signal.error && settings.GetParHide()) ? true : false; // Сигнал скрывается тогда, когда у него есть ошибка, и стоит флаг "скрывать ошибки"
 	int max = (signal.bit.value[1] == -1 ? signal.bit.value[0] : signal.bit.value[1]);
 
 	// Запись номера слова и битов
 	if (signal.numWord.value.size() == 2 || (param.dwKprno && signal.part != nullptr))
 	{
-		bParHide ? file << "//\tMERGE\n" : file << "\tMERGE\n";
+		WriteFile(file, L"\tMERGE", bParHide);
 		// Формирование первой части бита
-		buffer.Format(L"\t\tWDADDR = %d,%d,%d\n", signal.numWord.value[0], signal.bit.value[0], max);
-		if (bParHide)
-			buffer.Insert(0, L"//");
-		file << CT2A(buffer);
+		buffer.Format(L"\t\tWDADDR = %d,%d,%d", signal.numWord.value[0], signal.bit.value[0], max);
+		WriteFile(file, buffer, bParHide);
 		// Формирование второй части бита
 		if (signal.numWord.value.size() == 2)
 		{
 			max = (signal.bit.value[3] == -1) ? signal.bit.value[2] : signal.bit.value[3];
-			buffer.Format(L"\t\tWDADDR = %d,%d,%d\n", signal.numWord.value[1], signal.bit.value[2], max);
+			buffer.Format(L"\t\tWDADDR = %d,%d,%d", signal.numWord.value[1], signal.bit.value[2], max);
 		}
 		else if (param.dwKprno && signal.part != nullptr)
 		{
 			max = (signal.part->bit.value[1] == -1) ? signal.part->bit.value[0] : signal.part->bit.value[1];
-			buffer.Format(L"\t\tWDADDR = %d,%d,%d\n", signal.part->numWord.value[0], signal.part->bit.value[0], max);
+			buffer.Format(L"\t\tWDADDR = %d,%d,%d", signal.part->numWord.value[0], signal.part->bit.value[0], max);
 		}
 		else
 			buffer.Empty();
-		
-		if (bParHide)
-			buffer.Insert(0, L"//");
-		file << CT2A(buffer);
-		bParHide ? file << "//\tEND_MERGE\n" : file << "\tEND_MERGE\n";
+		WriteFile(file, buffer, bParHide);
+		WriteFile(file, L"\tEND_MERGE", bParHide);
 	}
 	else
 	{
-		param.arinc ? buffer.Format(L"\tWDADDR = %d,%d,%d\n", param.arincNum, signal.bit.value[0], max) :
-			buffer.Format(L"\tWDADDR = %d,%d,%d\n", signal.numWord.value[0], signal.bit.value[0], max);
-		if (bParHide)
-			buffer.Insert(0, L"//");
-		file << CT2A(buffer);
+		param.arinc ? buffer.Format(L"\tWDADDR = %d,%d,%d", param.arincNum, signal.bit.value[0], max) :
+			buffer.Format(L"\tWDADDR = %d,%d,%d", signal.numWord.value[0], signal.bit.value[0], max);
+		WriteFile(file, buffer, bParHide);
 	}
 
 	// Мин, макс, цср
 	if (signal.max.value != DBL_MIN && signal.csr.value != DBL_MIN)
 	{
-		bParHide ? file << "//\tVALDESCR\n" : file << "\tVALDESCR\n";
-		signal.bitSign ? (bParHide ? file << "//\t\tSIGNED\n" : file << "\t\tSIGNED\n") : 
-			(bParHide ? file << "//\t\tUNSIGNED\n" : file << "\t\tUNSIGNED\n");
-		IsInt(signal.min.value) ? buffer.Format(L"\t\tMIN = %.0lf\n", signal.min.value) : buffer.Format(L"\t\tMIN = %lf\n", signal.min.value);
-		if (bParHide)
-			buffer.Insert(0, L"//");
-		file << CT2A(buffer);
-		IsInt(signal.max.value) ? buffer.Format(L"\t\tMAX = %.0lf\n", signal.max.value) : buffer.Format(L"\t\tMAX = %lf\n", signal.max.value);
-		if (bParHide)
-			buffer.Insert(0, L"//");
-		file << CT2A(buffer);
-		IsInt(signal.csr.value) ? buffer.Format(L"\t\tMSB = %.0lf\n", signal.csr.value) : buffer.Format(L"\t\tMSB = %lf\n", signal.csr.value);
-		if (bParHide)
-			buffer.Insert(0, L"//");
-		file << CT2A(buffer);
-		bParHide ? file << "//\tEND_VALDESCR\n" : file << "\tEND_VALDESCR\n";
+		WriteFile(file, L"\tVALDESCR", bParHide); 
+		signal.bitSign ? WriteFile(file, L"\t\tSIGNED", bParHide) : WriteFile(file, L"\t\tUNSIGNED", bParHide);
+		IsInt(signal.min.value) ? buffer.Format(L"\t\tMIN = %.0lf", signal.min.value) : buffer.Format(L"\t\tMIN = %lf", signal.min.value);
+		WriteFile(file, buffer, bParHide);
+		IsInt(signal.max.value) ? buffer.Format(L"\t\tMAX = %.0lf", signal.max.value) : buffer.Format(L"\t\tMAX = %lf", signal.max.value);
+		WriteFile(file, buffer, bParHide);
+		IsInt(signal.csr.value) ? buffer.Format(L"\t\tMSB = %.0lf", signal.csr.value) : buffer.Format(L"\t\tMSB = %lf", signal.csr.value);
+		WriteFile(file, buffer, bParHide);
+		WriteFile(file, L"\tEND_VALDESCR", bParHide);
 	}
+}
+
+// Запись строки в файл
+void CReport::WriteFile(ofstream& file, CString text, bool hide)
+{
+	if (hide)	// Комментируем строку
+	{
+		text.Insert(0, L"//");
+		text.Replace(L"\n", L"\n//");
+	}
+	text.Insert(text.GetLength(), L"\n");	// Добавляем в конец строки спецификатор перехода на новую строку
+	file << CT2A(text);
 }
 
 // Проверка на int значение

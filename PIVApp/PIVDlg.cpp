@@ -51,7 +51,6 @@ void Waiting(CPIVDlg& dlg, HWND hWnd)
 
 void CPIVDlg::ReceiveMessage(HWND hWnd)
 {
-	piv.WriteLog(logdll::stThread[logdll::start]);
 	while (1)
 	{
 		CString temp = piv.GetStatus();
