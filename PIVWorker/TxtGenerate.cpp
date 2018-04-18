@@ -89,10 +89,7 @@ void CReport::Generate(const bookData& book)
 			if (j != 0 && info.arinc)	
 				if (book.sheets[i].signals[j].numWord.value[0] != book.sheets[i].signals[j - 1].numWord.value[0])
 					cNumWord++;
-			if (!book.sheets[i].signals[j].error || settings.GetGenTxt())	// Если нет ошибок в параметре или включена принудительная генерация txt
-				WriteTxtParam(tmpFile, book.sheets[i].signals[j], info, cNumWord);	// Запись параметра
-			else
-				logger >> L"Параметр " + book.sheets[i].signals[j].title[1] + L" (лист \"" + book.sheets[i].name + L"\") не сгенерирован";
+			WriteTxtParam(tmpFile, book.sheets[i].signals[j], info, cNumWord);	// Запись параметра
 		}
 		tmpFile.close();
 	}
@@ -106,6 +103,12 @@ void CReport::WriteTxtParam(ofstream& file, const signalData& signal, const shee
 
 	if (buffer.Find(RESERVE_SIGNAL) != -1 || (settings.GetProject() == project::kprno35 && dwPart::checkLow(buffer)))
 		return;
+
+	if (signal.error && !settings.GetGenTxt()) // Если нет ошибок в параметре или включена принудительная генерация txt
+	{
+		logger >> L"Параметр " + signal.title[1] + L" (лист \"" + info.name + L"\") не сгенерирован";
+		return;
+	}
 
 	bool dwKprno = WriteParamTitle(file, signal, info);
 	if (!signal.dimension.IsEmpty())
@@ -159,15 +162,24 @@ bool CReport::WriteParamTitle(ofstream& file, const signalData& signal, const sh
 		logger >> msg;
 	}
 
-	buffer.Format(L"PAR=%s\n", buffer);	// Запись обозначения сигнала
+	// Запись обозначения сигнала
+	buffer.Remove(L'\n');
+	buffer.Remove(L'\t');
+	buffer.Remove(L' ');
+	buffer = L"PAR=" + buffer + L"\n";
+	//buffer.Format(L"%s%s\n", L"PAR=", buffer);	// TODO: В некоторых случаях метод CString.Format() выдает некорректную строку
 	file << CT2A(buffer);
 
+	// Наименования сигнала
 	buffer = signal.title[0];
 	bool dwKprno = false;
 	if (settings.GetProject() == project::kprno35)
 		dwKprno = dwPart::deleleHight(buffer);
 	buffer.Replace(L"\"", L"\\\"");
-	buffer.Format(L"\tNAME=\"%s\"\n", buffer); // Наименования сигнала
+	buffer.Replace(L"\n", L" ");
+	buffer.Replace(L"\t", L" ");
+	buffer = L"\tNAME=\"" + buffer + L"\"\n";
+	//buffer.Format(L"\tNAME=\"%s\"\n", buffer); 
 	file << CT2A(buffer);
 	return dwKprno;
 }
