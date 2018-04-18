@@ -95,6 +95,6 @@ int CSettings::GetMethod() { return this->parameters.iMethod; }
 
 bool CSettings::GetNumPk() { return this->parameters.bNumPK; }
 
-bool CSettings::GetGenTxt() { return this->parameters.bGenTxt; }
+bool CSettings::GetParHide() { return this->parameters.bGenTxt; }
 
-bool CSettings::GetGenComment() { return this->parameters.bComment; }
+bool CSettings::GetComHide() { return this->parameters.bComment; }

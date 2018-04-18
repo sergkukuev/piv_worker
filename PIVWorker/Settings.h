@@ -56,8 +56,8 @@ namespace stgdll
 		int GetProject();	// Проект проверки
 		int GetMethod();	// Метод проверки
 		bool GetNumPk();	// Флаг установки номера подкадра при генерации txt
-		bool GetGenTxt();	// Флаг принудительной генерации txt
-		bool GetGenComment();	// Флаг использования базы номеров наборов
+		bool GetParHide();	// Флаг принудительной генерации txt
+		bool GetComHide();	// Флаг использования базы номеров наборов
 		
 		CString GetDefaultPath();	// Путь папки с exe
 		CString GetPath();			// Текущий путь
