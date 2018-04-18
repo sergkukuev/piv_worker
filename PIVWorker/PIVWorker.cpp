@@ -295,7 +295,6 @@ void CPIV::RefreshExcel()
 			logger >> exc.GetMsg();
 		}
 	}
-	
 	bProj ? (report.GetReport(project, true) ? bOper = bOper : bOper = false) : 
 		(report.GetReport(other, false) ? bOper = bOper : bOper = false);	// true -  проект, false - отдельные протоколы
 	CloseThread(primary);
