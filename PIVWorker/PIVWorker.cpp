@@ -140,27 +140,30 @@ void CPIV::StartOpen()
 
 void CPIV::OpenExcel() 
 {
-	try 
+	logger.Write(L"Идет открытие протоколов проекта...");
+	CReaderExcel reader;
+	bool bOper = true;
+	for (size_t i = 0; i < buffer.size(); i++)
 	{
-		logger.Write(L"Идет открытие протоколов...");
-		CReaderExcel reader;
-		for (size_t i = 0; i < buffer.size(); i++)
+		try
+		{
 			project.books.push_back(reader.GetBook(buffer[i]));
-
-		CTest tester;
-		project.db = tester.Start(project.books);
-
-		// Генерация артефактов
-		CReport report;
-		report.GetReport(project, true);		// true -  проект, false - отдельные протоколы
-		report.GetTxt(project.books);
-		CloseThread(primary);
-		logger.Write(L"Открытие протоколов завершено");	// Логирование
+		}
+		catch (MyException& exc)
+		{
+			bOper = false;
+			logger >> exc.GetMsg();
+		}
 	}
-	catch (MyException& exc)
-	{
-		logger.WriteError(exc.GetMsg());
-	}
+
+	CTest tester;
+	project.db = tester.Start(project.books);
+	// Генерация артефактов
+	CReport report;
+	report.GetReport(project, true) ? bOper = bOper : bOper = false;		// true -  проект, false - отдельные протоколы
+	report.GetTxt(project.books) ? bOper = bOper : bOper = false;
+	CloseThread(primary);
+	bOper ? logger.Write(L"Открытие проекта завершено успешно") : logger.Write(L"Открытие проекта завершено с ошибками");
 }
 #pragma endregion
 
@@ -195,35 +198,34 @@ void CPIV::StartAdd()
 
 void CPIV::AddExcel() 
 {
-	try 
+	bool bOper = true;
+	CReport report;
+	buffer.size() == 1 ? logger.Write(L"Идет добавление протокола...") : logger.Write(L"Идет добавление протоколов...");
+	for (size_t i = 0; i < buffer.size(); i++) 
 	{
-		// TODO: Сделать правильную обертку трай кетч
-		logger.Write(L"Идет добавление протоколов...");
-		CReport report;
-		for (size_t i = 0; i < buffer.size(); i++) 
+		try
 		{
-			bool contain = IsContain(other, buffer[i]);
 			CReaderExcel reader;
+			bool contain = IsContain(other, buffer[i]);
 			bookData book = reader.GetBook(buffer[i]);
 			contain ? Refresh(other, book) : other.books.push_back(book);
-			
 			CTest tester;
 			list <bookData>::iterator pBook = GetBook(other, buffer[i]);
+			if (pBook == other.books.end())	// Книга не найденa, хотя добавлена выше
+				throw BookNotFound(NameFromPath(buffer[i]));
 			errorData error = tester.Start(*pBook);
 			contain ? Refresh(other, error) : other.db.push_back(error);
-
-			report.GetTxt(*pBook);
+			report.GetTxt(*pBook) ? bOper = bOper : bOper = false;
 		}
-		
-		report.GetReport(other, false);	// true -  проект, false - отдельные протоколы
-		CloseThread(primary);
-		
-		logger.Write(L"Добавление протоколов завершено");	// Логирование
+		catch (MyException& exc)
+		{
+			bOper = false;
+			logger >> exc.GetMsg();
+		}
 	}
-	catch (MyException& exc) 
-	{
-		logger.WriteError(exc.GetMsg());
-	}
+	report.GetReport(other, false) ? bOper = bOper : bOper = false;	// true -  проект, false - отдельные протоколы
+	CloseThread(primary);
+	bOper ? logger.Write(L"Добавление завершено успешно") : logger.Write(L"Добавление завершено с ошибками");
 }
 #pragma endregion
 
@@ -256,29 +258,28 @@ void CPIV::StartRefresh()
 
 void CPIV::RefreshExcel() 
 {
-	try 
+	bool bOper = true, bProj = true;
+	CReport report;
+	buffer.size() == 1 ? logger.Write(L"Идет обновление выбранного протокола...") : logger.Write(L"Идет обновление выбранных протоколов...");
+	for (size_t i = 0; i < buffer.size(); i++)
 	{
-		logger.Write(L"Идет обновление выбранных протоколов...");
-		CReport report;
-		bool flag = true;
-		for (size_t i = 0; i < buffer.size(); i++)
+		try
 		{
 			CReaderExcel reader;
 			bookData book = reader.GetBook(buffer[i]);
 			list <bookData>::iterator pBook;
-
 			CTest tester;
-			if (IsContain(project, buffer[i])) 
+			if (IsContain(project, buffer[i]))
 			{
-				flag = true;
+				bProj = true;
 				Refresh(project, book);
 				pBook = GetBook(project, buffer[i]);
 				errorData error = tester.Start(*pBook);
 				Refresh(project, error);
 			}
-			else if (IsContain(other, buffer[i])) 
+			else if (IsContain(other, buffer[i]))
 			{
-				flag = false;
+				bProj = false;
 				Refresh(other, book);
 				pBook = GetBook(other, buffer[i]);
 				errorData error = tester.Start(*pBook);
@@ -286,20 +287,19 @@ void CPIV::RefreshExcel()
 			}
 			else
 				throw BookNotFound(NameFromPath(buffer[i]));
-
-			report.GetTxt(*pBook);
+			report.GetTxt(*pBook) ? bOper = bOper : bOper = false;
 		}
-		
-		flag ?	report.GetReport(project, true) : report.GetReport(other, false);
+		catch (MyException& exc)
+		{
+			bOper = false;
+			logger >> exc.GetMsg();
+		}
+	}
 	
-		CloseThread(primary);
-		
-		logger.Write(L"Обновление протоколов завершено");	// Логирование
-	}
-	catch (MyException& exc) 
-	{
-		logger.WriteError(exc.GetMsg());
-	}
+	bProj ? (report.GetReport(project, true) ? bOper = bOper : bOper = false) : 
+		(report.GetReport(other, false) ? bOper = bOper : bOper = false);	// true -  проект, false - отдельные протоколы
+	CloseThread(primary);
+	bOper ? logger.Write(L"Обновление завершено успешно") : logger.Write(L"Обновление завершено с ошибками");
 }
 #pragma endregion
 
@@ -312,7 +312,7 @@ void CPIV::Close()
 		other.books.clear();
 	if (!other.db.empty())
 		other.db.clear();
-	logger.Write(L"Закрытие протоколов завершено");	// Логирование
+	logger.Write(L"Закрытие всех протоколов завершено");	// Логирование
 }
 
 // одного
@@ -345,18 +345,17 @@ void CPIV::StartClose()
 // Закрытие проекта
 void CPIV::CloseProject() 
 {
-	if (!project.books.empty() || !project.db.empty())
-	{
-		logger.Write(L"Идет закрытие проекта...");
+	logger.Write(L"Идет закрытие проекта...");
+	if (!project.books.empty())
 		project.books.clear();
+	if (!project.db.empty())
 		project.db.clear();
-		logger.Write(L"Закрытие проекта завершено");	// Логирование
-	}
+	logger.Write(L"Закрытие проекта завершено");	// Логирование
 }
 
 void CPIV::CloseExcel() 
 {
-	logger.Write(L"Идет закрытие выбранных протоколов...");
+	buffer.size() == 1 ? logger.Write(L"Идет закрытие выбранного протокола...") : logger.Write(L"Идет закрытие выбранных протоколов...");
 	for (size_t i = 0; i < buffer.size(); i++) 
 	{
 		for (list <errorData>::iterator it = other.db.begin(); it != other.db.end();)
@@ -365,7 +364,7 @@ void CPIV::CloseExcel()
 			it->name.Compare(NameFromPath(buffer[i])) == 0 ? other.books.erase(it++) : it++;
 	}
 	CloseThread(primary);
-	logger.Write(L"Закрытие протоколов завершено");	// Логирование
+	logger.Write(L"Закрытие завершено успешно");	// Логирование
 }
 #pragma endregion
 
