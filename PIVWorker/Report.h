@@ -46,15 +46,16 @@ public:
 	CReport();	// Конструктор
 	~CReport();	// Деструктор
 
-	void GetReport(pivData& data, const bool& isProj);			// Генерация отчета об ошибках
+	bool GetReport(pivData& data, const bool& isProj);	// Генерация отчета об ошибках
 	// Генерация txt файлов
-	void GetTxt(list <bookData>& books);		// несколько файлов
+	void GetTxt(list <bookData>& books);	// несколько файлов
 	void GetTxt(const bookData& book);		// один файл
 
 private:
 	CSettings& settings = CSettings::Instance();			// Указатель на настройки
 	logdll::CLogger& logger = logdll::CLogger::Instance(); // Логирование
 	bool isProject;		// Метка о создании отчета проекта или отдельных ПИВ (true - проект, false - отдельные протоколы)
+	bool bGenRep = true;	// Операция создания отчета завершена с ошибками - false, без ошибок - true 
 
 	// Report.cpp
 	void CreateMainFile(pivData& data, CString path);	// Создание основного файла

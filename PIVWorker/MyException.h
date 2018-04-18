@@ -15,6 +15,19 @@ protected:
 	CString sheet = L"";	// Имя листа в файле
 };
 
+// Общее
+class BookNotFound : public MyException
+{
+public:
+	BookNotFound(const CString& book) { this->book = book; }
+	virtual CString GetMsg()
+	{
+		CString result;
+		result.Format(L"Протокол \"%s\" в памяти отсутствует!", book);
+		return result;
+	};
+};
+
 // Исключения класса CReaderExcel
 #pragma region ReaderExcel
 class BadTypeException: public MyException	
@@ -86,7 +99,7 @@ public:
 };
 #pragma endregion
 
-#pragma region OTHER
+#pragma region Test
 // Исключения для класса CTest
 class UndefinedError : public MyException 
 {
@@ -107,20 +120,10 @@ public:
 private:
 	CString param = L"";	// Параметр с ошибкой
 };
-
-class BookNotFound : public MyException 
-{
-public:
-	BookNotFound(const CString& book) { this->book = book; }
-	virtual CString GetMsg() 
-	{
-		CString result;
-		result.Format(L"Протокол \"%s\" в памяти отсутствует!", book);
-		return result;
-	};
-};
+#pragma endregion
 
 // Исключения для класса CReport
+#pragma region Report
 class FolderNotCreated : public MyException
 {
 public:
@@ -135,10 +138,17 @@ private:
 	CString path = L"";
 };
 
-// TODO: Удалить все вхождения исключения
-class EmptyPathException : public MyException 
+class FileNotCreated : public MyException
 {
 public:
-	virtual CString GetMsg() { return L"Путь для хранения отчета и txt не задан!"; };
+	FileNotCreated(const CString& path) { this->path = path; }
+	virtual CString GetMsg()
+	{
+		CString result;
+		result.Format(L"Не удалось создать файл \"%s\"", path);
+		return result;
+	}
+private:
+	CString path = L"";
 };
 #pragma endregion

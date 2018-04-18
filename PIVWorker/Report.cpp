@@ -14,36 +14,32 @@ CReport::CReport()	{	}
 CReport::~CReport()	{	}
 
 // Генерация отчета об ошибках
-void CReport::GetReport(pivData& data, const bool& isProj) 
+bool CReport::GetReport(pivData& data, const bool& isProj) 
 {
-	if (settings.GetPath().IsEmpty())
-		throw EmptyPathException();
-
 	logger >> L"Создание отчета о полученных ошибках...";
 	this->isProject = isProj;
 
 	CString tPath;	// Путь к текущему файлу
-
-	// Создание и открытие файла
 	isProject ? tPath.Format(_T("%s%s"), settings.GetPath(), settings.folders[project]) :
 		tPath.Format(_T("%s%s"), settings.GetPath(), settings.folders[other]);
-	CreateDirectory(tPath, NULL);
 	CreateMainFile(data, tPath);
-	logger >> L"Создание отчета о полученных ошибках завершено";
+	//logger >> L"Создание отчета о полученных ошибках завершено";
+	return bGenRep;
 }
 
 // Создание директорий для отчета
-void CReport::CreateFolders(const CString& path)
+bool CReport::CreateFolders(const CString& path)
 {
 	CString folder = path;
 	folder.Format(L"%s%s", path, settings.folders[error]);
-	CreateDirectory(folder, NULL);
+	bool res = CreateDir(folder);
 	folder.Format(L"%s%s", path, settings.folders[syntax]);
-	CreateDirectory(folder, NULL);
+	CreateDir(folder) ? res = res : res = false;
 	folder.Format(L"%s%s", path, settings.folders[simantic]);
-	CreateDirectory(folder, NULL);
+	CreateDir(folder) ? res = res : res = false;
 	folder.Format(L"%s%s", path, settings.folders[warning]);
-	CreateDirectory(folder, NULL);
+	CreateDir(folder) ? res = res : res = false;
+	return res;
 }
 
 #pragma region MAIN_FILE
@@ -51,38 +47,50 @@ void CReport::CreateFolders(const CString& path)
 void CReport::CreateMainFile(pivData& data, CString path)
 {
 	logger >> L"Создание главного отчет-файла...";
-	CreateFolders(path);
-	path.Format(L"%s\\%s", path, REPORT_NAME);
-	// TODO: Проверить корректность всех путей перед созданием
-	CStdioFile file(path, CFile::modeCreate | CFile::modeWrite | CFile::typeUnicode);	// Поток записи в файл
-	WriteFile(file, L"<!DOCTYPE html>\n"
-		"<html lang=\"ru\">\n"
-		"<head>\n"
-		+ T(1) + L"<meta charset=\"UTF-8\">\n"
-		+ T(1) + L"<title>Замечания</title>\n");
-	CssStyle(file, true);
-	WriteFile(file, L"</head>\n"
-		L"<body>\n"
-		+ T(1) + L"<div class=\"tabs\">\n"
-		+ T(2) + L"<![if gt IE 9]>\n"
-		+ T(3) + L"<input id=\"tab1\" type=\"radio\" name=\"tabs\" checked>\n"
-		+ T(3) + L"<label for=\"tab1\">Отчет</label>\n"
-		+ T(3) + L"<input id=\"tab2\" type=\"radio\" name=\"tabs\">\n"
-		+ T(3) + L"<label for=\"tab2\">Статистика</label>\n"
-		+ T(2) + L"<![endif]>\n"
-		+ T(2) + L"<section id=\"content-tab1\">\n");
-	MainTable(file, data.db);
-	WriteFile(file, T(2) + L"</section>\n"
-		+ T(2) + L"<![if gt IE 9]>\n"
-		+ T(2) + L"<section id=\"content-tab2\">\n");
-	InfoTable(file, SetAmount(data));
-	WriteFile(file, T(2) + L"</section>\n"
-		+ T(2) + L"<![endif]>\n"
-		+ T(1) + L"</div>\n");
-	WriteFile(file, L"</body>\n");
-	//ScriptMain(file);
-	WriteFile(file, L"</html>\n");
-	file.Close();
+	try
+	{
+		if (!CreateFolders(path))
+			throw FolderNotCreated(path);
+		path.Format(L"%s\\%s", path, REPORT_NAME);
+
+		CStdioFile file;	// Открытие файла
+		if (!file.Open(path, CFile::modeCreate | CFile::modeWrite | CFile::typeUnicode))	// Поток записи в файл
+			throw FileNotCreated(path);
+
+		WriteFile(file, L"<!DOCTYPE html>\n"
+			"<html lang=\"ru\">\n"
+			"<head>\n"
+			+ T(1) + L"<meta charset=\"UTF-8\">\n"
+			+ T(1) + L"<title>Замечания</title>\n");
+		CssStyle(file, true);
+		WriteFile(file, L"</head>\n"
+			L"<body>\n"
+			+ T(1) + L"<div class=\"tabs\">\n"
+			+ T(2) + L"<![if gt IE 9]>\n"
+			+ T(3) + L"<input id=\"tab1\" type=\"radio\" name=\"tabs\" checked>\n"
+			+ T(3) + L"<label for=\"tab1\">Отчет</label>\n"
+			+ T(3) + L"<input id=\"tab2\" type=\"radio\" name=\"tabs\">\n"
+			+ T(3) + L"<label for=\"tab2\">Статистика</label>\n"
+			+ T(2) + L"<![endif]>\n"
+			+ T(2) + L"<section id=\"content-tab1\">\n");
+		MainTable(file, data.db);
+		WriteFile(file, T(2) + L"</section>\n"
+			+ T(2) + L"<![if gt IE 9]>\n"
+			+ T(2) + L"<section id=\"content-tab2\">\n");
+		InfoTable(file, SetAmount(data));
+		WriteFile(file, T(2) + L"</section>\n"
+			+ T(2) + L"<![endif]>\n"
+			+ T(1) + L"</div>\n");
+		WriteFile(file, L"</body>\n");
+		//ScriptMain(file);
+		WriteFile(file, L"</html>\n");
+		file.Close();
+	}
+	catch (MyException& exc)
+	{
+		bGenRep = false;
+		logger >> exc.GetMsg();
+	}
 }
 
 // Начало записи замечаний
@@ -167,6 +175,7 @@ void CReport::WriteBook(CStdioFile& file, list <errorData>::iterator& it)
 		WriteFile(file, T(6) + L"<dt>" + it->set[i].data->name + L"</dt>\n");
 	WriteFile(file, T(5) + L"</td>\n");
 
+	// TODO: Записать общие ошибки common (см. StructPIV.h)
 	// Запись синтаксических ошибок
 	WriteFile(file, T(5) + L"<td class=csyntax>\n"); 
 	for (size_t i = 0; i < it->set.size(); i++)
@@ -191,54 +200,63 @@ void CReport::WriteBook(CStdioFile& file, list <errorData>::iterator& it)
 // Запись таблицы с листа
 CString CReport::WriteSheets(sheetData* sheet, const vector <errorSignal>& db, const CString& folder, const CString& bookName) 
 {
-	CString pathFile;
+	CString pathFile, result;	// Результирующая строка для записи ссылки в главный файл
 	isProject ? pathFile.Format(L"%s%s%s\\%s", settings.GetPath(), settings.folders[project], folder, bookName) : 
 		pathFile.Format(L"%s%s%s\\%s", settings.GetPath(), settings.folders[other], folder, bookName);
-	CreateDirectory(pathFile, NULL);
-	
-	CString result;	// Результирующая строка для записи ссылки в главный файл
 	int count = CountError(db);
-
-	if (count > 0) 
+	try
 	{
-		pathFile.Format(_T("%s\\%s.html"), pathFile, sheet->name);
-		CString relativePath = pathFile;
-		relativePath.Delete(0, settings.GetPath().GetLength());
-		isProject ? relativePath.Delete(0, settings.folders[project].GetLength()) : relativePath.Delete(0, settings.folders[other].GetLength());
-		relativePath.Insert(0, L".");
-		result.Format(L"%s<dt><a href=\"%s\">%d</a></dt>\n", T(6), relativePath, count);	// Формирование результирующей строки (ссылки)
-		
-		CStdioFile file(pathFile, CFile::modeCreate | CFile::modeWrite | CFile::typeUnicode);
-		// Шапочка
-		WriteFile(file, L"<!DOCTYPE html>\n"
-			"<html lang=\"ru\">\n"
-			"<head>\n"
-			+ T(1) + L"<meta charset=\"UTF-8\">\n"
-			+ T(1) + L"<title>Замечания по книге \"" + bookName + L"\"</title>\n");
-		CssStyle(file);
-		WriteFile(file, L"</head>\n"
-			"<body>\n"
-		);
-
-		SheetTableHeader(file, bookName, sheet->name, sheet->arinc);
-		WriteFile(file, T(2) + L"<tbody>\n");
-		// Запись наборов данных
-		for (size_t i = 0; i < db.size(); i++)
+		if (!CreateDir(pathFile))
+			throw FolderNotCreated(pathFile);	
+		if (count > 0)
 		{
-			// Индекс ошибки
-			WriteFile(file, T(3) + L"<tr>\n"
-				+ T(4) + L"<th rowspan=\"2\" class=cnum-remark>" + IntToCString((int)i + 1) + L"</th>\n");
-			WriteSignal(file, db[i]);
-		}
+			pathFile.Format(_T("%s\\%s.html"), pathFile, sheet->name);
+			CString relativePath = pathFile;
+			relativePath.Delete(0, settings.GetPath().GetLength());
+			isProject ? relativePath.Delete(0, settings.folders[project].GetLength()) : relativePath.Delete(0, settings.folders[other].GetLength());
+			relativePath.Insert(0, L".");
+			result.Format(L"%s<dt><a href=\"%s\">%d</a></dt>\n", T(6), relativePath, count);	// Формирование результирующей строки (ссылки)
 
-		WriteFile(file, T(2) + L"</tbody>\n"
-			+ T(1) + L"</table>\n"
-			"</body>\n"
-			"</html>");
-		file.Close();
+			CStdioFile file;
+			if (!file.Open(pathFile, CFile::modeCreate | CFile::modeWrite | CFile::typeUnicode))
+				throw FileNotCreated(pathFile);
+			// Шапочка
+			WriteFile(file, L"<!DOCTYPE html>\n"
+				"<html lang=\"ru\">\n"
+				"<head>\n"
+				+ T(1) + L"<meta charset=\"UTF-8\">\n"
+				+ T(1) + L"<title>Замечания по книге \"" + bookName + L"\"</title>\n");
+			CssStyle(file);
+			WriteFile(file, L"</head>\n"
+				"<body>\n"
+			);
+
+			SheetTableHeader(file, bookName, sheet->name, sheet->arinc);
+			WriteFile(file, T(2) + L"<tbody>\n");
+			// Запись наборов данных
+			for (size_t i = 0; i < db.size(); i++)
+			{
+				// Индекс ошибки
+				WriteFile(file, T(3) + L"<tr>\n"
+					+ T(4) + L"<th rowspan=\"2\" class=cnum-remark>" + IntToCString((int)i + 1) + L"</th>\n");
+				WriteSignal(file, db[i]);
+			}
+
+			WriteFile(file, T(2) + L"</tbody>\n"
+				+ T(1) + L"</table>\n"
+				"</body>\n"
+				"</html>");
+			file.Close();
+		}
+		else
+			result.Format(L"%s<dt>-</dt>\n", T(6)); // Формирование результирующей строки
 	}
-	else
-		result.Format(L"%s<dt>-</dt>\n", T(6)); // Формирование результирующей строки
+	catch (MyException& exc)
+	{
+		bGenRep = false;
+		logger >> exc.GetMsg();
+		result.Format(L"%s<dt>%d</dt>\n", T(6), count);
+	}
 	return result;
 }
 
@@ -319,7 +337,7 @@ CString CReport::T(int n)
 // Запись CSS стиля
 void CReport::CssStyle(CStdioFile& file, const bool& isMain)
 {
-	// TODO: Закончить работу с плавующей шапкой
+	// TODO: Исправить незначительные сдвиги плавующей шапки при масштабировании
 	WriteFile(file, T(1) + L"<style type=\"text/css\">\n"
 		+ CssCaption() +
 		CssTable(isMain) +
