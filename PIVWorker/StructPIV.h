@@ -92,6 +92,7 @@ struct signalData
 	bool bitSign = false;						// Флаг наличия знака
 	bool repWord = false;						// Флаг повторения сигнала на других листах
 	signalData* part = nullptr;					// Указатель на старшую (младшую) часть в КПРНО35
+	bool error = false;							// наличие ошибки в параметре
 };
 
 // Данные о наборе параметров / индикационном кадре
@@ -110,7 +111,6 @@ struct sheetData
 	CString line;		// линия передачи
 	npData np;			// 930м - номер набора параметров, кпрно - индикационный кадр
 	int pk = -1;		// 930м - номер подкадра, кпрно - страница пуи
-	bool error = false;	// наличие ошибки на листе
 	bool arinc = false;	// Тип линии передачи: Arinc(true), мкио(false)
 };
 

@@ -632,8 +632,12 @@ amountInfo CReport::SetAmount(pivData& data)
 	{
 		result.all += (int)it->sheets.size();
 		for (size_t j = 0; j < it->sheets.size(); j++)
-			if (it->sheets[j].error)
-				result.withError++;
+			for (size_t k = 0; k < it->sheets[j].signals.size(); k++)
+				if (it->sheets[j].signals[k].error)
+				{
+					result.withError++;
+					break;
+				}
 	}
 	result.withoutError = result.all - result.withError;
 

@@ -69,35 +69,32 @@ void CReport::Generate(const bookData& book)
 	int cNP = 1, cNumWord = 1;	// CRUTCH: Отдельные счетчики для arinc сигналов для подстановки в номер слова
 	for (size_t i = 0; i < book.sheets.size(); i++, cNP++, cNumWord = 1)
 	{
-		// Если нет на странице ошибок
-		if (!book.sheets[i].error || settings.GetGenTxt())
+		CString name;
+		sheetInfo info;
+		info.arinc = book.sheets[i].arinc;
+		info.arinc ? info.np = cNP : info.np = book.sheets[i].np.value;
+		info.pk = book.sheets[i].pk;
+		info.name = book.sheets[i].name;
+
+		// Создание txt файла для записи
+		name.Format(L"NP_%d_%s.txt", info.np, book.sheets[i].name);
+		filePath.Format(L"%s\\%s", path, name);
+		ofstream tmpFile(filePath);
+		mainFile << "#include \"";
+		mainFile << CT2A(name);
+		mainFile << "\"\n";
+
+		for (size_t j = 0; j < book.sheets[i].signals.size(); j++)
 		{
-			CString name;
-			sheetInfo info;
-			info.arinc = book.sheets[i].arinc;
-			info.arinc ? info.np = cNP : info.np = book.sheets[i].np.value;
-			info.pk = book.sheets[i].pk;
-			info.name = book.sheets[i].name;
-
-			// Создание txt файла для записи
-			name.Format(L"NP_%d_%s.txt", info.np, book.sheets[i].name);
-			filePath.Format(L"%s\\%s", path, name);
-			ofstream tmpFile(filePath);
-			mainFile << "#include \"";
-			mainFile << CT2A(name);
-			mainFile << "\"\n";
-
-			for (size_t j = 0; j < book.sheets[i].signals.size(); j++)
-			{
-				if (j != 0 && info.arinc)	
-					if (book.sheets[i].signals[j].numWord.value[0] != book.sheets[i].signals[j - 1].numWord.value[0])
-						cNumWord++;
+			if (j != 0 && info.arinc)	
+				if (book.sheets[i].signals[j].numWord.value[0] != book.sheets[i].signals[j - 1].numWord.value[0])
+					cNumWord++;
+			if (!book.sheets[i].signals[j].error || settings.GetGenTxt())	// Если нет ошибок в параметре или включена принудительная генерация txt
 				WriteTxtParam(tmpFile, book.sheets[i].signals[j], info, cNumWord);	// Запись параметра
-			}
-			tmpFile.close();
+			else
+				logger >> L"Параметр " + book.sheets[i].signals[j].title[1] + L" (лист \"" + book.sheets[i].name + L"\") не сгенерирован";
 		}
-		else
-			logger >> L" На листе \"" + book.sheets[i].name + L"\" имеются ошибки, txt-файл не создан";
+		tmpFile.close();
 	}
 	mainFile.close();
 }

@@ -150,7 +150,7 @@ void CTest::GetErrors(errorSheet& es)
 		if (!signal.error.empty())
 		{
 			es.syntax.push_back(signal);
-			sheet->error = true;
+			sheet->signals[i].error = true;
 			signal.error.clear();
 		}
 		// Проверка семантических ошибок
@@ -158,7 +158,7 @@ void CTest::GetErrors(errorSheet& es)
 		if (!signal.error.empty())
 		{
 			es.simantic.push_back(signal);
-			sheet->error = true;
+			sheet->signals[i].error = true;
 			signal.error.clear();
 		}
 		// Проверка замечаний
@@ -343,14 +343,13 @@ bool CTest::NpTest(errorSheet& es)
 		
 		if (!signal.error.empty())	// Запись ошибки
 		{
-			sheet->error = true;
+			sheet->signals[sheet->np.index].error = true;
 			es.simantic.push_back(signal);
 		}
 			
 	}
 	else
 	{
-		sheet->error = true;
 		es.common.push_back(L"Отсутствует значение <b>набора параметров</b>. Возможные значения: NP, IK_MFPI (МФПИ-35)");
 	}
 	return result;
