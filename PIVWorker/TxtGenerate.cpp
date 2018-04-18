@@ -10,17 +10,39 @@ static char THIS_FILE[] = __FILE__;
 #endif
 
 // одного 
-void CReport::GetTxt(const bookData& book)
+bool CReport::GetTxt(const bookData& book)
 {
-	Generate(book);
+	try 
+	{
+		Generate(book);
+	}
+	catch (MyException& exc)
+	{
+		logger >> exc.GetMsg();
+		return false;
+	}
+	return true;
 }
 
 // нескольких
-void CReport::GetTxt(list <bookData>& books)
+bool CReport::GetTxt(list <bookData>& books)
 {
+	bool result = true;
+	
 	// Обход по книгам
 	for (list <bookData>::iterator it = books.begin(); it != books.end(); it++)
-		Generate(*it);
+	{
+		try
+		{
+			Generate(*it);
+		}
+		catch (MyException& exc)
+		{
+			logger >> exc.GetMsg();
+			result = false;
+		}
+	}
+	return result;
 }
 
 // Генерация txt протоколов

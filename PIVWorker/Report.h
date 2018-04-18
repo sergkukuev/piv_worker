@@ -46,10 +46,11 @@ public:
 	CReport();	// Конструктор
 	~CReport();	// Деструктор
 
+	// Report.cpp
 	bool GetReport(pivData& data, const bool& isProj);	// Генерация отчета об ошибках
-	// Генерация txt файлов
-	void GetTxt(list <bookData>& books);	// несколько файлов
-	void GetTxt(const bookData& book);		// один файл
+	// TxtGenerate.cpp
+	bool GetTxt(list <bookData>& books);	// несколько файлов
+	bool GetTxt(const bookData& book);		// один файл
 
 private:
 	CSettings& settings = CSettings::Instance();			// Указатель на настройки
