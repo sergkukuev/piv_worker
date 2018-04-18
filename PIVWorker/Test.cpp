@@ -254,6 +254,7 @@ void CTest::SyntaxChecker(errorSignal& signal, const int& i)
 		}
 		catch (UndefinedError& exc)
 		{
+			sheet->signals[i].error = true;
 			logger >> exc.GetMsg();
 		}
 	}
