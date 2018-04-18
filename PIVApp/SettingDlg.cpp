@@ -27,7 +27,7 @@ CSettingDlg::CSettingDlg(CWnd* pParent /*=NULL*/)
 		this->pSettings = &dlgParent->settings;
 		bNumPk = pSettings->bNumPK;
 		bGenTxt = pSettings->bGenTxt;
-		bNpBase = pSettings->bNpBase;
+		bComment = pSettings->bComment;
 		iProject = pSettings->iProject;
 		iMethod = pSettings->iMethod;
 	}
@@ -36,7 +36,7 @@ CSettingDlg::CSettingDlg(CWnd* pParent /*=NULL*/)
 		AfxMessageBox(L"Не удалось получить текущие настройки DLL. Установлены настройки по умолчанию.");
 		bNumPk = FALSE;
 		bGenTxt = FALSE;
-		bNpBase = FALSE;
+		bComment = FALSE;
 		iProject = project::p930m;
 		iMethod = method::patterned;
 	}
@@ -48,16 +48,16 @@ void CSettingDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CDialog::DoDataExchange(pDX);
 	DDX_Check(pDX, IDC_CHECK_NUMPK, bNumPk);
-	DDX_Check(pDX, IDC_CHECK_TXT100, bGenTxt);
-	DDX_Check(pDX, IDC_CHECK_NPBASE, bNpBase);
+	DDX_Check(pDX, IDC_CHECK_PARAM, bGenTxt);
+	DDX_Check(pDX, IDC_CHECK_COMMENT, bComment);
 	DDX_Radio(pDX, IDC_930M, iProject);
 	DDX_Radio(pDX, IDC_TEMPLATE, iMethod);
 }
 
 BEGIN_MESSAGE_MAP(CSettingDlg, CDialog)
-	ON_BN_CLICKED(IDC_CHECK_TXT100, &CSettingDlg::OnEnableBtnSave)
+	ON_BN_CLICKED(IDC_CHECK_PARAM, &CSettingDlg::OnEnableBtnSave)
 	ON_BN_CLICKED(IDC_CHECK_NUMPK, &CSettingDlg::OnEnableBtnSave)
-	ON_BN_CLICKED(IDC_CHECK_NPBASE, &CSettingDlg::OnEnableBtnSave)
+	ON_BN_CLICKED(IDC_CHECK_COMMENT, &CSettingDlg::OnEnableBtnSave)
 	ON_BN_CLICKED(IDC_FAST, &CSettingDlg::OnEnableBtnSave)
 	ON_BN_CLICKED(IDC_TEMPLATE, &CSettingDlg::OnEnableBtnSave)
 	ON_BN_CLICKED(IDC_930M, &CSettingDlg::OnEnableBtnSave)
@@ -72,10 +72,10 @@ BOOL CSettingDlg::OnInitDialog()
 {
 	CButton *pCheck = (CButton*)this->GetDlgItem(IDC_CHECK_NUMPK);
 	pCheck->SetCheck(bNumPk);
-	pCheck = (CButton*)GetDlgItem(IDC_CHECK_TXT100);
+	pCheck = (CButton*)GetDlgItem(IDC_CHECK_PARAM);
 	pCheck->SetCheck(bGenTxt);
-	pCheck = (CButton*)GetDlgItem(IDC_CHECK_NPBASE);
-	pCheck->SetCheck(bNpBase);
+	pCheck = (CButton*)GetDlgItem(IDC_CHECK_COMMENT);
+	pCheck->SetCheck(bComment);
 	
 	if (iProject == project::p930m)
 		pCheck = (CButton*)this->GetDlgItem(IDC_930M);
@@ -96,7 +96,7 @@ void CSettingDlg::SetParameters()
 {
 	pSettings->bNumPK = (bool)bNumPk;
 	pSettings->bGenTxt = (bool)bGenTxt;
-	pSettings->bNpBase = (bool)bNpBase;
+	pSettings->bComment = (bool)bComment;
 
 	pSettings->iProject = iProject;
 	pSettings->iMethod = iMethod;

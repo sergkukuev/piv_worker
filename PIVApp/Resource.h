@@ -37,17 +37,15 @@
 #define IDC_SHOW_REP                    1041
 #define IDC_SAVESETTINGS                1045
 #define IDC_CHECK_NUMPK                 1047
-#define IDC_CHECK_TXT100                1048
+#define IDC_CHECK_PARAM                 1048
 #define IDC_930M                        1049
 #define IDC_KPRNO35                     1050
 #define IDC_FAST                        1051
 #define IDC_TEMPLATE                    1052
-#define IDC_CHECK_NUMPK2                1053
-#define IDC_CHECK_NPBASE                1053
+#define IDC_CHECK_COMMENT               1053
 #define IDC_RADIO_PROJ                  1055
 #define IDC_RADIO_TEST                  1056
 #define IDC_REPORT_TABLE                1057
-#define IDC_BUTTON1                     1058
 #define IDC_OPEN_LOG                    1059
 
 // Next default values for new objects
