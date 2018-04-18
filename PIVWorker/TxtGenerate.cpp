@@ -1,7 +1,9 @@
 #include "stdafx.h"
 
 #include <fstream>
+
 #include "Report.h"
+#include "SubFunc.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW

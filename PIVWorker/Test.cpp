@@ -1,5 +1,6 @@
 ﻿#include "stdafx.h"
 #include "Test.h"
+#include "SubFunc.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW

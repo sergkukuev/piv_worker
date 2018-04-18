@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "ReaderExcel.h"
+#include "SubFunc.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
