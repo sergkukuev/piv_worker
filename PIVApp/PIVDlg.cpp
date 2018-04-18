@@ -51,11 +51,12 @@ void Waiting(CPIVDlg& dlg, HWND hWnd)
 
 void CPIVDlg::ReceiveMessage(HWND hWnd)
 {
+	piv.WriteLog(logdll::stThread[logdll::start]);
 	while (1)
 	{
 		CString temp = piv.GetStatus();
 
-		if (temp.Compare(logdll::stApp[logdll::end]) == 0)
+		if (temp.Compare(logdll::stThread[logdll::end]) == 0)
 			break;
 
 		::SendMessage(hWnd, WM_EXCHANGE_DLL, 0, reinterpret_cast<LPARAM>(&temp));
@@ -121,7 +122,6 @@ BOOL CPIVDlg::OnInitDialog()
 {
 	//_crtBreakAlloc = /*587*/879627;
 	CDialogEx::OnInitDialog();
-	piv.WriteLog(logdll::stApp[logdll::start]);
 	// TODO: Добавление пункта "О программе..." в системное меню.
 	// IDM_ABOUTBOX должен быть в пределах системной команды.
 	/*ASSERT((IDM_ABOUTBOX & 0xFFF0) == IDM_ABOUTBOX);
@@ -629,7 +629,7 @@ void CPIVDlg::UpdateMenu()
 // Закрытие окна
 void CPIVDlg::OnClose()
 {
-	piv.WriteLog(logdll::stApp[logdll::end]);
+	piv.WriteLog(logdll::stThread[logdll::end]);
 	WaitForSingleObject(hWait, INFINITE);
 
 	hWait != 0 ? CloseHandle(hWait) : AfxMessageBox(L"Поток логирования закрылся где-то раньше");

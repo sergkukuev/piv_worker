@@ -22,13 +22,11 @@ CLogger::CLogger()
 	path = stg.GetDefaultPath();
 	path.Format(L"%s\\%s", path, lgFolder);
 	WriteInFile(lgSlash);
-	WriteInFile(stDLL[start]);
 }
 
 // Деструктор
 CLogger::~CLogger()	
 {
-	WriteInFile(stDLL[end]);
 	DeleteCriticalSection(&csFile);
 	DeleteCriticalSection(&csStat);
 }
