@@ -2,7 +2,6 @@
 
 #include <cstring>
 #include <vector>
-#include <map>
 
 using namespace std;
 
@@ -56,19 +55,95 @@ namespace dwPart
 }
 
 // Преобразование кириллицы в латиницу
-namespace CyrToLat
+namespace myctl
 {
 	// Карта соответствий кириллицы (1) и латиницы (2)
 	// лмнопрстуфхцчшщьыъэюя
-	const map <wchar_t, wchar_t> ctl = { { L'а', L'a' },{ L'А', L'A' },
+	/*const map <wchar_t, wchar_t> ctl = { { L'а', L'a' },{ L'А', L'A' },
 	{ L'В', L'B' },{ L'е', L'e' },{ L'Е', L'E' },{ L'ё', L'e' },
 	{ L'Ё', L'E' },{ L'к', L'k' },{ L'К', L'K' },{ L'М', L'M' },
 	{ L'Н', L'H' },{ L'о', L'o' },{ L'О', L'O' },{ L'р', L'p' },
 	{ L'Р', L'P' },{ L'с', L'c' },{ L'С', L'C' },{ L'Т', L'T' },
-	{ L'у', L'y' },{ L'У', L'Y' },{ L'х', L'x' },{ L'Х', L'X' } };
+	{ L'у', L'y' },{ L'У', L'Y' },{ L'х', L'x' },{ L'Х', L'X' } };*/
 
-	static void CyrToLat(CString& str)
+	// Приведение букв кириллицы к похожим по виду буквам латинского алфавита
+	static void Cyr2Lat(CString& result)
 	{
-		return;
+		CString temp = result;
+		for (int i = 0; i < result.GetLength(); i++)
+		{
+			wchar_t symbol;
+			switch (temp[i])
+			{
+			case L'а': symbol = L'a';
+			case L'А': symbol = L'A';
+			case L'б': symbol = L'b';
+			case L'В': symbol = L'B';
+			case L'г': symbol = L'r';
+			case L'е': symbol = L'e';
+			case L'Е': symbol = L'E';
+			case L'ё': symbol = L'e';
+			case L'Ё': symbol = L'E';
+			case L'И': symbol = L'N';
+			case L'к': symbol = L'k';
+			case L'К': symbol = L'K';
+			case L'м': symbol = L'm';
+			case L'М': symbol = L'M';
+			case L'о': symbol = L'o';
+			case L'О': symbol = L'O';
+			case L'п': symbol = L'n';
+			case L'р': symbol = L'p';
+			case L'Р': symbol = L'P';
+			case L'с': symbol = L'c';
+			case L'С': symbol = L'C';
+			case L'Т': symbol = L'T';
+			case L'у': symbol = L'y';
+			case L'У': symbol = L'Y';
+			case L'х': symbol = L'x';
+			case L'Х': symbol = L'X';
+			default: symbol = temp[i];	// Буква ни на что не похожа, оставляем как есть
+			// Непохожие буквы кириллицы
+			/*case L'Б': return L'B';
+			case L'в': return L'v';
+			case L'Г': return L'G';
+			case L'д': return L'd';
+			case L'Д': return L'D';
+			case L'ж': return L'z';
+			case L'Ж': return L'z';
+			case L'З': return L'Z';
+			case L'з': return L'z';
+			case L'и': return L'';
+			case L'й': return L'';
+			case L'Й': return L'';
+			case L'л': return L'l';
+			case L'Л': return L'L';
+			case L'т': return L't';
+			case L'П': return L'N';
+			case L'ф': return L'';
+			case L'Ф': return L'';
+			case L'ц': return L'';
+			case L'Ц': return L'';
+			case L'ч': return L'';
+			case L'Ч': return L'';
+			case L'ш': return L'';
+			case L'Ш': return L'';
+			case L'щ': return L'';
+			case L'Щ': return L'';
+			case L'ъ': return L'';
+			case L'Ъ': return L'';
+			case L'ы': return L'';
+			case L'Ы': return L'';
+			case L'ь': return L'';
+			case L'Ь': return L'';
+			case L'э': return L'';
+			case L'Э': return L'';
+			case L'ю': return L'';
+			case L'Ю': return L'';
+			case L'я': return L'';
+			case L'Я': return L'';*/
+			}
+			temp.Replace(temp[i], symbol);
+		}
+		result = temp;
 	}
 }

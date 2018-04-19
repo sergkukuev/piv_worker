@@ -173,7 +173,8 @@ bool CReport::WriteParamTitle(ofstream& file, const signalData& signal, const sh
 	buffer.Remove(L'\n');
 	buffer.Remove(L'\t');
 	buffer.Remove(L' ');
-	WriteFile(file, L"PAR=" + buffer, bParHide);	// TODO: Сделать преобразоватор кириллицы в латиницу
+	myctl::Cyr2Lat(buffer);
+	WriteFile(file, L"PAR=" + buffer, bParHide);
 	//buffer.Format(L"%s%s\n", L"PAR=", buffer);	// TODO: В некоторых случаях метод CString.Format() выдает некорректную строку
 
 	// Наименования сигнала
