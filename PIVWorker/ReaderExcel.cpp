@@ -152,8 +152,8 @@ void CReaderExcel::GetSignals(vector <signalData>& signals, const bool& bArinc)
 		if (!arinc.flag)
 		{
 			CString tmp;
-			// TODO: Сделать соответствие латинских и кириллицу, хитрецы пишут разными буковками
 			tmp.Format(L"%d", arinc.current);
+			myctl::Cyr2Lat(signal.title[1]);	// Преобразование кириллицы в латиницу
 			int pos = signal.title[1].Find(arinc.symbol);
 			signal.title[1].Replace(arinc.symbol, tmp);
 		}
@@ -263,6 +263,7 @@ void CReaderExcel::GetArinc(arincData& arinc, const long& row, CString numeric)
 	if (posEqual != -1)
 	{
 		arinc.symbol = numeric[posEqual - 1];
+		myctl::Cyr2Lat(arinc.symbol);	// Перевод кириллицы в латиницу
 		arinc.startRow = row;
 		arinc.flag = false;
 
@@ -908,12 +909,10 @@ bool CReaderExcel::IsRemark(const long& row)
 // Проверка линии передачи
 bool CReaderExcel::IsArinc()
 {
-	CString line;	// Строка линии передачи
 	Cell cell;		// Ячейка
-	bool result;
+	bool result = false;
 	if (work.FindCell(line, cell))
-		line = work.CellValue(cell.row, cell.column + 1);
-	line.Find(ARINC) != -1 ? result = true : result = false;
+		work.CellValue(cell.row, cell.column + 1).Find(ARINC) != -1 ? result = true : result = false;
 	return result;
 }
 
