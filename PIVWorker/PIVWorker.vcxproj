@@ -264,6 +264,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <ModuleDefinitionFile>.\PIVWorker.def</ModuleDefinitionFile>
       <OutputFile>d:\03_DEVELOP\EXE\PIVWorker\$(TargetName)$(TargetExt)</OutputFile>
+      <LinkTimeCodeGeneration>Default</LinkTimeCodeGeneration>
     </Link>
     <Midl>
       <MkTypLibCompatible>false</MkTypLibCompatible>
