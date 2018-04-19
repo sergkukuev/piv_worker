@@ -75,32 +75,32 @@ namespace myctl
 			wchar_t symbol;
 			switch (temp[i])
 			{
-			case L'а': symbol = L'a';
-			case L'А': symbol = L'A';
-			case L'б': symbol = L'b';
-			case L'В': symbol = L'B';
-			case L'г': symbol = L'r';
-			case L'е': symbol = L'e';
-			case L'Е': symbol = L'E';
-			case L'ё': symbol = L'e';
-			case L'Ё': symbol = L'E';
-			case L'И': symbol = L'N';
-			case L'к': symbol = L'k';
-			case L'К': symbol = L'K';
-			case L'м': symbol = L'm';
-			case L'М': symbol = L'M';
-			case L'о': symbol = L'o';
-			case L'О': symbol = L'O';
-			case L'п': symbol = L'n';
-			case L'р': symbol = L'p';
-			case L'Р': symbol = L'P';
-			case L'с': symbol = L'c';
-			case L'С': symbol = L'C';
-			case L'Т': symbol = L'T';
-			case L'у': symbol = L'y';
-			case L'У': symbol = L'Y';
-			case L'х': symbol = L'x';
-			case L'Х': symbol = L'X';
+			case L'а': symbol = L'a'; break;
+			case L'А': symbol = L'A'; break;
+			case L'б': symbol = L'b'; break;
+			case L'В': symbol = L'B'; break;
+			case L'г': symbol = L'r'; break;
+			case L'е': symbol = L'e'; break;
+			case L'Е': symbol = L'E'; break;
+			case L'ё': symbol = L'e'; break;
+			case L'Ё': symbol = L'E'; break;
+			case L'И': symbol = L'N'; break;
+			case L'к': symbol = L'k'; break;
+			case L'К': symbol = L'K'; break;
+			case L'м': symbol = L'm'; break;
+			case L'М': symbol = L'M'; break;
+			case L'о': symbol = L'o'; break;
+			case L'О': symbol = L'O'; break;
+			case L'п': symbol = L'n'; break;
+			case L'р': symbol = L'p'; break;
+			case L'Р': symbol = L'P'; break;
+			case L'с': symbol = L'c'; break;
+			case L'С': symbol = L'C'; break;
+			case L'Т': symbol = L'T'; break;
+			case L'у': symbol = L'y'; break;
+			case L'У': symbol = L'Y'; break;
+			case L'х': symbol = L'x'; break;
+			case L'Х': symbol = L'X'; break;
 			default: symbol = temp[i];	// Буква ни на что не похожа, оставляем как есть
 			// Непохожие буквы кириллицы
 			/*case L'Б': return L'B';

@@ -154,7 +154,6 @@ void CReaderExcel::GetSignals(vector <signalData>& signals, const bool& bArinc)
 			CString tmp;
 			tmp.Format(L"%d", arinc.current);
 			myctl::Cyr2Lat(signal.title[1]);	// ѕреобразование кириллицы в латиницу
-			int pos = signal.title[1].Find(arinc.symbol);
 			signal.title[1].Replace(arinc.symbol, tmp);
 		}
 
