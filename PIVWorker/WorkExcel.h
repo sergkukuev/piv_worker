@@ -58,6 +58,9 @@ public:
 	long CNextEmpty(const long& row, const long& column);
 	//  оличество слитых €чеек
 	long GetMerge(long& row, const long& column);
+protected:
+	Cell Start() { return first; }	// ѕерва€ €чейка excel
+	Cell End() { return last; }		// ѕоследн€€ €чейка excel
 private:
 	COleSafeArray* cells = NULL;	// ƒанные текущего листа
 	Cell first;		// ѕерва€ €чейка текущего листа

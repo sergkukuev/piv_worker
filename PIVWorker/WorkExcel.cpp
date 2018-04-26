@@ -83,7 +83,7 @@ CString CWorkExcel::BookName()
 // Имя книги из пути файла
 CString CWorkExcel::BookName(const CString& path)
 {
-	return path.Mid(path.ReverseFind(L'\\') + 1, path.ReverseFind(L'.') - path.ReverseFind(L'\\') - 1);
+	return path.Mid(path.ReverseFind(L'\\') + 1, path.ReverseFind(L'.') - path.ReverseFind(L'\\') - 1);	// TODO: Если у книги нет разрешения, выдаст некорректный результат
 }
 
 // Открытие листа
