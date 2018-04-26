@@ -7,76 +7,97 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
-using namespace exceldll;
-
 // Конструктор
-CWorkExcel::CWorkExcel(void) 
+CWorkExcel::CWorkExcel(const CString& path)
 {
-	if (!app.CreateDispatch(L"Excel.Application", NULL))
-		throw AccessExcelException();
-	app.put_Visible(FALSE);
-	app.put_UserControl(FALSE);
-	books.AttachDispatch(app.get_Workbooks());
-	cells = NULL;
+	Initialize();
+	OpenBook(path);
+}
+
+// Базовый конструктор
+CWorkExcel::CWorkExcel() 
+{
+	Initialize();
 }
 
 // Деструктор
-CWorkExcel::~CWorkExcel(void) 
+CWorkExcel::~CWorkExcel() 
 {
-	sheet.ReleaseDispatch();
-	sheets.ReleaseDispatch();
-	book.ReleaseDispatch();
-	books.ReleaseDispatch();
-	app.Quit();
-	app.ReleaseDispatch();
+	// TODO: Не запускается десктруктор при преждевременном закрытии приложения
+	Destroy();
+	CApplication::Quit();
+	CApplication::ReleaseDispatch();
+}
+
+// Инициализация excel
+void CWorkExcel::Initialize()
+{
+	if (!CApplication::CreateDispatch(L"Excel.Application", NULL))
+		throw AccessExcelException();
+	CApplication::put_Visible(FALSE);
+	CApplication::put_UserControl(FALSE);
+}
+
+// Закрытие всех компонентов excel
+void CWorkExcel::Destroy()
+{
+	CWorksheet::ReleaseDispatch();
+	CWorksheets::ReleaseDispatch();
+	CWorkbook::ReleaseDispatch();
+	CWorkbooks::ReleaseDispatch();
+	first = last = { 0, 0 };
 	delete cells;
 }
 
 // Открытие книги
 bool CWorkExcel::OpenBook(const CString& path) 
 {
+	CWorkbooks::AttachDispatch(CApplication::get_Workbooks());
 	COleVariant covOptional((long)DISP_E_PARAMNOTFOUND, VT_ERROR);
-	LPDISPATCH Lp = books.Open(path, covOptional, covOptional, covOptional, covOptional, covOptional,
+	LPDISPATCH Lp = CWorkbooks::Open(path, covOptional, covOptional, covOptional, covOptional, covOptional,
 						  covOptional, covOptional, covOptional, covOptional, covOptional,
 						  covOptional, covOptional, covOptional, covOptional);
 	if (Lp == NULL)	
 		return false;
 
-	book.AttachDispatch(Lp);
-	sheets.AttachDispatch(book.get_Sheets());
-
+	CWorkbook::AttachDispatch(Lp);
+	CWorksheets::AttachDispatch(CWorkbook::get_Sheets());
 	return true;
 }
 
-// Получение имени книги
+// Закрытие книги
+void CWorkExcel::CloseBook()
+{
+	Destroy();
+}
+
+// Имя книги
 CString CWorkExcel::BookName() 
 {
-	CString result = book.get_Name();
+	CString result = CWorkbook::get_Name();
 	int startPos = result.ReverseFind(L'.');
 	result.Delete(startPos, result.GetLength() - startPos);
 	return result;
 }
 
-// Получение имени книги из пути
-CString CWorkExcel::BookName(const CString& path) 
+// Имя книги из пути файла
+CString CWorkExcel::BookName(const CString& path)
 {
-	int posSlash = path.ReverseFind(L'\\');
-	return path.Mid(posSlash + 1, path.GetLength());
+	return path.Mid(path.ReverseFind(L'\\') + 1, path.ReverseFind(L'.') - path.ReverseFind(L'\\') - 1);
 }
 
 // Открытие листа
 bool CWorkExcel::OpenSheet(const long& index) 
 {
-	LPDISPATCH Lp = sheets.get_Item(COleVariant(index));
+	LPDISPATCH Lp = CWorksheets::get_Item(COleVariant(index));
 	if (Lp == NULL)	
 		return false;
 	
-	CRange range;
-	sheet.AttachDispatch(Lp);
-	Lp = sheet.get_UsedRange();
-	range.AttachDispatch(Lp);
+	CWorksheet::AttachDispatch(Lp);
+	Lp = CWorksheet::get_UsedRange();
+	CRange::AttachDispatch(Lp);
 
-	VARIANT items = range.get_Value2();
+	VARIANT items = CRange::get_Value2();
 	if (cells != NULL)
 		delete cells;
 
@@ -94,16 +115,19 @@ bool CWorkExcel::OpenSheet(const long& index)
 	return true;
 }
 
-// Получение имени текущего листа
-CString CWorkExcel::SheetName()	{ return sheet.get_Name(); }
+// Имя текущего листа
+CString CWorkExcel::SheetName()	{ return CWorksheet::get_Name(); }
 
-// Получение количества листов в книге
-long CWorkExcel::CountSheets()	{ return sheets.get_Count(); }
+// Количество листов в текущей книги
+long CWorkExcel::CountSheets()	{ return CWorksheets::get_Count(); }
 
-// Получение значения ячейки
+/// Количество строк на текущем листе
+long CWorkExcel::CountRows() { return last.row; }
+
+// Значение ячейки
 CString CWorkExcel::CellValue(const Cell& cell) { return CellValue(cell.row, cell.column); }
 
-// Получение значения ячейки
+// Значение ячейки
 CString CWorkExcel::CellValue(const long& row, const long& column) 
 {
 	VARIANT item;
@@ -112,46 +136,16 @@ CString CWorkExcel::CellValue(const long& row, const long& column)
 	long index[2] = { row, column };
 	cells->GetElement(index, &item);
 	CString result(item);
+	// TODO: Поставить проверку результата, иногда сбоит
 	result.Trim();
 	return result;
 }
 
-// Получение границы страницы excel листа
-Cell CWorkExcel::Boundary() { return last; }
+// Границы листа
+CWorkExcel::Cell CWorkExcel::Boundary() { return last; }
 
-// Получение количества строк в листе
-long CWorkExcel::CountRows() { return last.row; }
-
-// Поиск заголовков на текущем листе
-bool CWorkExcel::FindHeader(Header& header, const bool& bArinc) 
-{
-	for (size_t i = 0; i < header.list.size(); i++) 
-	{
-		std::vector<CString>::iterator it = header.list[i].begin();
-		bool bFind = false;
-		Cell cell = first;
-		
-		for (it; !bFind; it++) 
-		{
-			if (!bArinc && i + 1 == iAdress)
-				break;
-			if ((it == header.list[i].end()) && !bFind)
-				return false;
-			bFind = FindCell(*it, cell);
-		}
-		if (!bArinc && i + 1 == iAdress) 
-		{
-			header.adress[i + 1] = -1;
-			continue;
-		}
-			
-		header.adress[iRow] = cell.row;
-		header.adress[i + 1] = cell.column;
-	}
-	return true;
-}
-
-// Поиск ячейки по содержимому, в противном cell(-1,-1)
+// Поиск ячейки по содержимому
+// Результат не найден, ячейка (-1,-1)
 bool CWorkExcel::FindCell(const CString& field, Cell& cell)
 {
 	for (long i = first.row; i <= last.row; i++) 
@@ -170,7 +164,7 @@ bool CWorkExcel::FindCell(const CString& field, Cell& cell)
 	return false;
 }
 
-// Кол-во пустых ячеек после 
+// Количество пустых ячеек выше указанной
 long CWorkExcel::CPrevEmpty(const long& row, const long& column) 
 {
 	CString field = CellValue(row, column);
@@ -186,7 +180,7 @@ long CWorkExcel::CPrevEmpty(const long& row, const long& column)
 	return row - tmpRow;
 }
 
-// Кол-во пустых ячеек после 
+// Количество пустых ячеек ниже указанной
 long CWorkExcel::CNextEmpty(const long& row, const long& column) 
 {
 	CString field = CellValue(row, column);
@@ -209,7 +203,7 @@ long CWorkExcel::GetMerge(long& row, const long& column)
 	CString cell;
 	cell.Format(L"%s%d", LongToChar(column), row);
 	
-	CRange range = sheet.get_Range(COleVariant(cell), COleVariant(cell));
+	CRange range = CWorksheet::get_Range(COleVariant(cell), COleVariant(cell));
 	range = range.get_MergeArea();
 	range = range.get_Rows();
 	row = range.get_Row();
