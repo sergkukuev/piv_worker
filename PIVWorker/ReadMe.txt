@@ -25,10 +25,10 @@ PIVWorker.vcxproj.filters
 
 PIVWorker.h
     This is the main header file for the DLL.  It declares the
-    CPIVWorkerApp class.
+    CPIVWorkerWorkerApp class.
 
 PIVWorker.cpp
-    This is the main DLL source file.  It contains the class CPIVWorkerApp.
+    This is the main DLL source file.  It contains the class CPIVWorkerWorkerApp.
 
 PIVWorker.rc
     This is a listing of all of the Microsoft Windows resources that the

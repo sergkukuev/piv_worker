@@ -20,7 +20,7 @@ CSettingDlg::CSettingDlg(CWnd* pParent /*=NULL*/)
 #ifndef _WIN32_WCE
 	EnableActiveAccessibility();
 #endif	
-	CPIVDlg* dlgParent = (CPIVDlg*) pParent;
+	CPIVWorkerDlg* dlgParent = (CPIVWorkerDlg*) pParent;
 	// Установка параметров
 	if (dlgParent != NULL)
 	{

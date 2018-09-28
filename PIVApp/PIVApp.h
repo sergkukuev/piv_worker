@@ -11,14 +11,14 @@
 #include "resource.h"		// основные символы
 
 
-// CPIVApp:
+// CPIVWorkerApp:
 // О реализации данного класса см. PIVApp.cpp
 //
 
-class CPIVApp : public CWinApp
+class CPIVWorkerApp : public CWinApp
 {
 public:
-	CPIVApp();
+	CPIVWorkerApp();
 
 // Переопределение
 public:
@@ -31,4 +31,4 @@ public:
 	virtual BOOL ProcessMessageFilter(int, LPMSG);	// Передача акселераторов
 };
 
-extern CPIVApp theApp;
+extern CPIVWorkerApp theApp;

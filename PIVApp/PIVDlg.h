@@ -15,12 +15,12 @@
 #define PROJECT 0
 #define OTHER 1
 
-// диалоговое окно CPIVDlg
-class CPIVDlg : public CDialogEx
+// диалоговое окно CPIVWorkerDlg
+class CPIVWorkerDlg : public CDialogEx
 {
 // Создание
 public:
-	CPIVDlg(CWnd* pParent = NULL);	// стандартный конструктор
+	CPIVWorkerDlg(CWnd* pParent = NULL);	// стандартный конструктор
 
 // Данные диалогового окна
 #ifdef AFX_DESIGN_TIME
@@ -46,12 +46,12 @@ protected:
 	afx_msg void OnContextMenu(CWnd* pWnd, CPoint point);
 
 	// Логирование
-	friend void Waiting(CPIVDlg& dlg, HWND);
+	friend void Waiting(CPIVWorkerDlg& dlg, HWND);
 	void ReceiveMessage(HWND);
 
 	DECLARE_MESSAGE_MAP()
 private:
-	CPIV piv;	// Класс для работы с DLL по обработке протоколов
+	CPIVWorker piv;	// Класс для работы с DLL по обработке протоколов
 	vector <CString> pathProj;		// Пути файлов проекта
 	vector <CString> pathOther;	// Пути отдельных файлов
 	

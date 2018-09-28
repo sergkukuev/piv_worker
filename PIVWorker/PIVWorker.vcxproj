@@ -280,6 +280,8 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Data.cpp" />
+    <ClCompile Include="PIV.cpp" />
     <ClCompile Include="Logger.cpp" />
     <ClCompile Include="PIVWorker.cpp" />
     <ClCompile Include="ReaderExcel.cpp" />
@@ -298,6 +300,7 @@
     <ClCompile Include="WorkExcel.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Data.h" />
     <ClInclude Include="DllDeclare.h" />
     <ClInclude Include="excel\CApplication.h" />
     <ClInclude Include="excel\CRange.h" />
@@ -307,6 +310,7 @@
     <ClInclude Include="excel\CWorksheets.h" />
     <ClInclude Include="Logger.h" />
     <ClInclude Include="MyException.h" />
+    <ClInclude Include="PIV.h" />
     <ClInclude Include="PIVWorker.h" />
     <ClInclude Include="ReaderExcel.h" />
     <ClInclude Include="Report.h" />

@@ -13,16 +13,16 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
-// CPIVApp
+// CPIVWorkerApp
 
-BEGIN_MESSAGE_MAP(CPIVApp, CWinApp)
+BEGIN_MESSAGE_MAP(CPIVWorkerApp, CWinApp)
 	ON_COMMAND(ID_HELP, &CWinApp::OnHelp)
 END_MESSAGE_MAP()
 
 
-// создание CPIVApp
+// создание CPIVWorkerApp
 
-CPIVApp::CPIVApp()
+CPIVWorkerApp::CPIVWorkerApp()
 {
 	// поддержка диспетчера перезагрузки
 	m_dwRestartManagerSupportFlags = AFX_RESTART_MANAGER_SUPPORT_RESTART;
@@ -32,14 +32,14 @@ CPIVApp::CPIVApp()
 }
 
 
-// Единственный объект CPIVApp
+// Единственный объект CPIVWorkerApp
 
-CPIVApp theApp;
+CPIVWorkerApp theApp;
 
 
-// инициализация CPIVApp
+// инициализация CPIVWorkerApp
 
-BOOL CPIVApp::InitInstance()
+BOOL CPIVWorkerApp::InitInstance()
 {
 	// InitCommonControlsEx() требуется для Windows XP, если манифест
 	// приложения использует ComCtl32.dll версии 6 или более поздней версии для включения
@@ -76,7 +76,7 @@ BOOL CPIVApp::InitInstance()
 
 	SetRegistryKey(_T("SB-113"));
 
-	CPIVDlg dlg;
+	CPIVWorkerDlg dlg;
 	m_pMainWnd = &dlg;
 	INT_PTR nResponse = dlg.DoModal();
 	if (nResponse == IDOK)
@@ -110,7 +110,7 @@ BOOL CPIVApp::InitInstance()
 	return FALSE;
 }
 
-BOOL CPIVApp::ProcessMessageFilter(int code, LPMSG lpMsg)
+BOOL CPIVWorkerApp::ProcessMessageFilter(int code, LPMSG lpMsg)
 {
 	if (code >= 0 && m_pMainWnd && m_hAccel)
 	{

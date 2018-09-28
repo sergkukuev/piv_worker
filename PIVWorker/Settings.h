@@ -5,7 +5,7 @@
 
 #include "DllDeclare.h"
 
-class PIV_DECLARE CPIV;	// Объявление существующего класса
+class PIV_DECLARE CPIVWorker;	// Объявление существующего класса
 
 namespace stgdll
 {
@@ -36,43 +36,43 @@ namespace stgdll
 		}
 		return PathFileExists(path);
 	}
+};
 
-	// Класс настроек
-	class PIV_DECLARE CSettings
+// Класс настроек
+class PIV_DECLARE CSettings
+{
+	friend class CPIVWorker;
+public:
+	static CSettings& Instance()
 	{
-		friend class CPIV;
-	public:
-		static CSettings& Instance()
-		{
-			static CSettings stg;
-			return stg;
-		}
-		// Папки артефактов
-		const std::vector<CString> folders = { L"\\Artefacts", L"\\Text", L"\\Project", L"\\Other", L"\\Error",
-			L"\\Error\\Syntax", L"\\Error\\Simantic", L"\\Warning" };
+		static CSettings stg;
+		return stg;
+	}
+	// Папки артефактов
+	const std::vector<CString> folders = { L"\\Artefacts", L"\\Text", L"\\Project", L"\\Other", L"\\Error",
+		L"\\Error\\Syntax", L"\\Error\\Simantic", L"\\Warning" };
 
-		// Получение параметров настройки
-		stgParams GetParameters();
-		int GetProject();	// Проект проверки
-		int GetMethod();	// Метод проверки
-		bool GetNumPk();	// Флаг установки номера подкадра при генерации txt
-		bool GetParHide();	// Флаг принудительной генерации txt
-		bool GetComHide();	// Флаг использования базы номеров наборов
+	// Получение параметров настройки
+	stgParams GetParameters();
+	int GetProject();	// Проект проверки
+	int GetMethod();	// Метод проверки
+	bool GetNumPk();	// Флаг установки номера подкадра при генерации txt
+	bool GetParHide();	// Флаг принудительной генерации txt
+	bool GetComHide();	// Флаг использования базы номеров наборов
 		
-		CString GetDefaultPath();	// Путь папки с exe
-		CString GetPath();			// Текущий путь
-	private:
-		CSettings();	// Конструктор	
-		~CSettings();	// Деструктор
+	CString GetDefaultPath();	// Путь папки с exe
+	CString GetPath();			// Текущий путь
+private:
+	CSettings();	// Конструктор	
+	~CSettings();	// Деструктор
 
-		CSettings(CSettings const&) = delete;	// Удаляем конструктор копирования
-		CSettings& operator= (CSettings const&) = delete;	// И присваивания тоже
+	CSettings(CSettings const&) = delete;	// Удаляем конструктор копирования
+	CSettings& operator= (CSettings const&) = delete;	// И присваивания тоже
 
-		void WriteRegKeys();	// Запись ключей в реестр
-		void SetStgPath(const CString&);	// Установка пути артефактов
-		void Save(const stgParams& par);	// Сохранение параметров в файл
+	void WriteRegKeys();	// Запись ключей в реестр
+	void SetStgPath(const CString&);	// Установка пути артефактов
+	void Save(const stgParams& par);	// Сохранение параметров в файл
 
-		stgParams parameters;	// Основные параметры
-		CString path = L"";		// Основной путь папки с артефактами
-	};
+	stgParams parameters;	// Основные параметры
+	CString path = L"";		// Основной путь папки с артефактами
 };

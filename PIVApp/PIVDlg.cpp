@@ -12,12 +12,12 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
-// Диалоговое окно CPIVDlg
+// Диалоговое окно CPIVWorkerDlg
 //#define RECT_MOVE 779
 
 struct ThreadData
 {
-	CPIVDlg* dlg;
+	CPIVWorkerDlg* dlg;
 	HWND hWnd;
 };
 
@@ -43,13 +43,13 @@ DWORD WINAPI WaitThread(LPVOID lpParam) {
 	return 0;
 }
 
-void Waiting(CPIVDlg& dlg, HWND hWnd)
+void Waiting(CPIVWorkerDlg& dlg, HWND hWnd)
 {
 	ASSERT(hWnd != NULL);
 	dlg.ReceiveMessage(hWnd);
 }
 
-void CPIVDlg::ReceiveMessage(HWND hWnd)
+void CPIVWorkerDlg::ReceiveMessage(HWND hWnd)
 {
 	while (1)
 	{
@@ -70,7 +70,7 @@ void CPIVDlg::ReceiveMessage(HWND hWnd)
 }
 
 // Обновление статус-бара
-LRESULT CPIVDlg::OnReceiveMessage(WPARAM, LPARAM lParam)
+LRESULT CPIVWorkerDlg::OnReceiveMessage(WPARAM, LPARAM lParam)
 {
 	CString* pString = reinterpret_cast<CString*>(lParam);
 	ASSERT(pString != NULL);
@@ -79,45 +79,45 @@ LRESULT CPIVDlg::OnReceiveMessage(WPARAM, LPARAM lParam)
 }
 #pragma endregion
 
-CPIVDlg::CPIVDlg(CWnd* pParent /*=NULL*/) : CDialogEx(IDD_PIVAPP_DIALOG, pParent)
+CPIVWorkerDlg::CPIVWorkerDlg(CWnd* pParent /*=NULL*/) : CDialogEx(IDD_PIVAPP_DIALOG, pParent)
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 }
 
-void CPIVDlg::DoDataExchange(CDataExchange* pDX)
+void CPIVWorkerDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CDialogEx::DoDataExchange(pDX);
 	DDX_Control(pDX, IDC_EXPLORER, browser);
 }
 
-BEGIN_MESSAGE_MAP(CPIVDlg, CDialogEx)
+BEGIN_MESSAGE_MAP(CPIVWorkerDlg, CDialogEx)
 	ON_WM_SYSCOMMAND()
 	ON_WM_PAINT()
 	ON_WM_QUERYDRAGICON()
 	ON_WM_CONTEXTMENU()
-	ON_COMMAND(ID_OPEN_PROJ, &CPIVDlg::OnOpenProj)
-	ON_COMMAND(ID_REFRESH_PIV, &CPIVDlg::OnRefreshPiv)
-	ON_COMMAND(ID_CHANGE_FOLDER, &CPIVDlg::OnChangeFolder)
-	ON_COMMAND(ID_OPEN_REPORT, &CPIVDlg::OnOpenReport)
-	ON_COMMAND(ID_OPEN_FOLDER, &CPIVDlg::OnOpenFolder)
-	ON_COMMAND(ID_OPEN_PIV, &CPIVDlg::OnOpenPiv)
-	ON_COMMAND(ID_CLOSE_PIV, &CPIVDlg::OnClosePiv)
-	ON_COMMAND(ID_CLOSE_ALL, &CPIVDlg::OnCloseAll)
-	ON_CBN_SELCHANGE(IDC_CMB_MODE, &CPIVDlg::OnCbnSelchangeCombo)
-	ON_BN_CLICKED(IDC_BTN_HOME, &CPIVDlg::OnBnClickedBtnHome)
-	ON_BN_CLICKED(IDC_BTN_PREV, &CPIVDlg::OnBnClickedBtnPrev)
-	ON_BN_CLICKED(IDC_BTN_NEXT, &CPIVDlg::OnBnClickedBtnNext)
-	ON_BN_CLICKED(IDC_BTN_REFRESH, &CPIVDlg::OnBnClickedBtnRefresh)
-	ON_BN_CLICKED(IDC_BTN_SETTING, &CPIVDlg::OnBnClickedSetting)
-	ON_BN_CLICKED(IDC_SHOW_REP, &CPIVDlg::OnBnClickedShowRep)
-	ON_REGISTERED_MESSAGE(WM_EXCHANGE_DLL, &CPIVDlg::OnReceiveMessage)
+	ON_COMMAND(ID_OPEN_PROJ, &CPIVWorkerDlg::OnOpenProj)
+	ON_COMMAND(ID_REFRESH_PIV, &CPIVWorkerDlg::OnRefreshPiv)
+	ON_COMMAND(ID_CHANGE_FOLDER, &CPIVWorkerDlg::OnChangeFolder)
+	ON_COMMAND(ID_OPEN_REPORT, &CPIVWorkerDlg::OnOpenReport)
+	ON_COMMAND(ID_OPEN_FOLDER, &CPIVWorkerDlg::OnOpenFolder)
+	ON_COMMAND(ID_OPEN_PIV, &CPIVWorkerDlg::OnOpenPiv)
+	ON_COMMAND(ID_CLOSE_PIV, &CPIVWorkerDlg::OnClosePiv)
+	ON_COMMAND(ID_CLOSE_ALL, &CPIVWorkerDlg::OnCloseAll)
+	ON_CBN_SELCHANGE(IDC_CMB_MODE, &CPIVWorkerDlg::OnCbnSelchangeCombo)
+	ON_BN_CLICKED(IDC_BTN_HOME, &CPIVWorkerDlg::OnBnClickedBtnHome)
+	ON_BN_CLICKED(IDC_BTN_PREV, &CPIVWorkerDlg::OnBnClickedBtnPrev)
+	ON_BN_CLICKED(IDC_BTN_NEXT, &CPIVWorkerDlg::OnBnClickedBtnNext)
+	ON_BN_CLICKED(IDC_BTN_REFRESH, &CPIVWorkerDlg::OnBnClickedBtnRefresh)
+	ON_BN_CLICKED(IDC_BTN_SETTING, &CPIVWorkerDlg::OnBnClickedSetting)
+	ON_BN_CLICKED(IDC_SHOW_REP, &CPIVWorkerDlg::OnBnClickedShowRep)
+	ON_REGISTERED_MESSAGE(WM_EXCHANGE_DLL, &CPIVWorkerDlg::OnReceiveMessage)
 	//ON_WM_MOUSEMOVE()
 	ON_WM_CLOSE()
 END_MESSAGE_MAP()
 
 
-// Обработчики сообщений CPIVDlg
-BOOL CPIVDlg::OnInitDialog()
+// Обработчики сообщений CPIVWorkerDlg
+BOOL CPIVWorkerDlg::OnInitDialog()
 {
 	//_crtBreakAlloc = /*587*/879627;
 	CDialogEx::OnInitDialog();
@@ -211,7 +211,7 @@ BOOL CPIVDlg::OnInitDialog()
 	return TRUE;  // возврат значения TRUE, если фокус не передан элементу управления
 }
 
-void CPIVDlg::OnSysCommand(UINT nID, LPARAM lParam)
+void CPIVWorkerDlg::OnSysCommand(UINT nID, LPARAM lParam)
 {
 	if ((nID & 0xFFF0) == IDM_ABOUTBOX)
 	{
@@ -227,7 +227,7 @@ void CPIVDlg::OnSysCommand(UINT nID, LPARAM lParam)
 //  чтобы нарисовать значок.  Для приложений MFC, использующих модель документов или представлений,
 //  это автоматически выполняется рабочей областью.
 
-void CPIVDlg::OnPaint()
+void CPIVWorkerDlg::OnPaint()
 {
 	if (IsIconic())
 	{
@@ -254,13 +254,13 @@ void CPIVDlg::OnPaint()
 
 // Система вызывает эту функцию для получения отображения курсора при перемещении
 //  свернутого окна.
-HCURSOR CPIVDlg::OnQueryDragIcon()
+HCURSOR CPIVWorkerDlg::OnQueryDragIcon()
 {
 	return static_cast<HCURSOR>(m_hIcon);
 }
 
 // Обработка контекстного меню
-void CPIVDlg::OnContextMenu(CWnd* pWnd, CPoint point)
+void CPIVWorkerDlg::OnContextMenu(CWnd* pWnd, CPoint point)
 {
 	CMenu* menu;	// Указатель на подменю
 	CRect rect;		// Объект текущего диалогового окна
@@ -271,7 +271,7 @@ void CPIVDlg::OnContextMenu(CWnd* pWnd, CPoint point)
 }
 
 // Обработка движения мыши
-/*void CPIVDlg::OnMouseMove(UINT nFlags, CPoint point)
+/*void CPIVWorkerDlg::OnMouseMove(UINT nFlags, CPoint point)
 {
 	CString move;
 	move.Format(L"X=%d; Y=%d", point.x, point.y);
@@ -280,7 +280,7 @@ void CPIVDlg::OnContextMenu(CWnd* pWnd, CPoint point)
 
 #pragma region Handlers
 // Открытие проекта
-void CPIVDlg::OnOpenProj()
+void CPIVWorkerDlg::OnOpenProj()
 {
 	vector <CString> path;
 	OpenFile(path);
@@ -297,7 +297,7 @@ void CPIVDlg::OnOpenProj()
 }
 
 // Открытие остальных 
-void CPIVDlg::OnOpenPiv()
+void CPIVWorkerDlg::OnOpenPiv()
 {
 	vector <CString> path;
 	OpenFile(path);
@@ -313,7 +313,7 @@ void CPIVDlg::OnOpenPiv()
 }
 
 // Обновление протоколов
-void CPIVDlg::OnRefreshPiv()
+void CPIVWorkerDlg::OnRefreshPiv()
 {
 	int nCount = m_ListBox->GetSelCount();			
 	CArray<int> sel;
@@ -329,7 +329,7 @@ void CPIVDlg::OnRefreshPiv()
 }
 
 // Смена рабочей директории
-void CPIVDlg::OnChangeFolder()
+void CPIVWorkerDlg::OnChangeFolder()
 {
 	CEdit* m_Edit = (CEdit*)GetDlgItem(IDC_EDIT_PATH);
 	CString folder = GetFolder();
@@ -344,7 +344,7 @@ void CPIVDlg::OnChangeFolder()
 }
 
 // Открыть отчет в браузере
-void CPIVDlg::OnOpenReport()
+void CPIVWorkerDlg::OnOpenReport()
 {
 	CComboBox* m_Cmb = (CComboBox*)GetDlgItem(IDC_CMB_MODE);
 	CString path;
@@ -356,14 +356,14 @@ void CPIVDlg::OnOpenReport()
 }
 
 // Открытие папки с артефактами
-void CPIVDlg::OnOpenFolder()
+void CPIVWorkerDlg::OnOpenFolder()
 {
 	CString path = piv.GetPath();
 	ShellExecute(0, L"Explore", piv.GetPath(), NULL, NULL, SW_NORMAL);
 }
 
 // Закрытие одного или нескольких выбранных протоколов
-void CPIVDlg::OnClosePiv()
+void CPIVWorkerDlg::OnClosePiv()
 {
 	vector <CString> forDel;
 	int nCount = m_ListBox->GetSelCount();
@@ -381,7 +381,7 @@ void CPIVDlg::OnClosePiv()
 }
 
 // Закрытие всех протоколов
-void CPIVDlg::OnCloseAll()
+void CPIVWorkerDlg::OnCloseAll()
 {
 	pathOther.clear();
 	pathOther.shrink_to_fit();
@@ -389,7 +389,7 @@ void CPIVDlg::OnCloseAll()
 }
 
 // Изменение области работы (работа с проектом, работа с отдельными файлами)
-void CPIVDlg::OnCbnSelchangeCombo()
+void CPIVWorkerDlg::OnCbnSelchangeCombo()
 {
 	RefreshList();
 	SetNumericPIV();
@@ -397,7 +397,7 @@ void CPIVDlg::OnCbnSelchangeCombo()
 }
 
 // Показывать отчет рядом со списком открытых протоколов или нет
-void CPIVDlg::OnBnClickedShowRep()
+void CPIVWorkerDlg::OnBnClickedShowRep()
 {
 	CWnd* pWnd = this->GetWindow(IDR_MAINFRAME);
 	CButton* chk = (CButton*)GetDlgItem(IDC_SHOW_REP);
@@ -419,7 +419,7 @@ void CPIVDlg::OnBnClickedShowRep()
 
 #pragma region SUB_FUNC
 // Открытие файлов
-void  CPIVDlg::OpenFile(vector <CString>& path)
+void  CPIVWorkerDlg::OpenFile(vector <CString>& path)
 {
 	CWnd* TheWindow = GetActiveWindow();
 	CFileDialog openDialog(true, NULL, NULL, OFN_ALLOWMULTISELECT + OFN_HIDEREADONLY, NULL, TheWindow);
@@ -440,7 +440,7 @@ void  CPIVDlg::OpenFile(vector <CString>& path)
 }
 
 // Выбор папки
-CString CPIVDlg::GetFolder()
+CString CPIVWorkerDlg::GetFolder()
 {
 	BROWSEINFO	bi;
 	TCHAR	szDisplayName[MAX_PATH];
@@ -464,7 +464,7 @@ CString CPIVDlg::GetFolder()
 }
 
 // Считывание путей файлов
-void CPIVDlg::ReadPath(const CFileDialog& dlg, vector <CString>& path)
+void CPIVWorkerDlg::ReadPath(const CFileDialog& dlg, vector <CString>& path)
 {
 	POSITION pos = dlg.GetStartPosition();
 
@@ -492,7 +492,7 @@ void CPIVDlg::ReadPath(const CFileDialog& dlg, vector <CString>& path)
 }
 
 // Извлечение имени файла из его пути
-CString CPIVDlg::NameFromPath(const CString& path)
+CString CPIVWorkerDlg::NameFromPath(const CString& path)
 {
 	int startPos = path.ReverseFind(L'\\') + 1;
 	CString result = path.Mid(startPos, path.GetLength());
@@ -503,30 +503,30 @@ CString CPIVDlg::NameFromPath(const CString& path)
 #pragma endregion
 
 #pragma region Browser
-void CPIVDlg::OnBnClickedBtnHome()
+void CPIVWorkerDlg::OnBnClickedBtnHome()
 {
 	BrowserNavigate();
 }
 
 
-void CPIVDlg::OnBnClickedBtnPrev()
+void CPIVWorkerDlg::OnBnClickedBtnPrev()
 {
 	browser.GoBack();
 }
 
 
-void CPIVDlg::OnBnClickedBtnNext()
+void CPIVWorkerDlg::OnBnClickedBtnNext()
 {
 	browser.GoForward();
 }
 
 
-void CPIVDlg::OnBnClickedBtnRefresh()
+void CPIVWorkerDlg::OnBnClickedBtnRefresh()
 {
 	browser.Refresh();
 }
 
-void CPIVDlg::BrowserNavigate()
+void CPIVWorkerDlg::BrowserNavigate()
 {
 	CComboBox* m_Cmb = (CComboBox*)GetDlgItem(IDC_CMB_MODE);
 	CString path;
@@ -541,7 +541,7 @@ void CPIVDlg::BrowserNavigate()
 
 #pragma region Settings
 // Открыть окно настроек
-void CPIVDlg::OnBnClickedSetting()
+void CPIVWorkerDlg::OnBnClickedSetting()
 {
 	settings = piv.GetSettings();
 	CSettingDlg stgDlg(this);
@@ -555,7 +555,7 @@ void CPIVDlg::OnBnClickedSetting()
 #pragma endregion
 
 // Обновление листа
-void CPIVDlg::RefreshList()
+void CPIVWorkerDlg::RefreshList()
 {
 	m_ListBox->ResetContent();
 	SetNumericPIV();
@@ -570,7 +570,7 @@ void CPIVDlg::RefreshList()
 }
 
 // Установка количество считанных ПИВ
-void CPIVDlg::SetNumericPIV()
+void CPIVWorkerDlg::SetNumericPIV()
 {
 	CString res;
 	CComboBox* m_Combo = (CComboBox*)GetDlgItem(IDC_CMB_MODE);
@@ -585,7 +585,7 @@ void CPIVDlg::SetNumericPIV()
 }
 
 // Обновление меню
-void CPIVDlg::UpdateMenu()
+void CPIVWorkerDlg::UpdateMenu()
 {
 	CComboBox* m_Combo = (CComboBox*)GetDlgItem(IDC_CMB_MODE);
 	if (m_Combo->GetCurSel() == PROJECT)
@@ -626,7 +626,7 @@ void CPIVDlg::UpdateMenu()
 }
 
 // Закрытие окна
-void CPIVDlg::OnClose()
+void CPIVWorkerDlg::OnClose()
 {
 	piv.WriteLog(logdll::stThread[logdll::end]);
 	WaitForSingleObject(hWait, INFINITE);

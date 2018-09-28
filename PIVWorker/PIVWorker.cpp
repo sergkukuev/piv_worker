@@ -39,10 +39,10 @@ static char THIS_FILE[] = __FILE__;
 using namespace stgdll;	// Пространство имен настроек
 struct ThreadData
 {
-	CPIV* object;
+	CPIVWorker* object;
 };
 
-// Единственный объект CPIVWorkerApp
+// Единственный объект CPIVWorkerWorkerApp
 CWinApp theApp;
 ThreadData mData;
 
@@ -58,32 +58,32 @@ DWORD WINAPI PrimaryThread(LPVOID lpParam)
 }
 
 // Конструктор
-CPIV::CPIV() {	}
+CPIVWorker::CPIVWorker() {	}
 
 // Деструктор
-CPIV::~CPIV() 
+CPIVWorker::~CPIVWorker() 
 {
 	Close();
 	CloseProject();
 }
 
-bool CPIV::IsUpdate() { return logger.IsRead(); }
+/*bool CPIVWorker::IsUpdate() { return logger.IsRead(); }
 
-CString CPIV::GetStatus() { return logger.GetStatus(); }
+CString CPIVWorker::GetStatus() { return logger.GetStatus(); }
 
-void CPIV::WriteLog(const CString& msg) { logger.Write(msg); }
+void CPIVWorker::WriteLog(const CString& msg) { logger.Write(msg); }
 
 // Получение путей параметров
-CString CPIV::GetPath() { return settings.GetPath(); }
+CString CPIVWorker::GetPath() { return settings.GetPath(); }
 
-CString CPIV::GetOtherPath()
+CString CPIVWorker::GetOtherPath()
 {
 	CString result;
 	result.Format(L"%s%s", settings.GetPath(), settings.folders[folders::other]);
 	return result;
 }
 
-CString CPIV::GetProjectPath()
+CString CPIVWorker::GetProjectPath()
 {
 	CString result;
 	result.Format(L"%s%s", settings.GetPath(), settings.folders[folders::project]);
@@ -91,13 +91,13 @@ CString CPIV::GetProjectPath()
 }
 #pragma region SET_PARAMETERS
 // Установка пути хранения артефактов
-void CPIV::SetPathToSave(const CString& pathToReport)
+void CPIVWorker::SetPathToSave(const CString& pathToReport)
 {
 	settings.SetStgPath(pathToReport);
 	logger.Write(L"Изменено расположение папки отчетов");
 }
 
-void CPIV::SetSettings(const stgParams& parameters) 
+void CPIVWorker::SetSettings(const stgParams& parameters) 
 { 
 	while (!GetStatusThread(primary))
 		Sleep(100);
@@ -105,12 +105,12 @@ void CPIV::SetSettings(const stgParams& parameters)
 	logger.Write(L"Изменены настройки приложения");
 }
 
-stgParams CPIV::GetSettings() { return settings.GetParameters(); }
+stgParams CPIVWorker::GetSettings() { return settings.GetParameters(); }
 #pragma endregion
 
 #pragma region OPEN_PROJECT
 // Открытие проекта (набора ПИВ) с установкой пути хранения артефактов
-void CPIV::Open(const vector<CString> pathToExcel, const CString pathToReport) 
+void CPIVWorker::Open(const vector<CString> pathToExcel, const CString pathToReport) 
 {
 	buffer = pathToExcel;
 	settings.SetStgPath(pathToReport);
@@ -118,14 +118,14 @@ void CPIV::Open(const vector<CString> pathToExcel, const CString pathToReport)
 }
 
 // использовать старый путь хранения
-void CPIV::Open(const vector<CString> pathToExcel)
+void CPIVWorker::Open(const vector<CString> pathToExcel)
 {
 	buffer = pathToExcel;
 	StartOpen();
 }
 
 // Запуск потока для операции открытия проекта
-void CPIV::StartOpen() 
+void CPIVWorker::StartOpen() 
 {
 	if (GetStatusThread(primary))
 	{
@@ -138,10 +138,10 @@ void CPIV::StartOpen()
 		AfxMessageBox(L"Подождите окончания выполнения операции, а затем повторите попытку", MB_ICONINFORMATION);
 }
 
-void CPIV::OpenExcel() 
+void CPIVWorker::OpenExcel() 
 {
 	logger.Write(L"Идет открытие протоколов проекта...");
-	CReaderExcel reader;
+	CReader reader;
 	bool bOper = true;
 	for (size_t i = 0; i < buffer.size(); i++)
 	{
@@ -170,21 +170,21 @@ void CPIV::OpenExcel()
 #pragma region OPEN_PIV
 // Открыть отдельные протоколы:
 // один
-void CPIV::Add(const CString pathToExcel) 
+void CPIVWorker::Add(const CString pathToExcel) 
 {
 	buffer.push_back(pathToExcel);
 	StartAdd();
 }
 
 // несколько
-void CPIV::Add(const vector<CString> pathToExcel) 
+void CPIVWorker::Add(const vector<CString> pathToExcel) 
 {
 	buffer = pathToExcel;
 	StartAdd();
 }
 
 // Запуск потока для открытия отдельных протоколов
-void CPIV::StartAdd() 
+void CPIVWorker::StartAdd() 
 {
 	if (GetStatusThread(primary))
 	{
@@ -196,7 +196,7 @@ void CPIV::StartAdd()
 		AfxMessageBox(L"Подождите окончания выполнения операции, а затем повторите попытку", MB_ICONINFORMATION);
 }
 
-void CPIV::AddExcel() 
+void CPIVWorker::AddExcel() 
 {
 	bool bOper = true;
 	CReport report;
@@ -205,7 +205,7 @@ void CPIV::AddExcel()
 	{
 		try
 		{
-			CReaderExcel reader;
+			CReader reader;
 			bool contain = IsContain(other, buffer[i]);
 			bookData book = reader.GetBook(buffer[i]);
 			contain ? Refresh(other, book) : other.books.push_back(book);
@@ -231,20 +231,20 @@ void CPIV::AddExcel()
 
 #pragma region REFRESH_PIV
 // Обновление протоколов
-void CPIV::Refresh(const vector<CString> pathToExcel)
+void CPIVWorker::Refresh(const vector<CString> pathToExcel)
 {
 	buffer = pathToExcel;
 	StartRefresh();
 }
 
-void CPIV::Refresh(const CString pathToExcel) 
+void CPIVWorker::Refresh(const CString pathToExcel) 
 {
 	buffer.push_back(pathToExcel);
 	StartRefresh();
 }
 
 // Запуск операции обновления протоколов
-void CPIV::StartRefresh() 
+void CPIVWorker::StartRefresh() 
 {
 	if (GetStatusThread(primary))
 	{
@@ -256,7 +256,7 @@ void CPIV::StartRefresh()
 		AfxMessageBox(L"Подождите окончания выполнения операции, а затем повторите попытку", MB_ICONINFORMATION);
 }
 
-void CPIV::RefreshExcel() 
+void CPIVWorker::RefreshExcel() 
 {
 	bool bOper = true, bProj = true;
 	CReport report;
@@ -265,7 +265,7 @@ void CPIV::RefreshExcel()
 	{
 		try
 		{
-			CReaderExcel reader;
+			CReader reader;
 			bookData book = reader.GetBook(buffer[i]);
 			list <bookData>::iterator pBook;
 			CTest tester;
@@ -304,7 +304,7 @@ void CPIV::RefreshExcel()
 
 #pragma region CLOSE_PIV
 // Закрытие всех протоколов
-void CPIV::Close() 
+void CPIVWorker::Close() 
 {
 	logger.Write(L"Идет закрытие всех протоколов...");
 	if (!other.books.empty())
@@ -315,21 +315,21 @@ void CPIV::Close()
 }
 
 // одного
-void CPIV::Close(const CString path)
+void CPIVWorker::Close(const CString path)
 {
 	buffer.push_back(path);
 	StartClose();
 }
 
 // нескольких
-void CPIV::Close(const vector<CString> path) 
+void CPIVWorker::Close(const vector<CString> path) 
 {
 	buffer = path;
 	StartClose();
 }
 
 // Запуск операции закрытия
-void CPIV::StartClose() 
+void CPIVWorker::StartClose() 
 {
 	if (GetStatusThread(primary))
 	{
@@ -342,7 +342,7 @@ void CPIV::StartClose()
 }
 
 // Закрытие проекта
-void CPIV::CloseProject() 
+void CPIVWorker::CloseProject() 
 {
 	logger.Write(L"Идет закрытие проекта...");
 	if (!project.books.empty())
@@ -352,7 +352,7 @@ void CPIV::CloseProject()
 	logger.Write(L"Закрытие проекта завершено");	// Логирование
 }
 
-void CPIV::CloseExcel() 
+void CPIVWorker::CloseExcel() 
 {
 	buffer.size() == 1 ? logger.Write(L"Идет закрытие выбранного протокола...") : logger.Write(L"Идет закрытие выбранных протоколов...");
 	for (size_t i = 0; i < buffer.size(); i++) 
@@ -369,7 +369,7 @@ void CPIV::CloseExcel()
 
 #pragma region SUB_FUNCTION
 // Обновление протоколов (данные + база ошибок)
-void CPIV::Refresh(pivData& data, const bookData& book, const errorData& error) 
+void CPIVWorker::Refresh(pivData& data, const bookData& book, const errorData& error) 
 {
 	for (list <bookData>::iterator it = data.books.begin(); it != data.books.end(); it++)
 		if (book.name.Compare(it->name) == 0)
@@ -381,7 +381,7 @@ void CPIV::Refresh(pivData& data, const bookData& book, const errorData& error)
 }
 
 // Обновление (данные)
-void CPIV::Refresh(pivData& data, const bookData& book) 
+void CPIVWorker::Refresh(pivData& data, const bookData& book) 
 {
 	for (list <bookData>::iterator it = data.books.begin(); it != data.books.end(); it++)
 		if (book.name.Compare(it->name) == 0)
@@ -389,7 +389,7 @@ void CPIV::Refresh(pivData& data, const bookData& book)
 }
 
 // Обновление (база ошибок)
-void CPIV::Refresh(pivData& data, const errorData& error) 
+void CPIVWorker::Refresh(pivData& data, const errorData& error) 
 {
 	for (list <errorData>::iterator it = data.db.begin(); it != data.db.end(); it++)
 		if (error.book->name.Compare(it->book->name) == 0)
@@ -397,7 +397,7 @@ void CPIV::Refresh(pivData& data, const errorData& error)
 }
 
 // Получение ссылки на данные требуемого протокола
-list<bookData>::iterator CPIV::GetBook(pivData& data, const CString& path)
+list<bookData>::iterator CPIVWorker::GetBook(pivData& data, const CString& path)
 {
 	for (list <bookData>::iterator it = data.books.begin(); it != data.books.end(); it++)
 		if (NameFromPath(path).Compare(it->name) == 0)
@@ -406,7 +406,7 @@ list<bookData>::iterator CPIV::GetBook(pivData& data, const CString& path)
 }
 
 // Выделение имени протокола из его пути
-CString CPIV::NameFromPath(const CString& path) 
+CString CPIVWorker::NameFromPath(const CString& path) 
 {
 	int startPos = path.ReverseFind(L'\\') + 1;
 	CString result = path.Mid(startPos, path.GetLength() - startPos);
@@ -416,7 +416,7 @@ CString CPIV::NameFromPath(const CString& path)
 }
 
 // Проверка наличия данных требуемого протокола
-bool CPIV::IsContain(pivData& data, const CString& path)
+bool CPIVWorker::IsContain(pivData& data, const CString& path)
 {
 	bool result = false;
 	for (list <bookData>::iterator it = data.books.begin(); it != data.books.end(); it++)
@@ -427,20 +427,20 @@ bool CPIV::IsContain(pivData& data, const CString& path)
 
 #pragma region THREAD_FUNC
 // Запуск операций DLL в потоке
-void Thread(CPIV& piv)
+void Thread(CPIVWorker& piv)
 {
 	switch (piv.hCmd)
 	{
-	case CPIV::open:
+	case CPIVWorker::open:
 		piv.OpenExcel();
 		break;
-	case CPIV::add:
+	case CPIVWorker::add:
 		piv.AddExcel();
 		break;
-	case CPIV::refresh:
+	case CPIVWorker::refresh:
 		piv.RefreshExcel();
 		break;
-	case CPIV::close:
+	case CPIVWorker::close:
 		piv.CloseExcel();
 		break;
 	default:
@@ -450,7 +450,7 @@ void Thread(CPIV& piv)
 }
 
 // Проверка доступности потока
-bool CPIV::GetStatusThread(const HANDLE& h)
+bool CPIVWorker::GetStatusThread(const HANDLE& h)
 {
 	DWORD ty;
 	bool result = true;
@@ -460,7 +460,7 @@ bool CPIV::GetStatusThread(const HANDLE& h)
 }
 
 // Закрытие потока
-void CPIV::CloseThread(HANDLE& h)
+void CPIVWorker::CloseThread(HANDLE& h)
 {
 	if (!buffer.empty())	// Очистка буфера
 	{
@@ -476,4 +476,4 @@ void CPIV::CloseThread(HANDLE& h)
 	else
 		logger.WriteError(L"Произошла ошибка закрытия основного потока DLL");
 }
-#pragma endregion
+#pragma endregion*/

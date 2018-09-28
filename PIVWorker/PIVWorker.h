@@ -23,11 +23,11 @@
 //		- закрытие выбранных ПИВ;
 //		- установка пути для хранения артефактов
 //		- установка необходимых флагов для генерации артефактов (наличие подкадров и т.д.)
-class PIV_DECLARE CPIV 
+class PIV_DECLARE CPIVWorker 
 {
 public:
-	CPIV();		// Конструктор
-	~CPIV();	// Деструктор
+	CPIVWorker();	// Конструктор
+	~CPIVWorker();	// Деструктор
 
 	bool IsUpdate();		// Проверка статуса работы DLL
 	CString GetStatus();	// Получение статуса DLL
@@ -55,7 +55,7 @@ public:
 	void SetPathToSave(const CString& pathToReport);// Установка пути хранения артефактов
 	void SetSettings(const stgdll::stgParams& parameters);	// Установка настроек DLL
 
-	friend void Thread(CPIV& piv);	// Запуск операций DLL в потоке
+	friend void Thread(CPIVWorker& piv);	// Запуск операций DLL в потоке
 private:
 	HANDLE primary;		// Основной поток
 	stgdll::CSettings& settings = stgdll::CSettings::Instance();	// Указатель на настройки

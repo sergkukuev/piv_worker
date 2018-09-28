@@ -28,8 +28,8 @@ public:
 	};
 };
 
-// Исключения класса CReaderExcel
-#pragma region ReaderExcel
+// Исключения класса CReader
+#pragma region Reader
 class BadTypeException: public MyException	
 {
 public:
